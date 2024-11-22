@@ -80,6 +80,7 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
+                    <!--
                     <Separator/>
                     <MenuItem Header="_Temp run game" Command="Print" InputGestureText="F5">
                         <MenuItem.Style>
@@ -102,6 +103,7 @@
                             </Style>
                         </MenuItem.Style>
                     </MenuItem>
+                    -->
                     <Separator/>
                     <MenuItem Header="Generate o_ffset map" Click="MenuItem_OffsetMap_Click"/>
                     <Separator/>
