@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "dgSpecHash": "eKGhRy0o9Ys=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\juanm\\Documents\\GitHub\\UTMT-UnderAnalyzer-Decompiler\\UndertaleModTests\\UndertaleModTests.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.applicationinsights\\2.22.0\\microsoft.applicationinsights.2.22.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\3.3.4\\microsoft.codeanalysis.analyzers.3.3.4.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.codeanalysis.common\\4.10.0\\microsoft.codeanalysis.common.4.10.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.codeanalysis.csharp\\4.10.0\\microsoft.codeanalysis.csharp.4.10.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.codeanalysis.csharp.scripting\\4.10.0\\microsoft.codeanalysis.csharp.scripting.4.10.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.codeanalysis.scripting.common\\4.10.0\\microsoft.codeanalysis.scripting.common.4.10.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testing.extensions.telemetry\\1.3.1\\microsoft.testing.extensions.telemetry.1.3.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testing.extensions.trxreport.abstractions\\1.3.1\\microsoft.testing.extensions.trxreport.abstractions.1.3.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testing.extensions.vstestbridge\\1.3.1\\microsoft.testing.extensions.vstestbridge.1.3.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testing.platform\\1.3.1\\microsoft.testing.platform.1.3.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testing.platform.msbuild\\1.3.1\\microsoft.testing.platform.msbuild.1.3.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.testplatform.objectmodel\\17.10.0\\microsoft.testplatform.objectmodel.17.10.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0\\microsoft.win32.systemevents.5.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\mstest.testadapter\\3.5.0\\mstest.testadapter.3.5.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\mstest.testframework\\3.5.0\\mstest.testframework.3.5.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\propertychanged.fody\\4.1.0\\propertychanged.fody.4.1.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.buffers\\4.5.1\\system.buffers.4.5.1.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.collections.immutable\\8.0.0\\system.collections.immutable.8.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.componentmodel.composition\\8.0.0\\system.componentmodel.composition.8.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.diagnostics.diagnosticsource\\5.0.0\\system.diagnostics.diagnosticsource.5.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.drawing.common\\5.0.3\\system.drawing.common.5.0.3.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.reflection.metadata\\8.0.0\\system.reflection.metadata.8.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.text.encoding.codepages\\7.0.0\\system.text.encoding.codepages.7.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.text.json\\8.0.4\\system.text.json.8.0.4.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.4\\system.threading.tasks.extensions.4.5.4.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'System.Text.Json' 8.0.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-8g4q-xg66-9fp4",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net6.0"
+      ]
+    }
+  ]
+}

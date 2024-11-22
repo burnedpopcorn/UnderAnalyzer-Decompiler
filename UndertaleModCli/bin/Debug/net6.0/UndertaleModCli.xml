@@ -1,0 +1,550 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>UndertaleModCli</name>
+    </assembly>
+    <members>
+        <member name="T:UndertaleModCli.DumpOptions">
+            <summary>
+            Cli options for the Dump command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Datafile">
+            <summary>
+            File path to the data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Output">
+            <summary>
+            Directory path to where to dump all contents
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Verbose">
+            <summary>
+            Determines if Cli should print out verbose logs
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Code">
+            <summary>
+            Names of the code entries that should get dumped
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Strings">
+            <summary>
+            Determines if strings should get dumped.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.DumpOptions.Textures">
+            <summary>
+            Determines if embedded textures should get dumped
+            </summary>
+        </member>
+        <member name="T:UndertaleModCli.InfoOptions">
+            <summary>
+            Cli options for the Info command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.InfoOptions.Datafile">
+            <summary>
+            File path to the data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.InfoOptions.Verbose">
+            <summary>
+            Determines if Cli should print out verbose logs
+            </summary>
+        </member>
+        <member name="T:UndertaleModCli.LoadOptions">
+            <summary>
+            Cli options for the Load command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Datafile">
+            <summary>
+            File path to the data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Scripts">
+            <summary>
+            File paths to the scripts that shall be run
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Line">
+            <summary>
+            C# string that shall be executed
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Output">
+            <summary>
+            File path to where to save the modified data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Interactive">
+            <summary>
+            Determines if Cli should be run in interactive mode
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.LoadOptions.Verbose">
+            <summary>
+            Determines if Cli should print out verbose logs
+            </summary>
+        </member>
+        <member name="T:UndertaleModCli.NewOptions">
+            <summary>
+            Cli options for the New command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.NewOptions.Output">
+            <summary>
+            File path for new data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.NewOptions.Overwrite">
+            <summary>
+            If the existing file path at <see cref="P:UndertaleModCli.NewOptions.Output"/> should be overwritten
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.NewOptions.Stdout">
+            <summary>
+            Whether to write the new data to Stdout
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.NewOptions.Verbose">
+            <summary>
+            Determines if Cli should print out verbose logs
+            </summary>
+        </member>
+        <member name="T:UndertaleModCli.ReplaceOptions">
+            <summary>
+            Cli options for the Replace command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.ReplaceOptions.Datafile">
+            <summary>
+            File path to the data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.ReplaceOptions.Output">
+            <summary>
+            File path to where to save the modified data file
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.ReplaceOptions.Verbose">
+            <summary>
+            Determines if Cli should print out verbose logs
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.ReplaceOptions.Code">
+            <summary>
+            Equal separated values of code entry and the file to replace the code entry with.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.ReplaceOptions.Textures">
+            <summary>
+            Equal separated values of embedded texture and the file to replace the embedded texture with.
+            </summary>
+        </member>
+        <member name="T:UndertaleModCli.Program">
+            <summary>
+            Main CLI Program
+            </summary>
+        </member>
+        <member name="F:UndertaleModCli.Program.EXIT_SUCCESS">
+            <summary>
+            Value that should be returned on a successful operation.
+            </summary>
+        </member>
+        <member name="F:UndertaleModCli.Program.EXIT_FAILURE">
+            <summary>
+            Value that should be returned on a failed operation.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.Program.IsInteractive">
+            <summary>
+            Value that determines if the current Program is running in interactive mode.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.Program.Verbose">
+            <summary>
+            Value that determines if the current Program is running in verbose mode.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.Program.Output">
+            <summary>
+            File path or directory path that determines an output for the current Program.
+            </summary>
+        </member>
+        <member name="F:UndertaleModCli.Program.UMT_REPLACE_ALL">
+            <summary>
+            Constant, used to indicate that the user wants to replace everything in a replace command.
+            </summary>
+        </member>
+        <member name="F:UndertaleModCli.Program.UMT_DUMP_ALL">
+            <summary>
+            Constant, used to indicate that the user wants to dump everything in a dump command
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.Program.CliScriptOptions">
+            <summary>
+            The ScriptOptions, only used for <see cref="T:Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript"/>, aka running C# code.
+            </summary>
+        </member>
+        <member name="P:UndertaleModCli.Program.FinishedMessageEnabled">
+            <summary>
+            Determines if actions should show a "this is finished" text. Gets set by <see cref="M:UndertaleModCli.Program.SetFinishedMessage(System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.Main(System.String[])">
+            <summary>
+            Main entrypoint for Cli
+            </summary>
+            <param name="args">Arguments passed on to program.</param>
+            <returns>Result code of the program.</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.New(UndertaleModCli.NewOptions)">
+            <summary>
+            Method that gets executed on the "new" command
+            </summary>
+            <param name="options">The arguments that have been provided with the "new" command</param>
+            <returns><see cref="F:UndertaleModCli.Program.EXIT_SUCCESS"/> and <see cref="F:UndertaleModCli.Program.EXIT_FAILURE"/> for being successful and failing respectively</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.Load(UndertaleModCli.LoadOptions)">
+            <summary>
+            Method that gets executed on the "load" command
+            </summary>
+            <param name="options">The arguments that have been provided with the "load" command</param>
+            <returns><see cref="F:UndertaleModCli.Program.EXIT_SUCCESS"/> and <see cref="F:UndertaleModCli.Program.EXIT_FAILURE"/> for being successful and failing respectively</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.Info(UndertaleModCli.InfoOptions)">
+            <summary>
+            Method that gets executed on the "info" command
+            </summary>
+            <param name="options">The arguments that have been provided with the "info" command</param>
+            <returns><see cref="F:UndertaleModCli.Program.EXIT_SUCCESS"/> and <see cref="F:UndertaleModCli.Program.EXIT_FAILURE"/> for being successful and failing respectively</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.Dump(UndertaleModCli.DumpOptions)">
+            <summary>
+            Method that gets executed on the "dump" command
+            </summary>
+            <param name="options">The arguments that have been provided with the "dump" command</param>
+            <returns><see cref="F:UndertaleModCli.Program.EXIT_SUCCESS"/> and <see cref="F:UndertaleModCli.Program.EXIT_FAILURE"/> for being successful and failing respectively</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.Replace(UndertaleModCli.ReplaceOptions)">
+            <summary>
+            Method that gets executed on the "replace" command
+            </summary>
+            <param name="options">The arguments that have been provided with the "replace" command</param>
+            <returns><see cref="F:UndertaleModCli.Program.EXIT_SUCCESS"/> and <see cref="F:UndertaleModCli.Program.EXIT_FAILURE"/> for being successful and failing respectively</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.RunInteractiveMenu">
+            <summary>
+            Runs the interactive menu indefinitely until user quits out of it.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.CliQuickInfo">
+            <summary>
+            Prints some basic info about the loaded data file.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.DumpCodeEntry(System.String)">
+            <summary>
+            Dumps a code entry from a data file.
+            </summary>
+            <param name="codeEntry">The code entry that should get dumped</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.DumpAllStrings">
+            <summary>
+            Dumps all strings in a data file.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.DumpAllTextures">
+            <summary>
+            Dumps all embedded textures in a data file.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceCodeEntryWithFile(System.String,System.IO.FileInfo)">
+            <summary>
+            Replaces a code entry with text from another file.
+            </summary>
+            <param name="codeEntry">The code entry to replace</param>
+            <param name="fileToReplace">File path which should replace the code entry.</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceTextureWithFile(System.String,System.IO.FileInfo)">
+            <summary>
+            Replaces an embedded texture with contents from another file.
+            </summary>
+            <param name="textureEntry">Embedded texture to replace</param>
+            <param name="fileToReplace">File path which should replace the embedded texture.</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.RunCSharpFile(System.String)">
+            <summary>
+            Evaluates and executes the contents of a file as C# Code.
+            </summary>
+            <param name="path">Path to file which contents to interpret as C# code</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.RunCSharpCode(System.String,System.String)">
+            <summary>
+            Evaluates and executes given C# code.
+            </summary>
+            <param name="code">The C# string to execute</param>
+            <param name="scriptFile">The path to the script file where <see cref="!:code"/> was executed from.
+            Leave as null, if it wasn't executed from a script file</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.SaveDataFile(System.String)">
+            <summary>
+            Saves the currently loaded <see cref="P:UndertaleModCli.Program.Data"/> to an output path.
+            </summary>
+            <param name="outputPath">The path where to save the data.</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReadDataFile(System.IO.FileInfo,UndertaleModLib.UndertaleReader.WarningHandlerDelegate,UndertaleModLib.UndertaleReader.MessageHandlerDelegate)">
+            <summary>
+            Read supplied filename and return the data file.
+            </summary>
+            <param name="datafile">The datafile to read</param>
+            <param name="warningHandler">Handler for Warnings</param>
+            <param name="messageHandler">Handler for Messages</param>
+            <returns></returns>
+            <exception cref="T:System.IO.FileNotFoundException">If the data file cannot be found</exception>
+        </member>
+        <member name="M:UndertaleModCli.Program.RemoveQuotes(System.String)">
+            <summary>
+            Trims <c>"</c> or <c>'</c> from the beginning and end of a string.
+            </summary>
+            <param name="s"><see cref="T:System.String"/> to remove <c>"</c> and/or <c>'</c> from</param>
+            <returns>A new <see cref="T:System.String"/> that can be directly passed onto a FileInfo Constructor</returns>
+        </member>
+        <member name="M:UndertaleModCli.Program.Pause">
+            <summary>
+            Replicated the CMD Pause command. Waits for any key to be pressed before continuing.
+            </summary>
+        </member>
+        <member name="M:UndertaleModCli.Program.WarningHandler(System.String)">
+            <summary>
+            A simple warning handler that prints warnings to console.
+            </summary>
+            <param name="warning">The warning to print</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.MessageHandler(System.String)">
+            <summary>
+            A simple message handler that prints messages to console.
+            </summary>
+            <param name="message">The message to print</param>
+        </member>
+        <member name="M:UndertaleModCli.Program.DummyHandler(System.String)">
+            <summary>
+            A dummy handler that does nothing.
+            </summary>
+            <param name="message">Not used.</param>
+        </member>
+        <member name="P:UndertaleModCli.Program.Data">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.FilePath">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.ScriptPath">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.Highlighted">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.Selected">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.CanSave">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.ScriptExecutionSuccess">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.ScriptErrorMessage">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.ExePath">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.ScriptErrorType">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.GMLCacheEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:UndertaleModCli.Program.IsAppClosed">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.EnsureDataLoaded">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.MakeNewDataFile">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ScriptMessage(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SetUMTConsoleText(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ScriptQuestion(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ScriptError(System.String,System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SimpleTextOutput(System.String,System.String,System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ScriptOpenURL(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.RunUMTScript(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.AreFilesIdentical(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SetFinishedMessage(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.UpdateProgressBar(System.String,System.String,System.Double,System.Double)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SetProgressBar(System.String,System.String,System.Double,System.Double)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.UpdateProgressValue(System.Double)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.UpdateProgressStatus(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.AddProgress(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.IncrementProgress">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.AddProgressParallel(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.IncrementProgressParallel">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GetProgress">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SetProgress(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.InitializeScriptDialog">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReapplyProfileCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GenerateGMLCache(UndertaleModLib.Decompiler.GlobalDecompileContext,System.Object,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.NukeProfileGML(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SetProgressBar">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.HideProgressBar">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.EnableUI">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SyncBinding(System.String,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.DisableAllSyncBindings">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.StartProgressBarUpdater">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.StopProgressBarUpdater">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ChangeSelection(System.Object,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.PromptChooseDirectory">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.PromptLoadFile(System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GetDecompiledText(System.String,UndertaleModLib.Decompiler.GlobalDecompileContext,Underanalyzer.Decompiler.IDecompileSettings)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GetDecompiledText(UndertaleModLib.Models.UndertaleCode,UndertaleModLib.Decompiler.GlobalDecompileContext,Underanalyzer.Decompiler.IDecompileSettings)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GetDisassemblyText(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.GetDisassemblyText(UndertaleModLib.Models.UndertaleCode)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ScriptInputDialog(System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.SimpleTextInput(System.String,System.String,System.String,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ClickableSearchOutput(System.String,System.String,System.Int32,System.Linq.IOrderedEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.Collections.Generic.List{System.ValueTuple{System.Int32,System.String}}}},System.Boolean,System.Linq.IOrderedEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ClickableSearchOutput(System.String,System.String,System.Int32,System.Collections.Generic.IDictionary{System.String,System.Collections.Generic.List{System.ValueTuple{System.Int32,System.String}}},System.Boolean,System.Collections.Generic.IEnumerable{System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.LintUMTScript(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ImportGMLString(System.String,System.String,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ImportASMString(System.String,System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ImportGMLFile(System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ImportASMFile(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceTextInGML(System.String,System.String,System.String,System.Boolean,System.Boolean,UndertaleModLib.Decompiler.GlobalDecompileContext,Underanalyzer.Decompiler.IDecompileSettings)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceTextInGML(UndertaleModLib.Models.UndertaleCode,System.String,System.String,System.Boolean,System.Boolean,UndertaleModLib.Decompiler.GlobalDecompileContext,Underanalyzer.Decompiler.IDecompileSettings)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceTempWithMain(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceMainWithTemp(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceTempWithCorrections(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.ReplaceCorrectionsWithTemp(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.UpdateCorrections(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.DummyBool">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.DummyVoid">
+            <inheritdoc/>
+        </member>
+        <member name="M:UndertaleModCli.Program.DummyString">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

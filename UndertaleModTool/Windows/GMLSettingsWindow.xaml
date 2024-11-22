@@ -8,7 +8,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:Settings}"
-        Title="Settings - GML compiler/decompiler" Height="Auto" Width="700" SizeToContent="Height" WindowStartupLocation="CenterOwner">
+        Title="GML Decompiler - Settings" Height="Auto" Width="700" SizeToContent="Height" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <ObjectDataProvider MethodName="GetValues" ObjectType="{x:Type sys:Enum}" x:Key="IndentStyleKind">
             <ObjectDataProvider.MethodParameters>

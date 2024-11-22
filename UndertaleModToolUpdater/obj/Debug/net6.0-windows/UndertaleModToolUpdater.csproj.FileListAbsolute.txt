@@ -1,0 +1,17 @@
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.exe
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.deps.json
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.runtimeconfig.json
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.dll
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.pdb
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\UndertaleModToolUpdater.xml
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.AssemblyInfoInputs.cache
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.AssemblyInfo.cs
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.csproj.CoreCompileInputs.cache
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.sourcelink.json
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.dll
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\refint\UndertaleModToolUpdater.dll
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.xml
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.pdb
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\UndertaleModToolUpdater.genruntimeconfig.cache
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\obj\Debug\net6.0-windows\ref\UndertaleModToolUpdater.dll
