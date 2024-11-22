@@ -456,8 +456,8 @@ namespace UndertaleModTool
             ApplyCorrections();
             CrashCheck();
 
-            RunGMSDebuggerItem.Visibility = Settings.Instance.ShowDebuggerOption
-                                            ? Visibility.Visible : Visibility.Collapsed;
+            //RunGMSDebuggerItem.Visibility = Settings.Instance.ShowDebuggerOption
+            //                                ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public Dictionary<string, NamedPipeServerStream> childFiles = new Dictionary<string, NamedPipeServerStream>();
@@ -2850,12 +2850,12 @@ namespace UndertaleModTool
 
         private void MenuItem_GitHub_Click(object sender, RoutedEventArgs e)
         {
-            OpenBrowser("https://github.com/UnderminersTeam/UndertaleModTool");
+            OpenBrowser("https://github.com/burnedpopcorn/UTMT-UnderAnalyzer-Decompiler");
         }
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\nVersion " + Version, "About");
+            this.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\nUTMT/UnderAnalyzer Decompiler by burnedpopcorn180\nVersion " + Version, "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs

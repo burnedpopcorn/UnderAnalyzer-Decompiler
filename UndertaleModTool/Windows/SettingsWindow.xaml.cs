@@ -205,7 +205,7 @@ namespace UndertaleModTool
                 Settings.Instance.ShowDebuggerOption = value;
                 Settings.Save();
 
-                mainWindow.RunGMSDebuggerItem.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                //mainWindow.RunGMSDebuggerItem.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
