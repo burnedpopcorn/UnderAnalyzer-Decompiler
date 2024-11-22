@@ -178,7 +178,8 @@ public class DecompileSettings : IDecompileSettings
     public bool CleanupElseToContinue { get; set; } = true;
     public bool CleanupDefaultArgumentValues { get; set; } = true;
     public bool CleanupBuiltinArrayVariables { get; set; } = true;
-    public bool CreateEnumDeclarations { get; set; } = true;
+    // To stop Decompiler from making Enum Declarations, as that can fuck up decomps
+    public bool CreateEnumDeclarations { get; set; } = false;
     public string UnknownEnumName { get; set; } = "UnknownEnum";
     public string UnknownEnumValuePattern { get; set; } = "Value_{0}";
     public string UnknownArgumentNamePattern { get; set; } = "arg{0}";

@@ -82,7 +82,6 @@
                     </MenuItem>
                     <Separator/>
                     <MenuItem Header="_Temp run game" Command="Print" InputGestureText="F5">
-                        <!-- TODO: I think I need a custom command for that... -->
                         <MenuItem.Style>
                             <Style TargetType="{x:Type MenuItem}">
                                 <Setter Property="IsEnabled" Value="{Binding CanSave}"/>
