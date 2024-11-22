@@ -2130,6 +2130,11 @@ namespace UndertaleModTool
             MenuItem_RunScript_SubmenuOpened(sender, e, Path.Combine(ExePath, "Scripts"));
         }
 
+        private void Decomp_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            MenuItem_RunScript_SubmenuOpened(sender, e, Path.Combine(ExePath, "Decompiling_Scripts"));
+        }
+
         private void MenuItem_RunScript_SubmenuOpened(object sender, RoutedEventArgs e, string folderDir)
         {
             MenuItem item = sender as MenuItem;
@@ -2147,7 +2152,7 @@ namespace UndertaleModTool
                 {
                     item.Items.Add(new MenuItem {Header = $"(Path {folderDir} does not exist, cannot search for files!)", IsEnabled = false});
 
-                    if (item.Name == "RootScriptItem")
+                    if (item.Name == "RootScriptItem" || item.Name == "DecompScriptItem")
                     {
                         var otherScripts1 = new MenuItem {Header = "Run _other script..."};
                         otherScripts1.Click += MenuItem_RunOtherScript_Click;
@@ -2201,7 +2206,7 @@ namespace UndertaleModTool
             }
 
             // If we're at the complete root, we need to add the "Run other script" button as well
-            if (item.Name != "RootScriptItem") return;
+            if (item.Name != "RootScriptItem" || item.Name != "DecompScriptItem") return;
 
             var otherScripts = new MenuItem {Header = "Run _other script..."};
             otherScripts.Click += MenuItem_RunOtherScript_Click;
