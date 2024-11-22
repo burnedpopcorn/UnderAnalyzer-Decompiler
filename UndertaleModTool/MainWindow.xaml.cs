@@ -226,10 +226,13 @@ namespace UndertaleModTool
             InitializeComponent();
             this.DataContext = this;
 
-            Highlighted = new DescriptionView("Welcome to UndertaleModTool!", "Open a data.win file to get started, then double click on the items on the left to view them.");
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Here you can Decompile ANY GameMaker Game to a GameMaker Project\nOpen a data.win file to get started, then check out the included Scripts!");
             OpenInTab(Highlighted);
 
-            TitleMain = "UndertaleModTool by krzys_h v:" + Version;
+            TitleMain = "UnderAnalyzer Decompiler | UTMT v0.6.0.0";
+
+            // accidently got rid of his name, IM SORRY
+            //TitleMain = "UndertaleModTool v:" + Version;
 
             CanSave = false;
             CanSafelySave = false;
