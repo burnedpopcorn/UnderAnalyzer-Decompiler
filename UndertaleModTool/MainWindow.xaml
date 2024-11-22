@@ -110,9 +110,15 @@
                     <MenuItem Header="S_ettings" Command="Properties"/>
                     <MenuItem Header="_Close" Command="Close" InputGestureText="Ctrl+Q"/>
                 </local:MenuItemDark>
-                <local:MenuItemDark x:Name="RootScriptItem" Header="_Scripts" SubmenuOpened="RootMenuItem_SubmenuOpened">
+                <!-- NEW - Decompiling Scripts Tab -->
+                <local:MenuItemDark x:Name="DecompScriptItem" Header="_Decompiling Scripts" SubmenuOpened="Decomp_SubmenuOpened" RenderTransformOrigin="0.496,0.627">
                     <MenuItem Header="(...loading...)" IsEnabled="False"/>
                 </local:MenuItemDark>
+                <!-- Normal Scripts -->
+                <local:MenuItemDark x:Name="RootScriptItem" Header="_Other Scripts" SubmenuOpened="RootMenuItem_SubmenuOpened">
+                    <MenuItem Header="(...loading...)" IsEnabled="False"/>
+                </local:MenuItemDark>
+                
                 <local:MenuItemDark Header="_Find">
                     <MenuItem.Resources>
                         <Style TargetType="MenuItem">
