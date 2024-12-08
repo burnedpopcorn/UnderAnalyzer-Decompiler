@@ -950,7 +950,8 @@ namespace UndertaleModTool
             dialog.Owner = this;
 
             DisposeGameData();
-            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them");
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", 
+                "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them");
             OpenInTab(Highlighted);
 
             GameSpecificResolver.BaseDirectory = ExePath;
@@ -1079,6 +1080,11 @@ namespace UndertaleModTool
             // https://docs.microsoft.com/en-us/dotnet/api/system.runtime.gcsettings.largeobjectheapcompactionmode?view=net-6.0
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
+
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
+                "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor);
+            OpenInTab(Highlighted);
+
         }
 
         private async Task SaveFile(string filename, bool suppressDebug = false)
@@ -1599,11 +1605,22 @@ namespace UndertaleModTool
             if (e.NewValue is TreeViewItem)
             {
                 string item = (e.NewValue as TreeViewItem).Header?.ToString();
-
+                /*
                 if (item == "Data")
                 {
                     Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", Data != null ? "Go to the Decompiling Scripts Tab to start Decompiling some Games\n or Double click on the items on the left to individually view them" : "Open data.win file to get started");
                     return;
+                }
+                */
+                if (item == "Data")
+                {
+                    if (Data != null) {
+                        Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor);
+                        return;
+                    } else {
+                        Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Open data.win file to get started");
+                        return;
+                    }
                 }
 
                 if (Data == null)
@@ -3417,8 +3434,14 @@ result in loss of work.");
 
                     if (addDefaultTab)
                     {
-                        OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
-                                                      "Open a data.win file to get started, then go to the Decompiling Scripts Tab to Decompile some Games\n or double click on the items on the left to individually view them"));
+                        if (Data != null) {
+                            OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
+                                                      "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor));
+                        } else {
+                            OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
+                                                      "Open a data.win file to get started, then go to the Decompiling Scripts Tab to Decompile some Games\nor double click on the items on the left to individually view them"));
+                        }
+
                         CurrentTab = Tabs[CurrentTabIndex];
 
                         UpdateObjectLabel(CurrentTab.CurrentObject);
