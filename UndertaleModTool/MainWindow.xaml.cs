@@ -2895,7 +2895,7 @@ namespace UndertaleModTool
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\nUTMT/UnderAnalyzer Decompiler by burnedpopcorn180\nVersion " + Version, "About");
+            this.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\n\nModified UnderAnalyzer Decompiler by burnedpopcorn180", "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs
