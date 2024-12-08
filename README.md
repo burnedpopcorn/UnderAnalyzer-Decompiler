@@ -1,4 +1,4 @@
-# UTMT/UnderAnalyzer Decompiler
+# UnderAnalyzer Decompiler
 THis is a Fork of the UnderAnalyzer Branch of UnderTaleModTool, that aims to bring the absolute Best Decompiling Expeirence for GameMaker Studio Games
 
 And I mean TRUE Decompiling (and NOT just patching a game)
@@ -28,7 +28,7 @@ Changes:
 
 # Included Scripts
 
-All Scripts from UTMT/UnderAnalyzer are also included, but the new Scripts are:
+All Scripts from UTMT are also included, but the new Scripts are:
 
 - GameMaker Studio 2 Decompiler Script
 - GameMaker Studio 1 Decompiler Script
