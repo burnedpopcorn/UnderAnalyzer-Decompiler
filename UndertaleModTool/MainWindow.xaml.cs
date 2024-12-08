@@ -229,7 +229,7 @@ namespace UndertaleModTool
             Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Here you can Decompile ANY GameMaker Game to a GameMaker Project\nOpen a data.win file to get started, then check out the included Scripts!");
             OpenInTab(Highlighted);
 
-            TitleMain = "UnderAnalyzer Decompiler | UTMT v0.6.0.0";
+            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.6.0.0";
 
             // accidently got rid of his name, IM SORRY
             //TitleMain = "UndertaleModTool v:" + Version;
@@ -649,7 +649,7 @@ namespace UndertaleModTool
                                           ? "Tile sets"
                                           : "Backgrounds & Tile sets";
 
-            Highlighted = new DescriptionView("Welcome to UndertaleModTool!", "New file created, have fun making a game out of nothing\nI TOLD YOU to open a data.win, not create a new file! :P");
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "New file created, have fun making a game out of nothing\nI TOLD YOU to open a data.win, not create a new file! :P");
             OpenInTab(Highlighted);
 
             CanSave = true;
@@ -858,7 +858,7 @@ namespace UndertaleModTool
             Tabs.Clear();
             CurrentTab = null;
 
-            OpenInTab(new DescriptionView("Welcome to UndertaleModTool!",
+            OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
                                           "Open data.win file to get started, then double click on the items on the left to view them"));
             CurrentTab = Tabs[CurrentTabIndex];
 
@@ -935,7 +935,7 @@ namespace UndertaleModTool
             dialog.Owner = this;
 
             DisposeGameData();
-            Highlighted = new DescriptionView("Welcome to UndertaleModTool!", "Double click on the items on the left to view them!");
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them");
             OpenInTab(Highlighted);
 
             GameSpecificResolver.BaseDirectory = ExePath;
@@ -1015,7 +1015,7 @@ namespace UndertaleModTool
                         }
                         if (data.IsYYC())
                         {
-                            this.ShowWarning("This game uses YYC (YoYo Compiler), which means the code is embedded into the game executable. This configuration is currently not fully supported; continue at your own risk.", "YYC");
+                            this.ShowWarning("This game uses YYC (YoYo Compiler), which means the code is embedded into the game executable. This configuration is NOT Supported, and you cannot Decompile any Code with this", "YYC");
                         }
                         if (data.GeneralInfo != null)
                         {
@@ -1587,7 +1587,7 @@ namespace UndertaleModTool
 
                 if (item == "Data")
                 {
-                    Highlighted = new DescriptionView("Welcome to UndertaleModTool!", Data != null ? "Double click on the items on the left to view them" : "Open data.win file to get started");
+                    Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", Data != null ? "Go to the Decompiling Scripts Tab to start Decompiling some Games\n or Double click on the items on the left to individually view them" : "Open data.win file to get started");
                     return;
                 }
 
@@ -3402,8 +3402,8 @@ result in loss of work.");
 
                     if (addDefaultTab)
                     {
-                        OpenInTab(new DescriptionView("Welcome to UndertaleModTool!",
-                                                      "Open a data.win file to get started, then double click on the items on the left to view them"));
+                        OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
+                                                      "Open a data.win file to get started, then go to the Decompiling Scripts Tab to Decompile some Games\n or double click on the items on the left to individually view them"));
                         CurrentTab = Tabs[CurrentTabIndex];
 
                         UpdateObjectLabel(CurrentTab.CurrentObject);
