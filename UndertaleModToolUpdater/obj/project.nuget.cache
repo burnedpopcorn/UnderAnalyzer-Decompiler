@@ -4,12 +4,12 @@
   "success": true,
   "projectFilePath": "C:\\Users\\juanm\\Documents\\GitHub\\UTMT-UnderAnalyzer-Decompiler\\UndertaleModToolUpdater\\UndertaleModToolUpdater.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\6.0.36\\microsoft.netcore.app.runtime.win-x86.6.0.36.nupkg.sha512",
-    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\6.0.36\\microsoft.aspnetcore.app.runtime.win-x86.6.0.36.nupkg.sha512",
-    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\6.0.36\\microsoft.aspnetcore.app.runtime.win-x64.6.0.36.nupkg.sha512",
-    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\6.0.36\\microsoft.windowsdesktop.app.runtime.win-x64.6.0.36.nupkg.sha512",
     "C:\\Users\\juanm\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\6.0.36\\microsoft.netcore.app.runtime.win-x64.6.0.36.nupkg.sha512",
-    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\6.0.36\\microsoft.windowsdesktop.app.runtime.win-x86.6.0.36.nupkg.sha512"
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\6.0.36\\microsoft.netcore.app.runtime.win-x86.6.0.36.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\6.0.36\\microsoft.windowsdesktop.app.runtime.win-x64.6.0.36.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\6.0.36\\microsoft.windowsdesktop.app.runtime.win-x86.6.0.36.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\6.0.36\\microsoft.aspnetcore.app.runtime.win-x64.6.0.36.nupkg.sha512",
+    "C:\\Users\\juanm\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\6.0.36\\microsoft.aspnetcore.app.runtime.win-x86.6.0.36.nupkg.sha512"
   ],
   "logs": []
 }

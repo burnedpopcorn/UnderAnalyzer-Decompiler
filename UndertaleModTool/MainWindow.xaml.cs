@@ -778,44 +778,59 @@ namespace UndertaleModTool
                 e.Cancel = true;
 
                 bool save = false;
-
+                
+                // If it should warn you before leaving
                 if (SettingsWindow.WarnOnClose)
                 {
-                    if (this.ShowQuestion("Are you sure you want to quit?") == MessageBoxResult.Yes)
+                    if (this.ShowQuestion("Are you sure you want to Quit?") == MessageBoxResult.Yes)
                     {
-                        if (this.ShowQuestion("Save changes first?") == MessageBoxResult.Yes)
-                        {
-                            if (scriptDialog is not null)
-                            {
-                                if (this.ShowQuestion("Script still runs. Save anyway?\nIt can corrupt the data file that you'll save.") == MessageBoxResult.Yes)
-                                    save = true;
-                            }
-                            else
-                                save = true;
-
-                            if (save)
-                            {
-                                SaveResult saveRes = await SaveCodeChanges();
-
-                                if (saveRes == SaveResult.NotSaved)
-                                    _ = DoSaveDialog();
-                                else if (saveRes == SaveResult.Error)
-                                {
-                                    this.ShowError("The changes in code editor weren't saved due to some error in \"SaveCodeChanges()\".");
-                                    return;
-                                }
-                            }
-                        }
-                        else
-                            RevertProfile();
-
+                        // Dont Save data.win (because why would you) and leave
+                        RevertProfile();
                         DestroyUMTLastEdited();
                     }
                     else
-                        return;
+                        return; // Go back and don't leave
                 }
+                    /*
+                    if (SettingsWindow.WarnOnClose)
+                    {
+                        if (this.ShowQuestion("Are you sure you want to quit?") == MessageBoxResult.Yes)
+                        {
+                            if (this.ShowQuestion("Save changes first?") == MessageBoxResult.Yes)
+                            {
+                                if (scriptDialog is not null)
+                                {
+                                    if (this.ShowQuestion("Script still runs. Save anyway?\nIt can corrupt the data file that you'll save.") == MessageBoxResult.Yes)
+                                        save = true;
+                                }
+                                else
+                                    save = true;
+
+                                if (save)
+                                {
+                                    SaveResult saveRes = await SaveCodeChanges();
+
+                                    if (saveRes == SaveResult.NotSaved)
+                                        _ = DoSaveDialog();
+                                    else if (saveRes == SaveResult.Error)
+                                    {
+                                        this.ShowError("The changes in code editor weren't saved due to some error in \"SaveCodeChanges()\".");
+                                        return;
+                                    }
+                                }
+                            }
+                            else
+                                RevertProfile();
+
+                            DestroyUMTLastEdited();
+                        }
+                        else
+                            return;
+                    }
+                    */
                 else
                 {
+                    // If it won't warn you, just leave
                     RevertProfile();
                     DestroyUMTLastEdited();
                 }
