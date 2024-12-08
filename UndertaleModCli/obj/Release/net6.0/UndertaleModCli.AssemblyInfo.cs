@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UndertaleModCli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+157b8e462a5bca1aad016004dac001575f28551d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e54675852b5b948f0a953ec2c997b6724372171b")]
 [assembly: System.Reflection.AssemblyProductAttribute("UndertaleModCli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UndertaleModCli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
