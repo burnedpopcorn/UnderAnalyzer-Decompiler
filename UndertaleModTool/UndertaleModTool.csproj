@@ -167,13 +167,13 @@
     </ItemGroup>
     <ItemGroup>
       <None Update="Decompiling_Scripts\--- GMS1 Decompiling ---\BetterExportAssetOrder.csx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Decompiling_Scripts\--- GMS1 Decompiling ---\Export2GMS1FIXED_UA.csx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Decompiling_Scripts\--- GMS2 Decompiling ---\Ultimate_GMS2_Decompiler_UA.csx">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Properties\Settings.settings">
         <Generator>SettingsSingleFileGenerator</Generator>
