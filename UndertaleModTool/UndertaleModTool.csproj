@@ -19,6 +19,7 @@
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
         <!-- Suppress all missing XML comment warnings -->
         <NoWarn>1591</NoWarn>
+        <BaseOutputPath>C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModTool\Compiled_Output</BaseOutputPath>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="Corrections\README.txt" />

@@ -1,10 +1,15 @@
 ﻿/*
-	GMS2_Decompiler_FIXED_UA
+	Ultimate_GMS2_Decompiler_UA
 	
 	Original Decompiler by loypoll
 	Fixed and Improved by burnedpopcorn180
 	
-	Improvements include:
+	Ultimate_GMS2_Decompiler_UA Improvements include:
+	  - Added Feature to automatically add Enum Declarations into the Project
+	  - Added Asset_Order Note, which included a List of all Asset IDs and their respective Asset
+		  to provide the ability to more easily make a perfect Decompilation of a given game
+	
+	GMS2_Decompiler_FIXED_UA Improvements include:
 	  - Start-up Greetings and Credits Pop-Up
 	  - Sprites and TileSets that have no associated image attached to them no longer 
 			throw an exception, and will still allow decompilation to finish
@@ -34,9 +39,14 @@ using System.Xml.Serialization;
 using Underanalyzer.Decompiler;
 using Underanalyzer;
 using UndertaleModTool;
+// For Enum Extraction
+using Underanalyzer.Decompiler.AST;
+using Underanalyzer.Decompiler.GameSpecific;
+using Underanalyzer.Decompiler.ControlFlow;
+using System.Collections.Generic;
 
 // PROMOTION!
-ScriptMessage("Welcome to the GMS2 Decompiler FIXED!\n\nOriginally made by loypoll\nFixed and Improved by burnedpopcorn180\n\n---UnderAnalyzer Version---");
+ScriptMessage("Welcome to Ultimate_GMS2_Decompiler_UA!\n\nOriginally made by loypoll\nFixed and Improved by burnedpopcorn180\n\n---UnderAnalyzer Version---");
 
 // configuration
 var ignore = new List<string>() // ignore certain assets from attempting to decompile
@@ -1169,7 +1179,7 @@ void DumpOptions()
 	}
 
 	// jumpscare the user with funny image
-	byte[] custom_project_image = System.Convert.FromBase64String("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pE3detKYPUSXbcxkalBtntt83i4k7qebApW/9NJLzLbT9tW5Va0LjKaJpj0zkBmlcUUsrIoKUac9PuCCOUas5yc+mdbC3tRE5qPCoupa63LOHSdy14LE5S9TN2nd1Opu1CKXyh+SY+kgi6k2RU/RVffsDAbl24xl40j0sbKmcZ02Z3qhpIteBWzt6C6HWeRgMKQWxiLLNK95HvbClJwNHPHgVtuIq/zpp59O24/AbcxhZGHUrfuf3nAwGDGBMafhNVS4IMU7N81nZw+5ImPYbLpCxdy8niB/I0sn+oMKLOaBSFHdnIbEOakUsMQhveYHPiKonKPYePSSEP06tQp79STx7t27j919jEkiF4H79+/fu3fP7sG9wAqKN0z4hsMhduNkSlc+DpBpHX+QNJcclwOq3LlBrWNYWRJN6xmwvqQ14E5U91dynPyiOSdanE0fnj2wO6vcpPKjFUre0Txbmds0mopxe2qfiSsIsonL8BZQ3VR+SIk76+q5FWRN1sjlySeffPOb34zQUemf3njjtf97DeNagc1d5UpLYeTO/W4SeqZ2E7siehYhjsXBVe7ciNaRd/qgGhiIPqXQt1nscZaVkD0XuitC4mfjsyyW2x7G3uly840LUDuxiT7PZpPMoRvxVnVuIHV/kEBZezS5+yR5JDar57bAuET0J554AukiVcL566//aTwe287M7EuU4/YqRnTfxw655zgTviJHUrlzVK0jTRlOt536RMIDMy5g+uJfxLVS2FQq5MbKHwejemXZLhwwHI3wF16jPr394x//eP/BfYss7Nxodvdj8l1Wyt22o9aj4kctEcSU4XBAhCZNAAFT6o5+pssub7nIlZLujzLbK3JUlTtH0jrBQc/57LMIm39biLA3xXh92r+0OUI/OztD69kNT7InRUaj07e85S2PP/YYm0j8tddeu/fGG9j9Mptvc+juWtendEIHTOxTN7svKY7ce7ueA8WBkPYyrI9lOLgBlTvH0Dqd595mOBwx92DSwMxEs2R0rBCBA/T9REursOYtugEtfiiRDMu8hXB+enpK+sGDB2+8cY9bVduz2/JFfzlH9BSsH68UYOqLEt+HjWM5lvluTOXOwbVOKEGj/sCKuxim1y50N7s+y5TGWbSpm525f8zskJkMy/mAKYC0fbWOGTy7UsXtrDhrd+FgK+4kXw4Pfn355Zd1mb9B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");
+	byte[] custom_project_image = System.Convert.FromBase64String("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");
 	File.WriteAllBytes(rootPath + "options/main/template_icon.png", custom_project_image);
 	exportMainOptions.option_template_icon = "template_icon.png";
 
@@ -1772,7 +1782,15 @@ void DumpRoom(UndertaleRoom room)
 									imageSpeed = i.ImageSpeed,
 									imageIndex = i.ImageIndex
 								};
-								string objname = i.ObjectDefinition.Name.Content;
+								
+								// string objname = i.ObjectDefinition.Name.Content;
+								
+								string objname = "";
+								try {
+								objname = i.ObjectDefinition.Name.Content;
+								} catch {
+								errorList.Add($"{exportedRoom.name} - Empty Object Instance (inst_{i.InstanceID}) was found in Room");
+								}
 								
 								// dump creation code
 								string code = "";
@@ -4207,7 +4225,7 @@ var tooltip = new ToolTip();
 Form FORM = new Form()
 {
 	AutoSize = true,
-	Text = "Decompiler",
+	Text = "Ultimate_GMS2_Decompiler_UA",
 	MaximizeBox = false,
 	MinimizeBox = false,
 	StartPosition = FormStartPosition.CenterScreen,
@@ -4215,7 +4233,7 @@ Form FORM = new Form()
 };
 FORM.Controls.Add(new Label()
 {
-	Text = "Warning: Decompiling with UTMT is an unreliable process.\nSometimes specific code snippets enter an infinite loop of decompilation and freeze the script until you kill the task.\nAnd since you're decompiling a lot of code at once, it has way more chances of happening, so proceed at your own risk.",
+	Text = "Warning: Decompiling any Game is an unreliable process.\nSometimes specific code snippets enter an infinite loop of decompilation and freeze the script until you kill the task.\nAnd since you're decompiling a lot of code at once, it has way more chances of happening, so proceed at your own risk.",
 	AutoSize = true,
 	Location = new System.Drawing.Point(8, 8),
 });
@@ -5031,7 +5049,7 @@ if (!GMS1)
 		// add warning note
 		var note = new GMNotes()
 		{
-			name = "readme",
+			name = "README",
 			parent = new IdReference()
 			{
 				name = "Notes",
@@ -5041,21 +5059,47 @@ if (!GMS1)
 		string notePath = $"notes/{note.name}/";
 		Directory.CreateDirectory(rootPath + notePath);
 
-		var str = @"As a warning, neither this decompiler nor even UTMT can be perfect.
+		var str = @"Project Decompilied by Ultimate_GMS2_Decompiler_UA.csx
+	Improved by burnedpopcorn180
+		Original Version by loypoll
+
+As a warning, neither this Decompiler nor UnderAnalyzer are perfect.
 There's likely gonna be some stuff you're gonna have to fix on your own.
 
-Most notably asset indices. GameMaker stores assets referenced in the code as just numbers,
-and the decompiler would have to GUESS which variables are for assets and which aren't.
+Assets:
 
-If the game runner had an icon, you should use Resource Hacker to get it.
-The script isn't exactly good at that either.
+	Most notably Asset Indices. GameMaker, when compiling, uses Asset IDs (Numbers) to reference Assets
+	but when making a decompilation, this means that adding any resource would basically randomize those Asset IDs
+
+	so if, for example, you add a sprite to the decompilation, Asset IDs would shift +1, and the game would start displaying
+	random sprites, instead of the intended sprites
+
+	This isn't something this Script can (reliability) fix, as UnderAnalyzer would have to Guess what are Asset IDs and what are just Numbers
+	To Fix this, reference the Included 'Asset_Order' Note, as that provides a List of Asset IDs and their respective Asset
+
+Enums:
+
+	Enum Declarations have been Extracted for you in the 'Enum_Declarations' Script
+	So you don't really have to do anything with Enums
+	But you should at least try to move them in a suitable place
+	Because not doing that is pretty lazy
+	
+Project Settings:
+
+	The Original Project Settings should have been Extracted and Applied
+	
+	However, if the Game Executable had an Icon, you should use Resource Hacker to get it.
+	This script isn't exactly good at Extracting a Quality Icon.
+	
+	Or you could just Extract the Game Executable with 7zip, and search for the Icons there
 ";
 
 		if (Directory.Exists($"{dataPath}code"))
 			str += $"\nAny .gml files that were in the \"code\" folder ({dataPath}\\code) were used.\nIf you don't want this, rename the folder before re-running the script.";
 		else if (Data.IsVersionAtLeast(2, 3))
-			str += "\nAlso since this game is made in GM2.3+, some of the code probably failed to decompile.\nI can't do anything about this, it's UTMT's fault. Just fix it yourself.\n";
-
+			str += "\nAlso since this game is made in GM2.3+, some Code might have Failed to Decompile.\nIt's the fault of UnderAnalyzer. Just fix it yourself, or maybe try UTMT and see if that can Decompile that specific script\n";
+		
+		// Add Custom Note to the Project
 		File.WriteAllText(rootPath + $"{notePath}{note.name}.txt", str);
 		doJson(note, $"{notePath}/{note.name}.yy");
 		AddResource(new IdReference
@@ -5063,6 +5107,46 @@ The script isn't exactly good at that either.
 			name = note.name,
 			path = $"{notePath}{note.name}.yy"
 		});
+		
+		// ----------------------------------------------------------------------------------
+		// Adding Enum Declarations
+		var ENUMnote = new GMScript()
+		{
+			name = "Enum_Declarations",
+			parent = new IdReference()
+			{
+				name = "Scripts",
+				path = "folders/Scripts.yy"
+			}
+		};
+		string scriptPath = $"scripts/{ENUMnote.name}/";
+		Directory.CreateDirectory(rootPath + scriptPath);
+		doJson(ENUMnote, $"{scriptPath}/{ENUMnote.name}.yy");
+		AddResource(new IdReference
+		{
+			name = ENUMnote.name,
+			path = $"{scriptPath}{ENUMnote.name}.yy"
+		});
+		// ----------------------------------------------------------------------------------
+		// Adding Assets Order Note
+		var assetnote = new GMNotes()
+		{
+			name = "Asset_Order",
+			parent = new IdReference()
+			{
+				name = "Notes",
+				path = "folders/Notes.yy"
+			}
+		};
+		string assetnotePath = $"notes/{assetnote.name}/";
+		Directory.CreateDirectory(rootPath + assetnotePath);
+		doJson(assetnote, $"{assetnotePath}/{assetnote.name}.yy");
+		AddResource(new IdReference
+		{
+			name = assetnote.name,
+			path = $"{assetnotePath}{assetnote.name}.yy"
+		});
+		// ----------------------------------------------------------------------------------
 	}
 
 	// export final yyp
@@ -5095,14 +5179,529 @@ await StopUpdater();
 worker.Cleanup();
 HideProgressBar();
 
-// done
+// -------------------------------------------------------------------------------------------------------------------------------------------------------
+// Asset Order NOTE
+if (_PJCT.Checked && SCPT) {
+string outputPath = rootPath + "notes/Asset_Order/Asset_Order.txt";
+using (StreamWriter writer = new StreamWriter(outputPath))
+{
+	writer.WriteLine("Generated by Ultimate_GMS2_Decompiler_UA.csx");
+	writer.WriteLine("");
+	writer.WriteLine("This is a List of All Asset IDs");
+	writer.WriteLine("as the Decompiler often has to use an Asset's ID");
+	writer.WriteLine("because it can only GUESS what is an Asset and what is just a Number");
+	writer.WriteLine("");
+	writer.WriteLine("Assets Found:");
+	writer.WriteLine("");
+	
+	writer.WriteLine("Sprites: " + Data.Sprites.Count);
+	writer.WriteLine("Objects: " + Data.GameObjects.Count);
+	writer.WriteLine("Rooms: " + Data.Rooms.Count);
+	writer.WriteLine("Sounds: " + Data.Sounds.Count);
+	writer.WriteLine("Backgrounds: " + Data.Backgrounds.Count);
+	writer.WriteLine("Shaders: " + Data.Shaders.Count);
+	writer.WriteLine("Fonts: " + Data.Fonts.Count);
+	writer.WriteLine("Paths: " + Data.Paths.Count);
+	writer.WriteLine("Timelines: " + Data.Timelines.Count);
+	writer.WriteLine("Scripts: " + Data.Scripts.Count);
+	writer.WriteLine("Extensions: " + Data.Extensions.Count);
+	writer.WriteLine("");
+
+    // Write Sprites.
+    writer.WriteLine("--------------------- SPRITES ---------------------");
+    if (Data.Sprites.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (var sprite in Data.Sprites) {
+            writer.WriteLine(resourcecount + " - " + sprite.Name.Content);
+			++resourcecount;
+		}
+    }
+    else if (Data.Sprites.Count == 0) {
+		writer.WriteLine("No Sprites could be Found");
+	}
+	// Write Objects.
+    writer.WriteLine("--------------------- OBJECTS ---------------------");
+    if (Data.GameObjects.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertaleGameObject gameObject in Data.GameObjects) {
+            writer.WriteLine(resourcecount + " - " + gameObject.Name.Content);
+			++resourcecount;
+		}
+    }
+    else if (Data.GameObjects.Count == 0) {
+		writer.WriteLine("No Objects could be Found");
+	}
+	// Write Rooms.
+    writer.WriteLine("---------------------- ROOMS ----------------------");
+    if (Data.Rooms.Count > 0)
+    {
+	var resourcecount = 0;
+        foreach (UndertaleRoom room in Data.Rooms) {
+            writer.WriteLine(resourcecount + " - " + room.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Rooms.Count == 0) {
+		writer.WriteLine("No Rooms could be Found");
+	}
+    // Write Sounds.
+    writer.WriteLine("--------------------- SOUNDS ---------------------");
+    if (Data.Sounds.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertaleSound sound in Data.Sounds) {
+            writer.WriteLine(resourcecount + " - " + sound.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Sounds.Count == 0) {
+		writer.WriteLine("No Sounds could be Found");
+	}
+    // Write Backgrounds.
+    writer.WriteLine("------------------- BACKGROUNDS -------------------");
+    if (Data.Backgrounds.Count > 0)
+    {
+	var resourcecount = 0;
+        foreach (var background in Data.Backgrounds) {
+            writer.WriteLine(resourcecount + " - " + background.Name.Content);
+			++resourcecount;
+		}
+    }
+    else if (Data.Backgrounds.Count == 0) {
+		writer.WriteLine("No Backgrounds could be Found");
+	}
+	// Write Shaders.
+    writer.WriteLine("--------------------- SHADERS ---------------------");
+    if (Data.Shaders.Count > 0)
+    {
+	var resourcecount = 0;
+        foreach (UndertaleShader shader in Data.Shaders) {
+            writer.WriteLine(resourcecount + " - " + shader.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Shaders.Count == 0) {
+		writer.WriteLine("No Shaders could be Found");
+	}
+	// Write Fonts.
+    writer.WriteLine("---------------------- FONTS ----------------------");
+    if (Data.Fonts.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertaleFont font in Data.Fonts) {
+            writer.WriteLine(resourcecount + " - " + font.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Fonts.Count == 0) {
+		writer.WriteLine("No Fonts could be Found");
+	}
+    // Write Paths.
+    writer.WriteLine("---------------------- PATHS ----------------------");
+    if (Data.Paths.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertalePath path in Data.Paths) {
+            writer.WriteLine(resourcecount + " - " + path.Name.Content);
+			++resourcecount;
+		}
+    }
+    else if (Data.Paths.Count == 0) {
+		writer.WriteLine("No Paths could be Found");
+	}
+	// Write Timelines.
+    writer.WriteLine("-------------------- TIMELINES --------------------");
+    if (Data.Timelines.Count > 0)
+    {
+	var resourcecount = 0;
+        foreach (UndertaleTimeline timeline in Data.Timelines) {
+            writer.WriteLine(resourcecount + " - " + timeline.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Timelines.Count == 0) {
+		writer.WriteLine("No Timelines could be Found");
+	}
+    // Write Scripts.
+    writer.WriteLine("--------------------- SCRIPTS ---------------------");
+    if (Data.Scripts.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertaleScript script in Data.Scripts) {
+            writer.WriteLine(resourcecount + " - " + script.Name.Content);
+			++resourcecount;
+		}
+    }
+    else if (Data.Scripts.Count == 0) {
+		writer.WriteLine("No Scripts could be Found");
+	}
+    // Write Extensions.
+    writer.WriteLine("-------------------- EXTENSIONS --------------------");
+    if (Data.Extensions.Count > 0) 
+    {
+	var resourcecount = 0;
+        foreach (UndertaleExtension extension in Data.Extensions) {
+            writer.WriteLine(resourcecount + " - " + extension.Name.Content);
+			++resourcecount;
+		}
+    }
+	else if (Data.Extensions.Count == 0) {
+		writer.WriteLine("No Extensions could be Found");
+	}
+}
+}
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------
+// Enum Declarations Script gml File and File Path
+string codePath = "";
+if (_PJCT.Checked && SCPT) {
+codePath = rootPath + "scripts/Enum_Declarations/Enum_Declarations.gml";
+}
+
+// Setup UA Settings
+DecompileSettings dSettings = new DecompileSettings();
+dSettings.MacroDeclarationsAtTop = true;
+dSettings.CreateEnumDeclarations = true;
+
+// Unknown Enum stuff
+string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
+dSettings.UnknownEnumName = enumName;
+dSettings.UnknownEnumValuePattern = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
+
+// bools that are used when adding other enums to list
+bool VW_was_added = false;
+bool BG_was_added = false;
+// new ones
+bool YYM_was_added = false;
+bool YYMKIND_was_added = false;
+
+// For the Decompiler
+HashSet<long> values = new HashSet<long>();
+List<UndertaleCode> toDump = new();
+foreach (UndertaleCode code in Data.Code) {
+	if (code.ParentEntry is null) {
+		toDump.Add(code);
+	}
+}
+
+// Start Progress Bar
+SetProgressBar(null, "Searching for Enum Declarations in all Scripts...", 0, toDump.Count);
+StartProgressBarUpdater();
+
+// Call Dump Unknown Enum Declaration Function
+if (_PJCT.Checked && SCPT) {
+await DumpEnums();
+}
+
+// Stop Progress Bar once Previous Function finishes
+await StopProgressBarUpdater();
+HideProgressBar();
+
+// https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
+List<long> sorted = new List<long>(values);
+sorted.Sort((a, b) => Math.Sign(a - b));
+
+string code = "";
+
+// Adding Unknown Enums to the List
+if (_PJCT.Checked && SCPT) {
+code += @"// Generated by Ultimate_GMS2_Decompiler_UA.csx
+
+// Please remove this text, and move the Enum Declarations to somewhere that makes sense
+
+enum " + enumName + " {\n";
+
+long expectedValue = 0;
+foreach (long val in sorted) {
+	string name = string.Format(dSettings.UnknownEnumValuePattern, val.ToString().Replace("-", "m"));
+	if (val == expectedValue) {
+		code += "    " + name + ",\n";
+		if (expectedValue != long.MaxValue) {
+			expectedValue++;
+		}
+	} else {
+		code += "    " + name + " = " + val.ToString() + ",\n";
+		if (expectedValue != long.MaxValue) {
+			expectedValue = val + 1;
+		} else {
+			expectedValue = val;
+		}
+	}
+}
+code += "};";
+}
+
+// Check for other Enums like e__VW and e__BG enums
+if (_PJCT.Checked && SCPT) {
+await Check_Other_Enums();
+}
+
+// Write Unknown Enums to output file
+if (_PJCT.Checked && SCPT) {
+File.WriteAllText(codePath, code);
+}
+
+// For Progress Bar, and to allow Decompiler to do its job and find Unknown Enums
+async Task DumpEnums()
+{
+	if (Data.GlobalFunctions is null) {
+		SetProgressBar(null, "Building the cache of all global functions...", 0, 0);
+		await Task.Run(() => GlobalDecompileContext.BuildGlobalFunctionCache(Data));
+		SetProgressBar(null, "Code Entries", 0, toDump.Count);
+	}
+	await Task.Run(() => Parallel.ForEach(toDump, DumpEnums));
+}
+
+// Check all Code Entries for Unknown Enums
+void DumpEnums(UndertaleCode code)
+{
+    if (code is not null)
+    {
+        try
+        {
+			if (code != null) {
+				var context = new DecompileContext(decompileContext, code, dSettings);
+				BlockNode rootBlock = (BlockNode)context.DecompileToAST();
+				foreach (IStatementNode stmt in rootBlock.Children) {
+					if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName) {
+						foreach (GMEnumValue val in decl.Enum.Values) {
+							values.Add(val.Value);
+						}
+					}
+				}
+			}
+        }
+        catch (Exception e)
+        {}
+    }
+    IncrementProgressParallel();
+}
+
+// Custom shit, custom shit all the way down
+
+// Add e__VW Enum Declaration to List Function
+void Add_e__VW_ENUMS() {
+// if statement to only add it to the list ONCE
+	if (VW_was_added == false) {
+		code += @"
+
+// This one normally goes in __init_view.gml (GMS1 Compatiablity Script)
+enum e__VW {
+    XView,
+    YView,
+    WView,
+    HView,
+    Angle,
+    HBorder,
+    VBorder,
+    HSpeed,
+    VSpeed,
+    Object,
+    Visible,
+    XPort,
+    YPort,
+    WPort,
+    HPort,
+    Camera,
+    SurfaceID,
+};";
+		// Mark as Added when added, so it wont add it again
+		VW_was_added = true;
+	}
+}
+// Add e__BG Enum Declaration to List Function
+void Add_e__BG_ENUMS() {
+// if statement to only add it to the list ONCE
+	if (BG_was_added == false) {
+		code += @"
+
+// This one normally goes in __init_background.gml (GMS1 Compatiablity Script)
+enum e__BG {
+    Visible,
+    Foreground,
+    Index,
+    X,
+    Y,
+    Width,
+    Height,
+    HTiled,
+    VTiled,
+    XScale,
+    YScale,
+    HSpeed,
+    VSpeed,
+    Blend,
+    Alpha,
+};";
+		// Mark as Added when added, so it wont add it again
+		BG_was_added = true;
+	}
+}
+
+// Add e__YYM Enum Declaration to List Function
+void Add_e__YYM_ENUMS() {
+// if statement to only add it to the list ONCE
+	if (YYM_was_added == false) {
+		code += @"
+
+// This one normally goes in __init_d3d.gml (GMS1 Compatiablity Script)
+enum e__YYM {
+    PointB,
+    LineB,
+    TriB,
+    PointUVB,
+    LineUVB,
+    TriUVB,
+    PointVB,
+    LineVB,
+    TriVB,
+    Texture,
+    Colour,
+    NumVerts,
+    PrimKind,
+    NumPointCols,
+    NumLineCols,
+    NumTriCols,
+    PointCols,
+    LineCols,
+    TriCols,
+
+    // these are used when building model primitives
+    V1X,
+    V1Y,
+    V1Z,
+    V1NX,
+    V1NY,
+    V1NZ,
+    V1C,
+    V1U,
+    V1V,
+	
+    V2X,
+    V2Y,
+    V2Z,
+    V2NX,
+    V2NY,
+    V2NZ,
+    V2C,
+    V2U,
+    V2V,
+};";
+		// Mark as Added when added, so it wont add it again
+		YYM_was_added = true;
+	}
+}
+
+// Add e__YYMKIND Enum Declaration to List Function
+void Add_e__YYMKIND_ENUMS() {
+// if statement to only add it to the list ONCE
+	if (YYM_was_added == false) {
+		code += @"
+
+// This one normally goes in __init_d3d.gml (GMS1 Compatiablity Script)
+enum e__YYMKIND {
+    PRIMITIVE_BEGIN,
+    PRIMITIVE_END,
+    VERTEX,
+    VERTEX_COLOR,
+    VERTEX_TEX,
+    VERTEX_TEX_COLOR,
+    VERTEX_N,
+    VERTEX_N_COLOR,
+    VERTEX_N_TEX,
+    VERTEX_N_TEX_COLOR,
+    SHAPE_BLOCK,
+    SHAPE_CYLINDER,
+    SHAPE_CONE,
+    SHAPE_ELLIPSOID,
+    SHAPE_WALL,
+    SHAPE_FLOOR,
+};";
+		// Mark as Added when added, so it wont add it again
+		YYMKIND_was_added = true;
+	}
+}
+
+// Below is Search Function from Search.csx
+// so thanks to whoever made it
+
+// Allow void Check_Other_Enums to do its job
+async Task Check_Other_Enums() {
+	await Task.Run(() => Parallel.ForEach(Data.Code, Check_Other_Enums));
+}
+
+// Check if the Other Enum Declarations are in the Project, duh
+void Check_Other_Enums(UndertaleCode code)
+{
+	// try + catch, because why not (plus it forces me to)
+    try
+    {
+        if (code is not null && code.ParentEntry is null)
+        {
+            var lineNumber = 1;
+			
+			// Decompiled COde as Text
+            StringReader decompiledText = new(code != null 
+                ? new Underanalyzer.Decompiler.DecompileContext(decompileContext, code, dSettings).DecompileToString() 
+                : "");
+            bool nameWritten = false;
+            string lineInt;
+			
+			// Check for these Enum Declarations in the Project
+			string e__VW_Check = "enum e__VW";
+			string e__BG_Check = "enum e__BG";
+			string e__YYM_Check = "e__YYM";
+			string e__YYMKIND_Check = "enum e__YYMKIND";
+			
+			// if line is not null, continue searching
+            while ((lineInt = decompiledText.ReadLine()) is not null)
+            {
+                if (lineInt == string.Empty)
+                {
+					// if line is empty, search next line
+                    lineNumber += 1;
+                    continue;
+                }
+				
+				if (lineInt.Contains(e__VW_Check)) {
+					// If an Instance of e__VW Enum was found, add to list
+					Add_e__VW_ENUMS();
+				}
+				
+				if (lineInt.Contains(e__BG_Check)) {
+					// If an Instance of e__BG Enum was found, add to list
+					Add_e__BG_ENUMS();
+				}
+
+				if (lineInt.Contains(e__YYM_Check)) {
+					// If an Instance of e__YYM Enum was found, add to list
+					Add_e__YYM_ENUMS();
+				}
+				
+				if (lineInt.Contains(e__YYMKIND_Check)) {
+					// If an Instance of e__YYMKIND Enum was found, add to list
+					Add_e__YYMKIND_ENUMS();
+				}
+				// search next line when current line has been searched
+                lineNumber += 1;
+            }
+        }
+    }
+    catch (Exception e) {
+	}
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+// Completely Done with Decompiling
 if (errorList.Count > 0)
 {
-	File.WriteAllLinesAsync(dataPath + "error_log.txt", errorList);
-	ScriptMessage($"Done with {errorList.Count} errors.\n{rootPath}\n\nA text file can be found in the data folder with logged exception messages for each error.");
+	File.WriteAllLinesAsync(dataPath + "Export_Data/error_log.txt", errorList);
+	ScriptMessage($"Done with {errorList.Count} errors.\n{rootPath}error_log.txt\n\nA text file can be found in the data folder with logged exception messages for each error.");
 }
 else
 	ScriptMessage("Done!" + (_PJCT.Checked ? " Remember to copy any necessary files into the \"datafiles\" folder." : ""));
 
 if (!_APND.Checked)
-	Process.Start("explorer.exe", rootPath); // pray that this works
+	Process.Start("explorer.exe", rootPath);
