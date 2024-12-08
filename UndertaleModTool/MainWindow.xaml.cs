@@ -2155,7 +2155,7 @@ namespace UndertaleModTool
                 {
                     item.Items.Add(new MenuItem {Header = $"(Path {folderDir} does not exist, cannot search for files!)", IsEnabled = false});
 
-                    if (item.Name == "RootScriptItem" || item.Name == "DecompScriptItem")
+                    if (item.Name == "RootScriptItem")
                     {
                         var otherScripts1 = new MenuItem {Header = "Run _other script..."};
                         otherScripts1.Click += MenuItem_RunOtherScript_Click;
@@ -2209,7 +2209,7 @@ namespace UndertaleModTool
             }
 
             // If we're at the complete root, we need to add the "Run other script" button as well
-            if (item.Name != "RootScriptItem" || item.Name != "DecompScriptItem") return;
+            if (item.Name != "RootScriptItem") return;
 
             var otherScripts = new MenuItem {Header = "Run _other script..."};
             otherScripts.Click += MenuItem_RunOtherScript_Click;
