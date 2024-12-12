@@ -24,7 +24,7 @@ Features Include:
 - "Create Enum Declarations" Settings is now DISABLED by default, as that WILL fuck up a Decompilation
 - Frequent Decompiler Updates to the Latest UA Version (as Github Artifacts rarely makes updated builds of colinatior27's latest commits)
 - Smaller file and project size, since unused libraries have been removed
-- Game Info is also available on the Big Info Box when a Game has been Loaded, but no asset is being looked at
+- Game Info is also available on the Big Info Box when a Game has been Loaded, but when no asset is being looked at
 
 Changes:
 - Removed all Temp Game and Save Features, as that doesn't work with UA, and patching games isn't the point of this Fork
