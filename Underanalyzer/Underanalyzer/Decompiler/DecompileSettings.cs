@@ -116,6 +116,11 @@ public interface IDecompileSettings
     public bool CleanupBuiltinArrayVariables { get; }
 
     /// <summary>
+    /// True if local variable declarations should be rewritten to be as readable as possible.
+    /// </summary>
+    public bool CleanupLocalVarDeclarations { get; }
+
+    /// <summary>
     /// If true, enum values that are detected in a code entry (including any unknown ones) will 
     /// be given declarations at the top of the code.
     /// </summary>
@@ -178,8 +183,8 @@ public class DecompileSettings : IDecompileSettings
     public bool CleanupElseToContinue { get; set; } = true;
     public bool CleanupDefaultArgumentValues { get; set; } = true;
     public bool CleanupBuiltinArrayVariables { get; set; } = true;
-    // To stop Decompiler from making Enum Declarations, as that can fuck up decomps
-    public bool CreateEnumDeclarations { get; set; } = false;
+    public bool CleanupLocalVarDeclarations { get; set; } = true;
+    public bool CreateEnumDeclarations { get; set; } = true;
     public string UnknownEnumName { get; set; } = "UnknownEnum";
     public string UnknownEnumValuePattern { get; set; } = "Value_{0}";
     public string UnknownArgumentNamePattern { get; set; } = "arg{0}";

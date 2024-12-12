@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UndertaleModToolUpdater")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89a34824e109c32c8c596d78673c6ec982aa397d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0d6dfa9c89314c2c76372c0167a7cfa0654fe3a6")]
 [assembly: System.Reflection.AssemblyProductAttribute("UndertaleModToolUpdater")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UndertaleModToolUpdater")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -225,8 +225,17 @@ namespace UndertaleModTool
         {
             InitializeComponent();
             this.DataContext = this;
-
-            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Here you can Decompile ANY GameMaker Game to a GameMaker Project\nOpen a data.win file to get started, then check out the included Scripts!");
+            // for build date - date is fetched from pre-build command in main project file
+            // /Resources/BuildDate.txt contains the string, and updates on every build
+            try
+            {
+                string strTrimBuildDate = File.ReadAllText("BuildDate.txt").Remove(14);
+                Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Here you can Decompile ANY GameMaker Game to a GameMaker Project\nOpen a data.win file to get started, then check out the included Scripts!\n\nBuild Date: " + strTrimBuildDate + "\nCheck Github for Updated Releases");
+            }
+            catch
+            {
+                Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Here you can Decompile ANY GameMaker Game to a GameMaker Project\nOpen a data.win file to get started, then check out the included Scripts!\n\nBuild Date is Unavailable, which might mean that BuildDate.txt is missing\nCheck Github for Updated Releases");
+            }
             OpenInTab(Highlighted);
 
             TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.6.0.0";
@@ -2890,12 +2899,12 @@ namespace UndertaleModTool
 
         private void MenuItem_GitHub_Click(object sender, RoutedEventArgs e)
         {
-            OpenBrowser("https://github.com/burnedpopcorn/UTMT-UnderAnalyzer-Decompiler");
+            OpenBrowser("https://github.com/burnedpopcorn/UTMT-Enhanced-Tools");
         }
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool by krzys_h and the Underminers team\n\nModified UnderAnalyzer Decompiler by burnedpopcorn180", "About");
+            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\nDecompiling Features and Scripts by burnedpopcorn180", "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs
@@ -2969,7 +2978,7 @@ namespace UndertaleModTool
         public async void UpdateApp(SettingsWindow window)
         {
             // yeah, im not gonna make an Updater for this, sooo....
-            OpenBrowser("https://github.com/burnedpopcorn/UTMT-UnderAnalyzer-Decompiler");
+            OpenBrowser("https://github.com/burnedpopcorn/UTMT-Enhanced-Tools");
         }
 
         private async void Command_Run(object sender, ExecutedRoutedEventArgs e)
