@@ -1,2 +1,0 @@
-C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\win-x64\publish\UndertaleModToolUpdater.pdb
-C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModToolUpdater\bin\Debug\net6.0-windows\win-x64\publish\UndertaleModToolUpdater.exe
