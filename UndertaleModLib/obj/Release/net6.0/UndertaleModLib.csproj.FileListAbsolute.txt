@@ -1,3 +1,4 @@
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\UndertaleModLib.dll
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\GameSpecificData\README.txt
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\GameSpecificData\Underanalyzer\deltarune.json
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\GameSpecificData\Underanalyzer\template.json
@@ -7,7 +8,6 @@ C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bi
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\GameSpecificData\Definitions\gamemaker.json
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\GameSpecificData\Definitions\undertale.json
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\UndertaleModLib.deps.json
-C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\UndertaleModLib.dll
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\UndertaleModLib.xml
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\Underanalyzer.dll
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Release\net6.0\Underanalyzer.pdb

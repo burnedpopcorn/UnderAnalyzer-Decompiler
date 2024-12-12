@@ -23,7 +23,11 @@
         <AssemblyName>UnderAnalyzer-Decompiler</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
+      <None Remove="BuildDate.txt" />
       <None Remove="Corrections\README.txt" />
+      <None Remove="Decompiling_Scripts\--- GMS1 Decompiling ---\BetterExportAssetOrder.csx" />
+      <None Remove="Decompiling_Scripts\--- GMS1 Decompiling ---\Export2GMS1FIXED_UA.csx" />
+      <None Remove="Decompiling_Scripts\--- GMS2 Decompiling ---\Ultimate_GMS2_Decompiler_UA.csx" />
       <None Remove="Resources\tabs_left_button.png" />
       <None Remove="Resources\tabs_right_button.png" />
       <None Remove="Resources\X_Down.png" />
@@ -157,6 +161,15 @@
         </Content>
     </ItemGroup>
     <ItemGroup>
+      <Content Include="BuildDate.txt">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+	  </Content>
+		<Folder Include="Decompiling_Scripts" />
+		<Content Include="Decompiling_Scripts/**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</Content>
       <Content Include="icon.ico" />
     </ItemGroup>
     <ItemGroup>
@@ -167,21 +180,9 @@
       </Compile>
     </ItemGroup>
     <ItemGroup>
-      <None Update="Decompiling_Scripts\--- GMS1 Decompiling ---\BetterExportAssetOrder.csx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Decompiling_Scripts\--- GMS1 Decompiling ---\Export2GMS1FIXED_UA.csx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Decompiling_Scripts\--- GMS2 Decompiling ---\Ultimate_GMS2_Decompiler_UA.csx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
       <None Update="Properties\Settings.settings">
         <Generator>SettingsSingleFileGenerator</Generator>
         <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-      </None>
-      <None Update="BuildDate.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
