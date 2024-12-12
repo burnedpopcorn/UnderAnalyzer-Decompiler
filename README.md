@@ -58,6 +58,9 @@ All Scripts can be found Independently in my [UTMT-Enhanced-Tools](https://githu
 
 This Repo includes Versions of these Scripts for Vanilla UTMT as well
 
+> [!IMPORTANT]
+> That Github Repo also includes my Decompiling Pack, which has ALL the best tools to Decompile ANY GameMaker Game, including this one
+
 ## Special thanks
 
 Special thanks to everybody who did previous research on unpacking and decompiling Undertale, it was a really huge help:
