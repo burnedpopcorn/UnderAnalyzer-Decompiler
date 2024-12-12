@@ -59,7 +59,7 @@ All Scripts can be found Independently in my [UTMT-Enhanced-Tools](https://githu
 This Repo includes Versions of these Scripts for Vanilla UTMT as well
 
 > [!IMPORTANT]
-> That Github Repo also includes my Decompiling Pack, which has ALL the best tools to Decompile ANY GameMaker Game, including this one
+> That Github Repo also includes my Decompiling Pack, which has ALL the best tools to Decompile ANY GameMaker Game, including this one, all in one convenient package
 
 ## Special thanks
 
