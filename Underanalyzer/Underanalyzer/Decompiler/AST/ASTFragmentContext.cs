@@ -12,7 +12,7 @@ namespace Underanalyzer.Decompiler.AST;
 /// <summary>
 /// Represents a single fragment context within the AST.
 /// </summary>
-public class ASTFragmentContext
+public sealed class ASTFragmentContext
 {
     /// <summary>
     /// The fragment we belong to.
@@ -66,6 +66,16 @@ public class ASTFragmentContext
     public List<string> LocalVariableNamesList { get; } = [];
 
     /// <summary>
+    /// The current local variable scope.
+    /// </summary>
+    internal LocalScope? CurrentLocalScope { get; private set; }
+
+    /// <summary>
+    /// The current block being cleaned up during post-cleanup.
+    /// </summary>
+    internal BlockNode? CurrentPostCleanupBlock { get; set; }
+
+    /// <summary>
     /// Map of code entry names to function names, for all children fragments/sub-functions of this context.
     /// </summary>
     public Dictionary<string, string> SubFunctionNames { get; } = [];
@@ -117,9 +127,8 @@ public class ASTFragmentContext
     /// </summary>
     internal void RemoveLocal(string name)
     {
-        if (LocalVariableNames.Contains(name))
+        if (LocalVariableNames.Remove(name))
         {
-            LocalVariableNames.Remove(name);
             LocalVariableNamesList.Remove(name);
         }
     }
@@ -165,5 +174,57 @@ public class ASTFragmentContext
         NamedArguments.Add(name);
         NamedArgumentByIndex[index] = name;
         return name;
+    }
+
+    /// <summary>
+    /// Pushes a new local scope for this fragment.
+    /// </summary>
+    internal void PushLocalScope(DecompileContext context, BlockNode containingBlock, IStatementNode startStatement)
+    {
+        if (!context.Settings.CleanupLocalVarDeclarations)
+        {
+            return;
+        }
+
+        LocalScope? oldScope = CurrentLocalScope;
+        CurrentLocalScope = new LocalScope(oldScope, containingBlock, startStatement);
+        oldScope?.Children?.Add(CurrentLocalScope);
+    }
+
+    /// <summary>
+    /// Pops a local scope for this fragment.
+    /// </summary>
+    internal void PopLocalScope(DecompileContext context)
+    {
+        if (!context.Settings.CleanupLocalVarDeclarations)
+        {
+            return;
+        }
+
+        LocalScope oldScope = CurrentLocalScope!;
+        CurrentLocalScope = oldScope.Parent;
+
+        if (CurrentLocalScope is null)
+        {
+            // Perform a pass on local scopes, generating local variable declarations.
+            HashSet<string> declaredAnywhere = new(LocalVariableNames.Count);
+            oldScope.GenerateDeclarations(declaredAnywhere);
+
+            // Generate local variable declaration for any remaining undeclared locals
+            List<string> toDeclareAtTop = new(LocalVariableNames.Count);
+            foreach (string local in LocalVariableNamesList)
+            {
+                if (!declaredAnywhere.Contains(local))
+                {
+                    toDeclareAtTop.Add(local);
+                }
+            }
+            if (toDeclareAtTop.Count > 0)
+            {
+                LocalVarDeclNode decl = new();
+                decl.Locals.AddRange(toDeclareAtTop);
+                oldScope.ContainingBlock.Children.Insert(0, decl);
+            }
+        }
     }
 }

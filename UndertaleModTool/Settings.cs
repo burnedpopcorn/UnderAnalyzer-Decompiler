@@ -201,6 +201,8 @@ namespace UndertaleModTool
         public bool CleanupElseToContinue { get => InnerSettings.CleanupElseToContinue; set => InnerSettings.CleanupElseToContinue = value; }
         public bool CleanupDefaultArgumentValues { get => InnerSettings.CleanupDefaultArgumentValues; set => InnerSettings.CleanupDefaultArgumentValues = value; }
         public bool CleanupBuiltinArrayVariables { get => InnerSettings.CleanupBuiltinArrayVariables; set => InnerSettings.CleanupBuiltinArrayVariables = value; }
+        // v added in decemeber 2 update
+        public bool CleanupLocalVarDeclarations { get => InnerSettings.CleanupLocalVarDeclarations; set => InnerSettings.CleanupLocalVarDeclarations = value; }
         public bool CreateEnumDeclarations { get => InnerSettings.CreateEnumDeclarations; set => InnerSettings.CreateEnumDeclarations = value; }
         public string UnknownEnumName { get => InnerSettings.UnknownEnumName; set => InnerSettings.UnknownEnumName = value; }
         public string UnknownEnumValuePattern { get => InnerSettings.UnknownEnumValuePattern; set => InnerSettings.UnknownEnumValuePattern = value; }

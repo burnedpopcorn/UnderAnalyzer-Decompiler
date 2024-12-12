@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UndertaleModLibTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89a34824e109c32c8c596d78673c6ec982aa397d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+31422c53c03c852512d790cc7c3cbf52466e8e4a")]
 [assembly: System.Reflection.AssemblyProductAttribute("UndertaleModLibTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UndertaleModLibTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
