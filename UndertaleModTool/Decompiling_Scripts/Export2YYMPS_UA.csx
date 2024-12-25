@@ -1,19 +1,12 @@
 ﻿/*
-	Ultimate_GMS2_Decompiler_UA
+	Export2YYMPS_UA.csx
+		Original Decompiler by loypoll
+			Modified to a YYMPS Decompiler by burnedpopcorn180
+			
+	This Script decompiles any part of a game into a YYMPS package
+	which then can be imported into any other project
 	
-	Original Decompiler by loypoll
-	Fixed and Improved by burnedpopcorn180
-	
-	Ultimate_GMS2_Decompiler_UA Improvements include:
-	  - Added Feature to automatically add Enum Declarations into the Project
-	  - Added Asset_Order Note, which included a List of all Asset IDs and their respective Asset
-		  to provide the ability to more easily make a perfect Decompilation of a given game
-	
-	GMS2_Decompiler_FIXED_UA Improvements include:
-	  - Start-up Greetings and Credits Pop-Up
-	  - Sprites and TileSets that have no associated image attached to them no longer 
-			throw an exception, and will still allow decompilation to finish
-	  - Lists any encountered null sprite/tileset in the error text log
+	This Script currently has issues, but works for the most part
 	
 	NOTE THAT THIS IS THE UNDERANALYZER VERSION
 */
@@ -44,13 +37,17 @@ using Underanalyzer.Decompiler.AST;
 using Underanalyzer.Decompiler.GameSpecific;
 using Underanalyzer.Decompiler.ControlFlow;
 using System.Collections.Generic;
+// for YYMPS Compression
+using System.IO.Compression;
 
 // PROMOTION!
-ScriptMessage("Welcome to Ultimate_GMS2_Decompiler_UA!\n\nOriginally made by loypoll\nFixed and Improved by burnedpopcorn180\n\n---UnderAnalyzer Version---");
+ScriptMessage("Welcome to Export2YYMPS.csx!\n\nOriginal GMS2 Decompiler made by loypoll\nYYMPS Exporter by burnedpopcorn180\n\n        ---UnderAnalyzer Version---");
+
+ScriptMessage("Tilesets are currently NOT working, and exporting them WILL cause the YYMPS to fail loading in GameMaker");
 
 // DO NOT DECLARE ENUMS FOR THE LOVE OF ALL THAT IS HOLY
 if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true) {
-	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\nContinue Anyways?")) {
+	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break any code\n\nContinue Anyways?")) {
 		return;
 	}
 }
@@ -62,7 +59,7 @@ var ignore = new List<string>() // ignore certain assets from attempting to deco
 };
 bool skipErrors;
 string dataPath = $"{Path.GetDirectoryName(FilePath)}\\";
-string rootPath = $"{dataPath}Export_Data\\";
+string rootPath = $"{dataPath}temp_dir\\";
 
 // ensure the user isn't retarded
 EnsureDataLoaded();
@@ -201,68 +198,6 @@ public class GMIncludedFile : ResourceBase
 
 	public long CopyToMask { get; set; } = -1L; // target platforms
 	public string filePath { get; set; } = "datafiles";
-}
-public class GMMainOptions : ResourceBase
-{
-	public GMMainOptions()
-	{
-		resourceVersion = "1.4";
-		name = "Main";
-	}
-	public string option_gameguid { get; set; } = Guid.NewGuid().ToString();
-	public string option_gameid { get; set; } = "0";
-	public int option_game_speed { get; set; } = 60;
-	public bool option_mips_for_3d_textures { get; set; }
-	public uint option_draw_colour { get; set; } = uint.MaxValue;
-	public uint option_window_colour { get; set; } = 255U;
-	public string option_steam_app_id { get; set; } = "0";
-	public bool option_sci_usesci { get; set; } // source control
-	public string option_author { get; set; } = "";
-	public bool option_collision_compatibility { get; set; }
-	public bool option_copy_on_write_enabled { get; set; }
-	public string option_lastchanged { get; set; } = "";
-	public bool option_spine_licence { get; set; }
-	public string option_template_image { get; set; } = "${base_options_dir}/main/template_image.png";
-	public string option_template_icon { get; set; } = "${base_options_dir}/main/template_icon.png";
-	public string option_template_description { get; set; }
-}
-public class GMWindowsOptions : ResourceBase
-{
-	public GMWindowsOptions()
-	{
-		resourceVersion = "1.1";
-		name = "Windows";
-	}
-	public string option_windows_display_name { get; set; } = "Created with GameMaker";
-	public string option_windows_executable_name { get; set; } = "${project_name}.exe";
-	public string option_windows_version { get; set; } = "1.0.0.0";
-	public string option_windows_company_info { get; set; } = "YoYo Games Ltd";
-	public string option_windows_product_info { get; set; } = "Created with GameMaker";
-	public string option_windows_copyright_info { get; set; } = "";
-	public string option_windows_description_info { get; set; } = "A GameMaker Game";
-	public bool option_windows_display_cursor { get; set; } = true;
-	public string option_windows_icon { get; set; } = "${base_options_dir}/windows/icons/icon.ico";
-	public int option_windows_save_location { get; set; } = 0;
-	public string option_windows_splash_screen { get; set; } = "${base_options_dir}/windows/splash/splash.png";
-	public bool option_windows_use_splash { get; set; }
-	public bool option_windows_start_fullscreen { get; set; }
-	public bool option_windows_allow_fullscreen_switching { get; set; }
-	public bool option_windows_interpolate_pixels { get; set; }
-	public bool option_windows_vsync { get; set; }
-	public bool option_windows_resize_window { get; set; }
-	public bool option_windows_borderless { get; set; }
-	public int option_windows_scale { get; set; }
-	public bool option_windows_copy_exe_to_dest { get; set; }
-	public int option_windows_sleep_margin { get; set; } = 10;
-	public string option_windows_texture_page { get; set; } = "2048x2048";
-	public string option_windows_installer_finished { get; set; } = "${base_options_dir}/windows/installer/finished.bmp";
-	public string option_windows_installer_header { get; set; } = "${base_options_dir}/windows/installer/header.bmp";
-	public string option_windows_license { get; set; } = "${base_options_dir}/windows/installer/license.txt";
-	public string option_windows_nsis_file { get; set; } = "${base_options_dir}/windows/installer/nsis_script.nsi";
-	public bool option_windows_enable_steam { get; set; }
-	public bool option_windows_disable_sandbox { get; set; }
-	public bool option_windows_steam_use_alternative_launcher { get; set; }
-	public bool option_windows_use_x64 { get; set; } = true;
 }
 public class Point
 {
@@ -1067,6 +1002,39 @@ public Bitmap Base64ToBitmap()
     }
 }
 
+// source/author: https://stackoverflow.com/a/5427121/826308
+// thanks bro
+// cemerson update 20181226
+public static class Prompt
+    {
+        public static string ShowDialog(string text, string caption, string defaultInputText = "")
+        {
+            Form prompt = new Form()
+            {
+                Width = 500,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = caption,
+                StartPosition = FormStartPosition.CenterScreen                    
+            };
+            Label textLabel = new Label() { Left = 50, Top = 20, Text = text };
+            TextBox textBox = new TextBox() { Left = 50, Top = 50, Width = 400 , Text = defaultInputText};
+            Button confirmation = new Button() { Text = "OK", Left = 350, Width = 100, Top = 70, DialogResult = DialogResult.OK };
+            confirmation.Click += (sender, e) => { prompt.Close(); };
+            prompt.Controls.Add(textBox);
+            prompt.Controls.Add(confirmation);
+            prompt.Controls.Add(textLabel);
+            prompt.AcceptButton = confirmation;
+
+            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
+        }
+
+        internal static string ShowDialog(object filenamePrompt, string v)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 #endregion
 #region GMS2 Asset Dumpers
 
@@ -1080,121 +1048,6 @@ void AddResource(IdReference resource)
 
 	if (!exportData.resources.Any(i => i.id.name == res.id.name))
 		exportData.resources.Add(res);
-}
-void DumpOptions()
-{
-	string optionsPath = "options/";
-	string mainOptionsPath = optionsPath + "main/";
-	Directory.CreateDirectory(rootPath + mainOptionsPath);
-
-	// make main options
-	var exportMainOptions = new GMMainOptions();
-	exportMainOptions.option_gameid = Data.GeneralInfo.GameID.ToString();
-	exportMainOptions.option_game_speed = (int)Data.GeneralInfo.GMS2FPS;
-	exportMainOptions.option_window_colour = (uint)Data.Options.WindowColor;
-	exportMainOptions.option_steam_app_id = Data.GeneralInfo.SteamAppID.ToString();
-	exportMainOptions.option_collision_compatibility = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.FastCollisionCompatibility) || !(Data.IsVersionAtLeast(2022, 1)));
-	exportMainOptions.option_copy_on_write_enabled = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.WriteErrors) || !(Data.IsVersionAtLeast(2022, 2)));
-							// unsure ^
-
-	// make windows options
-	string windowsOptionsPath = optionsPath + "windows/";
-	Directory.CreateDirectory(rootPath + windowsOptionsPath);
-
-	var exportWindowsOptions = new GMWindowsOptions();
-	exportWindowsOptions.option_windows_display_name = Data.GeneralInfo.DisplayName.Content;
-	exportWindowsOptions.option_windows_copyright_info = "Decompiled using Ultimate_GMS2_Decompiler_UA";
-
-	exportWindowsOptions.option_windows_start_fullscreen = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.FullScreen));
-	exportWindowsOptions.option_windows_interpolate_pixels = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.InterpolatePixels));
-	exportWindowsOptions.option_windows_borderless = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.BorderlessWindow));
-	exportWindowsOptions.option_windows_display_cursor = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.ShowCursor));
-	exportWindowsOptions.option_windows_resize_window = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.Sizeable));
-	exportWindowsOptions.option_windows_disable_sandbox = (Data.Options.Info.HasFlag(UndertaleOptions.OptionsFlags.DisableSandbox));
-	exportWindowsOptions.option_windows_vsync = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.SyncVertex1));
-	exportWindowsOptions.option_windows_allow_fullscreen_switching = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.ScreenKey));
-	exportWindowsOptions.option_windows_enable_steam = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.SteamEnabled));
-	if (!Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.Scale))
-		exportWindowsOptions.option_windows_scale = 1;
-	if (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.LocalDataEnabled))
-		exportWindowsOptions.option_windows_save_location = 1;
-
-	// use runner
-	string runnerExePath = dataPath + Data.GeneralInfo.FileName.Content + ".exe";
-	if (!File.Exists(runnerExePath))
-	{
-		// go through every executable trying to look for a runner.
-		foreach (var f in Directory.GetFiles(dataPath, "*.exe", SearchOption.TopDirectoryOnly))
-		{
-			var lastLine = File.ReadLines(f).Last();
-			if (lastLine.Contains("YoYoGames.GameMaker.Runner"))
-				runnerExePath = f;
-		}
-	}
-	if (File.Exists(runnerExePath))
-	{
-		var vinfo = FileVersionInfo.GetVersionInfo(runnerExePath);
-		if (vinfo.ProductName != null)
-		{
-			// assume nothing's there if product name is null.
-			exportWindowsOptions.option_windows_product_info = vinfo.ProductName;
-			exportWindowsOptions.option_windows_company_info = vinfo.CompanyName;
-			exportWindowsOptions.option_windows_description_info = vinfo.FileDescription;
-			exportWindowsOptions.option_windows_copyright_info = vinfo.LegalCopyright;
-			exportWindowsOptions.option_windows_version = vinfo.FileVersion;
-		}
-
-		// extract the icon from the exe
-		var iconExport = getIcon(runnerExePath);
-		if (iconExport != null)
-		{
-			string iconPath = rootPath + windowsOptionsPath + "icons/";
-			exportWindowsOptions.option_windows_icon = "icons/icon.ico";
-
-			Directory.CreateDirectory(iconPath);
-			using (var stream = new FileStream($"{iconPath}icon.ico", FileMode.Create))
-				iconExport.Save(stream);
-
-			/*
-			using (var stream = new FileStream($"{iconPath}readme.txt", FileMode.Create))
-			{
-				byte[] info = Encoding.Default.GetBytes("I did my very best at extracting the icon.\nIf it came out horrible, just use Resource Hacker.");
-				stream.Write(info, 0, info.Length);
-			}
-			*/
-		}
-	}
-
-	// splash
-	string splashPath = dataPath + "splash.png";
-	if (File.Exists(splashPath))
-	{
-		Directory.CreateDirectory(rootPath + windowsOptionsPath + "splash");
-		File.Copy(splashPath, rootPath + windowsOptionsPath + "splash/splash.png", true);
-
-		exportWindowsOptions.option_windows_splash_screen = "splash/splash.png";
-		exportWindowsOptions.option_windows_use_splash = true;
-	}
-
-	// constants
-	foreach (var i in Data.Options.Constants)
-	{
-		if (i.Name.Content == "@@DrawColour")
-			exportMainOptions.option_draw_colour = UInt32.Parse(i.Value.Content);
-		if (i.Name.Content == "@@SleepMargin")
-			exportWindowsOptions.option_windows_sleep_margin = Int32.Parse(i.Value.Content);
-	}
-
-	// jumpscare the user with funny image
-	byte[] custom_project_image = System.Convert.FromBase64String("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");
-	File.WriteAllBytes(rootPath + "options/main/template_icon.png", custom_project_image);
-	exportMainOptions.option_template_icon = "template_icon.png";
-
-	// export and add to data
-	doJson(exportMainOptions, mainOptionsPath + "options_main.yy");
-	doJson(exportWindowsOptions, windowsOptionsPath + "options_windows.yy");
-	exportData.Options.Add(new IdReference { name = exportMainOptions.name, path = mainOptionsPath + "options_main.yy" });
-	exportData.Options.Add(new IdReference { name = exportWindowsOptions.name, path = windowsOptionsPath + "options_windows.yy" });
 }
 
 void DumpSprite(UndertaleSprite sprite)
@@ -3784,7 +3637,7 @@ async Task DumpScripts()
 			Directory.CreateDirectory(rootPath + scriptPath);
 
 			// finish
-			File.WriteAllText(rootPath + scriptPath + globalinit.name + ".gml", "// Generated by Ultimate_GMS2_Decompiler_UA.csx\n" + code);
+			File.WriteAllText(rootPath + scriptPath + globalinit.name + ".gml", code);
 
 			doJson(globalinit, scriptPath + $"{globalinit.name}.yy");
 			AddResource(new IdReference
@@ -4235,7 +4088,7 @@ void addFolder(string n)
 
 // I am so sorry for this
 bool DUMP, GMS1, TWEK, COMP; // TWEK - code tweaks, COMP - comparison mode
-bool OPTN, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND;
+bool OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND;
 List<string> CSTM = new List<string>();
 
 //COMP = true;
@@ -4244,7 +4097,7 @@ var tooltip = new ToolTip();
 Form FORM = new Form()
 {
 	AutoSize = true,
-	Text = "Ultimate_GMS2_Decompiler_UA",
+	Text = "Export2YYMPS",
 	MaximizeBox = false,
 	MinimizeBox = false,
 	StartPosition = FormStartPosition.CenterScreen,
@@ -4252,7 +4105,10 @@ Form FORM = new Form()
 };
 FORM.Controls.Add(new Label()
 {
-	Text = "Warning: Decompiling any Game is an unreliable process.\nSometimes specific code snippets enter an infinite loop of decompilation and freeze the script until you kill the task.\nAnd since you're decompiling a lot of code at once, it has way more chances of happening, so proceed at your own risk.",
+	Text = @"Note: This Script defaults to using the Asset Picker, which allows you to individually include certain assets to the YYMPS
+To include entire asset sections, toggle the ""Pick Assets"" button and select the asset sections you want to include
+Rememeber that this does mean you can't combine both",
+
 	AutoSize = true,
 	Location = new System.Drawing.Point(8, 8),
 });
@@ -4264,13 +4120,14 @@ FORM.Controls.Add(new Label()
 	Font = new Font(Label.DefaultFont, FontStyle.Bold)
 });
 
-var _OPTN = new CheckBox()
+// moved up here cuz yeah
+var _PJCT = new CheckBox()
 {
 	Location = new System.Drawing.Point(16 + (120 * 0), 100 + (32 * 0)),
-	Text = "Options",
+	Text = "Project File",
 	Checked = true
 };
-FORM.Controls.Add(_OPTN);
+FORM.Controls.Add(_PJCT);
 
 var _OBJT = new CheckBox()
 {
@@ -4388,14 +4245,6 @@ var _BGND = new CheckBox()
 };
 FORM.Controls.Add(_BGND);
 
-var _PJCT = new CheckBox()
-{
-	Location = new System.Drawing.Point(16 + (120 * 2), 100 + (32 * 2)),
-	Text = "Project File",
-	Checked = true
-};
-FORM.Controls.Add(_PJCT);
-
 // custom
 var _CSTM = new CheckBox()
 {
@@ -4403,6 +4252,15 @@ var _CSTM = new CheckBox()
 	Text = "Pick Assets",
 	AutoSize = true
 };
+
+// disable turning off Project File, because it is necessary
+_PJCT.Enabled = false;
+
+// setup for initial load
+_OBJT.Enabled = _ROOM.Enabled = _EXTN.Enabled = _SCPT.Enabled = _TMLN.Enabled = _SOND.Enabled = _SHDR.Enabled = _PATH.Enabled = _ACRV.Enabled = _SEQN.Enabled = _FONT.Enabled = _SPRT.Enabled = _BGND.Enabled = false;
+_OBJT.Checked = _ROOM.Checked = _EXTN.Checked = _SCPT.Checked = _TMLN.Checked = _SOND.Checked = _SHDR.Checked = _PATH.Checked = _ACRV.Checked = _SEQN.Checked = _FONT.Checked = _SPRT.Checked = _BGND.Checked = false;
+_CSTM.Checked = true;
+
 _CSTM.CheckedChanged += (o, e) =>
 {
 	if (_CSTM.Checked)
@@ -4429,10 +4287,11 @@ tooltip.SetToolTip(_CSTM, "Individually pick one by one\nwhich resources you wan
 var _CMBT = new Button()
 {
 	Location = new System.Drawing.Point(16 + (120 * 1) + 92, 228 + (24 * 0) - 4),
-	Text = "Change...",
+	Text = "Pick Individual Assets...",
 	AutoSize = true,
-	Enabled = false
+	Enabled = true // Just to default to unlocked
 };
+
 _CMBT.Click += (o, e) =>
 {
 	// make custom form
@@ -4709,7 +4568,7 @@ FORM.Controls.Add(_CMBT);
 // settings
 FORM.Controls.Add(new Label()
 {
-	Text = "Decompiler settings",
+	Text = "Decompiler Settings",
 	AutoSize = true,
 	Location = new System.Drawing.Point(8, 200),
 	Font = new Font(Label.DefaultFont, FontStyle.Bold)
@@ -4735,12 +4594,10 @@ _APND.CheckedChanged += (o, s) =>
 {
 	if (_APND.Checked)
 	{
-		_OPTN.Enabled = _OPTN.Checked = false;
 		_PJCT.Enabled = _PJCT.Checked = false;
 	}
 	else
 	{
-		_OPTN.Enabled = true;
 		_PJCT.Enabled = true;
 	}
 };
@@ -4867,7 +4724,6 @@ OKBT.Click += (o, s) =>
 	GMS1 = false;
 	TWEK = _TWEK.Checked;
 
-	OPTN = _OPTN.Checked;
 	OBJT = _OBJT.Checked;
 	ROOM = _ROOM.Checked;
 	EXTN = _EXTN.Checked;
@@ -4906,32 +4762,52 @@ if (!GMS1)
 {
 	// prepare project file
 	if (exportData == null)
-	{
+	{	
+		// if dumbass disables Project File
+		if (!_PJCT.Checked && !_APND.Checked) {
+			ScriptMessage("The Project File is necessary to Export a YYMPS Package\nRun the Script again, and DON'T Disable it, dummy");
+			return;
+		}
+	
+		// YYMPS ONLY Type shit
+		string pkgName = Prompt.ShowDialog("Put YYMPS Name", "Input YYMPS Filename", "GenericName");
+		string pkgID = Prompt.ShowDialog("Put YYMPS ID", "Input YYMPS ID", "generic_name");
+		string pkgVer = Prompt.ShowDialog("Put Version", "Input YYMPS Version", "1.0.0");
+	
 		exportData = new GMProject
 		{
-			name = Data.GeneralInfo.Name.Content,
+			name = pkgID,
 			isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode))
 		};
-		exportData.MetaData.Add("IDEVersion", "2023.1.0.0");
-
-		// add default folders
-		addFolder("Sprites");
-		addFolder("Tile Sets");
-		addFolder("Sounds");
-		addFolder("Paths");
-		addFolder("Scripts");
-		addFolder("Shaders");
-		addFolder("Fonts");
-		addFolder("Timelines");
-		addFolder("Objects");
-		addFolder("Rooms");
+		
+		// im surprised this wasn't in the original script
+		exportData.MetaData.Add("IDEVersion", $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}");//"2023.1.0.0");
+		// YYMPS ONLY Metadata
+		exportData.MetaData.Add("PackageType", "Asset");
+		exportData.MetaData.Add("PackageName", $"{pkgName}");
+		exportData.MetaData.Add("PackageID", $"{pkgID}");
+		exportData.MetaData.Add("PackagePublisher", "YYMPS by Export2YYMPS");
+		exportData.MetaData.Add("PackageVersion", $"{pkgVer}");
+		
+		// For MetaData.JSON
+		string metadatapath = rootPath + "metadata.json";
+		
+		using (StreamWriter writer = new StreamWriter(metadatapath))
 		{
-			addFolder("Sequences");
-			addFolder("Animation Curves");
+			writer.WriteLine("{ ");
+			writer.WriteLine(@$"  ""package_id"": ""{pkgID}"",");
+			writer.WriteLine(@$"  ""display_name"": ""{pkgName}"",");
+			writer.WriteLine(@$"  ""version"": ""{pkgVer}"",");
+			writer.WriteLine(@$"  ""package_type"": ""asset"",");
+			writer.WriteLine(@$"  ""ide_version"": ""{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}""");
+			writer.WriteLine("}");
 		}
-		addFolder("Notes");
-		addFolder("Extensions");
-			exportData.TextureGroups.Add(new GMTextureGroup());
+		
+		// add YYMPS Folder in YYP
+		addFolder($"{pkgName}");
+		
+		// back to normal stuffs
+		exportData.TextureGroups.Add(new GMTextureGroup());
 
 		if (SOND && Data.AudioGroups != null)
 		{
@@ -4940,6 +4816,7 @@ if (!GMS1)
 		}
 		else
 			exportData.AudioGroups.Add(new GMAudioGroup());
+			
 	}
 	else
 	{
@@ -4959,9 +4836,6 @@ if (!GMS1)
 	}
 
 	// resource dumps
-	if (OPTN)
-		DumpOptions();
-
 	if (OBJT || CSTM.Count > 0)
 	{
 		SetupProgress("Objects", 0, Data.GameObjects.Count);
@@ -5063,134 +4937,10 @@ if (!GMS1)
 		await DumpTilesets();
 	}
 
-	if (_PJCT.Checked && SCPT)
-	{
-		// add warning note
-		var note = new GMNotes()
-		{
-			name = "README",
-			parent = new IdReference()
-			{
-				name = "Notes",
-				path = "folders/Notes.yy"
-			}
-		};
-		string notePath = $"notes/{note.name}/";
-		Directory.CreateDirectory(rootPath + notePath);
-
-		var str = @"Project Decompilied by Ultimate_GMS2_Decompiler_UA.csx
-	Improved by burnedpopcorn180
-		Original Version by loypoll
-
-As a warning, neither this Decompiler nor UnderAnalyzer are perfect.
-There's likely gonna be some stuff you're gonna have to fix on your own.
-
-Assets:
-
-	Most notably Asset Indices. GameMaker, when compiling, uses Asset IDs (Numbers) to reference Assets
-	but when making a decompilation, this means that adding any resource would basically randomize those Asset IDs
-
-	so if, for example, you add a sprite to the decompilation, Asset IDs would shift +1, and the game would start displaying
-	random sprites, instead of the intended sprites
-
-	This isn't something this Script can (reliability) fix, as UnderAnalyzer would have to Guess what are Asset IDs and what are just Numbers
-	To Fix this, reference the Included 'Asset_Order' Note, as that provides a List of Asset IDs and their respective Asset
-
-Enums:
-
-	Enum Declarations have been Extracted for you in the 'Enum_Declarations' Script
-	So you don't really have to do anything with Enums
-	But you should at least try to move them in a suitable place
-	Because not doing that is pretty lazy
-	
-Project Settings:
-
-	The Original Project Settings should have been Extracted and Applied
-	
-	However, if the Game Executable had an Icon, you should use Resource Hacker to get it.
-	This script isn't exactly good at Extracting a Quality Icon.
-	
-	Or you could just Extract the Game Executable with 7zip, and search for the Icons there
-";
-
-		if (Directory.Exists($"{dataPath}code"))
-			str += $"\nAny .gml files that were in the \"code\" folder ({dataPath}\\code) were used.\nIf you don't want this, rename the folder before re-running the script.";
-		else if (Data.IsVersionAtLeast(2, 3))
-			str += "\nAlso since this game is made in GM2.3+, some Code might have Failed to Decompile.\nIt's the fault of UnderAnalyzer. Just fix it yourself, or maybe try UTMT and see if that can Decompile that specific script\n";
-		
-		// Add Custom Note to the Project
-		File.WriteAllText(rootPath + $"{notePath}{note.name}.txt", str);
-		doJson(note, $"{notePath}/{note.name}.yy");
-		AddResource(new IdReference
-		{
-			name = note.name,
-			path = $"{notePath}{note.name}.yy"
-		});
-		
-		// ----------------------------------------------------------------------------------
-		// Adding Enum Declarations
-		var ENUMnote = new GMScript()
-		{
-			name = "Enum_Declarations",
-			parent = new IdReference()
-			{
-				name = "Scripts",
-				path = "folders/Scripts.yy"
-			}
-		};
-		string scriptPath = $"scripts/{ENUMnote.name}/";
-		Directory.CreateDirectory(rootPath + scriptPath);
-		doJson(ENUMnote, $"{scriptPath}/{ENUMnote.name}.yy");
-		AddResource(new IdReference
-		{
-			name = ENUMnote.name,
-			path = $"{scriptPath}{ENUMnote.name}.yy"
-		});
-		// ----------------------------------------------------------------------------------
-		// Adding Assets Order Note
-		var assetnote = new GMNotes()
-		{
-			name = "Asset_Order",
-			parent = new IdReference()
-			{
-				name = "Notes",
-				path = "folders/Notes.yy"
-			}
-		};
-		string assetnotePath = $"notes/{assetnote.name}/";
-		Directory.CreateDirectory(rootPath + assetnotePath);
-		doJson(assetnote, $"{assetnotePath}/{assetnote.name}.yy");
-		AddResource(new IdReference
-		{
-			name = assetnote.name,
-			path = $"{assetnotePath}{assetnote.name}.yy"
-		});
-		// ----------------------------------------------------------------------------------
-	}
-
 	// export final yyp
 	if (_PJCT.Checked || _APND.Checked)
 		doJson(exportData, $"{exportData.name}.yyp");
 }
-
-#endregion
-#region Dump GMS1
-
-else
-{
-	if (SPRT || CSTM.Count > 0)
-	{
-		SetupProgress("Sprites", 0, Data.Sprites.Count);
-		await DumpSprites();
-	}
-
-	// export final project gmx
-	/*
-	if (_PJCT.Checked || _APND.Checked)
-		DumpProjectGMS1();
-	*/
-}
-
 #endregion
 
 // cleanup
@@ -5198,529 +4948,54 @@ await StopUpdater();
 worker.Cleanup();
 HideProgressBar();
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------------
-// Asset Order NOTE
-if (_PJCT.Checked && SCPT) {
-string outputPath = rootPath + "notes/Asset_Order/Asset_Order.txt";
-using (StreamWriter writer = new StreamWriter(outputPath))
-{
-	writer.WriteLine("Generated by Ultimate_GMS2_Decompiler_UA.csx");
-	writer.WriteLine("");
-	writer.WriteLine("This is a List of All Asset IDs");
-	writer.WriteLine("as the Decompiler often has to use an Asset's ID");
-	writer.WriteLine("because it can only GUESS what is an Asset and what is just a Number");
-	writer.WriteLine("");
-	writer.WriteLine("Assets Found:");
-	writer.WriteLine("");
+// Make final YYMPS directory
+string yympsPath = $"{dataPath}Export_YYMPS\\";
+Directory.CreateDirectory(yympsPath);
+
+// YYMPS Compression
+string startPath = rootPath;
+string zipPath = yympsPath + $"{exportData.name}.yymps";
+
+// if previous yymps exists with the same name, DELETE IT OFF THE FACE OF THE EARTH
+if(File.Exists(zipPath))
+    File.Delete(zipPath);
 	
-	writer.WriteLine("Sprites: " + Data.Sprites.Count);
-	writer.WriteLine("Objects: " + Data.GameObjects.Count);
-	writer.WriteLine("Rooms: " + Data.Rooms.Count);
-	writer.WriteLine("Sounds: " + Data.Sounds.Count);
-	writer.WriteLine("Backgrounds: " + Data.Backgrounds.Count);
-	writer.WriteLine("Shaders: " + Data.Shaders.Count);
-	writer.WriteLine("Fonts: " + Data.Fonts.Count);
-	writer.WriteLine("Paths: " + Data.Paths.Count);
-	writer.WriteLine("Timelines: " + Data.Timelines.Count);
-	writer.WriteLine("Scripts: " + Data.Scripts.Count);
-	writer.WriteLine("Extensions: " + Data.Extensions.Count);
-	writer.WriteLine("");
+		
+async Task createyymps() {
 
-    // Write Sprites.
-    writer.WriteLine("--------------------- SPRITES ---------------------");
-    if (Data.Sprites.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (var sprite in Data.Sprites) {
-            writer.WriteLine(resourcecount + " - " + sprite.Name.Content);
-			++resourcecount;
-		}
-    }
-    else if (Data.Sprites.Count == 0) {
-		writer.WriteLine("No Sprites could be Found");
-	}
-	// Write Objects.
-    writer.WriteLine("--------------------- OBJECTS ---------------------");
-    if (Data.GameObjects.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertaleGameObject gameObject in Data.GameObjects) {
-            writer.WriteLine(resourcecount + " - " + gameObject.Name.Content);
-			++resourcecount;
-		}
-    }
-    else if (Data.GameObjects.Count == 0) {
-		writer.WriteLine("No Objects could be Found");
-	}
-	// Write Rooms.
-    writer.WriteLine("---------------------- ROOMS ----------------------");
-    if (Data.Rooms.Count > 0)
-    {
-	var resourcecount = 0;
-        foreach (UndertaleRoom room in Data.Rooms) {
-            writer.WriteLine(resourcecount + " - " + room.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Rooms.Count == 0) {
-		writer.WriteLine("No Rooms could be Found");
-	}
-    // Write Sounds.
-    writer.WriteLine("--------------------- SOUNDS ---------------------");
-    if (Data.Sounds.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertaleSound sound in Data.Sounds) {
-            writer.WriteLine(resourcecount + " - " + sound.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Sounds.Count == 0) {
-		writer.WriteLine("No Sounds could be Found");
-	}
-    // Write Backgrounds.
-    writer.WriteLine("------------------- BACKGROUNDS -------------------");
-    if (Data.Backgrounds.Count > 0)
-    {
-	var resourcecount = 0;
-        foreach (var background in Data.Backgrounds) {
-            writer.WriteLine(resourcecount + " - " + background.Name.Content);
-			++resourcecount;
-		}
-    }
-    else if (Data.Backgrounds.Count == 0) {
-		writer.WriteLine("No Backgrounds could be Found");
-	}
-	// Write Shaders.
-    writer.WriteLine("--------------------- SHADERS ---------------------");
-    if (Data.Shaders.Count > 0)
-    {
-	var resourcecount = 0;
-        foreach (UndertaleShader shader in Data.Shaders) {
-            writer.WriteLine(resourcecount + " - " + shader.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Shaders.Count == 0) {
-		writer.WriteLine("No Shaders could be Found");
-	}
-	// Write Fonts.
-    writer.WriteLine("---------------------- FONTS ----------------------");
-    if (Data.Fonts.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertaleFont font in Data.Fonts) {
-            writer.WriteLine(resourcecount + " - " + font.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Fonts.Count == 0) {
-		writer.WriteLine("No Fonts could be Found");
-	}
-    // Write Paths.
-    writer.WriteLine("---------------------- PATHS ----------------------");
-    if (Data.Paths.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertalePath path in Data.Paths) {
-            writer.WriteLine(resourcecount + " - " + path.Name.Content);
-			++resourcecount;
-		}
-    }
-    else if (Data.Paths.Count == 0) {
-		writer.WriteLine("No Paths could be Found");
-	}
-	// Write Timelines.
-    writer.WriteLine("-------------------- TIMELINES --------------------");
-    if (Data.Timelines.Count > 0)
-    {
-	var resourcecount = 0;
-        foreach (UndertaleTimeline timeline in Data.Timelines) {
-            writer.WriteLine(resourcecount + " - " + timeline.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Timelines.Count == 0) {
-		writer.WriteLine("No Timelines could be Found");
-	}
-    // Write Scripts.
-    writer.WriteLine("--------------------- SCRIPTS ---------------------");
-    if (Data.Scripts.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertaleScript script in Data.Scripts) {
-            writer.WriteLine(resourcecount + " - " + script.Name.Content);
-			++resourcecount;
-		}
-    }
-    else if (Data.Scripts.Count == 0) {
-		writer.WriteLine("No Scripts could be Found");
-	}
-    // Write Extensions.
-    writer.WriteLine("-------------------- EXTENSIONS --------------------");
-    if (Data.Extensions.Count > 0) 
-    {
-	var resourcecount = 0;
-        foreach (UndertaleExtension extension in Data.Extensions) {
-            writer.WriteLine(resourcecount + " - " + extension.Name.Content);
-			++resourcecount;
-		}
-    }
-	else if (Data.Extensions.Count == 0) {
-		writer.WriteLine("No Extensions could be Found");
-	}
-}
-}
+// Compress to YYMPS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ZipFile.CreateFromDirectory(startPath, zipPath);
 
-// -------------------------------------------------------------------------------------------------------------------------------------------------------
-// Enum Declarations Script gml File and File Path
-string codePath = "";
-if (_PJCT.Checked && SCPT) {
-codePath = rootPath + "scripts/Enum_Declarations/Enum_Declarations.gml";
-}
-
-// Setup UA Settings
-DecompileSettings dSettings = new DecompileSettings();
-dSettings.MacroDeclarationsAtTop = true;
-dSettings.CreateEnumDeclarations = true;
-
-// Unknown Enum stuff
-string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
-dSettings.UnknownEnumName = enumName;
-dSettings.UnknownEnumValuePattern = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
-
-// bools that are used when adding other enums to list
-bool VW_was_added = false;
-bool BG_was_added = false;
-// new ones
-bool YYM_was_added = false;
-bool YYMKIND_was_added = false;
-
-// For the Decompiler
-HashSet<long> values = new HashSet<long>();
-List<UndertaleCode> toDump = new();
-foreach (UndertaleCode code in Data.Code) {
-	if (code.ParentEntry is null) {
-		toDump.Add(code);
-	}
-}
-
-// Start Progress Bar
-SetProgressBar(null, "Searching for Enum Declarations in all Scripts...", 0, toDump.Count);
-StartProgressBarUpdater();
-
-// Call Dump Unknown Enum Declaration Function
-if (_PJCT.Checked && SCPT) {
-await DumpEnums();
-}
-
-// Stop Progress Bar once Previous Function finishes
-await StopProgressBarUpdater();
-HideProgressBar();
-
-// https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
-List<long> sorted = new List<long>(values);
-sorted.Sort((a, b) => Math.Sign(a - b));
-
-string code = "";
-
-// Adding Unknown Enums to the List
-if (_PJCT.Checked && SCPT) {
-code += @"// Generated by Ultimate_GMS2_Decompiler_UA.csx
-
-// Please remove this text, and move the Enum Declarations to somewhere that makes sense
-
-enum " + enumName + " {\n";
-
-long expectedValue = 0;
-foreach (long val in sorted) {
-	string name = string.Format(dSettings.UnknownEnumValuePattern, val.ToString().Replace("-", "m"));
-	if (val == expectedValue) {
-		code += "    " + name + ",\n";
-		if (expectedValue != long.MaxValue) {
-			expectedValue++;
-		}
-	} else {
-		code += "    " + name + " = " + val.ToString() + ",\n";
-		if (expectedValue != long.MaxValue) {
-			expectedValue = val + 1;
-		} else {
-			expectedValue = val;
-		}
-	}
-}
-code += "};";
-}
-
-// Check for other Enums like e__VW and e__BG enums
-if (_PJCT.Checked && SCPT) {
-await Check_Other_Enums();
-}
-
-// Write Unknown Enums to output file
-if (_PJCT.Checked && SCPT) {
-File.WriteAllText(codePath, code);
-}
-
-// For Progress Bar, and to allow Decompiler to do its job and find Unknown Enums
-async Task DumpEnums()
+// delete temp directory workspace
+// its this fucked up because sometimes it fails to delete it
+// when sounds are included, as sounds take more time to decompile
+// and it attempts to delete the temp folder while still decompiling, which causes it to shit itself
+// so this indefinitely attempts to delete it, and will eventually succeed when everything is done
+// and will leave infinite loop when it has succeed, because duh
+while (true)
 {
-	if (Data.GlobalFunctions is null) {
-		SetProgressBar(null, "Building the cache of all global functions...", 0, 0);
-		await Task.Run(() => GlobalDecompileContext.BuildGlobalFunctionCache(Data));
-		SetProgressBar(null, "Code Entries", 0, toDump.Count);
-	}
-	await Task.Run(() => Parallel.ForEach(toDump, DumpEnums));
-}
-
-// Check all Code Entries for Unknown Enums
-void DumpEnums(UndertaleCode code)
-{
-    if (code is not null)
-    {
-        try
-        {
-			if (code != null) {
-				var context = new DecompileContext(decompileContext, code, dSettings);
-				BlockNode rootBlock = (BlockNode)context.DecompileToAST();
-				foreach (IStatementNode stmt in rootBlock.Children) {
-					if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName) {
-						foreach (GMEnumValue val in decl.Enum.Values) {
-							values.Add(val.Value);
-						}
-					}
-				}
-			}
-        }
-        catch (Exception e)
-        {}
-    }
-    IncrementProgressParallel();
-}
-
-// Custom shit, custom shit all the way down
-
-// Add e__VW Enum Declaration to List Function
-void Add_e__VW_ENUMS() {
-// if statement to only add it to the list ONCE
-	if (VW_was_added == false) {
-		code += @"
-
-// This one normally goes in __init_view.gml (GMS1 Compatiablity Script)
-enum e__VW {
-    XView,
-    YView,
-    WView,
-    HView,
-    Angle,
-    HBorder,
-    VBorder,
-    HSpeed,
-    VSpeed,
-    Object,
-    Visible,
-    XPort,
-    YPort,
-    WPort,
-    HPort,
-    Camera,
-    SurfaceID,
-};";
-		// Mark as Added when added, so it wont add it again
-		VW_was_added = true;
-	}
-}
-// Add e__BG Enum Declaration to List Function
-void Add_e__BG_ENUMS() {
-// if statement to only add it to the list ONCE
-	if (BG_was_added == false) {
-		code += @"
-
-// This one normally goes in __init_background.gml (GMS1 Compatiablity Script)
-enum e__BG {
-    Visible,
-    Foreground,
-    Index,
-    X,
-    Y,
-    Width,
-    Height,
-    HTiled,
-    VTiled,
-    XScale,
-    YScale,
-    HSpeed,
-    VSpeed,
-    Blend,
-    Alpha,
-};";
-		// Mark as Added when added, so it wont add it again
-		BG_was_added = true;
+	try 
+	{
+		System.IO.Directory.Delete(rootPath, true);
+		if (Directory.Exists(rootPath) == false)
+			break;
+	} 
+	catch {}
 	}
 }
 
-// Add e__YYM Enum Declaration to List Function
-void Add_e__YYM_ENUMS() {
-// if statement to only add it to the list ONCE
-	if (YYM_was_added == false) {
-		code += @"
-
-// This one normally goes in __init_d3d.gml (GMS1 Compatiablity Script)
-enum e__YYM {
-    PointB,
-    LineB,
-    TriB,
-    PointUVB,
-    LineUVB,
-    TriUVB,
-    PointVB,
-    LineVB,
-    TriVB,
-    Texture,
-    Colour,
-    NumVerts,
-    PrimKind,
-    NumPointCols,
-    NumLineCols,
-    NumTriCols,
-    PointCols,
-    LineCols,
-    TriCols,
-
-    // these are used when building model primitives
-    V1X,
-    V1Y,
-    V1Z,
-    V1NX,
-    V1NY,
-    V1NZ,
-    V1C,
-    V1U,
-    V1V,
+// to wait for yymps creation to fully finish
+await createyymps();
 	
-    V2X,
-    V2Y,
-    V2Z,
-    V2NX,
-    V2NY,
-    V2NZ,
-    V2C,
-    V2U,
-    V2V,
-};";
-		// Mark as Added when added, so it wont add it again
-		YYM_was_added = true;
-	}
-}
-
-// Add e__YYMKIND Enum Declaration to List Function
-void Add_e__YYMKIND_ENUMS() {
-// if statement to only add it to the list ONCE
-	if (YYM_was_added == false) {
-		code += @"
-
-// This one normally goes in __init_d3d.gml (GMS1 Compatiablity Script)
-enum e__YYMKIND {
-    PRIMITIVE_BEGIN,
-    PRIMITIVE_END,
-    VERTEX,
-    VERTEX_COLOR,
-    VERTEX_TEX,
-    VERTEX_TEX_COLOR,
-    VERTEX_N,
-    VERTEX_N_COLOR,
-    VERTEX_N_TEX,
-    VERTEX_N_TEX_COLOR,
-    SHAPE_BLOCK,
-    SHAPE_CYLINDER,
-    SHAPE_CONE,
-    SHAPE_ELLIPSOID,
-    SHAPE_WALL,
-    SHAPE_FLOOR,
-};";
-		// Mark as Added when added, so it wont add it again
-		YYMKIND_was_added = true;
-	}
-}
-
-// Below is Search Function from Search.csx
-// so thanks to whoever made it
-
-// Allow void Check_Other_Enums to do its job
-async Task Check_Other_Enums() {
-	await Task.Run(() => Parallel.ForEach(Data.Code, Check_Other_Enums));
-}
-
-// Check if the Other Enum Declarations are in the Project, duh
-void Check_Other_Enums(UndertaleCode code)
-{
-	// try + catch, because why not (plus it forces me to)
-    try
-    {
-        if (code is not null && code.ParentEntry is null)
-        {
-            var lineNumber = 1;
-			
-			// Decompiled COde as Text
-            StringReader decompiledText = new(code != null 
-                ? new Underanalyzer.Decompiler.DecompileContext(decompileContext, code, dSettings).DecompileToString() 
-                : "");
-            bool nameWritten = false;
-            string lineInt;
-			
-			// Check for these Enum Declarations in the Project
-			string e__VW_Check = "enum e__VW";
-			string e__BG_Check = "enum e__BG";
-			string e__YYM_Check = "e__YYM";
-			string e__YYMKIND_Check = "enum e__YYMKIND";
-			
-			// if line is not null, continue searching
-            while ((lineInt = decompiledText.ReadLine()) is not null)
-            {
-                if (lineInt == string.Empty)
-                {
-					// if line is empty, search next line
-                    lineNumber += 1;
-                    continue;
-                }
-				
-				if (lineInt.Contains(e__VW_Check)) {
-					// If an Instance of e__VW Enum was found, add to list
-					Add_e__VW_ENUMS();
-				}
-				
-				if (lineInt.Contains(e__BG_Check)) {
-					// If an Instance of e__BG Enum was found, add to list
-					Add_e__BG_ENUMS();
-				}
-
-				if (lineInt.Contains(e__YYM_Check)) {
-					// If an Instance of e__YYM Enum was found, add to list
-					Add_e__YYM_ENUMS();
-				}
-				
-				if (lineInt.Contains(e__YYMKIND_Check)) {
-					// If an Instance of e__YYMKIND Enum was found, add to list
-					Add_e__YYMKIND_ENUMS();
-				}
-				// search next line when current line has been searched
-                lineNumber += 1;
-            }
-        }
-    }
-    catch (Exception e) {
-	}
-}
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
 // Completely Done with Decompiling
 if (errorList.Count > 0)
 {
-	File.WriteAllLinesAsync(dataPath + "Export_Data/error_log.txt", errorList);
+	File.WriteAllLinesAsync(yympsPath + "error_log.txt", errorList);
 	ScriptMessage($"Done with {errorList.Count} errors.\n{rootPath}error_log.txt\n\nA text file can be found in the data folder with logged exception messages for each error.");
 }
 else
-	ScriptMessage("Done!" + (_PJCT.Checked ? " Remember to copy any necessary files into the \"datafiles\" folder." : ""));
+	ScriptMessage("Done!\nThe YYMPS Package should finish Compressing after this Message\nPress OK to go to the Exported YYMPS");
 
+// Open File Explorer to the YYMPS Directory
 if (!_APND.Checked)
-	Process.Start("explorer.exe", rootPath);
+	Process.Start("explorer.exe", yympsPath);
