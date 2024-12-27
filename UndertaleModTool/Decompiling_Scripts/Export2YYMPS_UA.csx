@@ -43,8 +43,6 @@ using System.IO.Compression;
 // PROMOTION!
 ScriptMessage("Welcome to Export2YYMPS.csx!\n\nOriginal GMS2 Decompiler made by loypoll\nYYMPS Exporter by burnedpopcorn180\n\n        ---UnderAnalyzer Version---");
 
-ScriptMessage("Tilesets are currently NOT working, and exporting them WILL cause the YYMPS to fail loading in GameMaker");
-
 // DO NOT DECLARE ENUMS FOR THE LOVE OF ALL THAT IS HOLY
 if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true) {
 	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break any code\n\nContinue Anyways?")) {
@@ -2454,19 +2452,6 @@ void DumpTileset(UndertaleBackground bg)
 		{
 			name = tgrp,
 			path = $"texturegroups/{tgrp}"
-		};
-	}
-
-	// finish
-	if (_APND.Checked)
-		exportedSprite.parent = APNDREF;
-	else
-	{
-		addFolder(newFolderName, $"Sprites/{newFolderName}", Data.Sprites.Count);
-		exportedSprite.parent = new IdReference
-		{
-			name = newFolderName,
-			path = $"folders/Sprites/{newFolderName}.yy"
 		};
 	}
 
