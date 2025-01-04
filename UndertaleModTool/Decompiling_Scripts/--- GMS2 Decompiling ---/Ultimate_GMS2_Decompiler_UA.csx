@@ -1054,20 +1054,6 @@ public class GMNotes : ResourceBase
 	// nothing lol
 }
 
-// added this thing in attempt to add a 1x1 tranparent image when sprite is null
-// but it doesn't work
-// don't remove it tho, since it is needed lol
-public Bitmap Base64ToBitmap()
-{
-    byte[] byteBuffer = Convert.FromBase64String("R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
-    using (MemoryStream memoryStream = new MemoryStream(byteBuffer))
-    {
-        var bmpReturn = (Bitmap) System.Drawing.Image.FromStream(memoryStream);
-        memoryStream.Close();
-        return bmpReturn;
-    }
-}
-
 #endregion
 #region GMS2 Asset Dumpers
 
@@ -2519,11 +2505,9 @@ void DumpTileset(UndertaleBackground bg)
 	catch
 	{
 		// give up immediately and make an empty image
-		// note to loy: this never worked
-		//img = new Bitmap(exportedSprite.width, exportedSprite.height);
-		
-		// this is extremely bullshit and doesn't work, but it can't be null, so...yeah
-		img = Base64ToBitmap();
+		exportedSprite.width = 1;
+		exportedSprite.height = 1;
+		img = new Bitmap(exportedSprite.width, exportedSprite.height);
 	}
 	
 	// try + catch : working sprites will save to image, while null sprites will do nothing
@@ -4932,7 +4916,7 @@ async Task CheckSpr_TextureGroup()
 		// adding TextureGroups to YYP
 		// we have to remove __yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_, as its not a valid one
 		try {
-			if (group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_")
+			if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
 				{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
 		} catch {}
 	}
@@ -4962,7 +4946,7 @@ async Task CheckTile_TextureGroup()
 		if (!(SPRT && BGND))
 		{
 			try {
-				if (group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_")
+				if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
 					{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
 			} catch {}
 		}

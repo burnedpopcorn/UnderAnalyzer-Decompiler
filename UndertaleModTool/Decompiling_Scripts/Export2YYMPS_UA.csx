@@ -986,20 +986,6 @@ public class GMNotes : ResourceBase
 	// nothing lol
 }
 
-// added this thing in attempt to add a 1x1 tranparent image when sprite is null
-// but it doesn't work
-// don't remove it tho, since it is needed lol
-public Bitmap Base64ToBitmap()
-{
-    byte[] byteBuffer = Convert.FromBase64String("R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==");
-    using (MemoryStream memoryStream = new MemoryStream(byteBuffer))
-    {
-        var bmpReturn = (Bitmap) System.Drawing.Image.FromStream(memoryStream);
-        memoryStream.Close();
-        return bmpReturn;
-    }
-}
-
 // source/author: https://stackoverflow.com/a/5427121/826308
 // thanks bro
 // cemerson update 20181226
@@ -1306,13 +1292,7 @@ void DumpSprite(UndertaleSprite sprite)
 	if (tgrp.StartsWith("__YY__") && tgrp.Contains("_YYG_AUTO_GEN_TEX_GROUP_NAME_"))
 		exportedSprite.For3D = true;
 	else
-	{
-		exportedSprite.textureGroupId = new IdReference
-		{
-			name = tgrp,
-			path = $"texturegroups/{tgrp}"
-		};
-	}
+		exportedSprite.textureGroupId = sprtexGroups.GetValueOrDefault(sprite, defaultTexGroup);
 
 	// finish
 	doJson(exportedSprite, spritePath + $"{exportedSprite.name}.yy");
@@ -2374,11 +2354,9 @@ void DumpTileset(UndertaleBackground bg)
 	catch
 	{
 		// give up immediately and make an empty image
-		// note to loy: this never worked
-		//img = new Bitmap(exportedSprite.width, exportedSprite.height);
-		
-		// this is extremely bullshit and doesn't work, but it can't be null, so...yeah
-		img = Base64ToBitmap();
+		exportedSprite.width = 1;
+		exportedSprite.height = 1;
+		img = new Bitmap(exportedSprite.width, exportedSprite.height);
 	}
 	
 	// try + catch : working sprites will save to image, while null sprites will do nothing
@@ -2447,13 +2425,7 @@ void DumpTileset(UndertaleBackground bg)
 	if (tgrp.StartsWith("__YY__") && tgrp.Contains("_YYG_AUTO_GEN_TEX_GROUP_NAME_"))
 		exportedSprite.For3D = true;
 	else
-	{
-		exportedSprite.textureGroupId = new IdReference
-		{
-			name = tgrp,
-			path = $"texturegroups/{tgrp}"
-		};
-	}
+		exportedSprite.textureGroupId = tiletexGroups.GetValueOrDefault(bg, defaultTexGroup);
 
 	doJson(exportedSprite, spritePath + $"{exportedSprite.name}.yy");
 	AddResource(new IdReference
@@ -4741,6 +4713,86 @@ if (!DUMP)
 StartProgressBarUpdater();
 Directory.CreateDirectory(rootPath);
 
+#region Check TextureGroups for Sprites and TileSets
+
+// Custom TextureGroups Detection, because previous method never works
+// thank you quantum, i literally could not think of a good way of doing this
+// but i feel like it could be done better
+
+// Default stuffs
+public var defaultTexGroup = new IdReference
+{
+	name = "Default",
+	path = "texturegroups/Default"
+};
+
+// Dictionaries that hold all the answsers
+public var sprtexGroups = new Dictionary<UndertaleSprite, IdReference>();
+public var tiletexGroups = new Dictionary<UndertaleBackground, IdReference>();
+
+// Check for TextureGroups, then check what Sprites are in them
+async Task CheckSpr_TextureGroup()
+{
+	// Loop through each TextureGroup
+	foreach (UndertaleTextureGroupInfo group in Data.TextureGroupInfo)
+	{
+		var sprTXreference = new IdReference
+		{
+			name = group.Name.Content,
+			path = "texturegroups/" + group.Name.Content
+		};
+		// Loop through ALL Sprites in the TextureGroup currently being checked
+		foreach (UndertaleResourceById<UndertaleSprite, UndertaleChunkSPRT> spr in group.Sprites)
+		{
+			// Add all Sprites in TextureGroup into the Dictionary List
+			sprtexGroups.TryAdd(spr.Resource, sprTXreference);
+		}
+		foreach (UndertaleResourceById<UndertaleSprite, UndertaleChunkSPRT> spr in group.SpineSprites)
+		{
+			sprtexGroups.TryAdd(spr.Resource, sprTXreference);
+		}
+		// adding TextureGroups to YYP
+		// we have to remove __yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_, as its not a valid one
+		try {
+			if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
+				{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
+		} catch {}
+	}
+}
+
+// Check for TextureGroups, then check what TileSets are in them
+async Task CheckTile_TextureGroup()
+{
+	// Loop through each TextureGroup
+	foreach (UndertaleTextureGroupInfo group in Data.TextureGroupInfo)
+	{
+		var tileTXreference = new IdReference
+		{
+			name = group.Name.Content,
+			path = "texturegroups/" + group.Name.Content
+		};
+		// Loop through All TileSets in the TextureGroup currently being checked
+		foreach (UndertaleResourceById<UndertaleBackground, UndertaleChunkBGND> bg in group.Tilesets)
+		{
+			// Add all TileSets in TextureGroup into the Dictionary List
+			tiletexGroups.TryAdd(bg.Resource, tileTXreference);
+		}
+		
+		// adding TextureGroups to YYP
+		// if both sprites and tilesets are being decompiled, don't run
+		// because it should NOT duplicate them
+		if (!(SPRT && BGND))
+		{
+			try {
+				if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
+					{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
+			} catch {}
+		}
+	}
+}
+
+#endregion
+
 #region Dump GMS2
 
 if (!GMS1)
@@ -4913,12 +4965,16 @@ if (!GMS1)
 	if (SPRT || CSTM.Count > 0)
 	{
 		SetupProgress("Exporting Sprites...", 0, Data.Sprites.Count);
+		// Custom Check
+		await CheckSpr_TextureGroup();
 		await DumpSprites();
 	}
 
 	if (BGND || CSTM.Count > 0)
 	{
 		SetupProgress((Data.IsGameMaker2() ? "Exporting TileSets..." : "Exporting Backgrounds..."), 0, Data.Backgrounds.Count);
+		// Custom Check
+		await CheckTile_TextureGroup();
 		await DumpTilesets();
 	}
 

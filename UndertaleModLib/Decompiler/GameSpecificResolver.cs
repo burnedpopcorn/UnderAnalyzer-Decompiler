@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -27,6 +28,24 @@ public class GameSpecificResolver
     {
         ["Always"] = (UndertaleData data, string value) => 
         {
+            return ConditionResult.Accept;
+        },
+
+        // New one
+        // Allows JSON File to be accepted if Setting in GML Settings Window is ENABLED
+        ["Always_Check"] = (UndertaleData data, string value) =>
+        {
+                // why does it have to be like this
+            if (data.ToolInfo.DecompilerSettings.PTVarDefinitions == true) 
+            {
+                return ConditionResult.Accept;
+            } 
+            // WHY DOES THIS NOT CHANGE???
+            else if (data.ToolInfo.DecompilerSettings.PTVarDefinitions == false)
+            {
+                return ConditionResult.Ignore;
+            }
+            // just to make the error list shut up
             return ConditionResult.Accept;
         },
 

@@ -24,3 +24,5 @@ C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\ob
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\obj\Debug\net6.0\refint\UndertaleModLib.dll
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\obj\Debug\net6.0\UndertaleModLib.xml
 C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\obj\Debug\net6.0\ref\UndertaleModLib.dll
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\GameSpecificData\Definitions\pt_defs.json
+C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\GameSpecificData\Underanalyzer\pizzatower.json

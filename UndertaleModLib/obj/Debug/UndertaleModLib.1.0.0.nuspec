@@ -6,7 +6,7 @@
     <authors>UndertaleModLib</authors>
     <description>Package Description</description>
     <copyright>Copyright ©  2018-2024, licensed under GPLv3</copyright>
-    <repository type="git" commit="89a34824e109c32c8c596d78673c6ec982aa397d" />
+    <repository type="git" commit="eb013be6b837dd19484338015d1fc3aba3720c24" />
     <dependencies>
       <group targetFramework="net6.0">
         <dependency id="Underanalyzer" version="1.0.0" exclude="Build,Analyzers" />
@@ -28,8 +28,8 @@
     </contentFiles>
   </metadata>
   <files>
-    <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\win-x64\UndertaleModLib.dll" target="lib\net6.0\UndertaleModLib.dll" />
-    <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\win-x64\UndertaleModLib.xml" target="lib\net6.0\UndertaleModLib.xml" />
+    <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\UndertaleModLib.dll" target="lib\net6.0\UndertaleModLib.dll" />
+    <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\bin\Debug\net6.0\UndertaleModLib.xml" target="lib\net6.0\UndertaleModLib.xml" />
     <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\GameSpecificData\README.txt" target="content\GameSpecificData\README.txt" />
     <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\GameSpecificData\README.txt" target="contentFiles\any\net6.0\GameSpecificData\README.txt" />
     <file src="C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModLib\GameSpecificData\Underanalyzer\deltarune.json" target="content\GameSpecificData\Underanalyzer\deltarune.json" />
