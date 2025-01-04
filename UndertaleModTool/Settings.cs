@@ -15,7 +15,7 @@ namespace UndertaleModTool
     public class Settings
     {
         public static string AppDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UndertaleModTool");
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnderAnalyzer");//"UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
         public string Version { get; set; } = MainWindow.Version;
@@ -54,7 +54,7 @@ namespace UndertaleModTool
         public double GlobalGridThickness { get; set; } = 1;
         public bool GridThicknessEnabled { get; set; } = false;
 
-        public bool EnableDarkMode { get; set; } = false;
+        public bool EnableDarkMode { get; set; } = true;
         public bool ShowDebuggerOption { get; set; } = false;
         public DecompilerSettings DecompilerSettings { get; set; }
         public string InstanceIdPrefix { get; set; } = "inst_";
@@ -208,6 +208,9 @@ namespace UndertaleModTool
         public string UnknownEnumValuePattern { get => InnerSettings.UnknownEnumValuePattern; set => InnerSettings.UnknownEnumValuePattern = value; }
         public string UnknownArgumentNamePattern { get => InnerSettings.UnknownArgumentNamePattern; set => InnerSettings.UnknownArgumentNamePattern = value; }
         public bool AllowLeftoverDataOnStack { get => InnerSettings.AllowLeftoverDataOnStack; set => InnerSettings.AllowLeftoverDataOnStack = value; }
+
+        // NEW Pizza Tower Variable Definitions Setting
+        public bool PTVarDefinitions { get => InnerSettings.PTVarDefinitions; set => InnerSettings.PTVarDefinitions = value; }
 
         /// <inheritdoc/>
         public bool TryGetPredefinedDouble(double value, [MaybeNullWhen(false)] out string result, out bool isResultMultiPart)

@@ -1090,8 +1090,28 @@ namespace UndertaleModTool
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
 
-            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
-                "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor);
+            string GMS_Version_readable = "";
+
+            if (Data != null)
+            {
+                if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.LTS2022_0)
+                {
+                    GMS_Version_readable = "\n\nThis File was Compiled using the 2022 LTS";
+                }
+                else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Post2022_0)
+                {
+                    GMS_Version_readable = "\n\nThis File was Compiled using a very recent version of GMS2\nMore recent than the 2022 LTS";
+                }
+                else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Pre2022_0)
+                {
+                    if (Data.GeneralInfo.Major == 2)
+                        GMS_Version_readable = "\n\nThis File was Compiled using a very early version of GMS2\nEariler than the 2022 LTS";
+                    else if (Data.GeneralInfo.Major == 1)
+                        GMS_Version_readable = "\n\nThis File was Compiled using the GMS1";
+                }
+            }
+
+            Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + GMS_Version_readable);
             OpenInTab(Highlighted);
 
         }
@@ -1621,10 +1641,33 @@ namespace UndertaleModTool
                     return;
                 }
                 */
+
+                // Default
+                string GMS_Version_readable = "";
+
+                if (Data != null)
+                {
+                    if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.LTS2022_0)
+                    {
+                        GMS_Version_readable = "\n\nThis File was Compiled using the 2022 LTS";
+                    }
+                    else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Post2022_0)
+                    {
+                        GMS_Version_readable = "\n\nThis File was Compiled using a very recent version of GMS2\nMore recent than the 2022 LTS";
+                    }
+                    else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Pre2022_0)
+                    {
+                        if (Data.GeneralInfo.Major == 2)
+                            GMS_Version_readable = "\n\nThis File was Compiled using a very early version of GMS2\nEariler than the 2022 LTS";
+                        else if (Data.GeneralInfo.Major == 1)
+                            GMS_Version_readable = "\n\nThis File was Compiled using the GMS1";
+                    }
+                }
+
                 if (item == "Data")
                 {
                     if (Data != null) {
-                        Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor);
+                        Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + GMS_Version_readable);
                         return;
                     } else {
                         Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Open data.win file to get started");
@@ -2904,7 +2947,7 @@ namespace UndertaleModTool
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\nDecompiling Features and Scripts by burnedpopcorn180", "About");
+            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\n\nDecompiling Features and Scripts by burnedpopcorn180\n\nPizza Tower Definitions by avievie on Github", "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs
@@ -3441,11 +3484,31 @@ result in loss of work.");
                     CurrentTabIndex = -1;
                     CurrentTab = null;
 
+                    string GMS_Version_readable = "";
+
+                    if (Data != null)
+                    {
+                        if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.LTS2022_0)
+                        {
+                            GMS_Version_readable = "\n\nThis File was Compiled using the 2022 LTS";
+                        }
+                        else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Post2022_0)
+                        {
+                            GMS_Version_readable = "\n\nThis File was Compiled using a very recent version of GMS2\nMore recent than the 2022 LTS";
+                        }
+                        else if (Data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.Pre2022_0)
+                        {
+                            if (Data.GeneralInfo.Major == 2)
+                                GMS_Version_readable = "\n\nThis File was Compiled using a very early version of GMS2\nEariler than the 2022 LTS";
+                            else if (Data.GeneralInfo.Major == 1)
+                                GMS_Version_readable = "\n\nThis File was Compiled using the GMS1";
+                        }
+                    }
+
                     if (addDefaultTab)
                     {
                         if (Data != null) {
-                            OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
-                                                      "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor));
+                            OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + GMS_Version_readable));
                         } else {
                             OpenInTab(new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!",
                                                       "Open a data.win file to get started, then go to the Decompiling Scripts Tab to Decompile some Games\nor double click on the items on the left to individually view them"));
