@@ -17,18 +17,6 @@
           "lib/netcoreapp2.0/_._": {}
         }
       },
-      "Microsoft.NET.ILLink.Analyzers/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Analyzers.props": {}
-        }
-      },
-      "Microsoft.NET.ILLink.Tasks/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Tasks.props": {}
-        }
-      },
       "Microsoft.NETCore.Platforms/5.0.0": {
         "type": "package",
         "compile": {
@@ -209,18 +197,6 @@
           "lib/netcoreapp2.0/_._": {}
         }
       },
-      "Microsoft.NET.ILLink.Analyzers/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Analyzers.props": {}
-        }
-      },
-      "Microsoft.NET.ILLink.Tasks/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Tasks.props": {}
-        }
-      },
       "Microsoft.NETCore.Platforms/5.0.0": {
         "type": "package",
         "compile": {
@@ -377,18 +353,6 @@
         },
         "runtime": {
           "lib/netcoreapp2.0/_._": {}
-        }
-      },
-      "Microsoft.NET.ILLink.Analyzers/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Analyzers.props": {}
-        }
-      },
-      "Microsoft.NET.ILLink.Tasks/7.0.100-1.23211.1": {
-        "type": "package",
-        "build": {
-          "build/Microsoft.NET.ILLink.Tasks.props": {}
         }
       },
       "Microsoft.NETCore.Platforms/5.0.0": {
@@ -636,53 +600,6 @@
         "ref/xamarinwatchos10/_._",
         "useSharedDesignerContext.txt",
         "version.txt"
-      ]
-    },
-    "Microsoft.NET.ILLink.Analyzers/7.0.100-1.23211.1": {
-      "sha512": "0GvbEgDGcUQA9KuWcQU1WwYHXt1tBzNr1Nls/M57rM7NA/AndFwCaCEoJpJkmxRY7xLlPDBnmGp8h5+FNqUngg==",
-      "type": "package",
-      "path": "microsoft.net.illink.analyzers/7.0.100-1.23211.1",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Icon.png",
-        "analyzers/dotnet/cs/ILLink.CodeFixProvider.dll",
-        "analyzers/dotnet/cs/ILLink.RoslynAnalyzer.dll",
-        "build/Microsoft.NET.ILLink.Analyzers.props",
-        "microsoft.net.illink.analyzers.7.0.100-1.23211.1.nupkg.sha512",
-        "microsoft.net.illink.analyzers.nuspec"
-      ]
-    },
-    "Microsoft.NET.ILLink.Tasks/7.0.100-1.23211.1": {
-      "sha512": "tvG8XZYLjT0o3WicCyKBZysVWo1jC9HdCFmNRmddx3WbAz0UCsd0qKZqpiEo99VLA8Re+FzWK51OcRldQPbt2Q==",
-      "type": "package",
-      "path": "microsoft.net.illink.tasks/7.0.100-1.23211.1",
-      "hasTools": true,
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Icon.png",
-        "Sdk/Sdk.props",
-        "build/6.0_suppressions.xml",
-        "build/Microsoft.NET.ILLink.Tasks.props",
-        "build/Microsoft.NET.ILLink.targets",
-        "microsoft.net.illink.tasks.7.0.100-1.23211.1.nupkg.sha512",
-        "microsoft.net.illink.tasks.nuspec",
-        "tools/net472/ILLink.Tasks.dll",
-        "tools/net472/Mono.Cecil.dll",
-        "tools/net472/System.Buffers.dll",
-        "tools/net472/System.Collections.Immutable.dll",
-        "tools/net472/System.Memory.dll",
-        "tools/net472/System.Numerics.Vectors.dll",
-        "tools/net472/System.Reflection.Metadata.dll",
-        "tools/net472/System.Runtime.CompilerServices.Unsafe.dll",
-        "tools/net7.0/ILLink.Tasks.deps.json",
-        "tools/net7.0/ILLink.Tasks.dll",
-        "tools/net7.0/Mono.Cecil.Pdb.dll",
-        "tools/net7.0/Mono.Cecil.dll",
-        "tools/net7.0/illink.deps.json",
-        "tools/net7.0/illink.dll",
-        "tools/net7.0/illink.runtimeconfig.json"
       ]
     },
     "Microsoft.NETCore.Platforms/5.0.0": {
@@ -958,8 +875,6 @@
     "net6.0": [
       "Fody >= 6.8.1",
       "Microsoft.CSharp >= 4.7.0",
-      "Microsoft.NET.ILLink.Analyzers >= 7.0.100-1.23211.1",
-      "Microsoft.NET.ILLink.Tasks >= 7.0.100-1.23211.1",
       "PropertyChanged.Fody >= 4.1.0",
       "SharpZipLib >= 1.4.2",
       "System.Drawing.Common >= 5.0.3",
@@ -1029,18 +944,6 @@
           "Microsoft.CSharp": {
             "target": "Package",
             "version": "[4.7.0, )"
-          },
-          "Microsoft.NET.ILLink.Analyzers": {
-            "suppressParent": "All",
-            "target": "Package",
-            "version": "[7.0.100-1.23211.1, )",
-            "autoReferenced": true
-          },
-          "Microsoft.NET.ILLink.Tasks": {
-            "suppressParent": "All",
-            "target": "Package",
-            "version": "[7.0.100-1.23211.1, )",
-            "autoReferenced": true
           },
           "PropertyChanged.Fody": {
             "target": "Package",

@@ -96,6 +96,8 @@
 
             <Separator Grid.Row="18" Grid.ColumnSpan="4" Margin="10"/>
             <local:ButtonDark Grid.Row="19" Grid.Column="0" Grid.ColumnSpan="1" Margin="5" Click="AppDataButton_Click">Open application data folder</local:ButtonDark>
+            <!-- Custom thingy -->
+            <local:ButtonDark Grid.Row="19" Grid.Column="1" Grid.ColumnSpan="2" Margin="45,5,0,5" Click="PT_JSON_BUTTON" HorizontalAlignment="Left">Create Pizza Tower Variable Defintions</local:ButtonDark>
             <local:ButtonDark Grid.Row="19" Grid.Column="2" Grid.ColumnSpan="2" Margin="5" Click="UpdateAppButton_Click" x:Name="UpdateAppButton" HorizontalAlignment="Right" Width="223">Check Github For Updates</local:ButtonDark>
         </Grid>
     </ScrollViewer>

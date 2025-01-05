@@ -66,18 +66,6 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
-            "Microsoft.NET.ILLink.Analyzers": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
-            },
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
-            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[8.0.4, )"
@@ -104,18 +92,6 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
-            "Microsoft.NET.ILLink.Analyzers": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
-            },
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
-            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[8.0.4, )"
@@ -156,12 +132,6 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[8.0.11, )",
-              "autoReferenced": true
-            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[8.0.4, )"
@@ -210,11 +180,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     },
@@ -277,18 +242,6 @@
             "Microsoft.CSharp": {
               "target": "Package",
               "version": "[4.7.0, )"
-            },
-            "Microsoft.NET.ILLink.Analyzers": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
-            },
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[7.0.100-1.23211.1, )",
-              "autoReferenced": true
             },
             "PropertyChanged.Fody": {
               "target": "Package",

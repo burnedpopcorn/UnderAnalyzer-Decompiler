@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright ©  2018-2024, licensed under GPLv3")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.6.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eb013be6b837dd19484338015d1fc3aba3720c24")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3ae3122bf930c14c2d2c5703f78e970a72a6816d")]
 [assembly: System.Reflection.AssemblyProductAttribute("UndertaleModLib")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UndertaleModLib")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.6.0.0")]
