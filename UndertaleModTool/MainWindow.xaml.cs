@@ -3829,6 +3829,12 @@ result in loss of work.");
             CurrentTabIndex = 0;
         }
 
+        private void PT_JSON_BUTTON_CLICK(object sender, RoutedEventArgs e)
+        {
+            // VERY WIP SHIT
+            PT_AssetResolver.InitializeTypes(Data);
+        }
+
         private void TabTitleText_Initialized(object sender, EventArgs e)
         {
             Tab.SetTabTitleBinding(null, null, sender as TextBlock);

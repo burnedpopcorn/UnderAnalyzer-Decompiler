@@ -147,6 +147,11 @@
                     <MenuItem Header="_GitHub" Click="MenuItem_GitHub_Click"/>
                     <MenuItem Header="_About" Click="MenuItem_About_Click"/>
                 </local:MenuItemDark>
+                <!-- New Feature -->
+                <local:MenuItemDark Header="_WIP - Variable Definitions Maker">
+                    <MenuItem Header="_Make Default Pizza Tower JSON" Click="PT_JSON_BUTTON_CLICK"/>
+                    <MenuItem Header="_Make Custom JSON (UNFINISHED)" Click="MenuItem_About_Click"/>
+                </local:MenuItemDark>
             </Menu>
             <Grid DockPanel.Dock="Bottom">
                 <local:TextBoxDark x:Name="CommandBox" AcceptsReturn="True" PreviewKeyDown="CommandBox_PreviewKeyDown" Margin="0,0,35,0"/>
