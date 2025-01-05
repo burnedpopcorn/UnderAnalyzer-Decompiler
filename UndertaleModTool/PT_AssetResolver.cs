@@ -23,6 +23,13 @@ namespace UndertaleModTool
         // Properly initializes per-project/game
         public static void InitializeTypes(UndertaleData data)
         {
+            if (data == null) 
+            {
+                // Failsafe just in case user is dumb
+                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
+                return;
+            }
+
             PT_AssetResolver.PTStates.Clear();
 
             // do this to eventually convert to json
