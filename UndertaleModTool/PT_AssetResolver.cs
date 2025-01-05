@@ -1,11 +1,16 @@
 ﻿// VERY WIP
+// Make JSON File for Pizza Tower data.win
+// This is basically completely from UTMTCE, but is used to make JSON files for UA
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+// Json stuff
 using System.Text.Json;
+// for the data.win, duh
 using UndertaleModLib;
 using UndertaleModLib.Models;
+// for ShowWarning
 using System.Windows;
 
 namespace UndertaleModTool
@@ -80,7 +85,7 @@ namespace UndertaleModTool
                     new[] { "scr_pizzaface_p3_" }
                 );
 
-                // Variable Definitions
+                // Variables taht should == Enum
                 builtin_vars.Add("state", "Enum.states");
                 builtin_vars.Add("_state", "Enum.states");
                 builtin_vars.Add("prevstate", "Enum.states");
@@ -117,6 +122,8 @@ namespace UndertaleModTool
             }
 
                 // Variable Definitions
+
+                // Rooms
                 builtin_vars.Add("leveltorestart", "Asset.Room");
                 builtin_vars.Add("targetRoom", "Asset.Room");
                 builtin_vars.Add("targetRoom2", "Asset.Room");
@@ -127,7 +134,12 @@ namespace UndertaleModTool
                 builtin_vars.Add("hub_array", "Asset.Room");
                 builtin_vars.Add("level_array", "Asset.Room");
                 builtin_vars.Add("_levelinfo", "Asset.Room");
+                builtin_vars.Add("room_arr", "Asset.Room");
+                builtin_vars.Add("rm", "Asset.Room");
+                builtin_vars.Add("room_index", "Asset.Room");
+                builtin_vars.Add("levels", "Asset.Room");
 
+                // Objects
                 builtin_vars.Add("objectlist", "Asset.Object");
                 builtin_vars.Add("object_arr", "Asset.Object");
                 builtin_vars.Add("objdark_arr", "Asset.Object");
@@ -137,12 +149,10 @@ namespace UndertaleModTool
                 builtin_vars.Add("dark_arr", "Asset.Object");
                 builtin_vars.Add("flash_arr", "Asset.Object");
                 builtin_vars.Add("collision_list", "Asset.Object");
-
                 builtin_vars.Add("content", "Asset.Object");
                 builtin_vars.Add("player", "Asset.Object");
                 builtin_vars.Add("targetplayer", "Asset.Object");
                 builtin_vars.Add("target", "Asset.Object");
-
                 builtin_vars.Add("playerid", "Asset.Object");
                 builtin_vars.Add("_playerid", "Asset.Object");
                 builtin_vars.Add("player_id", "Asset.Object");
@@ -151,41 +161,32 @@ namespace UndertaleModTool
                 builtin_vars.Add("objectID", "Asset.Object");
                 builtin_vars.Add("spawnenemyID", "Asset.Object");
                 builtin_vars.Add("ID", "Asset.Object");
-
                 builtin_vars.Add("baddiegrabbedID", "Asset.Object");
                 builtin_vars.Add("pizzashieldID", "Asset.Object");
                 builtin_vars.Add("angryeffectid", "Asset.Object");
                 builtin_vars.Add("pizzashieldid", "Asset.Object");
                 builtin_vars.Add("superchargedeffectid", "Asset.Object");
-
                 builtin_vars.Add("baddieID", "Asset.Object");
                 builtin_vars.Add("baddieid", "Asset.Object");
                 builtin_vars.Add("brickid", "Asset.Object");
                 builtin_vars.Add("attackerID", "Asset.Object");
-
                 builtin_vars.Add("object", "Asset.Object");
                 builtin_vars.Add("obj", "Asset.Object");
                 builtin_vars.Add("_obj", "Asset.Object");
                 builtin_vars.Add("closestObj", "Asset.Object");
                 builtin_vars.Add("solidObj", "Asset.Object");
                 builtin_vars.Add("bg_obj", "Asset.Object");
-
                 builtin_vars.Add("_obj_player", "Asset.Object");
                 builtin_vars.Add("obj_explosion", "Asset.Object");
                 builtin_vars.Add("my_obj_index", "Asset.Object");
                 builtin_vars.Add("inst", "Asset.Object");
-
                 builtin_vars.Add("chargeeffectid", "Asset.Object");
                 builtin_vars.Add("dashcloudid", "Asset.Object");
                 builtin_vars.Add("crazyruneffectid", "Asset.Object");
                 builtin_vars.Add("superslameffectid", "Asset.Object");
                 builtin_vars.Add("speedlineseffectid", "Asset.Object");
 
-                builtin_vars.Add("room_arr", "Asset.Room");
-                builtin_vars.Add("rm", "Asset.Room");
-                builtin_vars.Add("room_index", "Asset.Room");
-                builtin_vars.Add("levels", "Asset.Room");
-
+                // Sprites
                 builtin_vars.Add("bpal", "Asset.Sprite");
                 builtin_vars.Add("vstitle", "Asset.Sprite");
                 builtin_vars.Add("bg", "Asset.Sprite");
@@ -206,13 +207,12 @@ namespace UndertaleModTool
                 builtin_vars.Add("_hurt", "Asset.Sprite");
                 builtin_vars.Add("_dead", "Asset.Sprite");
                 builtin_vars.Add("treasure_arr", "Asset.Sprite");
-
                 builtin_vars.Add("storedspriteindex", "Asset.Sprite");
                 builtin_vars.Add("icon", "Asset.Sprite");
-
                 builtin_vars.Add("spridle", "Asset.Sprite");
                 builtin_vars.Add("sprgot", "Asset.Sprite");
 
+                // Colors
                 builtin_vars.Add("color", "Constant.Color");
                 builtin_vars.Add("textcolor", "Constant.Color");
                 builtin_vars.Add("bc", "Constant.Color");
@@ -221,10 +221,221 @@ namespace UndertaleModTool
                 builtin_vars.Add("c1", "Constant.Color");
                 builtin_vars.Add("c2", "Constant.Color");
 
-                builtin_vars.Add("gameframe_caption_icon", "Asset.Sprite");
+            builtin_vars.Add("gameframe_caption_icon", "Asset.Sprite");
 
-                // Function Arguments
-                builtin_funcs["gml_Script_instance_create_unique"] =
+            // Add all from this repo: https://github.com/avievie/PizzaTowerGameSpecificData
+            // thanks so much @avievie
+            builtin_vars.Add("landspr", "Asset.Sprite");
+            builtin_vars.Add("idlespr", "Asset.Sprite");
+            builtin_vars.Add("fallspr", "Asset.Sprite");
+            builtin_vars.Add("stunfallspr", "Asset.Sprite");
+            builtin_vars.Add("walkspr", "Asset.Sprite");
+            builtin_vars.Add("turnspr", "Asset.Sprite");
+            builtin_vars.Add("recoveryspr", "Asset.Sprite");
+            builtin_vars.Add("grabbedspr", "Asset.Sprite");
+            builtin_vars.Add("scaredspr", "Asset.Sprite");
+            builtin_vars.Add("ragespr", "Asset.Sprite");
+            builtin_vars.Add("spr_dead", "Asset.Sprite");
+            builtin_vars.Add("spr_palette", "Asset.Sprite");
+            builtin_vars.Add("tube_spr", "Asset.Sprite");
+            builtin_vars.Add("spr_intro", "Asset.Sprite");
+            builtin_vars.Add("spr_introidle", "Asset.Sprite");
+            builtin_vars.Add("ts", "Asset.Tileset");
+            builtin_vars.Add("t", "Asset.Sprite");
+            builtin_vars.Add("spr_attack", "Asset.Sprite");
+            builtin_vars.Add("spr_hidden", "Asset.Sprite");
+            builtin_vars.Add("spr_idle", "Asset.Sprite");
+            builtin_vars.Add("stunspr", "Asset.Sprite");
+            builtin_vars.Add("bgsprite", "Asset.Sprite");
+            builtin_vars.Add("ratpowerup", "Asset.Object");
+            builtin_vars.Add("boss_hpsprite", "Asset.Sprite");
+            builtin_vars.Add("pl", "Asset.Object");
+            builtin_vars.Add("spr", "Asset.Sprite");
+            builtin_vars.Add("expressionsprite", "Asset.Sprite");
+            builtin_vars.Add("_spr", "Asset.Sprite");
+            builtin_vars.Add("attackdash", "Asset.Sprite");
+            builtin_vars.Add("airattackdash", "Asset.Sprite");
+            builtin_vars.Add("airattackdashstart", "Asset.Sprite");
+            builtin_vars.Add("tauntstoredsprite", "Asset.Sprite");
+            builtin_vars.Add("movespr", "Asset.Sprite");
+            builtin_vars.Add("spr_joystick", "Asset.Sprite");
+            builtin_vars.Add("_select", "Constant.GamepadButton");
+            builtin_vars.Add("_back", "Constant.GamepadButton");
+            builtin_vars.Add("tvsprite", "Asset.Sprite");
+            builtin_vars.Add("sprite", "Asset.Sprite");
+            builtin_vars.Add("divisionjustforplayersprites", "Asset.Sprite");
+            builtin_vars.Add("spr_move", "Asset.Sprite");
+            builtin_vars.Add("spr_crawl", "Asset.Sprite");
+            builtin_vars.Add("spr_hurt", "Asset.Sprite");
+            builtin_vars.Add("spr_jump", "Asset.Sprite");
+            builtin_vars.Add("spr_jump2", "Asset.Sprite");
+            builtin_vars.Add("spr_fall", "Asset.Sprite");
+            builtin_vars.Add("spr_fall2", "Asset.Sprite");
+            builtin_vars.Add("spr_crouch", "Asset.Sprite");
+            builtin_vars.Add("spr_crouchjump", "Asset.Sprite");
+            builtin_vars.Add("spr_crouchfall", "Asset.Sprite");
+            builtin_vars.Add("spr_couchstart", "Asset.Sprite");
+            builtin_vars.Add("spr_bump", "Asset.Sprite");
+            builtin_vars.Add("spr_land", "Asset.Sprite");
+            builtin_vars.Add("spr_land2", "Asset.Sprite");
+            builtin_vars.Add("spr_lookdoor", "Asset.Sprite");
+            builtin_vars.Add("spr_walkfront", "Asset.Sprite");
+            builtin_vars.Add("spr_victory", "Asset.Sprite");
+            builtin_vars.Add("spr_Ladder", "Asset.Sprite");
+            builtin_vars.Add("spr_laddermove", "Asset.Sprite");
+            builtin_vars.Add("spr_ladderdown", "Asset.Sprite");
+            builtin_vars.Add("spr_keyget", "Asset.Sprite");
+            builtin_vars.Add("spr_crouchslip", "Asset.Sprite");
+            builtin_vars.Add("spr_pistolshot", "Asset.Sprite");
+            builtin_vars.Add("spr_pistolwalk", "Asset.Sprite");
+            builtin_vars.Add("spr_longjump", "Asset.Sprite");
+            builtin_vars.Add("spr_longjumpend", "Asset.Sprite");
+            builtin_vars.Add("spr_breakdance", "Asset.Sprite");
+            builtin_vars.Add("spr_machslideboostfall", "Asset.Sprite");
+            builtin_vars.Add("spr_mach3boostfall", "Asset.Sprite");
+            builtin_vars.Add("spr_mrpinch", "Asset.Sprite");
+            builtin_vars.Add("spr_rampjump", "Asset.Sprite");
+            builtin_vars.Add("spr_mach1", "Asset.Sprite");
+            builtin_vars.Add("spr_mach", "Asset.Sprite");
+            builtin_vars.Add("spr_secondjump1", "Asset.Sprite");
+            builtin_vars.Add("spr_secondjump2", "Asset.Sprite");
+            builtin_vars.Add("spr_machslidestart", "Asset.Sprite");
+            builtin_vars.Add("spr_machslide", "Asset.Sprite");
+            builtin_vars.Add("spr_machslideend", "Asset.Sprite");
+            builtin_vars.Add("spr_machslideboost", "Asset.Sprite");
+            builtin_vars.Add("spr_catched", "Asset.Sprite");
+            builtin_vars.Add("spr_punch", "Asset.Sprite");
+            builtin_vars.Add("spr_backkick", "Asset.Sprite");
+            builtin_vars.Add("spr_shoulder", "Asset.Sprite");
+            builtin_vars.Add("spr_uppunch", "Asset.Sprite");
+            builtin_vars.Add("spr_stomp", "Asset.Sprite");
+            builtin_vars.Add("spr_stompprep", "Asset.Sprite");
+            builtin_vars.Add("spr_crouchslide", "Asset.Sprite");
+            builtin_vars.Add("spr_climbwall", "Asset.Sprite");
+            builtin_vars.Add("spr_grab", "Asset.Sprite");
+            builtin_vars.Add("spr_mach2jump", "Asset.Sprite");
+            builtin_vars.Add("spr_Timesup", "Asset.Sprite");
+            builtin_vars.Add("spr_deathstart", "Asset.Sprite");
+            builtin_vars.Add("spr_deathend", "Asset.Sprite");
+            builtin_vars.Add("spr_machpunch1", "Asset.Sprite");
+            builtin_vars.Add("spr_machpunch2", "Asset.Sprite");
+            builtin_vars.Add("spr_hurtjump", "Asset.Sprite");
+            builtin_vars.Add("spr_entergate", "Asset.Sprite");
+            builtin_vars.Add("spr_gottreasure", "Asset.Sprite");
+            builtin_vars.Add("spr_bossintro", "Asset.Sprite");
+            builtin_vars.Add("spr_hurtidle", "Asset.Sprite");
+            builtin_vars.Add("spr_hurtwalk", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexmash1", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexmash2", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexmash3", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexmash4", "Asset.Sprite");
+            builtin_vars.Add("spr_tackle", "Asset.Sprite");
+            builtin_vars.Add("spr_airdash1", "Asset.Sprite");
+            builtin_vars.Add("spr_airdash2", "Asset.Sprite");
+            builtin_vars.Add("spr_idle1", "Asset.Sprite");
+            builtin_vars.Add("spr_idle2", "Asset.Sprite");
+            builtin_vars.Add("spr_idle3", "Asset.Sprite");
+            builtin_vars.Add("spr_idle4", "Asset.Sprite");
+            builtin_vars.Add("spr_idle5", "Asset.Sprite");
+            builtin_vars.Add("spr_idle6", "Asset.Sprite");
+            builtin_vars.Add("spr_wallsplat", "Asset.Sprite");
+            builtin_vars.Add("spr_piledriver", "Asset.Sprite");
+            builtin_vars.Add("spr_piledriverland", "Asset.Sprite");
+            builtin_vars.Add("spr_charge", "Asset.Sprite");
+            builtin_vars.Add("spr_mach3jump", "Asset.Sprite");
+            builtin_vars.Add("spr_mach4", "Asset.Sprite");
+            builtin_vars.Add("spr_machclimbwall", "Asset.Sprite");
+            builtin_vars.Add("spr_dive", "Asset.Sprite");
+            builtin_vars.Add("spr_machroll", "Asset.Sprite");
+            builtin_vars.Add("spr_hitwall", "Asset.Sprite");
+            builtin_vars.Add("spr_superjumpland", "Asset.Sprite");
+            builtin_vars.Add("spr_walljumpstart", "Asset.Sprite");
+            builtin_vars.Add("spr_superjumpprep", "Asset.Sprite");
+            builtin_vars.Add("spr_superjump", "Asset.Sprite");
+            builtin_vars.Add("spr_superjumppreplight", "Asset.Sprite");
+            builtin_vars.Add("spr_superjumpright", "Asset.Sprite");
+            builtin_vars.Add("spr_superjumpleft", "Asset.Sprite");
+            builtin_vars.Add("spr_machfreefall", "Asset.Sprite");
+            builtin_vars.Add("spr_mach3hit", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepwalk", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepjump", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepfall", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepidle", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepjumpstart", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepthunder", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepland", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepdownslope", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepstart", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepcharge", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepdoublejump", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepfly", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepdowntrust", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepupslope", "Asset.Sprite");
+            builtin_vars.Add("spr_knightpepbump", "Asset.Sprite");
+            builtin_vars.Add("spr_bodyslamfall", "Asset.Sprite");
+            builtin_vars.Add("spr_bodyslamstart", "Asset.Sprite");
+            builtin_vars.Add("spr_bodyslamland", "Asset.Sprite");
+            builtin_vars.Add("spr_crazyrun", "Asset.Sprite");
+            builtin_vars.Add("spr_bombpeprun", "Asset.Sprite");
+            builtin_vars.Add("spr_bombpepintro", "Asset.Sprite");
+            builtin_vars.Add("spr_bombpeprunabouttoexplode", "Asset.Sprite");
+            builtin_vars.Add("spr_bombpepend", "Asset.Sprite");
+            builtin_vars.Add("spr_jetpackstart2", "Asset.Sprite");
+            builtin_vars.Add("spr_fireass", "Asset.Sprite");
+            builtin_vars.Add("spr_fireassground", "Asset.Sprite");
+            builtin_vars.Add("spr_fireassend", "Asset.Sprite");
+            builtin_vars.Add("spr_tumblestart", "Asset.Sprite");
+            builtin_vars.Add("spr_tumbleend", "Asset.Sprite");
+            builtin_vars.Add("spr_tumble", "Asset.Sprite");
+            builtin_vars.Add("spr_stunned", "Asset.Sprite");
+            builtin_vars.Add("spr_clown", "Asset.Sprite");
+            builtin_vars.Add("spr_clownbump", "Asset.Sprite");
+            builtin_vars.Add("spr_clowncrouch", "Asset.Sprite");
+            builtin_vars.Add("spr_clownfall", "Asset.Sprite");
+            builtin_vars.Add("spr_clownjump", "Asset.Sprite");
+            builtin_vars.Add("spr_clownwallclimb", "Asset.Sprite");
+            builtin_vars.Add("spr_downpizzabox", "Asset.Sprite");
+            builtin_vars.Add("spr_uppizzabox", "Asset.Sprite");
+            builtin_vars.Add("spr_slipnslide", "Asset.Sprite");
+            builtin_vars.Add("spr_mach3boost", "Asset.Sprite");
+            builtin_vars.Add("spr_facehurtup", "Asset.Sprite");
+            builtin_vars.Add("spr_facehurt", "Asset.Sprite");
+            builtin_vars.Add("spr_walljumpend", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexdash", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexdashjumpstart", "Asset.Sprite");
+            builtin_vars.Add("spr_suplexdashjump", "Asset.Sprite");
+            builtin_vars.Add("spr_shotgunsuplexdash", "Asset.Sprite");
+            builtin_vars.Add("spr_rollgetup", "Asset.Sprite");
+            builtin_vars.Add("spr_swingding", "Asset.Sprite");
+            builtin_vars.Add("spr_swingdingend", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingjump", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingidle", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingwalk", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingstart", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingfall", "Asset.Sprite");
+            builtin_vars.Add("spr_haulingland", "Asset.Sprite");
+            builtin_vars.Add("spr_uppercutfinishingblow", "Asset.Sprite");
+            builtin_vars.Add("spr_finishingblow1", "Asset.Sprite");
+            builtin_vars.Add("spr_finishingblow2", "Asset.Sprite");
+            builtin_vars.Add("spr_finishingblow3", "Asset.Sprite");
+            builtin_vars.Add("spr_finishingblow4", "Asset.Sprite");
+            builtin_vars.Add("spr_finishingblow5", "Asset.Sprite");
+            builtin_vars.Add("spr_winding", "Asset.Sprite");
+            builtin_vars.Add("spr_3hpwalk", "Asset.Sprite");
+            builtin_vars.Add("spr_3hpidle", "Asset.Sprite");
+            builtin_vars.Add("spr_panic", "Asset.Sprite");
+            builtin_vars.Add("spr_facestomp", "Asset.Sprite");
+            builtin_vars.Add("spr_freefall", "Asset.Sprite");
+            builtin_vars.Add("spr_shotgunsuplex", "Asset.Sprite");
+            builtin_vars.Add("spr_pushback1", "Asset.Sprite");
+            builtin_vars.Add("spr_pushback2", "Asset.Sprite");
+            builtin_vars.Add("spr_throw", "Asset.Sprite");
+            builtin_vars.Add("spr_run", "Asset.Sprite");
+            builtin_vars.Add("spr_shotgunidle", "Asset.Sprite");
+            builtin_vars.Add("spr_sworddash", "Asset.Sprite");
+
+            // Function Arguments (From UTMTCE)
+            builtin_funcs["gml_Script_instance_create_unique"] =
                     new[] { null, null, "Asset.Object" };
                 builtin_funcs["gml_Script_instance_nearest_random"] =
                     new[] { "Asset.Object", null };
@@ -396,11 +607,13 @@ namespace UndertaleModTool
             try
             {
                 File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + data.GeneralInfo.Name + ".json", jsonString);
+                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made");
             }
             catch (Exception e) 
             {
                 Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Read data.win's Internal Game Name");
                 File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "GameDefinitions.json", jsonString);
+                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made");
             }
         }
 
