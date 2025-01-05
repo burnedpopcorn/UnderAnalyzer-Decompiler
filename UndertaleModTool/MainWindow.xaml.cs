@@ -2947,7 +2947,7 @@ namespace UndertaleModTool
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\n\nDecompiling Features and Scripts by burnedpopcorn180\n\nPizza Tower Definitions by avievie on Github", "About");
+            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\n\nDecompiling Features and Scripts by burnedpopcorn180", "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs
