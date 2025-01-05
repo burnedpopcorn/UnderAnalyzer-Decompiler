@@ -169,10 +169,6 @@
                     <CheckBox Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="3" Content="Scope Local Variable Declarations" 
                               ToolTip="If enabled, local variable declarations will be placed according to their scopes, which are detected based on usage in the code." 
                               IsChecked="{Binding DecompilerSettings.CleanupLocalVarDeclarations}"/>
-                    <!-- new feature maybe -->
-                    <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="3" Content="WIP - Pizza Tower Variable Definitions" 
-                              ToolTip="If enabled, this will Detect known Variables in Pizza Tower, and will ensure that those Variables refer to the correct Asset Type" 
-                              IsChecked="{Binding DecompilerSettings.PTVarDefinitions}"/>
                 </Grid>
             </Grid>
         </StackPanel>

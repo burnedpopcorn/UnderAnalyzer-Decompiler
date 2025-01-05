@@ -209,9 +209,6 @@ namespace UndertaleModTool
         public string UnknownArgumentNamePattern { get => InnerSettings.UnknownArgumentNamePattern; set => InnerSettings.UnknownArgumentNamePattern = value; }
         public bool AllowLeftoverDataOnStack { get => InnerSettings.AllowLeftoverDataOnStack; set => InnerSettings.AllowLeftoverDataOnStack = value; }
 
-        // NEW Pizza Tower Variable Definitions Setting
-        public bool PTVarDefinitions { get => InnerSettings.PTVarDefinitions; set => InnerSettings.PTVarDefinitions = value; }
-
         /// <inheritdoc/>
         public bool TryGetPredefinedDouble(double value, [MaybeNullWhen(false)] out string result, out bool isResultMultiPart)
         {

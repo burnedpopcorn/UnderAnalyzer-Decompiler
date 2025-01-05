@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using UndertaleModLib;
 
 namespace UndertaleModTool
 {
@@ -257,6 +258,14 @@ namespace UndertaleModTool
         private void UpdateAppButton_Click(object sender, RoutedEventArgs e)
         {
             ((MainWindow)Owner).UpdateApp(this);
+        }
+
+        private void PT_JSON_BUTTON(object sender, RoutedEventArgs e)
+        {
+            // VERY WIP SHIT
+            UndertaleData data = new UndertaleData(); // This thing does not work WHYYYYY
+            PT_AssetResolver.InitializeTypes(data);
+            mainWindow.ShowMessage("Pizza Tower Variable Definitions JSON File was made!\n");
         }
 
         private void GMLSettingsButton_Click(object sender, RoutedEventArgs e)

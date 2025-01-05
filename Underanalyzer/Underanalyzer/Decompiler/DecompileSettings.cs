@@ -151,11 +151,6 @@ public interface IDecompileSettings
     public bool AllowLeftoverDataOnStack { get; }
 
     /// <summary>
-    /// For Pizza Tower Variable Definitions Setting
-    /// </summary>
-    public bool PTVarDefinitions { get; }
-
-    /// <summary>
     /// Attempts to retrieve a predefined double value (such as <c>pi</c>), given its double form.
     /// </summary>
     /// <param name="value">The double as stored in the GML code</param>
@@ -194,8 +189,6 @@ public class DecompileSettings : IDecompileSettings
     public string UnknownEnumValuePattern { get; set; } = "Value_{0}";
     public string UnknownArgumentNamePattern { get; set; } = "arg{0}";
     public bool AllowLeftoverDataOnStack { get; set; } = false;
-    // NEW Pizza Tower Variable Definitions Setting
-    public bool PTVarDefinitions { get; set; } = true;
 
     // Some basic data populated from code seen in the wild
     // TODO: populate this with more values by default?
