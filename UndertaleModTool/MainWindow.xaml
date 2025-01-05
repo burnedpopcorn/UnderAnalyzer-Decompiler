@@ -123,8 +123,10 @@
                 </local:MenuItemDark>
                 <!-- New Feature -->
                 <local:MenuItemDark Header="_WIP - Variable Definitions Maker">
-                    <MenuItem Header="_Make Default Pizza Tower JSON" Click="PT_JSON_BUTTON_CLICK"/>
-                    <MenuItem Header="_Make Custom JSON (UNFINISHED)" Click="MenuItem_About_Click"/>
+                    <MenuItem Header="_Make JSON for Pizza Tower Mod" Click="PT_JSON_BUTTON_CLICK"/>
+                    <Separator/>
+                    <MenuItem Header="_Make New Custom JSON (UNFINISHED)" Click="MenuItem_About_Click"/>
+                    <MenuItem Header="_Edit Existing Custom JSON (UNFINISHED)" Click="MenuItem_About_Click"/>
                 </local:MenuItemDark>
 
                 <local:MenuItemDark Header="_Find">
