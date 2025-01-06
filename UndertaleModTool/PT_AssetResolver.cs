@@ -13,6 +13,10 @@ using UndertaleModLib.Models;
 // for ShowWarning
 using System.Windows;
 
+// Note for me
+// how to get data in a new script i guess
+// UndertaleData data = mainWindow.Data;
+
 namespace UndertaleModTool
 {
     public class PT_AssetResolver
@@ -434,6 +438,9 @@ namespace UndertaleModTool
             builtin_vars.Add("spr_shotgunidle", "Asset.Sprite");
             builtin_vars.Add("spr_sworddash", "Asset.Sprite");
 
+            // Extra Shit i found
+            builtin_vars.Add("particlespr", "Asset.Sprite");
+
             // Function Arguments (From UTMTCE)
             builtin_funcs["gml_Script_instance_create_unique"] =
                     new[] { null, null, "Asset.Object" };
@@ -581,7 +588,7 @@ namespace UndertaleModTool
             var PTJSON = new
             {
                 // Enum Only Branch
-                Types = new 
+                Types = new
                 {
                     // goofy thing from above
                     Enums = enums,
@@ -590,7 +597,7 @@ namespace UndertaleModTool
                     General = new { }
                 },
                 // Other Shit Branch
-                GlobalNames = new 
+                GlobalNames = new
                 {
                     // crackful
                     Variables = builtin_vars,
@@ -604,17 +611,34 @@ namespace UndertaleModTool
 
             // Convert the parent object to a JSON string
             string jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
-            try
-            {
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + data.GeneralInfo.Name + ".json", jsonString);
-                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made");
-            }
-            catch (Exception e) 
-            {
-                Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Read data.win's Internal Game Name");
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "GameDefinitions.json", jsonString);
-                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made");
-            }
+                // Write main JSON File
+
+                // this is so fucking dumb IT IS A STRING!!!!
+                string dataname = data.GeneralInfo.Name + "";
+                string datanameclean = dataname.Replace("\"", "");
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
+
+                // Loader JSON
+                var loader = new
+                {
+                    LoadOrder = 1,
+                    Conditions = new[]
+                    {
+                        new
+                        {
+                            ConditionKind = "Always"
+                            // If i want to add this as a feature i guess
+                            //ConditionKind = "DisplayName.Regex",
+                            //Value = $"(?i)^{datanameclean}"
+                        }
+                    },
+                    UnderanalyzerFilename = datanameclean + ".json"
+                };
+                // Write Loader JSON
+                string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
+                // Notify User that it is done
+                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
 
         // Detects PT state names

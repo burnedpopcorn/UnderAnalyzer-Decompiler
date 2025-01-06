@@ -1275,6 +1275,8 @@ namespace UndertaleModTool
             private static readonly SolidColorBrush ConstantBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
             private static readonly SolidColorBrush InstanceBrush = new(Color.FromRgb(0x58, 0xE3, 0x5A));
             private static readonly SolidColorBrush LocalBrush = new(Color.FromRgb(0xFF, 0xF8, 0x99));
+            // ENUMS
+            private static readonly SolidColorBrush EnumBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
 
             private static ContextMenuDark contextMenu;
 
@@ -1461,6 +1463,27 @@ namespace UndertaleModTool
                                                            GlobalBrush);
                         }
                     }
+
+                    // For Colors for Second Dynamic Value in Enums
+                    if (offset >= 7)
+                    {
+                        if (doc.GetText(offset - 7, 7) == "states.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
+                    if (offset >= 12)
+                    {
+                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
+                    // For Colors for First Static Value in Enums
+                    if (data.BuiltinList.Enums.ContainsKey(nameText))
+                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                    // this is VERY hacky, but i cant think of a better way
+
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
                                                        ConstantBrush);
