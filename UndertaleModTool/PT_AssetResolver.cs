@@ -628,6 +628,7 @@ namespace UndertaleModTool
                         {
                             ConditionKind = "Always"
                             // If i want to add this as a feature i guess
+                            // REMEMBER IT USES DISPLAY NAME
                             //ConditionKind = "DisplayName.Regex",
                             //Value = $"(?i)^{datanameclean}"
                         }
