@@ -1,4 +1,11 @@
-﻿using System;
+﻿// VERY WIP
+// Variable Definition JSON Maker
+// with UI, because yeah
+
+// only does Variables at the moment
+// Enums and Functions will be done soon maybe
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -118,7 +125,7 @@ namespace UndertaleModTool
                 }
             }
 
-            string dataname = data.GeneralInfo.Name + "";
+            string dataname = data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
 
             try
@@ -172,7 +179,7 @@ namespace UndertaleModTool
                 return;
             }
 
-            string dataname = data.GeneralInfo.Name + "";
+            string dataname = data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
 
             // Loader JSON
@@ -207,7 +214,7 @@ namespace UndertaleModTool
                 return;
             }
 
-            string dataname = data.GeneralInfo.Name + "";
+            string dataname = data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
 
             // Loader JSON
