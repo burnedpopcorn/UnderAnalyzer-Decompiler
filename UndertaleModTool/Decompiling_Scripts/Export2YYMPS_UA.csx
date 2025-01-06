@@ -4754,7 +4754,7 @@ async Task CheckSpr_TextureGroup()
 		// adding TextureGroups to YYP
 		// we have to remove __yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_, as its not a valid one
 		try {
-			if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
+			if (!(group.Name.Content.Contains("_YYG_AUTO_GEN_TEX_GROUP_NAME_")) && !(group.Name.Content.Contains("Default")) && !(group.Name.Content.Contains("_yyg_auto_gen_tex_group_name_")) && !(group.Name.Content.Contains("default")))
 				{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
 		} catch {}
 	}
@@ -4784,7 +4784,7 @@ async Task CheckTile_TextureGroup()
 		if (!(SPRT && BGND))
 		{
 			try {
-				if ((group.Name.Content != "__yy__0fallbacktexture.png_yyg_auto_gen_tex_group_name_") && (group.Name.Content != "default"))
+				if (!(group.Name.Content.Contains("_YYG_AUTO_GEN_TEX_GROUP_NAME_")) && !(group.Name.Content.Contains("Default")) && !(group.Name.Content.Contains("_yyg_auto_gen_tex_group_name_")) && !(group.Name.Content.Contains("default")))
 					{ exportData.TextureGroups.Add(new GMTextureGroup { name = group.Name.Content }); }
 			} catch {}
 		}
