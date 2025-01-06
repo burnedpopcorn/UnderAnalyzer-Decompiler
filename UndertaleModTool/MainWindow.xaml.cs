@@ -3829,10 +3829,20 @@ result in loss of work.");
             CurrentTabIndex = 0;
         }
 
+        // Pizza Tower Thing
         private void PT_JSON_BUTTON_CLICK(object sender, RoutedEventArgs e)
         {
             // VERY WIP SHIT
             PT_AssetResolver.InitializeTypes(Data);
+        }
+        // Var Defition Form Window
+        private void OpenVarDefinitionForm_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a new instance of the VarDefinitionForm window
+            VarDefinitionForm varDefinitionWindow = new VarDefinitionForm();
+
+            // Show the new window
+            varDefinitionWindow.Show();
         }
 
         private void TabTitleText_Initialized(object sender, EventArgs e)
