@@ -1351,6 +1351,9 @@ namespace UndertaleModTool
                 return -1;
             }
 
+            // Only here because of fucking bullshit compiler
+            public Dictionary<string, double> Enums = null;
+
             /// Constructs an element at the specified offset.
             /// May return null if no element should be constructed.
             public override VisualLineElement ConstructElement(int offset)
@@ -1479,10 +1482,17 @@ namespace UndertaleModTool
                             return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
                         }
                     }
-                    // For Colors for First Static Value in Enums
-                    if (data.BuiltinList.Enums.ContainsKey(nameText))
+                    // Because fucking the COMPILER IS ACTUALLY MORE RETARDED THAN ME
+                    // HOW IS THAT EVEN POSSIBLE!!11!1!!11!!
+                    Enums = new Dictionary<string, double>();
+                    // Custom Enums
+                    Enums["UnknownEnum"] = 0.0;
+                    Enums["states"] = 1.0;
+
+                    // Color Enums Red if its even there
+                    if (Enums.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                    // this is VERY hacky, but i cant think of a better way
+                    //
 
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,

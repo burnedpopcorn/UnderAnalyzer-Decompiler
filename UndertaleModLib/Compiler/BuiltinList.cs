@@ -119,8 +119,6 @@ namespace UndertaleModLib.Compiler
         public Dictionary<string, FunctionInfo> Functions = null;
         public Dictionary<Compiler.Lexer.Token.TokenKind, AccessorInfo> Accessors1D = null;
         public Dictionary<Compiler.Lexer.Token.TokenKind, AccessorInfo> Accessors2D = null;
-        // Custom Enums (mainly for colors)
-        public Dictionary<string, int> Enums = null;
 
         public int CurrentID = 0;
         public int ArgumentID = 0;
@@ -139,11 +137,6 @@ namespace UndertaleModLib.Compiler
 
         public void Initialize(UndertaleData data)
         {
-            // Custom Functions
-            Enums = new Dictionary<string, int>();
-            Enums["UnknownEnum"] = 0;
-            Enums["states"] = 1;
-
             // Functions
             Functions = new Dictionary<string, FunctionInfo>();
             Functions["matrix_get"] = new FunctionInfo(this, 1);

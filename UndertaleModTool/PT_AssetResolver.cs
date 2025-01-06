@@ -616,7 +616,7 @@ namespace UndertaleModTool
                 // this is so fucking dumb IT IS A STRING!!!!
                 string dataname = data.GeneralInfo.Name + "";
                 string datanameclean = dataname.Replace("\"", "");
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
+                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
 
                 // Loader JSON
                 var loader = new
@@ -637,7 +637,7 @@ namespace UndertaleModTool
                 };
                 // Write Loader JSON
                 string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
+                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
                 // Notify User that it is done
                 Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
