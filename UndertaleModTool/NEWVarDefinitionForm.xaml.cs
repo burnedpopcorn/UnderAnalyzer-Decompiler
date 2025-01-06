@@ -16,13 +16,23 @@ namespace UndertaleModTool
 {
     public partial class VarDefinitionForm : Window
     {
+        // For data.win reading
         private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
         public VarDefinitionForm()
         {
             InitializeComponent();
         }
+        // For Dark Mode Title Bar
+        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (!IsVisible || IsLoaded)
+                return;
 
-        // Method to return predefined asset types
+            if (Settings.Instance.EnableDarkMode)
+                MainWindow.SetDarkTitleBarForWindow(this, true, false);
+        }
+
+        // List of all Asset Types for DropDown Menu
         public static List<string> GetAssetTypes()
         {
             return new List<string>
@@ -49,7 +59,7 @@ namespace UndertaleModTool
             };
         }
 
-        // Handle adding a new row with a TextBox and ComboBox
+        // Add Variable Button Press
         private void AddVarRowButton_Click(object sender, RoutedEventArgs e)
         {
             // Create a new Grid for the new row
@@ -69,7 +79,8 @@ namespace UndertaleModTool
             Grid.SetColumn(variableTextBox, 0); // Place it in the first column (left half)
 
             // Create the ComboBox for asset types
-            ComboBox newComboBox = new ComboBox
+            // Use UTMT's custom box
+            ComboBoxDark newComboBox = new ComboBoxDark
             {
                 ItemsSource = GetAssetTypes(), // Bind to static method to get asset types
             };
@@ -156,7 +167,7 @@ namespace UndertaleModTool
                 };
                 // Convert the parent object to a JSON string
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Underanalyzer/" + datanameclean + "_CUSTOM.json", jsonString);
+                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + "_CUSTOM.json", jsonString);
 
                 MessageBox.Show("JSON File has been Saved");
             }
@@ -198,7 +209,7 @@ namespace UndertaleModTool
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
         }
 
         // Function to make Loader JSON File (For All Games)
@@ -232,7 +243,7 @@ namespace UndertaleModTool
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
         }
 
         public static Dictionary<string, string> all_vars;
