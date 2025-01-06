@@ -7,65 +7,40 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:Settings}"
-        Title="Variable Definition Maker" Height="400" Width="700" SizeToContent="Height" WindowStartupLocation="CenterOwner">
+        ResizeMode="NoResize"
+        Title="Variable Definition Maker" Height="400" Width="700" MaxHeight="400" MaxWidth="700" SizeToContent="Height" WindowStartupLocation="CenterOwner">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel>
             <TextBlock Text="Variable Definition Maker" Margin="10,10,10,4" FontWeight="Bold"
                        ToolTip="Variable Definition that will be accounted for when Decompiling"/>
 
-            <Grid Margin="10,0,10,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="1" Grid.Column="1" Margin="10,3,123,3" Text="Variable:" ToolTip="Prefix used for named instance IDs when found by decompiler, and for compilation. Change this value if it conflicts with variable names."/>
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="76,3,76,3" Text="{Binding InstanceIdPrefix}"/>
-            </Grid>
-
             <!-- StackPanel to hold dynamic rows -->
             <StackPanel x:Name="VariableRowsPanel" Margin="10,0,10,3">
-                <!-- Existing row with TextBox and ComboBox -->
-                <Grid x:Name="InitialRow" Margin="10,0,10,10">
+                <Grid Margin="10,0,10,10">
                     <Grid.ColumnDefinitions>
+                        <!-- First column for Variable label and TextBox -->
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <!-- Second column for Asset Type label and ComboBox -->
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="293,-30,56,36" Text="Variable:" ToolTip="Prefix used for named instance IDs when found by decompiler, and for compilation. Change this value if it conflicts with variable names."/>
+                    <!-- Variable label -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="10" Text="Variable:" ToolTip="Prefix used for named instance IDs when found by decompiler, and for compilation. Change this value if it conflicts with variable names." VerticalAlignment="Center"/>
 
-                    <TextBlock Grid.Row="0" Grid.Column="1" Margin="285,-30,64,36" Text="Asset Type:" ToolTip="Asset Type of the Variable" Grid.ColumnSpan="3"/>
-                    <ComboBox x:Name="AssetTypeComboBox" Grid.Column="3" Margin="24,-33,8,33" 
-                        SelectedItem="{Binding SelectedOption, Mode=TwoWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
+                    <!-- Asset Type label -->
+                    <TextBlock Grid.Column="1" Margin="283,0,0,0" Text="Asset Type:" ToolTip="Asset Type of the Variable" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 </Grid>
+
             </StackPanel>
 
             <!-- Buttons for Add and Save -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
                 <Button x:Name="AddRowButton" Content="Add Variable" Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Variable"/>
-                <Button x:Name="AddRowButton1" Content="Add Enum" Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Enum"/>
-                <Button x:Name="AddRowButton3" Content="Add Function" Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Enum"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Width="340">
                 <Button x:Name="SaveButton" Content="Any Game Save" Width="150" Margin="10" Click="SaveButtonMulti_Click" ToolTip="Save JSON to work with any Game Loaded"/>

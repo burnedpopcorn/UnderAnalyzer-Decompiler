@@ -13,7 +13,6 @@ namespace UndertaleModTool
         public VarDefinitionForm()
         {
             InitializeComponent();
-            PopulateAssetTypes(); // Populate the AssetTypeComboBox in the first row
         }
 
         // Method to return predefined asset types
@@ -43,71 +42,33 @@ namespace UndertaleModTool
             };
         }
 
-        // Populate the AssetTypeComboBox for the first row
-        private void PopulateAssetTypes()
-        {
-            AssetTypeComboBox.ItemsSource = GetAssetTypes();
-        }
-
         // Handle adding a new row with a TextBox and ComboBox
         private void AddVarRowButton_Click(object sender, RoutedEventArgs e)
         {
             // Create a new Grid for the new row
             Grid newRow = new Grid();
-            newRow.Margin = new Thickness(10, 0, 10, 10);
 
-            // Define the columns explicitly with GridLength.Star
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            // Define Colums for 
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });    // 50% width for the ComboBox
 
-            // Define the rows
-            newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
-            newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            // Define the rows (one row for TextBox and ComboBox)
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            // Create the TextBlock for "Variable"
-            TextBlock variableLabel = new TextBlock
-            {
-                Text = "Variable:",
-                Margin = new Thickness(10),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            newRow.Children.Add(variableLabel);
-            Grid.SetRow(variableLabel, 0);
-            Grid.SetColumn(variableLabel, 1);
-
-            // Create the TextBox for entering the variable name
-            TextBox variableTextBox = new TextBox
-            {
-                Margin = new Thickness(10)
-            };
+            // Create Variable TextBox
+            TextBox variableTextBox = new TextBox { };
             newRow.Children.Add(variableTextBox);
-            Grid.SetRow(variableTextBox, 1);
-            Grid.SetColumn(variableTextBox, 1);
-
-            // Create the TextBlock for "Asset Type"
-            TextBlock assetTypeLabel = new TextBlock
-            {
-                Text = "Asset Type:",
-                Margin = new Thickness(10),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            newRow.Children.Add(assetTypeLabel);
-            Grid.SetRow(assetTypeLabel, 2);
-            Grid.SetColumn(assetTypeLabel, 1);
-            Grid.SetColumnSpan(assetTypeLabel, 3);
+            Grid.SetRow(variableTextBox, 0);  // Place it in the first row
+            Grid.SetColumn(variableTextBox, 0); // Place it in the first column (left half)
 
             // Create the ComboBox for asset types
             ComboBox newComboBox = new ComboBox
             {
-                Margin = new Thickness(24, 0, 8, 0),
                 ItemsSource = GetAssetTypes(), // Bind to static method to get asset types
             };
             newRow.Children.Add(newComboBox);
-            Grid.SetRow(newComboBox, 2);
-            Grid.SetColumn(newComboBox, 3);
+            Grid.SetRow(newComboBox, 0);  // Place it in the first row
+            Grid.SetColumn(newComboBox, 1); // Place it in the second column (right half)
 
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
