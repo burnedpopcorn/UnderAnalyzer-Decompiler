@@ -4,12 +4,12 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using UndertaleModLib;
 
 namespace UndertaleModTool
 {
     public partial class VarDefinitionForm : Window
     {
+        private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
         public VarDefinitionForm()
         {
             InitializeComponent();
@@ -115,6 +115,16 @@ namespace UndertaleModTool
 
         public void SaveButton_Func()
         {
+            // Get data from data.win
+            var data = mainWindow.Data;
+
+            if (data == null)
+            {
+                // Failsafe just in case user is dumb
+                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
+                return;
+            }
+
             var rowsData = new List<RowData>();
 
             all_vars = new Dictionary<string, string> { };
@@ -147,6 +157,9 @@ namespace UndertaleModTool
                 }
             }
 
+            string dataname = data.GeneralInfo.Name + "";
+            string datanameclean = dataname.Replace("\"", "");
+
             try
             {
                 // Main JSON thingy
@@ -175,7 +188,7 @@ namespace UndertaleModTool
                 };
                 // Convert the parent object to a JSON string
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "shit.json", jsonString);
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Underanalyzer/" + datanameclean + "_CUSTOM.json", jsonString);
 
                 MessageBox.Show("JSON File has been Saved");
             }
@@ -185,16 +198,16 @@ namespace UndertaleModTool
             }
         }
 
-        private void SaveButtonSingle_Click(object sender, RoutedEventArgs e)
+        // Function to make Loader JSON File (Only for Specific Game that is Currently Loaded)
+        public void SaveButtonSingle_Click(object sender, RoutedEventArgs e)
         {
+            // Get data from data.win
+            var data = mainWindow.Data;
+            // Get User Input and make Var Def JSON File
             SaveButton_Func();
-
-            UndertaleData data = new UndertaleData();
 
             if (data == null)
             {
-                // Failsafe just in case user is dumb
-                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
                 return;
             }
 
@@ -213,17 +226,28 @@ namespace UndertaleModTool
                             Value = $"(?i)^{datanameclean}"
                         }
                     },
-                UnderanalyzerFilename = "shit.json"
+                UnderanalyzerFilename = datanameclean + "_CUSTOM.json"
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "loader.json", loaderString);
+            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
         }
 
+        // Function to make Loader JSON File (For All Games)
         private void SaveButtonMulti_Click(object sender, RoutedEventArgs e)
         {
-            // Save all User Input to JSON File
+            // Get data from data.win
+            var data = mainWindow.Data;
+            // Get User Input and make Var Def JSON File
             SaveButton_Func();
+
+            if (data == null)
+            {
+                return;
+            }
+
+            string dataname = data.GeneralInfo.Name + "";
+            string datanameclean = dataname.Replace("\"", "");
 
             // Loader JSON
             var loader = new
@@ -234,16 +258,13 @@ namespace UndertaleModTool
                         new
                         {
                             ConditionKind = "Always"
-                            // If i want to add this as a feature i guess
-                            //ConditionKind = "DisplayName.Regex",
-                            //Value = $"(?i)^{datanameclean}"
                         }
                     },
-                UnderanalyzerFilename = "shit.json"
+                UnderanalyzerFilename = datanameclean + "_CUSTOM.json"
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "loader.json", loaderString);
+            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
         }
 
         public static Dictionary<string, string> all_vars;
