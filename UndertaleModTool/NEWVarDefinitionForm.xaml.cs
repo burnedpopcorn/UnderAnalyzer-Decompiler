@@ -11,6 +11,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using UndertaleModTool.Windows;
 
 namespace UndertaleModTool
 {
@@ -18,9 +19,14 @@ namespace UndertaleModTool
     {
         // For data.win reading
         private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+
+        // Initialze Everything
         public VarDefinitionForm()
         {
             InitializeComponent();
+
+            // Set Initial Variable Row
+            AddVarRow();
         }
         // For Dark Mode Title Bar
         private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -62,6 +68,14 @@ namespace UndertaleModTool
         // Add Variable Button Press
         private void AddVarRowButton_Click(object sender, RoutedEventArgs e)
         {
+            // Add Row Function
+            AddVarRow();
+        }
+
+        // Add Row Function
+        // Isn't built in above because of the Initial 8 Rows
+        public void AddVarRow() 
+        {
             // Create a new Grid for the new row
             Grid newRow = new Grid();
 
@@ -92,6 +106,42 @@ namespace UndertaleModTool
             VariableRowsPanel.Children.Add(newRow);
         }
 
+        // Add Function Button Press
+        private void AddFunctionRowButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Add Row Function for functions
+            AddFunctionRow();
+        }
+
+        // Add Row Function for functions (2 TextBoxes)
+        public void AddFunctionRow()
+        {
+            // Create a new Grid for the new row
+            Grid newRow = new Grid();
+
+            // Define Columns: 2 columns, each for a TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the first TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the second TextBox
+
+            // Define the rows (one row for the two TextBoxes)
+            newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            // Create first TextBox (e.g., Function name)
+            TextBox functionTextBox1 = new TextBox { };
+            newRow.Children.Add(functionTextBox1);
+            Grid.SetRow(functionTextBox1, 0);  // Place it in the first row
+            Grid.SetColumn(functionTextBox1, 0); // Place it in the first column (left half)
+
+            // Create second TextBox (e.g., Function argument)
+            TextBox functionTextBox2 = new TextBox { };
+            newRow.Children.Add(functionTextBox2);
+            Grid.SetRow(functionTextBox2, 0);  // Place it in the first row
+            Grid.SetColumn(functionTextBox2, 1); // Place it in the second column (right half)
+
+            // Add the new row to the VariableRowsPanel
+            VariableRowsPanel.Children.Add(newRow);
+        }
+
         public void SaveButton_Func()
         {
             // Get data from data.win
@@ -106,32 +156,58 @@ namespace UndertaleModTool
 
             var rowsData = new List<RowData>();
 
-            all_vars = new Dictionary<string, string> { };
+            // Dictionaries for storing user input separately for function rows and variable rows
+            Dictionary<string, string> functionRows = new Dictionary<string, string>(); // Function name and argument
+            Dictionary<string, string> variableRows = new Dictionary<string, string>(); // Variable name and asset type
 
             // Loop through all rows in VariableRowsPanel
             foreach (var item in VariableRowsPanel.Children)
             {
                 if (item is Grid row)
                 {
-                    // Access TextBox and ComboBox elements more safely
-                    TextBox textBox = null;
+                    // Identify if it's a function row or variable row
+                    TextBox textBox1 = null;
                     ComboBox comboBox = null;
 
+                    // Function TextBox
+                    TextBox textBox2 = null;
+
+                    // Check the children of the row (either TextBox, ComboBox, or both)
                     foreach (var child in row.Children)
                     {
                         if (child is TextBox tBox)
-                            textBox = tBox;
+                        {
+                            // If the first TextBox is found, assign it to textBox1
+                            if (textBox1 == null)
+                                textBox1 = tBox;
+                            else
+                                textBox2 = tBox; // If a second TextBox is found, assign it to textBox2 (function argument)
+                        }
                         else if (child is ComboBox cBox)
+                        {
                             comboBox = cBox;
+                        }
                     }
 
-                    // Check if both TextBox and ComboBox are found
-                    if (textBox != null && comboBox != null)
+                    // Check if both TextBoxes exist (Function row)
+                    if (textBox1 != null && textBox2 != null)
                     {
-                        var selectedOption = comboBox.SelectedItem as string; // Get selected asset type
-                        string texBox = textBox.Text;
+                        // Get the function name and function argument from the two TextBoxes
+                        string functionName = textBox1.Text;
+                        string functionArgument = textBox2.Text;
 
-                        all_vars.Add(texBox, selectedOption);
+                        // Add the function name and argument as a Tuple to the functionRows list
+                        functionRows.Add(functionName, functionArgument);
+                    }
+                    // Check if there's one TextBox and one ComboBox (Variable row)
+                    else if (textBox1 != null && comboBox != null)
+                    {
+                        // Get the variable name and selected asset type from the TextBox and ComboBox
+                        string variableName = textBox1.Text;
+                        string assetType = comboBox.SelectedItem as string;
+
+                        // Add the variable name and asset type to the variableRows dictionary
+                        variableRows.Add(variableName, assetType);
                     }
                 }
             }
@@ -141,7 +217,7 @@ namespace UndertaleModTool
 
             try
             {
-                // Main JSON thingy
+                // Main JSON structure
                 var JSON = new
                 {
                     // Enum Only Branch
@@ -156,15 +232,16 @@ namespace UndertaleModTool
                     // Other Shit Branch
                     GlobalNames = new
                     {
-                        // crackful
-                        Variables = all_vars,
-                        FunctionArguments = "",
-                        // Shit just for the Template
+                        // Store the variables in the "Variables" section
+                        Variables = variableRows,
+                        FunctionArguments = functionRows, // Store the function name and arguments in the "FunctionArguments" section
+                                                          // Shit just for the Template
                         FunctionReturn = new { }
                     },
                     // Shit just for the Template
                     CodeEntryNames = new { }
                 };
+
                 // Convert the parent object to a JSON string
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + "_CUSTOM.json", jsonString);
@@ -176,6 +253,8 @@ namespace UndertaleModTool
                 MessageBox.Show($"Error saving JSON:\n\n {ex.Message}");
             }
         }
+
+        #region Loader JSON File Functions
 
         // Function to make Loader JSON File (Only for Specific Game that is Currently Loaded)
         public void SaveButtonSingle_Click(object sender, RoutedEventArgs e)
@@ -199,7 +278,7 @@ namespace UndertaleModTool
                 LoadOrder = 1,
                 Conditions = new[]
                 {
-                        new
+                    new
                         {
                             ConditionKind = "DisplayName.Regex",
                             Value = $"(?i)^{datanameclean}"
@@ -234,7 +313,7 @@ namespace UndertaleModTool
                 LoadOrder = 1,
                 Conditions = new[]
                 {
-                        new
+                    new
                         {
                             ConditionKind = "Always"
                         }
@@ -246,6 +325,10 @@ namespace UndertaleModTool
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
         }
 
+        #endregion
+
+        #region Public Assets
+
         public static Dictionary<string, string> all_vars;
 
         // Helper class to hold row data
@@ -256,5 +339,7 @@ namespace UndertaleModTool
 
             public string TexBox { get; set; }
         }
+
+        #endregion
     }
 }
