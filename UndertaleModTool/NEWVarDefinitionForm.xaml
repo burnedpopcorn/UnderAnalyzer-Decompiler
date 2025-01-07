@@ -16,6 +16,40 @@
             <TextBlock Text="Variable Definition Maker" Margin="10,10,10,4" FontWeight="Bold"
                        ToolTip="Variable Definition that will be accounted for when Decompiling"/>
 
+            <!-- Massive Explaination Text with even bigger Explaination ToolTip -->
+            <TextBlock Grid.Row="14" Grid.Column="0" Grid.ColumnSpan="4" Margin="10" TextWrapping="Wrap" Text="Here you can Define Variables for any game you like. To learn about how to format your inputs correctly, hover over this text. Press the 'Any Game Save' button to save the files and make them apply to any Game Loaded, or press 'Specific Game Save' to make these definitions apply solely to the Game currently loaded">
+                <TextBlock.ToolTip>
+                    <ToolTip>
+                        <TextBlock>
+                            To add a Variable, press the 'Add Variable' button. 
+                            <LineBreak/>
+                            In the First Textbox, input the Variable you wish to define
+                            <LineBreak/>
+                            In the Second Textbox, select the Asset Type you want to define it as in the DropDown Menu.
+                            <LineBreak/>
+                            <LineBreak/>
+                            Example:   spr_player   |   Asset.Sprite
+                            <LineBreak/>
+                            Outcome:   spr_player = spr_player_walking;
+                            <LineBreak/>
+                            <LineBreak/>
+                            To add a Function, press the 'Add Function' button
+                            <LineBreak/>
+                            In the First Textbox, input the Function you wish to define (keep the gml_Script_)
+                            <LineBreak/>
+                            In the Second Textbox, type out the Asset Types of all arguments the function takes 
+                            <LineBreak/>
+                            (if you dont want to specify an argument, just input null)
+                            <LineBreak/>
+                            <LineBreak/>
+                            Example: gml_Script_scr_sound   |   Asset.Sound, null, Bool
+                            <LineBreak/>
+                            Outcome: scr_sound(sfx_punch, 10, true);
+                        </TextBlock>
+                    </ToolTip>
+                </TextBlock.ToolTip>
+            </TextBlock>
+
             <!-- StackPanel to hold dynamic rows -->
             <StackPanel x:Name="VariableRowsPanel" Margin="10,0,10,3">
                 <Grid Margin="10,0,10,10">
@@ -34,7 +68,7 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Margin="10" Text="Variable:" ToolTip="Prefix used for named instance IDs when found by decompiler, and for compilation. Change this value if it conflicts with variable names." VerticalAlignment="Center"/>
 
                     <!-- Asset Type label -->
-                    <TextBlock Grid.Column="1" Margin="283,0,0,0" Text="Asset Type:" ToolTip="Asset Type of the Variable" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Column="1" Margin="283,0,0,0" Text="Asset Types:" ToolTip="Asset Type of the Variable" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 </Grid>
 
             </StackPanel>
