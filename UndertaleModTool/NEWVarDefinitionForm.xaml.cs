@@ -93,14 +93,15 @@ namespace UndertaleModTool
 
         // Add Row Function
         // Isn't built in above because of the Initial 8 Rows
-        public void AddVarRow() 
+        public void AddVarRow()
         {
             // Create a new Grid for the new row
             Grid newRow = new Grid();
 
-            // Define Colums for 
+            // Define Columns for 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the TextBox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });    // 50% width for the ComboBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });    // Remove button column
 
             // Define the rows (one row for TextBox and ComboBox)
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
@@ -112,7 +113,6 @@ namespace UndertaleModTool
             Grid.SetColumn(variableTextBox, 0); // Place it in the first column (left half)
 
             // Create the ComboBox for asset types
-            // Use UTMT's custom box
             ComboBoxDark newComboBox = new ComboBoxDark
             {
                 ItemsSource = GetAssetTypes(), // Bind to static method to get asset types
@@ -120,6 +120,16 @@ namespace UndertaleModTool
             newRow.Children.Add(newComboBox);
             Grid.SetRow(newComboBox, 0);  // Place it in the first row
             Grid.SetColumn(newComboBox, 1); // Place it in the second column (right half)
+
+            // Add "Remove" Button
+            ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
+            removeButton.Click += (s, e) =>
+            {
+                VariableRowsPanel.Children.Remove(newRow);
+            };
+            newRow.Children.Add(removeButton);
+            Grid.SetRow(removeButton, 0);  // Place it in the first row
+            Grid.SetColumn(removeButton, 2); // Place it in the third column (right-most side)
 
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
@@ -145,6 +155,7 @@ namespace UndertaleModTool
             // Define Columns: 2 columns, each for a TextBox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the first TextBox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the second TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // Remove button column
 
             // Define the rows (one row for the two TextBoxes)
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
@@ -163,6 +174,16 @@ namespace UndertaleModTool
             newRow.Children.Add(functionTextBox2);
             Grid.SetRow(functionTextBox2, 0);  // Place it in the first row
             Grid.SetColumn(functionTextBox2, 1); // Place it in the second column (right half)
+
+            // Add "Remove" Button
+            ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
+            removeButton.Click += (s, e) =>
+            {
+                VariableRowsPanel.Children.Remove(newRow);
+            };
+            newRow.Children.Add(removeButton);
+            Grid.SetRow(removeButton, 0);  // Place it in the first row
+            Grid.SetColumn(removeButton, 2); // Place it in the third column (right-most side)
 
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
@@ -215,6 +236,14 @@ namespace UndertaleModTool
                         {
                             comboBox = cBox;
                         }
+                        else if (child is Button removeButton)
+                        {
+                            // If the row contains a "Remove" button, skip it when processing
+                            if (removeButton.IsPressed)
+                            {
+                                return; // Do nothing for this row if it's deleted
+                            }
+                        }
                     }
 
                     // Check if both TextBoxes exist (Function row)
@@ -224,7 +253,7 @@ namespace UndertaleModTool
                         string functionName = textBox1.Text;
                         string functionArgumentString = textBox2.Text;
 
-                        // Seperate "Asset." and null
+                        // Separate "Asset." and null
                         var functionArguments = functionArgumentString
                             .Split(',')
                             .Select(arg => arg.Trim())  // trim extra spaces
@@ -241,13 +270,16 @@ namespace UndertaleModTool
                         string assetType = comboBox.SelectedItem as string;
 
                         // Add the variable name and asset type to the variableRows dictionary
-                        variableRows.Add(variableName, assetType);
+                        if (!string.IsNullOrEmpty(variableName) && !string.IsNullOrEmpty(assetType))
+                        {
+                            variableRows.Add(variableName, assetType);
+                        }
                     }
                 }
             }
 
             string dataname = data.GeneralInfo.DisplayName + "";
-            string datanameclean = dataname.Replace("\"", "");
+            string datanameclean = dataname.Replace("\"", "").Replace(" ", "_");
 
             try
             {
@@ -257,8 +289,8 @@ namespace UndertaleModTool
                     // Enum Only Branch
                     Types = new
                     {
-                        // goofy thing from above
-                        Enums = "",
+                        // Should be replaced later when feature is implimented
+                        Enums = new { },
                         // Shit just for the Template
                         Constants = new { },
                         General = new { }
@@ -279,7 +311,7 @@ namespace UndertaleModTool
 
                 // Convert the parent object to a JSON string
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + "_CUSTOM.json", jsonString);
+                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/CUSTOM_DEFINITIONS.json", jsonString);
 
                 MessageBox.Show("JSON File has been Saved");
             }
@@ -306,11 +338,13 @@ namespace UndertaleModTool
 
             string dataname = data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
+            // This string should only be for filename
+            string datanameCLEANEST = datanameclean.Replace(" ", "_");
 
             // Loader JSON
             var loader = new
             {
-                LoadOrder = 1,
+                LoadOrder = 0,
                 Conditions = new[]
                 {
                     new
@@ -319,11 +353,11 @@ namespace UndertaleModTool
                             Value = $"(?i)^{datanameclean}"
                         }
                     },
-                UnderanalyzerFilename = datanameclean + "_CUSTOM.json"
+                UnderanalyzerFilename = "CUSTOM_DEFINITIONS.json"
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/LOADER.json", loaderString);
         }
 
         // Function to make Loader JSON File (For All Games)
@@ -340,12 +374,12 @@ namespace UndertaleModTool
             }
 
             string dataname = data.GeneralInfo.DisplayName + "";
-            string datanameclean = dataname.Replace("\"", "");
+            string datanameclean = dataname.Replace("\"", "").Replace(" ", "_");
 
             // Loader JSON
             var loader = new
             {
-                LoadOrder = 1,
+                LoadOrder = 0,
                 Conditions = new[]
                 {
                     new
@@ -353,11 +387,11 @@ namespace UndertaleModTool
                             ConditionKind = "Always"
                         }
                     },
-                UnderanalyzerFilename = datanameclean + "_CUSTOM.json"
+                UnderanalyzerFilename = "CUSTOM_DEFINITIONS.json"
             };
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/LOADER.json", loaderString);
         }
 
         #endregion

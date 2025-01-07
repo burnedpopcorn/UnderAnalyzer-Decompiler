@@ -21,11 +21,11 @@
                 <TextBlock.ToolTip>
                     <ToolTip>
                         <TextBlock>
-                            To add a Variable, press the 'Add Variable' button. 
+                            To add a Variable, press the 'Add Variable' button
                             <LineBreak/>
                             In the First Textbox, input the Variable you wish to define
                             <LineBreak/>
-                            In the Second Textbox, select the Asset Type you want to define it as in the DropDown Menu.
+                            In the Second Textbox, select the Asset Type you want to define it as in the DropDown Menu
                             <LineBreak/>
                             <LineBreak/>
                             Example:   spr_player   |   Asset.Sprite
