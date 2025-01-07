@@ -1,5 +1,4 @@
-﻿// VERY WIP
-// Make JSON File for Pizza Tower data.win
+﻿// Make JSON File for Pizza Tower data.win
 // This is basically completely from UTMTCE, but is used to make JSON files for UA
 
 using System;
@@ -29,7 +28,7 @@ namespace UndertaleModTool
 
         public static Dictionary<string, int> JSON_PTStates = new(); // for json/the only thing that is sent to the thing
 
-        // Properly initializes per-project/game
+        // Make the JSON Files
         public static void InitializeTypes(UndertaleData data)
         {
             if (data == null) 
@@ -475,14 +474,17 @@ namespace UndertaleModTool
                     new[] { null, "Asset.Sprite", null, null, null, null };
 
                 builtin_funcs["gml_Script_scr_sound"] =
-                    new[] { "Asset.Sound", "Asset.Sound", "Asset.Sound", "Asset.Sound" };
+                    new[] { "Asset.Sound" };
                 builtin_funcs["gml_Script_scr_music"] =
-                    new[] { "Asset.Sound", "Asset.Sound", "Asset.Sound", "Asset.Sound" };
+                    new[] { "Asset.Sound" };
                 builtin_funcs["gml_Script_scr_soundeffect"] =
-                    new[] { "Asset.Sound", "Asset.Sound", "Asset.Sound", "Asset.Sound" };
+                    new[] { "Asset.Sound" };
 
                 builtin_funcs["gml_Script_declare_particle"] =
                     new[] { null, "Asset.Sprite", null, null };
+                builtin_funcs["gml_Script_create_debris"] =
+                    new[] { null, null, "Asset.Sprite" };
+            // Added it again because for some reason if an argument is missing, it does not load it
                 builtin_funcs["gml_Script_create_debris"] =
                     new[] { null, null, "Asset.Sprite", null };
                 builtin_funcs["gml_Script_create_collect"] =
@@ -627,10 +629,6 @@ namespace UndertaleModTool
                         new
                         {
                             ConditionKind = "Always"
-                            // If i want to add this as a feature i guess
-                            // REMEMBER IT USES DISPLAY NAME
-                            //ConditionKind = "DisplayName.Regex",
-                            //Value = $"(?i)^{datanameclean}"
                         }
                     },
                     UnderanalyzerFilename = datanameclean + ".json"
