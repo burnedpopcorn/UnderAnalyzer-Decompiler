@@ -11,23 +11,29 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using UndertaleModTool.Windows;
+using System.Linq;
 
 namespace UndertaleModTool
 {
     public partial class VarDefinitionForm : Window
     {
+        #region Public Assets
+
         // For data.win reading
         private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
 
-        // Initialze Everything
-        public VarDefinitionForm()
-        {
-            InitializeComponent();
+        // For Function Saving
+        public static Dictionary<string, string[]> all_funcs;
 
-            // Set Initial Variable Row
-            AddVarRow();
+        // Helper class to hold row data
+        public class RowData
+        {
+            public string Text { get; set; }
+            public string SelectedOption { get; set; }
+
+            public string TexBox { get; set; }
         }
+
         // For Dark Mode Title Bar
         private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -36,6 +42,17 @@ namespace UndertaleModTool
 
             if (Settings.Instance.EnableDarkMode)
                 MainWindow.SetDarkTitleBarForWindow(this, true, false);
+        }
+
+        #endregion
+
+        // Initialize Everything
+        public VarDefinitionForm()
+        {
+            InitializeComponent();
+
+            // Set Initial Variable Row
+            AddVarRow();
         }
 
         // List of all Asset Types for DropDown Menu
@@ -64,6 +81,8 @@ namespace UndertaleModTool
                 "Constant.VirtualKey"
             };
         }
+
+        #region Variable Functions
 
         // Add Variable Button Press
         private void AddVarRowButton_Click(object sender, RoutedEventArgs e)
@@ -106,6 +125,10 @@ namespace UndertaleModTool
             VariableRowsPanel.Children.Add(newRow);
         }
 
+        #endregion
+
+        #region Function Functions
+
         // Add Function Button Press
         private void AddFunctionRowButton_Click(object sender, RoutedEventArgs e)
         {
@@ -127,12 +150,15 @@ namespace UndertaleModTool
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
             // Create first TextBox (e.g., Function name)
-            TextBox functionTextBox1 = new TextBox { };
+            TextBox functionTextBox1 = new TextBox
+            {
+                Text = "gml_Script_" // add this by default because underanalyzer is whack
+            };
             newRow.Children.Add(functionTextBox1);
             Grid.SetRow(functionTextBox1, 0);  // Place it in the first row
             Grid.SetColumn(functionTextBox1, 0); // Place it in the first column (left half)
 
-            // Create second TextBox (e.g., Function argument)
+            // Create second TextBox (e.g., Function arguments)
             TextBox functionTextBox2 = new TextBox { };
             newRow.Children.Add(functionTextBox2);
             Grid.SetRow(functionTextBox2, 0);  // Place it in the first row
@@ -141,6 +167,8 @@ namespace UndertaleModTool
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
         }
+
+        #endregion
 
         public void SaveButton_Func()
         {
@@ -157,8 +185,8 @@ namespace UndertaleModTool
             var rowsData = new List<RowData>();
 
             // Dictionaries for storing user input separately for function rows and variable rows
-            Dictionary<string, string> functionRows = new Dictionary<string, string>(); // Function name and argument
             Dictionary<string, string> variableRows = new Dictionary<string, string>(); // Variable name and asset type
+            all_funcs = new Dictionary<string, string[]> { };
 
             // Loop through all rows in VariableRowsPanel
             foreach (var item in VariableRowsPanel.Children)
@@ -194,10 +222,16 @@ namespace UndertaleModTool
                     {
                         // Get the function name and function argument from the two TextBoxes
                         string functionName = textBox1.Text;
-                        string functionArgument = textBox2.Text;
+                        string functionArgumentString = textBox2.Text;
 
-                        // Add the function name and argument as a Tuple to the functionRows list
-                        functionRows.Add(functionName, functionArgument);
+                        // Seperate "Asset." and null
+                        var functionArguments = functionArgumentString
+                            .Split(',')
+                            .Select(arg => arg.Trim())  // trim extra spaces
+                            .Select(arg => arg == "null" ? null : arg)  // Handle "null" as a null value
+                            .ToArray();
+
+                        all_funcs[functionName] = functionArguments;
                     }
                     // Check if there's one TextBox and one ComboBox (Variable row)
                     else if (textBox1 != null && comboBox != null)
@@ -234,8 +268,9 @@ namespace UndertaleModTool
                     {
                         // Store the variables in the "Variables" section
                         Variables = variableRows,
-                        FunctionArguments = functionRows, // Store the function name and arguments in the "FunctionArguments" section
-                                                          // Shit just for the Template
+                        // and funcs in the FunctionArguments section
+                        FunctionArguments = all_funcs,
+                        // Shit just for the Template
                         FunctionReturn = new { }
                     },
                     // Shit just for the Template
@@ -323,21 +358,6 @@ namespace UndertaleModTool
             // Write Loader JSON
             string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_LOADER.json", loaderString);
-        }
-
-        #endregion
-
-        #region Public Assets
-
-        public static Dictionary<string, string> all_vars;
-
-        // Helper class to hold row data
-        public class RowData
-        {
-            public string Text { get; set; }
-            public string SelectedOption { get; set; }
-
-            public string TexBox { get; set; }
         }
 
         #endregion
