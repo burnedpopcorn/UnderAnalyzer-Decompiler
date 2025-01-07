@@ -92,44 +92,44 @@ namespace UndertaleModTool
         }
 
         // Add Row Function
-        // Isn't built in above because of the Initial 8 Rows
+        // Isn't built in above because of the Initial Row
         public void AddVarRow()
         {
-            // Create a new Grid for the new row
+            // create grid for row
             Grid newRow = new Grid();
 
-            // Define Columns for 
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the TextBox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });    // 50% width for the ComboBox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });    // Remove button column
+            // Define Columns
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Textbox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For ComboBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
-            // Define the rows (one row for TextBox and ComboBox)
+            // Define Row
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
             // Create Variable TextBox
             TextBox variableTextBox = new TextBox { };
             newRow.Children.Add(variableTextBox);
-            Grid.SetRow(variableTextBox, 0);  // Place it in the first row
-            Grid.SetColumn(variableTextBox, 0); // Place it in the first column (left half)
+            Grid.SetRow(variableTextBox, 0);  // Place in First Row
+            Grid.SetColumn(variableTextBox, 0); // Place in Left Half of Row
 
-            // Create the ComboBox for asset types
+            // Create the ComboBox with Asset Type list
             ComboBoxDark newComboBox = new ComboBoxDark
             {
-                ItemsSource = GetAssetTypes(), // Bind to static method to get asset types
+                ItemsSource = GetAssetTypes(), // Bind to Asset Types
             };
             newRow.Children.Add(newComboBox);
-            Grid.SetRow(newComboBox, 0);  // Place it in the first row
-            Grid.SetColumn(newComboBox, 1); // Place it in the second column (right half)
+            Grid.SetRow(newComboBox, 0);  // Place in same Row
+            Grid.SetColumn(newComboBox, 1); // Place in Right Half
 
-            // Add "Remove" Button
+            // Delete Row Button
             ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
             };
             newRow.Children.Add(removeButton);
-            Grid.SetRow(removeButton, 0);  // Place it in the first row
-            Grid.SetColumn(removeButton, 2); // Place it in the third column (right-most side)
+            Grid.SetRow(removeButton, 0);  // Place in same Row
+            Grid.SetColumn(removeButton, 2); // Place in Right Most Side
 
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
@@ -149,41 +149,41 @@ namespace UndertaleModTool
         // Add Row Function for functions (2 TextBoxes)
         public void AddFunctionRow()
         {
-            // Create a new Grid for the new row
+            // create grid
             Grid newRow = new Grid();
 
-            // Define Columns: 2 columns, each for a TextBox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the first TextBox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // 50% width for the second TextBox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // Remove button column
+            // Define Columns
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
-            // Define the rows (one row for the two TextBoxes)
+            // Define Row
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            // Create first TextBox (e.g., Function name)
+            // Create First TextBox (Function Name)
             TextBox functionTextBox1 = new TextBox
             {
                 Text = "gml_Script_" // add this by default because underanalyzer is whack
             };
             newRow.Children.Add(functionTextBox1);
-            Grid.SetRow(functionTextBox1, 0);  // Place it in the first row
-            Grid.SetColumn(functionTextBox1, 0); // Place it in the first column (left half)
+            Grid.SetRow(functionTextBox1, 0);  // Place in First Row
+            Grid.SetColumn(functionTextBox1, 0); // Place in Left Half
 
-            // Create second TextBox (e.g., Function arguments)
+            // Create Second TextBox (Function Arguments)
             TextBox functionTextBox2 = new TextBox { };
             newRow.Children.Add(functionTextBox2);
-            Grid.SetRow(functionTextBox2, 0);  // Place it in the first row
-            Grid.SetColumn(functionTextBox2, 1); // Place it in the second column (right half)
+            Grid.SetRow(functionTextBox2, 0);  // Place in same Row
+            Grid.SetColumn(functionTextBox2, 1); // Place in Right Half
 
-            // Add "Remove" Button
+            // Delete Row Button
             ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
             };
             newRow.Children.Add(removeButton);
-            Grid.SetRow(removeButton, 0);  // Place it in the first row
-            Grid.SetColumn(removeButton, 2); // Place it in the third column (right-most side)
+            Grid.SetRow(removeButton, 0);  // Place in same Row
+            Grid.SetColumn(removeButton, 2); // Place on Right Most Side
 
             // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
