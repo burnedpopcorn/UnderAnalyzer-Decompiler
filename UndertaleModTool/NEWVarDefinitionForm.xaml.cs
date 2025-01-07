@@ -196,13 +196,6 @@ namespace UndertaleModTool
             // Get data from data.win
             var data = mainWindow.Data;
 
-            if (data == null)
-            {
-                // Failsafe just in case user is dumb
-                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
-                return;
-            }
-
             var rowsData = new List<RowData>();
 
             // Dictionaries for storing user input separately for function rows and variable rows
@@ -278,9 +271,6 @@ namespace UndertaleModTool
                 }
             }
 
-            string dataname = data.GeneralInfo.DisplayName + "";
-            string datanameclean = dataname.Replace("\"", "").Replace(" ", "_");
-
             try
             {
                 // Main JSON structure
@@ -328,18 +318,19 @@ namespace UndertaleModTool
         {
             // Get data from data.win
             var data = mainWindow.Data;
-            // Get User Input and make Var Def JSON File
-            SaveButton_Func();
 
             if (data == null)
             {
+                // Failsafe just in case user is dumb
+                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
                 return;
             }
 
+            // Get User Input and make Var Def JSON File
+            SaveButton_Func();
+
             string dataname = data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
-            // This string should only be for filename
-            string datanameCLEANEST = datanameclean.Replace(" ", "_");
 
             // Loader JSON
             var loader = new
@@ -363,18 +354,8 @@ namespace UndertaleModTool
         // Function to make Loader JSON File (For All Games)
         private void SaveButtonMulti_Click(object sender, RoutedEventArgs e)
         {
-            // Get data from data.win
-            var data = mainWindow.Data;
             // Get User Input and make Var Def JSON File
             SaveButton_Func();
-
-            if (data == null)
-            {
-                return;
-            }
-
-            string dataname = data.GeneralInfo.DisplayName + "";
-            string datanameclean = dataname.Replace("\"", "").Replace(" ", "_");
 
             // Loader JSON
             var loader = new
