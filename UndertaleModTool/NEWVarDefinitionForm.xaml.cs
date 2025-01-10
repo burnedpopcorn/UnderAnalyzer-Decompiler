@@ -2,8 +2,8 @@
 // Variable Definition JSON Maker
 // with UI, because yeah
 
-// only does Variables at the moment
-// Enums and Functions will be done soon maybe
+// only does Variables and Function Arguments at the moment
+// Enums will be done soon maybe
 
 using System;
 using System.Collections.Generic;
@@ -303,7 +303,7 @@ namespace UndertaleModTool
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/CUSTOM_DEFINITIONS.json", jsonString);
 
-                MessageBox.Show("JSON File has been Saved");
+                MessageBox.Show("JSON File has been Saved\n\nRemember to Restart the Program for it to Apply");
             }
             catch (Exception ex)
             {

@@ -74,7 +74,7 @@
             </StackPanel>
 
             <!-- Buttons for Add and Save -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0">
                 <local:ButtonDark Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Variable">Add Variable</local:ButtonDark>
                 <!-- New button for adding function row -->
                 <local:ButtonDark Width="100" Margin="10" Click="AddFunctionRowButton_Click" ToolTip="Add a Row for a New Function">Add Function</local:ButtonDark>
