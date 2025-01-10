@@ -9,6 +9,9 @@
 	  - Added Asset_Order Note, which included a List of all Asset IDs and their respective Asset
 		  to provide the ability to more easily make a perfect Decompilation of a given game
 	  - (NEW) Added Ability to Detect and Assign TextureGroups to Sprites and Tilesets
+
+	  - (NEW) Added Ability to Extract Pizza Tower Enums
+		  Given you are using my decompiler, and have generated and applied a Pizza Tower JSON File
 	
 	GMS2_Decompiler_FIXED_UA Improvements include:
 	  - Start-up Greetings and Credits Pop-Up
@@ -3402,8 +3405,21 @@ void DumpSequence(UndertaleSequence seq)
 						(GMTrack as GMColourTrack).keyframes.Keyframes.Add(GMKeyframe);
 					}
 					break;
-			}
-		}
+
+                case "GMTextTrack": // UTMT DOESNT EVEN FUCKING DECOMPILE THIS ONE
+                    break;
+            }
+			// Why was this missing
+            if (GMTrack != null)
+            {
+                GMTrack.name = track.Name.Content;
+                GMTrack.isCreationTrack = track.IsCreationTrack;
+                GMTrack.builtinName = (int)track.BuiltinName;
+                GMTrack.traits = (int)track.Traits;
+                GMTrack.tracks = DumpTracks(track.Tracks);
+                tracklist.Add(GMTrack);
+            }
+        }
 
 		return tracklist;
 	}

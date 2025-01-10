@@ -88,36 +88,40 @@ namespace UndertaleModTool
                     new[] { "scr_pizzaface_p3_" }
                 );
 
-                // Variables taht should == Enum
-                builtin_vars.Add("state", "Enum.states");
-                builtin_vars.Add("_state", "Enum.states");
-                builtin_vars.Add("prevstate", "Enum.states");
-                builtin_vars.Add("_prevstate", "Enum.states");
-                builtin_vars.Add("substate", "Enum.states");
-                builtin_vars.Add("arenastate", "Enum.states");
-                builtin_vars.Add("player_state", "Enum.states");
-                builtin_vars.Add("tauntstoredstate", "Enum.states");
-                builtin_vars.Add("taunt_storedstate", "Enum.states");
-                builtin_vars.Add("storedstate", "Enum.states");
-                builtin_vars.Add("chosenstate", "Enum.states");
-                builtin_vars.Add("superattackstate", "Enum.states");
-                builtin_vars.Add("text_state", "Enum.states");
-                builtin_vars.Add("ministate", "Enum.states");
-                builtin_vars.Add("dropstate", "Enum.states");
-                builtin_vars.Add("verticalstate", "Enum.states");
-                builtin_vars.Add("walkstate", "Enum.states");
-                builtin_vars.Add("hitstate", "Enum.states");
-                builtin_vars.Add("toppin_state", "Enum.states");
-                builtin_vars.Add("bossintrostate", "Enum.states");
-                builtin_vars.Add("introstate", "Enum.states");
-                builtin_vars.Add("fadeoutstate", "Enum.states");
-                builtin_vars.Add("supergrabstate", "Enum.states");
-                builtin_vars.Add("startstate", "Enum.states");
-                builtin_vars.Add("atstate", "Enum.states");
-                builtin_vars.Add("attack_pool", "Enum.states");
+                // ONLY Add if the FindStateNames Function actually found states
+                if (JSON_PTStates.Count > 0)
+                {
+                    // Variables that should == Enum
+                    builtin_vars.Add("state", "Enum.states");
+                    builtin_vars.Add("_state", "Enum.states");
+                    builtin_vars.Add("prevstate", "Enum.states");
+                    builtin_vars.Add("_prevstate", "Enum.states");
+                    builtin_vars.Add("substate", "Enum.states");
+                    builtin_vars.Add("arenastate", "Enum.states");
+                    builtin_vars.Add("player_state", "Enum.states");
+                    builtin_vars.Add("tauntstoredstate", "Enum.states");
+                    builtin_vars.Add("taunt_storedstate", "Enum.states");
+                    builtin_vars.Add("storedstate", "Enum.states");
+                    builtin_vars.Add("chosenstate", "Enum.states");
+                    builtin_vars.Add("superattackstate", "Enum.states");
+                    builtin_vars.Add("text_state", "Enum.states");
+                    builtin_vars.Add("ministate", "Enum.states");
+                    builtin_vars.Add("dropstate", "Enum.states");
+                    builtin_vars.Add("verticalstate", "Enum.states");
+                    builtin_vars.Add("walkstate", "Enum.states");
+                    builtin_vars.Add("hitstate", "Enum.states");
+                    builtin_vars.Add("toppin_state", "Enum.states");
+                    builtin_vars.Add("bossintrostate", "Enum.states");
+                    builtin_vars.Add("introstate", "Enum.states");
+                    builtin_vars.Add("fadeoutstate", "Enum.states");
+                    builtin_vars.Add("supergrabstate", "Enum.states");
+                    builtin_vars.Add("startstate", "Enum.states");
+                    builtin_vars.Add("atstate", "Enum.states");
+                    builtin_vars.Add("attack_pool", "Enum.states");
 
-                // Function Arguments
-                builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
+                    // Function Arguments
+                    builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
+                }
             }
             catch (Exception e) 
             {
@@ -586,6 +590,7 @@ namespace UndertaleModTool
                     } 
                 }
             };
+
             // Main JSON thingy
             var PTJSON = new
             {
@@ -611,33 +616,65 @@ namespace UndertaleModTool
                 CodeEntryNames = new { }
             };
 
-            // Convert the parent object to a JSON string
-            string jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
-                // Write main JSON File
-
-                // this is so fucking dumb IT IS A STRING!!!!
-                string dataname = data.GeneralInfo.Name + "";
-                string datanameclean = dataname.Replace("\"", "");
-                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
-
-                // Loader JSON
-                var loader = new
+            // Use if there are no enums
+            // i wish there was a better way, but C# is a bitch
+            var PTJSON_NOENUMS = new
+            {
+                // Enum Only Branch
+                Types = new
                 {
-                    LoadOrder = 1,
-                    Conditions = new[]
+                    // goofy thing from above
+                    Enums = new { },
+                    // Shit just for the Template
+                    Constants = new { },
+                    General = new { }
+                },
+                // Other Shit Branch
+                GlobalNames = new
+                {
+                    // crackful
+                    Variables = builtin_vars,
+                    FunctionArguments = builtin_funcs,
+                    // Shit just for the Template
+                    FunctionReturn = new { }
+                },
+                // Shit just for the Template
+                CodeEntryNames = new { }
+            };
+
+            string jsonString = ""; 
+
+            // Convert the parent object to a JSON string
+
+            if (JSON_PTStates.Count > 0) // if has enums
+                jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
+            else // if doesn't have enums
+                jsonString = JsonSerializer.Serialize(PTJSON_NOENUMS, new JsonSerializerOptions { WriteIndented = true });
+
+            // Write main JSON File
+            // this is so fucking dumb IT IS A STRING!!!!
+            string dataname = data.GeneralInfo.Name + "";
+            string datanameclean = dataname.Replace("\"", "");
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
+
+            // Loader JSON
+            var loader = new
+            {
+                LoadOrder = 1,
+                Conditions = new[]
+                {
+                    new
                     {
-                        new
-                        {
-                            ConditionKind = "Always"
-                        }
-                    },
-                    UnderanalyzerFilename = datanameclean + ".json"
-                };
-                // Write Loader JSON
-                string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
-                // Notify User that it is done
-                Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
+                        ConditionKind = "Always"
+                    }
+                },
+                UnderanalyzerFilename = datanameclean + ".json"
+            };
+            // Write Loader JSON
+            string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
+            // Notify User that it is done
+            Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
 
         // Detects PT state names
