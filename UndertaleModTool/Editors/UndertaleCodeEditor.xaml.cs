@@ -1482,12 +1482,20 @@ namespace UndertaleModTool
                             return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
                         }
                     }
+                    if (offset >= 9)
+                    {
+                        if (doc.GetText(offset - 9, 9) == "particle.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
                     // Because fucking the COMPILER IS ACTUALLY MORE RETARDED THAN ME
                     // HOW IS THAT EVEN POSSIBLE!!11!1!!11!!
                     Enums = new Dictionary<string, double>();
                     // Custom Enums
                     Enums["UnknownEnum"] = 0.0;
                     Enums["states"] = 1.0;
+                    Enums["particle"] = 2.0;
 
                     // Color Enums Red if its even there
                     if (Enums.ContainsKey(nameText))
