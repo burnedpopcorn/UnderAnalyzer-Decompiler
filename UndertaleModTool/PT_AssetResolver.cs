@@ -12,10 +12,6 @@ using UndertaleModLib.Models;
 // for ShowWarning
 using System.Windows;
 
-// Note for me
-// how to get data in a new script i guess
-// UndertaleData data = mainWindow.Data;
-
 namespace UndertaleModTool
 {
     public class PT_AssetResolver
@@ -28,10 +24,14 @@ namespace UndertaleModTool
 
         public static Dictionary<string, int> JSON_PTStates = new(); // for json/the only thing that is sent to the thing
 
+        public static Dictionary<string, object> enums = new(); // Main enums
+
+        public static Dictionary<string, int> particle_enums = new(); // for particle enums
+
         // Make the JSON Files
         public static void InitializeTypes(UndertaleData data)
         {
-            if (data == null) 
+            if (data == null)
             {
                 // Failsafe just in case user is dumb
                 Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
@@ -49,6 +49,9 @@ namespace UndertaleModTool
             { };
 
             // Pizza Tower Enums
+            // how these work is that:
+            //                                      v--- Code Entry to search               v--- find state name from, ex: (scr_player_normal(); --> normal)
+            // FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), new[] { "scr_player_", "state_player_", "scr_playerN_" });
             try
             {
                 // Check Pizza Tower States in these Scripts
@@ -123,110 +126,110 @@ namespace UndertaleModTool
                     builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
                 }
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Extract Pizza Tower Enums");
             }
 
-                // Variable Definitions
+            // Variable Definitions
 
-                // Rooms
-                builtin_vars.Add("leveltorestart", "Asset.Room");
-                builtin_vars.Add("targetRoom", "Asset.Room");
-                builtin_vars.Add("targetRoom2", "Asset.Room");
-                builtin_vars.Add("backtohubroom", "Asset.Room");
-                builtin_vars.Add("roomtorestart", "Asset.Room");
-                builtin_vars.Add("checkpointroom", "Asset.Room");
-                builtin_vars.Add("lastroom", "Asset.Room");
-                builtin_vars.Add("hub_array", "Asset.Room");
-                builtin_vars.Add("level_array", "Asset.Room");
-                builtin_vars.Add("_levelinfo", "Asset.Room");
-                builtin_vars.Add("room_arr", "Asset.Room");
-                builtin_vars.Add("rm", "Asset.Room");
-                builtin_vars.Add("room_index", "Asset.Room");
-                builtin_vars.Add("levels", "Asset.Room");
+            // Rooms
+            builtin_vars.Add("leveltorestart", "Asset.Room");
+            builtin_vars.Add("targetRoom", "Asset.Room");
+            builtin_vars.Add("targetRoom2", "Asset.Room");
+            builtin_vars.Add("backtohubroom", "Asset.Room");
+            builtin_vars.Add("roomtorestart", "Asset.Room");
+            builtin_vars.Add("checkpointroom", "Asset.Room");
+            builtin_vars.Add("lastroom", "Asset.Room");
+            builtin_vars.Add("hub_array", "Asset.Room");
+            builtin_vars.Add("level_array", "Asset.Room");
+            builtin_vars.Add("_levelinfo", "Asset.Room");
+            builtin_vars.Add("room_arr", "Asset.Room");
+            builtin_vars.Add("rm", "Asset.Room");
+            builtin_vars.Add("room_index", "Asset.Room");
+            builtin_vars.Add("levels", "Asset.Room");
 
-                // Objects
-                builtin_vars.Add("objectlist", "Asset.Object");
-                builtin_vars.Add("object_arr", "Asset.Object");
-                builtin_vars.Add("objdark_arr", "Asset.Object");
-                builtin_vars.Add("content_arr", "Asset.Object");
-                builtin_vars.Add("spawnpool", "Asset.Object");
-                builtin_vars.Add("spawn_arr", "Asset.Object");
-                builtin_vars.Add("dark_arr", "Asset.Object");
-                builtin_vars.Add("flash_arr", "Asset.Object");
-                builtin_vars.Add("collision_list", "Asset.Object");
-                builtin_vars.Add("content", "Asset.Object");
-                builtin_vars.Add("player", "Asset.Object");
-                builtin_vars.Add("targetplayer", "Asset.Object");
-                builtin_vars.Add("target", "Asset.Object");
-                builtin_vars.Add("playerid", "Asset.Object");
-                builtin_vars.Add("_playerid", "Asset.Object");
-                builtin_vars.Add("player_id", "Asset.Object");
-                builtin_vars.Add("platformid", "Asset.Object");
-                builtin_vars.Add("objID", "Asset.Object");
-                builtin_vars.Add("objectID", "Asset.Object");
-                builtin_vars.Add("spawnenemyID", "Asset.Object");
-                builtin_vars.Add("ID", "Asset.Object");
-                builtin_vars.Add("baddiegrabbedID", "Asset.Object");
-                builtin_vars.Add("pizzashieldID", "Asset.Object");
-                builtin_vars.Add("angryeffectid", "Asset.Object");
-                builtin_vars.Add("pizzashieldid", "Asset.Object");
-                builtin_vars.Add("superchargedeffectid", "Asset.Object");
-                builtin_vars.Add("baddieID", "Asset.Object");
-                builtin_vars.Add("baddieid", "Asset.Object");
-                builtin_vars.Add("brickid", "Asset.Object");
-                builtin_vars.Add("attackerID", "Asset.Object");
-                builtin_vars.Add("object", "Asset.Object");
-                builtin_vars.Add("obj", "Asset.Object");
-                builtin_vars.Add("_obj", "Asset.Object");
-                builtin_vars.Add("closestObj", "Asset.Object");
-                builtin_vars.Add("solidObj", "Asset.Object");
-                builtin_vars.Add("bg_obj", "Asset.Object");
-                builtin_vars.Add("_obj_player", "Asset.Object");
-                builtin_vars.Add("obj_explosion", "Asset.Object");
-                builtin_vars.Add("my_obj_index", "Asset.Object");
-                builtin_vars.Add("inst", "Asset.Object");
-                builtin_vars.Add("chargeeffectid", "Asset.Object");
-                builtin_vars.Add("dashcloudid", "Asset.Object");
-                builtin_vars.Add("crazyruneffectid", "Asset.Object");
-                builtin_vars.Add("superslameffectid", "Asset.Object");
-                builtin_vars.Add("speedlineseffectid", "Asset.Object");
+            // Objects
+            builtin_vars.Add("objectlist", "Asset.Object");
+            builtin_vars.Add("object_arr", "Asset.Object");
+            builtin_vars.Add("objdark_arr", "Asset.Object");
+            builtin_vars.Add("content_arr", "Asset.Object");
+            builtin_vars.Add("spawnpool", "Asset.Object");
+            builtin_vars.Add("spawn_arr", "Asset.Object");
+            builtin_vars.Add("dark_arr", "Asset.Object");
+            builtin_vars.Add("flash_arr", "Asset.Object");
+            builtin_vars.Add("collision_list", "Asset.Object");
+            builtin_vars.Add("content", "Asset.Object");
+            builtin_vars.Add("player", "Asset.Object");
+            builtin_vars.Add("targetplayer", "Asset.Object");
+            builtin_vars.Add("target", "Asset.Object");
+            builtin_vars.Add("playerid", "Asset.Object");
+            builtin_vars.Add("_playerid", "Asset.Object");
+            builtin_vars.Add("player_id", "Asset.Object");
+            builtin_vars.Add("platformid", "Asset.Object");
+            builtin_vars.Add("objID", "Asset.Object");
+            builtin_vars.Add("objectID", "Asset.Object");
+            builtin_vars.Add("spawnenemyID", "Asset.Object");
+            builtin_vars.Add("ID", "Asset.Object");
+            builtin_vars.Add("baddiegrabbedID", "Asset.Object");
+            builtin_vars.Add("pizzashieldID", "Asset.Object");
+            builtin_vars.Add("angryeffectid", "Asset.Object");
+            builtin_vars.Add("pizzashieldid", "Asset.Object");
+            builtin_vars.Add("superchargedeffectid", "Asset.Object");
+            builtin_vars.Add("baddieID", "Asset.Object");
+            builtin_vars.Add("baddieid", "Asset.Object");
+            builtin_vars.Add("brickid", "Asset.Object");
+            builtin_vars.Add("attackerID", "Asset.Object");
+            builtin_vars.Add("object", "Asset.Object");
+            builtin_vars.Add("obj", "Asset.Object");
+            builtin_vars.Add("_obj", "Asset.Object");
+            builtin_vars.Add("closestObj", "Asset.Object");
+            builtin_vars.Add("solidObj", "Asset.Object");
+            builtin_vars.Add("bg_obj", "Asset.Object");
+            builtin_vars.Add("_obj_player", "Asset.Object");
+            builtin_vars.Add("obj_explosion", "Asset.Object");
+            builtin_vars.Add("my_obj_index", "Asset.Object");
+            builtin_vars.Add("inst", "Asset.Object");
+            builtin_vars.Add("chargeeffectid", "Asset.Object");
+            builtin_vars.Add("dashcloudid", "Asset.Object");
+            builtin_vars.Add("crazyruneffectid", "Asset.Object");
+            builtin_vars.Add("superslameffectid", "Asset.Object");
+            builtin_vars.Add("speedlineseffectid", "Asset.Object");
 
-                // Sprites
-                builtin_vars.Add("bpal", "Asset.Sprite");
-                builtin_vars.Add("vstitle", "Asset.Sprite");
-                builtin_vars.Add("bg", "Asset.Sprite");
-                builtin_vars.Add("bg2", "Asset.Sprite");
-                builtin_vars.Add("bg3", "Asset.Sprite");
-                builtin_vars.Add("playersprshadow", "Asset.Sprite");
-                builtin_vars.Add("bosssprshadow", "Asset.Sprite");
-                builtin_vars.Add("portrait1_idle", "Asset.Sprite");
-                builtin_vars.Add("portrait1_hurt", "Asset.Sprite");
-                builtin_vars.Add("portrait2_idle", "Asset.Sprite");
-                builtin_vars.Add("portrait2_hurt", "Asset.Sprite");
-                builtin_vars.Add("boss_palette", "Asset.Sprite");
-                builtin_vars.Add("panicspr", "Asset.Sprite");
-                builtin_vars.Add("bossarr", "Asset.Sprite");
-                builtin_vars.Add("palettetexture", "Asset.Sprite");
-                builtin_vars.Add("switchstart", "Asset.Sprite");
-                builtin_vars.Add("switchend", "Asset.Sprite");
-                builtin_vars.Add("_hurt", "Asset.Sprite");
-                builtin_vars.Add("_dead", "Asset.Sprite");
-                builtin_vars.Add("treasure_arr", "Asset.Sprite");
-                builtin_vars.Add("storedspriteindex", "Asset.Sprite");
-                builtin_vars.Add("icon", "Asset.Sprite");
-                builtin_vars.Add("spridle", "Asset.Sprite");
-                builtin_vars.Add("sprgot", "Asset.Sprite");
+            // Sprites
+            builtin_vars.Add("bpal", "Asset.Sprite");
+            builtin_vars.Add("vstitle", "Asset.Sprite");
+            builtin_vars.Add("bg", "Asset.Sprite");
+            builtin_vars.Add("bg2", "Asset.Sprite");
+            builtin_vars.Add("bg3", "Asset.Sprite");
+            builtin_vars.Add("playersprshadow", "Asset.Sprite");
+            builtin_vars.Add("bosssprshadow", "Asset.Sprite");
+            builtin_vars.Add("portrait1_idle", "Asset.Sprite");
+            builtin_vars.Add("portrait1_hurt", "Asset.Sprite");
+            builtin_vars.Add("portrait2_idle", "Asset.Sprite");
+            builtin_vars.Add("portrait2_hurt", "Asset.Sprite");
+            builtin_vars.Add("boss_palette", "Asset.Sprite");
+            builtin_vars.Add("panicspr", "Asset.Sprite");
+            builtin_vars.Add("bossarr", "Asset.Sprite");
+            builtin_vars.Add("palettetexture", "Asset.Sprite");
+            builtin_vars.Add("switchstart", "Asset.Sprite");
+            builtin_vars.Add("switchend", "Asset.Sprite");
+            builtin_vars.Add("_hurt", "Asset.Sprite");
+            builtin_vars.Add("_dead", "Asset.Sprite");
+            builtin_vars.Add("treasure_arr", "Asset.Sprite");
+            builtin_vars.Add("storedspriteindex", "Asset.Sprite");
+            builtin_vars.Add("icon", "Asset.Sprite");
+            builtin_vars.Add("spridle", "Asset.Sprite");
+            builtin_vars.Add("sprgot", "Asset.Sprite");
 
-                // Colors
-                builtin_vars.Add("color", "Constant.Color");
-                builtin_vars.Add("textcolor", "Constant.Color");
-                builtin_vars.Add("bc", "Constant.Color");
-                builtin_vars.Add("tc", "Constant.Color");
-                builtin_vars.Add("gameframe_blend", "Constant.Color");
-                builtin_vars.Add("c1", "Constant.Color");
-                builtin_vars.Add("c2", "Constant.Color");
+            // Colors
+            builtin_vars.Add("color", "Constant.Color");
+            builtin_vars.Add("textcolor", "Constant.Color");
+            builtin_vars.Add("bc", "Constant.Color");
+            builtin_vars.Add("tc", "Constant.Color");
+            builtin_vars.Add("gameframe_blend", "Constant.Color");
+            builtin_vars.Add("c1", "Constant.Color");
+            builtin_vars.Add("c2", "Constant.Color");
 
             builtin_vars.Add("gameframe_caption_icon", "Asset.Sprite");
 
@@ -447,149 +450,154 @@ namespace UndertaleModTool
             // Function Arguments (From UTMTCE)
             builtin_funcs["gml_Script_instance_create_unique"] =
                     new[] { null, null, "Asset.Object" };
-                builtin_funcs["gml_Script_instance_nearest_random"] =
-                    new[] { "Asset.Object", null };
+            builtin_funcs["gml_Script_instance_nearest_random"] =
+                new[] { "Asset.Object", null };
 
-                builtin_funcs["gml_Script_draw_enemy"] =
-                    new[] { null, null, "Constant.Color" };
+            builtin_funcs["gml_Script_draw_enemy"] =
+                new[] { null, null, "Constant.Color" };
 
-                builtin_funcs["gml_Script_create_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null };
-                builtin_funcs["gml_Script_create_mach2effect"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_heatattack_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_firemouth_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_blue_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_red_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_blur_afterimage"] =
-                    new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null };
+            builtin_funcs["gml_Script_create_mach2effect"] =
+                new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_heatattack_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_firemouth_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_blue_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_red_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_blur_afterimage"] =
+                new[] { null, null, "Asset.Sprite", null, null };
 
-                builtin_funcs["gml_Script_pal_swap_init_system"] =
-                    new[] { "Asset.Shader" };
-                builtin_funcs["gml_Script_pal_swap_init_system_fix"] =
-                    new[] { "Asset.Shader" };
-                builtin_funcs["gml_Script_pal_swap_set"] =
-                    new[] { "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_pattern_set"] =
-                    new[] { null, "Asset.Sprite", null, null, null, null };
+            builtin_funcs["gml_Script_pal_swap_init_system"] =
+                new[] { "Asset.Shader" };
+            builtin_funcs["gml_Script_pal_swap_init_system_fix"] =
+                new[] { "Asset.Shader" };
+            builtin_funcs["gml_Script_pal_swap_set"] =
+                new[] { "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_pattern_set"] =
+                new[] { null, "Asset.Sprite", null, null, null, null };
 
-                builtin_funcs["gml_Script_scr_sound"] =
-                    new[] { "Asset.Sound" };
-                builtin_funcs["gml_Script_scr_music"] =
-                    new[] { "Asset.Sound" };
-                builtin_funcs["gml_Script_scr_soundeffect"] =
-                    new[] { "Asset.Sound" };
+            builtin_funcs["gml_Script_scr_sound"] =
+                new[] { "Asset.Sound" };
+            builtin_funcs["gml_Script_scr_music"] =
+                new[] { "Asset.Sound" };
+            builtin_funcs["gml_Script_scr_soundeffect"] =
+                new[] { "Asset.Sound" };
 
-                builtin_funcs["gml_Script_declare_particle"] =
-                    new[] { null, "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_create_debris"] =
-                    new[] { null, null, "Asset.Sprite" };
+            builtin_funcs["gml_Script_declare_particle"] =
+                new[] { null, "Asset.Sprite", null, null };
+            builtin_funcs["gml_Script_create_debris"] =
+                new[] { null, null, "Asset.Sprite" };
             // Added it again because for some reason if an argument is missing, it does not load it
-                builtin_funcs["gml_Script_create_debris"] =
-                    new[] { null, null, "Asset.Sprite", null };
-                builtin_funcs["gml_Script_create_collect"] =
-                    new[] { null, null, "Asset.Sprite", null };
+            builtin_funcs["gml_Script_create_debris"] =
+                new[] { null, null, "Asset.Sprite", null };
+            builtin_funcs["gml_Script_create_collect"] =
+                new[] { null, null, "Asset.Sprite", null };
 
-                builtin_funcs["gml_Script_tv_do_expression"] =
-                    new[] { "Asset.Sprite" };
+            builtin_funcs["gml_Script_tv_do_expression"] =
+                new[] { "Asset.Sprite" };
 
-                builtin_funcs["gml_Script_scr_pauseicon_add"] =
-                    new[] { "Asset.Sprite", null, null, null };
+            builtin_funcs["gml_Script_scr_pauseicon_add"] =
+                new[] { "Asset.Sprite", null, null, null };
 
-                builtin_funcs["gml_Script_scr_room_goto"] =
-                    new[] { "Asset.Room" };
+            builtin_funcs["gml_Script_scr_room_goto"] =
+                new[] { "Asset.Room" };
 
-                builtin_funcs["gml_Script_add_music"] =
-                    new[] { "Asset.Room", null, null, null, null };
-                builtin_funcs["gml_Script_hub_state"] =
-                    new[] { "Asset.Room", null, null };
+            builtin_funcs["gml_Script_add_music"] =
+                new[] { "Asset.Room", null, null, null, null };
+            builtin_funcs["gml_Script_hub_state"] =
+                new[] { "Asset.Room", null, null };
 
-                builtin_funcs["gml_Script_draw_background_tiled"] =
-                    new[] { "Asset.Sprite", null, null, null };
-                builtin_funcs["gml_Script_scr_draw_granny_texture"] =
-                    new[] { null, null, null, null,
+            builtin_funcs["gml_Script_draw_background_tiled"] =
+                new[] { "Asset.Sprite", null, null, null };
+            builtin_funcs["gml_Script_scr_draw_granny_texture"] =
+                new[] { null, null, null, null,
                     null, null, "Asset.Sprite", "Asset.Sprite", };
 
-                builtin_funcs["gml_Script_object_get_depth"] =
-                    new[] { "Asset.Object" };
+            builtin_funcs["gml_Script_object_get_depth"] =
+                new[] { "Asset.Object" };
 
-                builtin_funcs["gml_Script_scr_bosscontroller_particle_anim"] =
-                    new[] { "Asset.Sprite", null, null,
+            builtin_funcs["gml_Script_scr_bosscontroller_particle_anim"] =
+                new[] { "Asset.Sprite", null, null,
                     null, null, "Asset.Sprite", null };
-                builtin_funcs["gml_Script_scr_bosscontroller_particle_hp"] =
-                    new[] { "Asset.Sprite", null, null,
+            builtin_funcs["gml_Script_scr_bosscontroller_particle_hp"] =
+                new[] { "Asset.Sprite", null, null,
                     null, null, "Asset.Sprite", null, "Asset.Sprite" };
-                builtin_funcs["gml_Script_scr_bosscontroller_draw_health"] =
-                    new[] { "Asset.Sprite",
+            builtin_funcs["gml_Script_scr_bosscontroller_draw_health"] =
+                new[] { "Asset.Sprite",
                     null, null, null, null, null,
                     null, null, null, null, null,
                     "Asset.Sprite", null, "Asset.Sprite" };
-                builtin_funcs["gml_Script_scr_boss_genericintro"] =
-                    new[] { "Asset.Sprite" };
-                builtin_funcs["gml_Script_boss_update_pizzaheadKO"] =
-                    new[] { "Asset.Sprite", "Asset.Sprite" };
-                builtin_funcs["gml_Script_scr_pizzaface_p3_do_player_attack"] =
-                    new[] { "Asset.Object" };
+            builtin_funcs["gml_Script_scr_boss_genericintro"] =
+                new[] { "Asset.Sprite" };
+            builtin_funcs["gml_Script_boss_update_pizzaheadKO"] =
+                new[] { "Asset.Sprite", "Asset.Sprite" };
+            builtin_funcs["gml_Script_scr_pizzaface_p3_do_player_attack"] =
+                new[] { "Asset.Object" };
 
-                builtin_funcs["gml_Script_scr_boss_do_hurt_phase2"] =
-                    new[] { "Asset.Object" };
+            builtin_funcs["gml_Script_scr_boss_do_hurt_phase2"] =
+                new[] { "Asset.Object" };
 
-                builtin_funcs["gml_Script_check_slope"] = new[] { "Asset.Object" };
-                builtin_funcs["gml_Script_check_slope_player"] = new[] { "Asset.Object" };
-                builtin_funcs["gml_Script_try_solid"] =
-                    new[] { null, null, "Asset.Object", null };
+            builtin_funcs["gml_Script_check_slope"] = new[] { "Asset.Object" };
+            builtin_funcs["gml_Script_check_slope_player"] = new[] { "Asset.Object" };
+            builtin_funcs["gml_Script_try_solid"] =
+                new[] { null, null, "Asset.Object", null };
 
-                builtin_funcs["gml_Script_add_rank_achievements"] =
-                    new[] { null, null, "Asset.Sprite", null,
+            builtin_funcs["gml_Script_add_rank_achievements"] =
+                new[] { null, null, "Asset.Sprite", null,
                     null };
-                builtin_funcs["gml_Script_add_boss_achievements"] =
-                    new[] { null, "Asset.Room", "Asset.Sprite", null };
+            builtin_funcs["gml_Script_add_boss_achievements"] =
+                new[] { null, "Asset.Room", "Asset.Sprite", null };
 
-                builtin_funcs["gml_Script_achievement_unlock"] =
-                    new[] { null, null, "Asset.Sprite", null };
-                builtin_funcs["gml_Script_palette_unlock"] =
-                    new[] { null, null, null, "Asset.Sprite" };
+            builtin_funcs["gml_Script_achievement_unlock"] =
+                new[] { null, null, "Asset.Sprite", null };
+            builtin_funcs["gml_Script_palette_unlock"] =
+                new[] { null, null, null, "Asset.Sprite" };
 
-                builtin_funcs["gml_Script_scr_monsterinvestigate"] =
-                    new[] { null, "Asset.Sprite", "Asset.Sprite" };
+            builtin_funcs["gml_Script_scr_monsterinvestigate"] =
+                new[] { null, "Asset.Sprite", "Asset.Sprite" };
 
-                builtin_funcs["gml_Script_timedgate_add_objects"] =
-                    new[] { "Asset.Object", null };
+            builtin_funcs["gml_Script_timedgate_add_objects"] =
+                new[] { "Asset.Object", null };
 
-                builtin_funcs["gml_Script_randomize_animations"] =
-                    new[] { "Asset.Sprite", null };
+            builtin_funcs["gml_Script_randomize_animations"] =
+                new[] { "Asset.Sprite", null };
 
-                builtin_funcs["gml_Script_tdp_draw_text_color"] =
-                    new[] {
+            builtin_funcs["gml_Script_tdp_draw_text_color"] =
+                new[] {
                         null, null, null,
                         "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color",
                         null
-                    };
-                builtin_funcs["gml_Script_scr_draw_text_arr"] =
-                    new[] {
+                };
+            builtin_funcs["gml_Script_scr_draw_text_arr"] =
+                new[] {
                         null, null, null,
                         "Constant.Color", null
-                    };
-                builtin_funcs["gml_Script_lang_draw_sprite"] =
-                    new[] { "Asset.Sprite", null, null, null };
+                };
+            builtin_funcs["gml_Script_lang_draw_sprite"] =
+                new[] { "Asset.Sprite", null, null, null };
 
             // Time for the goofy ahh JSON shit
-            var enums = new Dictionary<string, object>
-            {
-                // what the fuck is this dense shite
-                { 
-                    "Enum.states", 
-                    new 
-                    { 
+
+            // add only if PT States were found
+            if (JSON_PTStates.Count > 0)
+            { 
+                enums.Add(
+                   "Enum.states",
+                    new
+                    {
                         Name = "states",
-                        Values = JSON_PTStates 
-                    } 
-                }
-            };
+                        Values = JSON_PTStates
+                    }
+                );
+            }
+
+            // Call for other Enums
+            // was exported to void function so that decompiler script can use it
+            FindOtherEnums(data);
 
             // Main JSON thingy
             var PTJSON = new
@@ -616,45 +624,13 @@ namespace UndertaleModTool
                 CodeEntryNames = new { }
             };
 
-            // Use if there are no enums
-            // i wish there was a better way, but C# is a bitch
-            var PTJSON_NOENUMS = new
-            {
-                // Enum Only Branch
-                Types = new
-                {
-                    // goofy thing from above
-                    Enums = new { },
-                    // Shit just for the Template
-                    Constants = new { },
-                    General = new { }
-                },
-                // Other Shit Branch
-                GlobalNames = new
-                {
-                    // crackful
-                    Variables = builtin_vars,
-                    FunctionArguments = builtin_funcs,
-                    // Shit just for the Template
-                    FunctionReturn = new { }
-                },
-                // Shit just for the Template
-                CodeEntryNames = new { }
-            };
-
-            string jsonString = ""; 
-
             // Convert the parent object to a JSON string
-
-            if (JSON_PTStates.Count > 0) // if has enums
-                jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
-            else // if doesn't have enums
-                jsonString = JsonSerializer.Serialize(PTJSON_NOENUMS, new JsonSerializerOptions { WriteIndented = true });
+            string jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
 
             // Write main JSON File
             // this is so fucking dumb IT IS A STRING!!!!
-            string dataname = data.GeneralInfo.Name + "";
-            string datanameclean = dataname.Replace("\"", "");
+            //string dataname = data.GeneralInfo.Name + "";
+            string datanameclean = (data.GeneralInfo.Name + "").Replace("\"", "");
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
 
             // Loader JSON
@@ -677,7 +653,48 @@ namespace UndertaleModTool
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
 
-        // Detects PT state names
+        public static void FindOtherEnums(UndertaleData data) 
+        {
+            // Particle Enums
+            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
+            {
+                particle_enums = new Dictionary<string, int>
+                {
+                    { "enum_start", 0 }, //just because
+                    { "cloudeffect", 1 },
+                    { "crazyrunothereffect", 2 },
+                    { "highjumpcloud1", 3 },
+                    { "highjumpcloud2", 4 },
+                    { "jumpdust", 5 },
+                    { "balloonpop", 6 },
+                    { "shotgunimpact", 7 },
+                    { "impact", 8 },
+                    { "genericpoofeffect", 9 },
+                    { "keyparticles", 10 },
+                    { "teleporteffect", 11 },
+                    { "landcloud", 12 },
+                    { "ratmountballooncloud", 13 },
+                    { "groundpoundeffect", 14 },
+                    { "noisegrounddash", 15 },
+                    { "bubblepop", 16 },
+                    { "enum_length", 17 }, // just because
+                };
+                builtin_funcs["gml_Script_create_particle"] = new[] { null, null, "Enum.particle", null };
+                builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
+                builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
+
+                enums.Add(
+                   "Enum.particle",
+                    new
+                    {
+                        Name = "particle",
+                        Values = particle_enums
+                    }
+                );
+            }
+        }
+
+        // Detects PT state names (thank you so much utmtce)
         public static void FindStateNames(UndertaleCode code, string[] statePrefix)
         {
             if (code != null)

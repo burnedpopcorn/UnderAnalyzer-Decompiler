@@ -6,7 +6,7 @@
     <authors>UndertaleModLib</authors>
     <description>Package Description</description>
     <copyright>Copyright ©  2018-2024, licensed under GPLv3</copyright>
-    <repository type="git" commit="a2fc61ddf7af4fb2c1fa49f508e65337bcb21044" />
+    <repository type="git" commit="f9ec8670c3c5667cb8040d340966c7e8e8abbd45" />
     <dependencies>
       <group targetFramework="net6.0">
         <dependency id="Underanalyzer" version="1.0.0" exclude="Build,Analyzers" />
