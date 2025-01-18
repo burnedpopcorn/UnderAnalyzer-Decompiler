@@ -141,7 +141,8 @@ await ExportShaders();
 GenerateProjectFile();
 
 // --------------- Export completed ---------------
-worker.Cleanup();
+// changed from .Cleanup due to dumb new utmt shit
+worker.Dispose();
 HideProgressBar();
 
 if (errLog.Count > 0) // If Errors were Encountered during decompilation
