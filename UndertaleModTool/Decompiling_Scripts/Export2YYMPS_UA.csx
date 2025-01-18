@@ -37,6 +37,8 @@ using Underanalyzer.Decompiler.AST;
 using Underanalyzer.Decompiler.GameSpecific;
 using Underanalyzer.Decompiler.ControlFlow;
 using System.Collections.Generic;
+// because of the new UTMT update
+using ImageMagick;
 // for YYMPS Compression
 using System.IO.Compression;
 
@@ -1057,16 +1059,16 @@ void DumpSprite(UndertaleSprite sprite)
 		//type = (int)sprite.SSpriteType, // not a good idea
 	};
 
-	/* 
+    /* 
 		set sprite size to first texture if available.
 		this is because sometimes the sprite size doesn't correspond
 		to the actual texture size for whatever reason.
 	*/
-	// burned here
-	// try + catch to detect sprites with no image
-	// and to avoid an exception
-	Bitmap nullimg;
-	try {
+    // burned here
+    // try + catch to detect sprites with no image
+    // and to avoid an exception
+    IMagickImage<byte> nullimg;
+    try {
 		if (sprite.Textures.Count > 0)
 		{
 			exportedSprite.width = (int)sprite.Textures[0].Texture.BoundingWidth;
@@ -1084,13 +1086,13 @@ void DumpSprite(UndertaleSprite sprite)
 		string lGuid = Guid.NewGuid().ToString();
 		string lPath = rootPath + spritePath + "layers/" + _compositeGuid + "/";
 		Directory.CreateDirectory(lPath);
-		
-		nullimg = new Bitmap(exportedSprite.width, exportedSprite.height);
-		TextureWorker.SaveImageToFile(rootPath + spritePath + _compositeGuid + ".png", nullimg, false);
-		TextureWorker.SaveImageToFile(lPath + lGuid + ".png", nullimg);
-		
-		// Log Null Sprite
-		errorList.Add($"{exportedSprite.name} - Null Sprite: No associated Image found");
+
+        nullimg = new MagickImage(MagickColors.White, exportedSprite.width, exportedSprite.height);
+        TextureWorker.SaveImageToFile(nullimg, rootPath + spritePath + _compositeGuid + ".png");
+        TextureWorker.SaveImageToFile(nullimg, lPath + lGuid + ".png");
+
+        // Log Null Sprite
+        errorList.Add($"{exportedSprite.name} - Null Sprite: No associated Image found");
 	}
 	// tags
 	var tagid = UndertaleTags.GetAssetTagID(Data, sprite);
@@ -1211,8 +1213,8 @@ void DumpSprite(UndertaleSprite sprite)
 			// extract images
 			if (frame.Texture != null)
 			{
-				Bitmap img;
-				try
+                IMagickImage<byte> img;
+                try
 				{
 					// bail if it's SWF or SPINE
 					if ((int)sprite.SSpriteType != 0)
@@ -1225,14 +1227,14 @@ void DumpSprite(UndertaleSprite sprite)
 					// fetch bitmap image
 					img = worker.GetTextureFor(frame.Texture, compositeGuid + ".png", true);
 				}
-				catch
-				{
-					// give up immediately and make an empty image
-					img = new Bitmap(exportedSprite.width, exportedSprite.height);
-				}
-				TextureWorker.SaveImageToFile(rootPath + spritePath + compositeGuid + ".png", img, false);
-				TextureWorker.SaveImageToFile(layersPath + layerGuid + ".png", img);
-			}
+                catch
+                {
+                    // give up immediately and make an empty image
+                    img = new MagickImage(MagickColors.White, exportedSprite.width, exportedSprite.height);
+                }
+                TextureWorker.SaveImageToFile(img, rootPath + spritePath + compositeGuid + ".png");
+                TextureWorker.SaveImageToFile(img, layersPath + layerGuid + ".png");
+            }
 
 			// add to frames
 			var spriteFrame = new GMSprite.GMSpriteFrame();
@@ -2344,9 +2346,9 @@ void DumpTileset(UndertaleBackground bg)
 	string layersPath = rootPath + spritePath + "layers/" + compositeGuid + "/";
 	Directory.CreateDirectory(layersPath);
 
-	// extract images
-	Bitmap img;
-	try
+    // extract images
+    IMagickImage<byte> img;
+    try
 	{
 		// fetch bitmap image
 		img = worker.GetTextureFor(bg.Texture, compositeGuid + ".png", true);
@@ -2356,17 +2358,17 @@ void DumpTileset(UndertaleBackground bg)
 		// give up immediately and make an empty image
 		exportedSprite.width = 1;
 		exportedSprite.height = 1;
-		img = new Bitmap(exportedSprite.width, exportedSprite.height);
-	}
+        img = new MagickImage(MagickColors.White, exportedSprite.width, exportedSprite.height);
+    }
 	
 	// try + catch : working sprites will save to image, while null sprites will do nothing
 	try {
-	// save image if it sprite is not null
-	TextureWorker.SaveImageToFile(rootPath + spritePath + compositeGuid + ".png", img, false);
-	TextureWorker.SaveImageToFile(layersPath + layerGuid + ".png", img, false);
-	if (Data.IsGameMaker2())
-		TextureWorker.SaveImageToFile(rootPath + tilesetPath + "output_tileset.png", img, false);
-	}
+        // save image if it sprite is not null
+        TextureWorker.SaveImageToFile(img, rootPath + spritePath + compositeGuid + ".png");
+        TextureWorker.SaveImageToFile(img, layersPath + layerGuid + ".png");
+        if (Data.IsGameMaker2())
+            TextureWorker.SaveImageToFile(img, rootPath + tilesetPath + "output_tileset.png");
+    }
 	// if it is null, do nothing
 	catch (Exception e) {}
 	
@@ -3792,8 +3794,8 @@ void DumpSpriteGMS1(UndertaleSprite sprite)
 			// extract images
 			if (frame.Texture != null)
 			{
-				Bitmap img;
-				try
+                IMagickImage<byte> img;
+                try
 				{
 					// bail if it's SWF or SPINE
 					if ((int)sprite.SSpriteType != 0)
@@ -3806,13 +3808,13 @@ void DumpSpriteGMS1(UndertaleSprite sprite)
 					// fetch bitmap image
 					img = worker.GetTextureFor(frame.Texture, $"{sprite.Name.Content}_{i}.png", true);
 				}
-				catch
-				{
-					// give up immediately and make an empty image
-					img = new Bitmap((int)sprite.Width, (int)sprite.Height);
-				}
-				TextureWorker.SaveImageToFile(rootPath + @$"sprites\images\{sprite.Name.Content}_{i}.png", img, false);
-			}
+                catch
+                {
+                    // give up immediately and make an empty image
+                    img = new MagickImage(MagickColors.White, (int)sprite.Width, (int)sprite.Height);
+                }
+                TextureWorker.SaveImageToFile(img, rootPath + @$"sprites\images\{sprite.Name.Content}_{i}.png");
+            }
 		}
 		writer.WriteEndElement();
 
@@ -4986,8 +4988,11 @@ if (!GMS1)
 
 // cleanup
 await StopUpdater();
-worker.Cleanup();
+// Why change it from .Cleanup?
+worker.Dispose();
 HideProgressBar();
+
+#region YYMPS Compression
 
 // Make final YYMPS directory
 string yympsPath = $"{dataPath}Export_YYMPS\\";
@@ -5027,7 +5032,9 @@ while (true)
 
 // to wait for yymps creation to fully finish
 await createyymps();
-	
+
+#endregion
+
 // Completely Done with Decompiling
 if (errorList.Count > 0)
 {

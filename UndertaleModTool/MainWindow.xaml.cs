@@ -836,17 +836,6 @@ namespace UndertaleModTool
                 // If it should warn you before leaving
                 if (SettingsWindow.WarnOnClose)
                 {
-                    if (this.ShowQuestion("Are you sure you want to Quit?") == MessageBoxResult.Yes)
-                    {
-                        // Dont Save data.win (because why would you) and leave
-                        RevertProfile();
-                        DestroyUMTLastEdited();
-                    }
-                    else
-                        return; // Go back and don't leave
-                }
-                if (SettingsWindow.WarnOnClose)
-                {
                     MessageBoxResult result = this.ShowQuestionWithCancel("Save changes before quitting?");
 
                     if (result == MessageBoxResult.Cancel)
