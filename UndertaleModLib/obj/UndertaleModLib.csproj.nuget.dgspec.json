@@ -58,7 +58,7 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
@@ -82,12 +82,26 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[6.0.36, 6.0.36]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102\\RuntimeIdentifierGraph.json"
         },
         "net7.0": {
           "targetAlias": "net7.0",
@@ -127,7 +141,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102\\RuntimeIdentifierGraph.json"
         },
         "net8.0": {
           "targetAlias": "net8.0",
@@ -153,7 +167,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
         },
         "netstandard2.1": {
           "targetAlias": "netstandard2.1",
@@ -179,7 +193,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102\\RuntimeIdentifierGraph.json"
         }
       }
     },
@@ -201,15 +215,15 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net6.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net6.0": {
-            "targetAlias": "net6.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {
               "C:\\Users\\juanm\\Documents\\GitHub\\UTMT-UnderAnalyzer-Decompiler\\Underanalyzer\\Underanalyzer\\Underanalyzer.csproj": {
                 "projectPath": "C:\\Users\\juanm\\Documents\\GitHub\\UTMT-UnderAnalyzer-Decompiler\\Underanalyzer\\Underanalyzer\\Underanalyzer.csproj"
@@ -225,19 +239,23 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         },
         "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
-        "net6.0": {
-          "targetAlias": "net6.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
             "Fody": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[6.8.1, )"
+              "version": "[6.9.1, )"
+            },
+            "Magick.NET-Q8-AnyCPU": {
+              "target": "Package",
+              "version": "[13.10.0, )"
             },
             "Microsoft.CSharp": {
               "target": "Package",
@@ -250,10 +268,6 @@
             "SharpZipLib": {
               "target": "Package",
               "version": "[1.4.2, )"
-            },
-            "System.Drawing.Common": {
-              "target": "Package",
-              "version": "[5.0.3, )"
             }
           },
           "imports": [
@@ -270,27 +284,27 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             },
             {
               "name": "Microsoft.AspNetCore.App.Runtime.win-x86",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             },
             {
               "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             },
             {
               "name": "Microsoft.NETCore.App.Runtime.win-x86",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             },
             {
               "name": "Microsoft.WindowsDesktop.App.Runtime.win-x86",
-              "version": "[6.0.36, 6.0.36]"
+              "version": "[8.0.12, 8.0.12]"
             }
           ],
           "frameworkReferences": {
@@ -298,7 +312,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.102/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {
