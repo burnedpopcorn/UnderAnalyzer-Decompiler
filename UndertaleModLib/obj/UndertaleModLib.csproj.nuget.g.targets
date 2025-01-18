@@ -2,6 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)system.text.json\8.0.4\buildTransitive\net6.0\System.Text.Json.targets" Condition="Exists('$(NuGetPackageRoot)system.text.json\8.0.4\buildTransitive\net6.0\System.Text.Json.targets')" />
-    <Import Project="$(NuGetPackageRoot)fody\6.8.1\build\Fody.targets" Condition="Exists('$(NuGetPackageRoot)fody\6.8.1\build\Fody.targets')" />
+    <Import Project="$(NuGetPackageRoot)fody\6.9.1\build\Fody.targets" Condition="Exists('$(NuGetPackageRoot)fody\6.9.1\build\Fody.targets')" />
+    <Import Project="$(NuGetPackageRoot)magick.net-q8-anycpu\13.10.0\buildTransitive\netstandard20\Magick.NET-Q8-AnyCPU.targets" Condition="Exists('$(NuGetPackageRoot)magick.net-q8-anycpu\13.10.0\buildTransitive\netstandard20\Magick.NET-Q8-AnyCPU.targets')" />
   </ImportGroup>
 </Project>

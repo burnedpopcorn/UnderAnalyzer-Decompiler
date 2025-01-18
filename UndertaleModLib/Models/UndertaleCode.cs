@@ -383,458 +383,573 @@ public class UndertaleInstruction : UndertaleObject, IGMInstruction
     /// <inheritdoc />
     public void Serialize(UndertaleWriter writer)
     {
+        // Flag tracking whether we're writing bytecode 14 (old) instructions
+        bool bytecode14 = writer.Bytecode14OrLower;
+
+        // Switch on the basic format of instruction to encode
         switch (GetInstructionType(Kind))
         {
             case InstructionType.SingleTypeInstruction:
             case InstructionType.DoubleTypeInstruction:
             case InstructionType.ComparisonInstruction:
-            {
-                writer.Write(Extra);
-                if (writer.Bytecode14OrLower && Kind == Opcode.Cmp)
-                    writer.Write((byte)0);
-                else
-                    writer.Write((byte)ComparisonKind);
-                byte TypePair = (byte)((byte)Type2 << 4 | (byte)Type1);
-                writer.Write(TypePair);
-
-                if (writer.Bytecode14OrLower)
                 {
-                    byte k = Kind switch
+                    // Write "extra" byte, used on some instructions
+                    writer.Write(Extra);
+
+                    // Write comparison kind, if present
+                    if (bytecode14 && Kind == Opcode.Cmp)
                     {
-                        Opcode.Conv => 0x03,
-                        Opcode.Mul => 0x04,
-                        Opcode.Div => 0x05,
-                        Opcode.Rem => 0x06,
-                        Opcode.Mod => 0x07,
-                        Opcode.Add => 0x08,
-                        Opcode.Sub => 0x09,
-                        Opcode.And => 0x0A,
-                        Opcode.Or => 0x0B,
-                        Opcode.Xor => 0x0C,
-                        Opcode.Neg => 0x0D,
-                        Opcode.Not => 0x0E,
-                        Opcode.Shl => 0x0F,
-                        Opcode.Shr => 0x10,
-                        Opcode.Dup => 0x82,
-                        Opcode.Cmp => (byte)(ComparisonKind + 0x10),
-                        Opcode.Ret => 0x9D,
-                        Opcode.Exit => 0x9E,
-                        Opcode.Popz => 0x9F,
-                        _ => (byte)Kind,
-                    };
-                    writer.Write(k);
-                }
-                else
-                    writer.Write((byte)Kind);
-            }
-                break;
-
-            case InstructionType.GotoInstruction:
-            {
-                // See unserialize
-                if (writer.Bytecode14OrLower)
-                    writer.WriteInt24(JumpOffset);
-                else if (JumpOffsetPopenvExitMagic)
-                {
-                    writer.WriteInt24(0xF00000);
-                }
-                else
-                {
-                    uint JumpOffsetFixed = (uint)JumpOffset;
-                    JumpOffsetFixed &= ~0xFF800000;
-                    writer.WriteInt24((int)JumpOffsetFixed);
-                }
-
-                if (writer.Bytecode14OrLower)
-                {
-                    if (Kind == Opcode.B)
-                        writer.Write((byte)0xB7);
-                    else if (Kind == Opcode.Bt)
-                        writer.Write((byte)0xB8);
-                    else if (Kind == Opcode.Bf)
-                        writer.Write((byte)0xB9);
-                    else if (Kind == Opcode.PushEnv)
-                        writer.Write((byte)0xBB);
-                    else if (Kind == Opcode.PopEnv)
-                        writer.Write((byte)0xBC);
+                        // Bytecode 14 encodes its comparison in the opcode itself, not here
+                        writer.Write((byte)0);
+                    }
                     else
-                        writer.Write((byte)Kind);
-                }
-                else
-                    writer.Write((byte)Kind);
-            }
-                break;
+                    {
+                        // Bytecode 15 and above encode a comparison kind outside of the opcode
+                        writer.Write((byte)ComparisonKind);
+                    }
 
-            case InstructionType.PopInstruction:
-            {
-                if (Type1 == DataType.Int16)
-                {
-                    // Special scenario - the swap instruction
-                    // TODO: Figure out the proper syntax, see #129
-                    writer.Write(SwapExtra);
-                    byte TypePair = (byte)((byte)Type2 << 4 | (byte)Type1);
-                    writer.Write(TypePair);
-                    if (writer.Bytecode14OrLower && Kind == Opcode.Pop)
-                        writer.Write((byte)0x41);
-                    else
-                        writer.Write((byte)Kind);
-                }
-                else
-                {
-                    writer.Write((short)TypeInst);
-                    byte TypePair = (byte)((byte)Type2 << 4 | (byte)Type1);
-                    writer.Write(TypePair);
-                    if (writer.Bytecode14OrLower && Kind == Opcode.Pop)
-                        writer.Write((byte)0x41);
-                    else
-                        writer.Write((byte)Kind);
-                    writer.WriteUndertaleObject(Destination);
-                }
-            }
-                break;
+                    // Write types
+                    byte typePair = (byte)((byte)Type2 << 4 | (byte)Type1);
+                    writer.Write(typePair);
 
-            case InstructionType.PushInstruction:
-            {
-                if (Type1 == DataType.Int16)
-                {
-                    //Debug.Assert(Value.GetType() == typeof(short));
-                    writer.Write((short)Value);
-                }
-                else if (Type1 == DataType.Variable)
-                {
-                    writer.Write((short)TypeInst);
-                }
-                else
-                {
-                    writer.Write((short)0);
-                }
-                writer.Write((byte)Type1);
-                if (writer.Bytecode14OrLower)
-                    writer.Write((byte)0xC0);
-                else
-                    writer.Write((byte)Kind);
-                switch (Type1)
-                {
-                    case DataType.Double:
-                        //Debug.Assert(Value.GetType() == typeof(double));
-                        writer.Write((double)Value);
-                        break;
-                    case DataType.Float:
-                        //Debug.Assert(Value.GetType() == typeof(float));
-                        writer.Write((float)Value);
-                        break;
-                    case DataType.Int32:
-                        if (Value.GetType() == typeof(Reference<UndertaleFunction>))
+                    // Write opcode
+                    if (bytecode14)
+                    {
+                        // Translate relevant opcodes to their old bytecode 14 equivalents
+                        byte k = Kind switch
                         {
-                            writer.WriteUndertaleObject((Reference<UndertaleFunction>)Value);
-                            break;
-                        }
-                        if (Value.GetType() == typeof(Reference<UndertaleVariable>))
-                        {
-                            writer.WriteUndertaleObject((Reference<UndertaleVariable>)Value);
-                            break;
-                        }
-                        //Debug.Assert(Value.GetType() == typeof(int));
-                        writer.Write((int)Value);
-                        break;
-                    case DataType.Int64:
-                        //Debug.Assert(Value.GetType() == typeof(long));
-                        writer.Write((long)Value);
-                        break;
-                    case DataType.Boolean:
-                        //Debug.Assert(Value.GetType() == typeof(bool));
-                        writer.Write((bool)Value ? 1 : 0);
-                        break;
-                    case DataType.Variable:
-                        //Debug.Assert(Value.GetType() == typeof(Reference<UndertaleVariable>));
-                        writer.WriteUndertaleObject((Reference<UndertaleVariable>)Value);
-                        break;
-                    case DataType.String:
-                        //Debug.Assert(Value.GetType() == typeof(UndertaleResourceById<UndertaleString, UndertaleChunkSTRG>));
-                        writer.WriteUndertaleObject((UndertaleResourceById<UndertaleString, UndertaleChunkSTRG>)Value);
-                        break;
-                    case DataType.Int16:
-                        break;
-                }
-            }
-                break;
-
-            case InstructionType.CallInstruction:
-            {
-                writer.Write(ArgumentsCount);
-                writer.Write((byte)Type1);
-                if (writer.Bytecode14OrLower && Kind == Opcode.Call)
-                    writer.Write((byte)0xDA);
-                else
-                    writer.Write((byte)Kind);
-                writer.WriteUndertaleObject(Function);
-            }
-                break;
-
-            case InstructionType.BreakInstruction:
-            {
-                //Debug.Assert(Value.GetType() == typeof(short));
-                writer.Write((short)Value);
-                writer.Write((byte)Type1);
-                writer.Write((byte)Kind);
-                if (Type1 == DataType.Int32)
-                {
-                    if (Function != null)
-                        writer.WriteUndertaleObject(Function);
+                            Opcode.Conv => 0x03,
+                            Opcode.Mul => 0x04,
+                            Opcode.Div => 0x05,
+                            Opcode.Rem => 0x06,
+                            Opcode.Mod => 0x07,
+                            Opcode.Add => 0x08,
+                            Opcode.Sub => 0x09,
+                            Opcode.And => 0x0A,
+                            Opcode.Or => 0x0B,
+                            Opcode.Xor => 0x0C,
+                            Opcode.Neg => 0x0D,
+                            Opcode.Not => 0x0E,
+                            Opcode.Shl => 0x0F,
+                            Opcode.Shr => 0x10,
+                            Opcode.Dup => 0x82,
+                            Opcode.Cmp => (byte)(ComparisonKind + 0x10), // Comparison kind is encoded into opcode
+                            Opcode.Ret => 0x9D,
+                            Opcode.Exit => 0x9E,
+                            Opcode.Popz => 0x9F,
+                            _ => (byte)Kind,
+                        };
+                        writer.Write(k);
+                    }
                     else
-                        writer.Write(IntArgument);
-                }
-            }
-                break;
+                    {
+                        // Write opcode verbatim on modern bytecode versions
+                        writer.Write((byte)Kind);
+                    }
 
-            default:
-                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
-        }
-    }
-
-    /// <inheritdoc />
-    public void Unserialize(UndertaleReader reader)
-    {
-        long instructionStartAddress = reader.Position;
-        reader.Position += 3; // skip for now, we'll read them later
-        byte kind = reader.ReadByte();
-        if (reader.Bytecode14OrLower)
-        {
-            // Convert opcode to our enum
-            kind = ConvertInstructionKind(kind);
-        }
-        Kind = (Opcode)kind;
-        reader.Position = instructionStartAddress;
-        switch (GetInstructionType(Kind))
-        {
-            case InstructionType.SingleTypeInstruction:
-            case InstructionType.DoubleTypeInstruction:
-            case InstructionType.ComparisonInstruction:
-            {
-                Extra = reader.ReadByte();
-#if DEBUG
-                if (Extra != 0 && Kind != Opcode.Dup && Kind != Opcode.CallV)
-                    throw new IOException("Invalid padding in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
-#endif
-                ComparisonKind = (ComparisonType)reader.ReadByte();
-                //if (!bytecode14 && (Kind == Opcode.Cmp) != ((byte)ComparisonKind != 0))
-                //    throw new IOException("Got unexpected comparison type in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture) + " (should be only in CMP)");
-                byte TypePair = reader.ReadByte();
-                Type1 = (DataType)(TypePair & 0xf);
-                Type2 = (DataType)(TypePair >> 4);
-#if DEBUG
-                if (GetInstructionType(Kind) == InstructionType.SingleTypeInstruction && Type2 != (byte)0)
-                    throw new IOException("Second type should be 0 in " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
-#endif
-                //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                if (reader.Bytecode14OrLower && Kind == Opcode.Cmp)
-                    ComparisonKind = (ComparisonType)(reader.ReadByte() - 0x10);
-                else
-                    reader.Position++;
-
-                if (Kind == Opcode.And || Kind == Opcode.Or)
-                {
-                    if (Type1 == DataType.Boolean && Type2 == DataType.Boolean)
-                        reader.undertaleData.ShortCircuit = false;
-                }
-            }
-                break;
-
-            case InstructionType.GotoInstruction:
-            {
-                if (reader.Bytecode14OrLower)
-                {
-                    JumpOffset = reader.ReadInt24();
-                    if (JumpOffset == -1048576) // magic? encoded in little endian as 00 00 F0, which is like below
-                        JumpOffsetPopenvExitMagic = true;
-                    reader.Position++;
                     break;
                 }
 
-                uint v = reader.ReadUInt24();
-
-                JumpOffsetPopenvExitMagic = (v & 0x800000) != 0;
-
-                // The rest is int23 signed value, so make sure
-                uint r = v & 0x003FFFFF;
-#if DEBUG
-                if (JumpOffsetPopenvExitMagic && v != 0xF00000)
-                    throw new Exception("Popenv magic doesn't work, call issue #90 again");
-                else
-#endif
+            case InstructionType.GotoInstruction:
                 {
-                    if ((v & 0x00C00000) != 0)
-                        r |= 0xFFC00000;
-                    JumpOffset = (int)r;
-                }
+                    // Write jump offset
+                    if (bytecode14)
+                    {
+                        // Bytecode 14 writes the offset verbatim
+                        writer.WriteInt24(JumpOffset);
+                    }
+                    else if (JumpOffsetPopenvExitMagic)
+                    {
+                        // If popenv exit magic is used, write that specifically
+                        writer.WriteInt24(0xF00000);
+                    }
+                    else
+                    {
+                        // If not using popenv exit magic, encode jump offset as 23-bit signed integer
+                        uint jumpOffsetFixed = (uint)JumpOffset;
+                        jumpOffsetFixed &= ~0xFF800000;
+                        writer.WriteInt24((int)jumpOffsetFixed);
+                    }
 
-                //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.Position++;
-            }
-                break;
+                    // Write opcode
+                    if (bytecode14)
+                    {
+                        // Translate relevant opcodes to their old bytecode 14 equivalents
+                        byte k = Kind switch
+                        {
+                            Opcode.B => 0xB7,
+                            Opcode.Bt => 0xB8,
+                            Opcode.Bf => 0xB9,
+                            Opcode.PushEnv => 0xBB,
+                            Opcode.PopEnv => 0xBC,
+                            _ => (byte)Kind
+                        };
+                        writer.Write(k);
+                    }
+                    else
+                    {
+                        // Write opcode verbatim on modern bytecode versions
+                        writer.Write((byte)Kind);
+                    }
+
+                    break;
+                }
 
             case InstructionType.PopInstruction:
-            {
-                TypeInst = (InstanceType)reader.ReadInt16();
-                byte TypePair = reader.ReadByte();
-                Type1 = (DataType)(TypePair & 0xf);
-                Type2 = (DataType)(TypePair >> 4);
-                //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.Position++;
-                if (Type1 == DataType.Int16)
                 {
-                    // Special scenario - the swap instruction
-                    // TODO: Figure out the proper syntax, see #129
-                    SwapExtra = (ushort)TypeInst;
-                    TypeInst = 0;
+                    if (Type1 == DataType.Int16)
+                    {
+                        // Special scenario - the swap instruction (see #129)
+                        // Write swap value
+                        writer.Write(SwapExtra);
+
+                        // Write types
+                        byte typePair = (byte)((byte)Type2 << 4 | (byte)Type1);
+                        writer.Write(typePair);
+
+                        // Write opcode (if writing bytecode 14, translate to the old opcode)
+                        if (bytecode14 && Kind == Opcode.Pop)
+                            writer.Write((byte)0x41);
+                        else
+                            writer.Write((byte)Kind);
+                    }
+                    else
+                    {
+                        // Write instance type
+                        writer.Write((short)TypeInst);
+
+                        // Write types
+                        byte typePair = (byte)((byte)Type2 << 4 | (byte)Type1);
+                        writer.Write(typePair);
+
+                        // Write opcode (if writing bytecode 14, translate to the old opcode)
+                        if (bytecode14 && Kind == Opcode.Pop)
+                            writer.Write((byte)0x41);
+                        else
+                            writer.Write((byte)Kind);
+
+                        // Write actual variable being stored to
+                        writer.WriteUndertaleObject(Destination);
+                    }
+
+                    break;
                 }
-                else
-                {
-                    Destination = reader.ReadUndertaleObject<Reference<UndertaleVariable>>();
-                }
-            }
-                break;
 
             case InstructionType.PushInstruction:
-            {
-                short val = reader.ReadInt16();
-                Type1 = (DataType)reader.ReadByte();
-                if (reader.Bytecode14OrLower)
                 {
-                    if (Type1 == DataType.Variable)
+                    // Write 16-bit integer, instance type, or empty data
+                    writer.Write(Type1 switch
                     {
-                        switch (val)
-                        {
-                            case -5:
-                                Kind = Opcode.PushGlb;
-                                break;
-                            case -6: // builtin
-                                Kind = Opcode.PushBltn;
-                                break;
-                            case -7:
-                                Kind = Opcode.PushLoc;
-                                break;
-                        }
-                    }
-                    else if (Type1 == DataType.Int16)
+                        DataType.Int16 => (short)Value,
+                        DataType.Variable => (short)TypeInst,
+                        _ => (short)0
+                    });
+
+                    // Write type (no second type is used)
+                    writer.Write((byte)Type1);
+
+                    // Write opcode (if writing bytecode 14, translate to the old opcode)
+                    if (bytecode14)
+                        writer.Write((byte)0xC0);
+                    else
+                        writer.Write((byte)Kind);
+
+                    // Write value being pushed
+                    switch (Type1)
                     {
-                        Kind = Opcode.PushI;
+                        case DataType.Double:
+                            writer.Write((double)Value);
+                            break;
+                        case DataType.Float:
+                            writer.Write((float)Value);
+                            break;
+                        case DataType.Int32:
+                            if (Value.GetType() == typeof(Reference<UndertaleFunction>))
+                            {
+                                // Write function reference, rather than integer
+                                writer.WriteUndertaleObject((Reference<UndertaleFunction>)Value);
+                                break;
+                            }
+                            if (Value.GetType() == typeof(Reference<UndertaleVariable>))
+                            {
+                                // Write variable reference, rather than integer
+                                writer.WriteUndertaleObject((Reference<UndertaleVariable>)Value);
+                                break;
+                            }
+                            writer.Write((int)Value);
+                            break;
+                        case DataType.Int64:
+                            writer.Write((long)Value);
+                            break;
+                        case DataType.Boolean:
+                            writer.Write((bool)Value ? 1 : 0);
+                            break;
+                        case DataType.Variable:
+                            writer.WriteUndertaleObject((Reference<UndertaleVariable>)Value);
+                            break;
+                        case DataType.String:
+                            writer.WriteUndertaleObject((UndertaleResourceById<UndertaleString, UndertaleChunkSTRG>)Value);
+                            break;
+                        case DataType.Int16:
+                            // Data is encoded in the first two bytes of the instruction (was already written above)
+                            break;
                     }
+
+                    break;
                 }
-                //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.Position++;
-                switch (Type1)
-                {
-                    case DataType.Double:
-                        Value = reader.ReadDouble();
-                        break;
-                    case DataType.Float:
-                        Value = reader.ReadSingle();
-                        break;
-                    case DataType.Int32:
-                        Value = reader.ReadInt32();
-                        break;
-                    case DataType.Int64:
-                        Value = reader.ReadInt64();
-                        break;
-                    case DataType.Boolean:
-                        Value = (reader.ReadUInt32() == 1); // TODO: double check
-                        break;
-                    case DataType.Variable:
-                        TypeInst = (InstanceType)val;
-                        Value = reader.ReadUndertaleObject<Reference<UndertaleVariable>>();
-                        break;
-                    case DataType.String:
-                        Value = reader.ReadUndertaleObject<UndertaleResourceById<UndertaleString, UndertaleChunkSTRG>>();
-                        break;
-                    case DataType.Int16:
-                        Value = val;
-                        break;
-                }
-            }
-                break;
 
             case InstructionType.CallInstruction:
-            {
-                ArgumentsCount = reader.ReadUInt16();
-                Type1 = (DataType)reader.ReadByte();
-                //if(reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                reader.Position++;
-                Function = reader.ReadUndertaleObject<Reference<UndertaleFunction>>();
-            }
-                break;
+                {
+                    // Write number of arguments being used in call
+                    writer.Write(ArgumentsCount);
+
+                    // Write type (no second type is used)
+                    writer.Write((byte)Type1);
+
+                    // Write opcode (if writing bytecode 14, translate to the old opcode)
+                    if (bytecode14 && Kind == Opcode.Call)
+                        writer.Write((byte)0xDA);
+                    else
+                        writer.Write((byte)Kind);
+
+                    // Write reference to the function being called
+                    writer.WriteUndertaleObject(Function);
+
+                    break;
+                }
 
             case InstructionType.BreakInstruction:
-            {
-                Value = reader.ReadInt16();
-                Type1 = (DataType)reader.ReadByte();
-                if (reader.ReadByte() != (byte)Kind) throw new Exception("really shouldn't happen");
-                if (Type1 == DataType.Int32)
                 {
-                    IntArgument = reader.ReadInt32();
-                    if (!reader.undertaleData.IsVersionAtLeast(2023, 8))
-                        reader.undertaleData.SetGMS2Version(2023, 8);
-                    if (!reader.undertaleData.IsVersionAtLeast(2024, 4))
+                    // Write type of break instruction (encoded in Value)
+                    writer.Write((short)Value);
+
+                    // Write type (no second type is used)
+                    writer.Write((byte)Type1);
+
+                    // Write opcode
+                    writer.Write((byte)Kind);
+
+                    // Write integer argument, or function, if either is present
+                    if (Type1 == DataType.Int32)
                     {
-                        if (CheckIfAssetTypeIs2024_4(reader.undertaleData, IntArgument & 0xffffff, IntArgument >> 24))
-                            reader.undertaleData.SetGMS2Version(2024, 4);
+                        if (Function != null)
+                            writer.WriteUndertaleObject(Function);
+                        else
+                            writer.Write(IntArgument);
                     }
+
+                    break;
                 }
-                if (reader.undertaleData.IsVersionAtLeast(2, 3))
-                {
-                    if ((short)Value == -10) // chknullish instruction, added in 2.3.7
-                    {
-                        if (!reader.undertaleData.IsVersionAtLeast(2, 3, 7))
-                            reader.undertaleData.SetGMS2Version(2, 3, 7);
-                    }
-                }
-            }
-                break;
 
             default:
-                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
+                throw new IOException($"Unknown opcode {Kind.ToString().ToUpper(CultureInfo.InvariantCulture)}");
         }
     }
+
+    public void Unserialize(UndertaleReader reader)
+    {
+        // Flag tracking whether we're parsing bytecode 14 (old) instructions
+        bool bytecode14 = reader.Bytecode14OrLower;
+
+        // Read first word from instruction
+        uint firstWord = reader.ReadUInt32();
+
+        // Read opcode from most significant byte
+        byte kindByte = (byte)((firstWord & 0xFF000000) >> 24);
+        Opcode kind = (Opcode)kindByte;
+        if (bytecode14)
+        {
+            // Convert opcode from old format to new format
+            kind = (Opcode)ConvertInstructionKind(kindByte);
+        }
+
+        // Extract first three bytes from first word
+        byte b0 = (byte)(firstWord & 0x000000FF);
+        byte b1 = (byte)((firstWord & 0x0000FF00) >> 8);
+        byte b2 = (byte)((firstWord & 0x00FF0000) >> 16);
+
+        // Parse instruction contents
+        InstructionType instructionType = GetInstructionType(kind);
+        switch (instructionType)
+        {
+            case InstructionType.SingleTypeInstruction:
+            case InstructionType.DoubleTypeInstruction:
+            case InstructionType.ComparisonInstruction:
+                {
+                    // Parse instruction components from bytes
+                    byte extra = b0;
+                    ComparisonType comparisonKind = (ComparisonType)b1;
+                    DataType type1 = (DataType)(b2 & 0xf);
+                    DataType type2 = (DataType)(b2 >> 4);
+
+                    // Ensure basic conditions hold
+                    if (extra != 0 && kind != Opcode.Dup && kind != Opcode.CallV)
+                    {
+                        throw new IOException($"Invalid padding in {kind.ToString().ToUpper(CultureInfo.InvariantCulture)}");
+                    }
+
+                    if (instructionType == InstructionType.SingleTypeInstruction && type2 != 0)
+                    {
+                        throw new IOException($"Second type should be 0 in {kind.ToString().ToUpper(CultureInfo.InvariantCulture)}");
+                    }
+
+
+                    // In bytecode 14, the comparison kind is encoded in the opcode itself
+                    if (bytecode14 && kind == Opcode.Cmp)
+                    {
+                        comparisonKind = (ComparisonType)(kindByte - 0x10);
+                    }
+
+                    // Check for "and.b.b" or "or.b.b", which imply the code was compiled without short-circuiting
+                    if ((kind is Opcode.And or Opcode.Or) && type1 == DataType.Boolean && type2 == DataType.Boolean)
+                    {
+                        reader.undertaleData.ShortCircuit = false;
+                    }
+
+                    // Assign to instruction
+                    Extra = extra;
+                    ComparisonKind = comparisonKind;
+                    Type1 = type1;
+                    Type2 = type2;
+
+                    break;
+                }
+
+            case InstructionType.GotoInstruction:
+                {
+                    if (bytecode14)
+                    {
+                        // Bytecode 14 has slightly different parsing
+                        int jumpOffset = b0 | (b1 << 8) | ((sbyte)b2 << 16);
+                        JumpOffset = jumpOffset;
+                        JumpOffsetPopenvExitMagic = (jumpOffset == -1048576); // encoded in little endian as 00 00 F0 (same as below)
+                        break;
+                    }
+
+                    // Parse normally
+                    uint v = (uint)(b0 | (b1 << 8) | (b2 << 16));
+                    bool popenvExitMagic = (v & 0x800000) != 0;
+                    if (popenvExitMagic && v != 0xF00000)
+                    {
+                        throw new Exception("Popenv magic doesn't work, call issue #90 again");
+                    }
+
+                    // The rest is int23 signed value, so make sure
+                    uint r = v & 0x003FFFFF;
+                    if ((v & 0x00C00000) != 0)
+                    {
+                        r |= 0xFFC00000;
+                    }
+
+                    // Assign to instruction
+                    JumpOffset = (int)r;
+                    JumpOffsetPopenvExitMagic = popenvExitMagic;
+
+                    break;
+                }
+
+            case InstructionType.PopInstruction:
+                {
+                    // Parse instruction components from bytes
+                    InstanceType typeInst = (InstanceType)(b0 | (b1 << 8));
+                    DataType type1 = (DataType)(b2 & 0xf);
+                    DataType type2 = (DataType)(b2 >> 4);
+
+                    if (type1 == DataType.Int16)
+                    {
+                        // Special scenario - the swap instruction (see #129)
+                        SwapExtra = (ushort)typeInst;
+                        typeInst = 0;
+                    }
+                    else
+                    {
+                        // Destination is an actual variable
+                        Destination = reader.ReadUndertaleObject<Reference<UndertaleVariable>>();
+                    }
+
+                    // Assign remaining values to instruction
+                    TypeInst = typeInst;
+                    Type1 = type1;
+                    Type2 = type2;
+
+                    break;
+                }
+
+            case InstructionType.PushInstruction:
+                {
+                    // Parse instruction components from bytes
+                    short val = (short)(b0 | (b1 << 8));
+                    DataType type1 = (DataType)b2;
+
+                    // Modify opcode of instruction, if in bytecode 14
+                    if (bytecode14)
+                    {
+                        if (type1 == DataType.Variable)
+                        {
+                            switch (val)
+                            {
+                                case -5:
+                                    kind = Opcode.PushGlb;
+                                    break;
+                                case -6: // builtin
+                                    kind = Opcode.PushBltn;
+                                    break;
+                                case -7:
+                                    kind = Opcode.PushLoc;
+                                    break;
+                            }
+                        }
+                        else if (type1 == DataType.Int16)
+                        {
+                            kind = Opcode.PushI;
+                        }
+                    }
+
+                    // Parse data being pushed
+                    switch (type1)
+                    {
+                        case DataType.Double:
+                            Value = reader.ReadDouble();
+                            break;
+                        case DataType.Float:
+                            Value = reader.ReadSingle();
+                            break;
+                        case DataType.Int32:
+                            Value = reader.ReadInt32();
+                            break;
+                        case DataType.Int64:
+                            Value = reader.ReadInt64();
+                            break;
+                        case DataType.Boolean:
+                            Value = reader.ReadBoolean();
+                            break;
+                        case DataType.Variable:
+                            TypeInst = (InstanceType)val;
+                            Value = reader.ReadUndertaleObject<Reference<UndertaleVariable>>();
+                            break;
+                        case DataType.String:
+                            Value = reader.ReadUndertaleObject<UndertaleResourceById<UndertaleString, UndertaleChunkSTRG>>();
+                            break;
+                        case DataType.Int16:
+                            Value = val;
+                            break;
+                    }
+
+                    // Assign remaining values to instruction
+                    Type1 = type1;
+
+                    break;
+                }
+
+            case InstructionType.CallInstruction:
+                {
+                    // Parse instruction components from bytes
+                    ArgumentsCount = (ushort)(b0 | (b1 << 8));
+                    Type1 = (DataType)b2;
+
+                    // Parse function being called
+                    Function = reader.ReadUndertaleObject<Reference<UndertaleFunction>>();
+
+                    break;
+                }
+
+            case InstructionType.BreakInstruction:
+                {
+                    // Parse instruction components from bytes
+                    short value = (short)(b0 | (b1 << 8));
+                    DataType type1 = (DataType)b2;
+
+                    // Parse integer argument, if provided
+                    if (type1 == DataType.Int32)
+                    {
+                        IntArgument = reader.ReadInt32();
+
+                        // Existence of this argument implies GameMaker 2023.8 or above
+                        if (!reader.undertaleData.IsVersionAtLeast(2023, 8))
+                        {
+                            reader.undertaleData.SetGMS2Version(2023, 8);
+                        }
+
+                        // If this is an asset type found in GameMaker 2024.4 or above, track that as well
+                        if (!reader.undertaleData.IsVersionAtLeast(2024, 4))
+                        {
+                            if (CheckIfAssetTypeIs2024_4(reader.undertaleData, IntArgument & 0xffffff, IntArgument >> 24))
+                                reader.undertaleData.SetGMS2Version(2024, 4);
+                        }
+                    }
+
+                    // If this is a chknullish instruction (ID -10), then this implies GameMaker 2.3.7 or above
+                    if (value == -10 && reader.undertaleData.IsVersionAtLeast(2, 3))
+                    {
+                        if (!reader.undertaleData.IsVersionAtLeast(2, 3, 7))
+                        {
+                            reader.undertaleData.SetGMS2Version(2, 3, 7);
+                        }
+                    }
+
+                    // Assign remaining values to instruction
+                    Value = value;
+                    Type1 = type1;
+
+                    break;
+                }
+
+            default:
+                throw new IOException($"Unknown opcode {Kind.ToString().ToUpper(CultureInfo.InvariantCulture)}");
+        }
+
+        // Assign final opcode to instruction
+        Kind = kind;
+    }
+
     /// <inheritdoc cref="UndertaleObject.UnserializeChildObjectCount(UndertaleReader)"/>
     public static uint UnserializeChildObjectCount(UndertaleReader reader)
     {
-        long instructionStartAddress = reader.Position;
-        reader.Position += 3; // skip for now, we'll read them later
-        byte kind = reader.ReadByte();
-        if (reader.Bytecode14OrLower)
+        // Flag tracking whether we're parsing bytecode 14 (old) instructions
+        bool bytecode14 = reader.Bytecode14OrLower;
+
+        // Read first word from instruction
+        uint firstWord = reader.ReadUInt32();
+
+        // Read opcode from most significant byte
+        Opcode kind = (Opcode)((firstWord & 0xFF000000) >> 24);
+        if (bytecode14)
         {
-            // Convert opcode to our enum
-            kind = ConvertInstructionKind(kind);
+            // Convert opcode from old format to new format
+            kind = (Opcode)ConvertInstructionKind((byte)kind);
         }
-        Opcode Kind = (Opcode)kind;
-        reader.Position = instructionStartAddress;
-        switch (GetInstructionType(Kind))
+
+        // Extract third byte from first word
+        byte b2 = (byte)((firstWord & 0x00FF0000) >> 16);
+
+        // Parse instruction contents
+        InstructionType instructionType = GetInstructionType(kind);
+        switch (instructionType)
         {
             case InstructionType.SingleTypeInstruction:
             case InstructionType.DoubleTypeInstruction:
             case InstructionType.ComparisonInstruction:
             case InstructionType.GotoInstruction:
-                reader.Position += 4;
+                // No special handling required
                 break;
 
             case InstructionType.PopInstruction:
-                reader.Position += 2; // "TypeInst"
-                int type1 = reader.ReadByte() & 0xf;
-                if (type1 != 0x0f)
                 {
-                    reader.Position += 1 + 4;
-                    return 1; // "Destination"
+                    // Skip destination of pop instruction, if present
+                    DataType type1 = (DataType)(b2 & 0xf);
+                    if (type1 != DataType.Int16)
+                    {
+                        reader.Position += 4;
+                        return 1; // "Destination"
+                    }
+                    break;
                 }
-                else
-                    reader.Position++;
-                break;
 
             case InstructionType.PushInstruction:
                 {
-                    reader.Position += 2;
-                    DataType Type1 = (DataType)reader.ReadByte();
-                    reader.Position++;
-                    switch (Type1)
+                    // Skip value being pushed, if present
+                    DataType type1 = (DataType)(b2 & 0xf);
+                    switch (type1)
                     {
                         case DataType.Double:
                         case DataType.Int64:
@@ -852,26 +967,26 @@ public class UndertaleInstruction : UndertaleObject, IGMInstruction
                             reader.Position += 4;
                             return 1;
                     }
+                    break;
                 }
-                break;
 
             case InstructionType.CallInstruction:
-                reader.Position += 8;
+                reader.Position += 4;
                 return 1; // "Function"
 
             case InstructionType.BreakInstruction:
                 {
-                    reader.Position += 2;
-                    DataType Type1 = (DataType)reader.ReadByte();
-                    if (Type1 == DataType.Int32)
-                        reader.Position += 5;
-                    else
-                        reader.Position += 1;
+                    // Skip past integer argument, if present
+                    DataType type1 = (DataType)(b2 & 0xf);
+                    if (type1 == DataType.Int32)
+                    {
+                        reader.Position += 4;
+                    }
                     break;
                 }
 
             default:
-                throw new IOException("Unknown opcode " + Kind.ToString().ToUpper(CultureInfo.InvariantCulture));
+                throw new IOException($"Unknown opcode {kind.ToString().ToUpper(CultureInfo.InvariantCulture)}");
         }
 
         return 0;

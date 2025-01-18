@@ -180,6 +180,15 @@ namespace UndertaleModTool.Windows
                     },
                     new TypesForVersion
                     {
+                        // Bytecode version 16
+                        Version = (16, uint.MaxValue, uint.MaxValue),
+                        Types = new[]
+                        {
+                            (typeof(UndertaleLanguage), "Languages"),
+                        }
+                    },
+                    new TypesForVersion
+                    {
                         Version = (2, 0, 0),
                         Types = new[]
                         {
