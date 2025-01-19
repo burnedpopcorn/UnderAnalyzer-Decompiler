@@ -1,9 +1,0 @@
-{
-  "LoadOrder": 0,
-  "Conditions": [
-    {
-      "ConditionKind": "Always"
-    }
-  ],
-  "UnderanalyzerFilename": "gamemaker.json"
-}
