@@ -175,10 +175,10 @@ public static class UndertaleDataExtensionMethods
 	public static UndertaleVariable DefineLocal(this IList<UndertaleVariable> list, IList<UndertaleVariable> originalReferencedLocalVars, int localId, string name, IList<UndertaleString> strg, UndertaleData data)
 	{
 		bool bytecode14 = (data?.GeneralInfo?.BytecodeVersion <= 14);
-		if (bytecode14)
-		{
-			UndertaleVariable search = list.Where((x) => x.Name.Content == name).FirstOrDefault();
-			if (search != null)
+        if (bytecode14 || data?.CodeLocals is null)
+        {
+            UndertaleVariable search = list.Where((x) => x.Name.Content == name && (bytecode14 || x.InstanceType == UndertaleInstruction.InstanceType.Local)).FirstOrDefault();
+            if (search != null)
 				return search;
 		}
 

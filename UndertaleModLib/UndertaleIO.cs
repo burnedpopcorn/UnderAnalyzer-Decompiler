@@ -78,6 +78,13 @@ namespace UndertaleModLib
                 }
                 else
                 {
+                    // FIXME
+                    if (CachedId > 0 || (typeof(ChunkT) != typeof(UndertaleChunkAGRP) && CachedId == 0))
+                    {
+                        if (!writer.undertaleData.IsVersionAtLeast(2024, 11))
+                            throw new IOException("Tried to write an ID reference to a null object, which is abnormal before 2024.11");
+                        writer.SubmitMessage("Writing -1 as the ID reference to a null (likely deleted by GMAC) object, as we can't assure what its position in the relevant chunk is (DATA LOSS)");
+                    }
                     if (typeof(ChunkT) == typeof(UndertaleChunkAGRP))
                         CachedId = 0;
                     else
@@ -111,6 +118,20 @@ namespace UndertaleModLib
                     return;
                 }
                 Resource = CachedId >= 0 ? list[CachedId] : default;
+                if (Resource == null && CachedId >= 0)
+                {
+                    // Naturally this can only happen with 2024.11 data files.
+                    // FIXME: Is this a good idea?
+                    if (reader.undertaleData.GeneralInfo.BytecodeVersion >= 17)
+                    {
+                        if (!reader.undertaleData.IsVersionAtLeast(2024, 11))
+                            reader.undertaleData.SetGMS2Version(2024, 11);
+                    }
+                    else
+                    {
+                        reader.SubmitWarning("ID reference to null object found on bytecode version pre-17! File is likely corrupt and you won't be able to save.");
+                    }
+                }
             }
         }
 
@@ -572,6 +593,8 @@ namespace UndertaleModLib
             try
             {
                 var expectedAddress = GetAddressForUndertaleObject(obj);
+                if (expectedAddress == 0)
+                    return;
                 if (expectedAddress != AbsPosition)
                 {
                     SubmitWarning("Reading misaligned at " + AbsPosition.ToString("X8") + ", realigning back to " + expectedAddress.ToString("X8") + "\nHIGH RISK OF DATA LOSS! The file is probably corrupted, or uses unsupported features\nProceed at your own risk");
@@ -775,6 +798,13 @@ namespace UndertaleModLib
 
         public void WriteUndertaleObject<T>(T obj) where T : UndertaleObject, new()
         {
+            if (obj is null)
+            {
+                // We simply shouldn't write anything.
+                // Pointers to this "object" are simply written as 0, and we don't need to
+                // put it in the pool
+                return;
+            }
             try
             {
                 // This isn't a major issue, and this is a performance waster

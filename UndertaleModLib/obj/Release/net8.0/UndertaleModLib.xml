@@ -1333,6 +1333,14 @@
             The kerning for each glyph.
             </summary>
         </member>
+        <member name="P:UndertaleModLib.Models.UndertaleFont.Glyph.UnknownAlwaysZero">
+            <summary>
+            Purpose unknown, always 0.
+            </summary>
+            <remarks>
+            Was introduced in GM 2024.11.
+            </remarks>
+        </member>
         <member name="M:UndertaleModLib.Models.UndertaleFont.Glyph.Serialize(UndertaleModLib.UndertaleWriter)">
             <inheritdoc />
         </member>

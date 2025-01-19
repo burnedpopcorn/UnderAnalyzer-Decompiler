@@ -32,6 +32,7 @@ namespace UndertaleModTool.Windows
     public class PredicateForVersion
     {
         public (uint Major, uint Minor, uint Release) Version { get; set; }
+        public (uint Major, uint Minor, uint Release) BeforeVersion { get; set; } = (uint.MaxValue, uint.MaxValue, uint.MaxValue);
         public Func<object, HashSetTypesOverride, bool, Dictionary<string, object[]>> Predicate { get; set; }
     }
 
@@ -60,7 +61,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleSprite obj)
                                 return null;
 
-                            var gameObjects = data.GameObjects.Where(x => x.Sprite == obj);
+                            var gameObjects = data.GameObjects.Where(x => x is not null).Where(x => x.Sprite == obj);
                             if (gameObjects.Any())
                                 return new() { { "Game objects", checkOne ? gameObjects.ToEmptyArray() : gameObjects.ToArray() } };
                             else
@@ -157,7 +158,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleSprite obj)
                                 return null;
 
-                            var textGroups = data.TextureGroupInfo.Where(x => x.Sprites.Any(s => s.Resource == obj)
+                            var textGroups = data.TextureGroupInfo.Where(x => x is not null).Where(x => x.Sprites.Any(s => s.Resource == obj)
                                                                               || (x.SpineSprites?.Any(s => s.Resource == obj) == true));
                             if (textGroups.Any())
                                 return new() { { "Texture groups", checkOne ? textGroups.ToEmptyArray() : textGroups.ToArray() } };
@@ -176,7 +177,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleSprite obj)
                                 return null;
 
-                            var partSysEmitters = data.ParticleSystemEmitters.Where(x => x.Sprite == obj);
+                            var partSysEmitters = data.ParticleSystemEmitters.Where(x => x is not null).Where(x => x.Sprite == obj);
                             if (partSysEmitters.Any())
                                 return new() { { "Particle system emitters", checkOne ? partSysEmitters.ToEmptyArray() : partSysEmitters.ToArray() } };
                             else
@@ -283,7 +284,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleBackground obj)
                                 return null;
 
-                            var textGroups = data.TextureGroupInfo.Where(x => x.Tilesets.Any(s => s.Resource == obj));
+                            var textGroups = data.TextureGroupInfo.Where(x => x is not null).Where(x => x.Tilesets.Any(s => s.Resource == obj));
                             if (textGroups.Any())
                                 return new() { { "Texture groups", checkOne ? textGroups.ToEmptyArray() : textGroups.ToArray() } };
                             else
@@ -304,7 +305,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleEmbeddedTexture obj)
                                 return null;
 
-                            var pageItems = data.TexturePageItems.Where(x => x.TexturePage == obj);
+                            var pageItems = data.TexturePageItems.Where(x => x is not null).Where(x => x.TexturePage == obj);
                             if (pageItems.Any())
                                 return new() { { "Texture page items", checkOne ? pageItems.ToEmptyArray() : pageItems.ToArray() } };
                             else
@@ -322,7 +323,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleEmbeddedTexture obj)
                                 return null;
 
-                            var textGroups = data.TextureGroupInfo.Where(x => x.TexturePages.Any(s => s.Resource == obj));
+                            var textGroups = data.TextureGroupInfo.Where(x => x is not null).Where(x => x.TexturePages.Any(s => s.Resource == obj));
                             if (textGroups.Any())
                                 return new() { { "Texture groups", checkOne ? textGroups.ToEmptyArray() : textGroups.ToArray() } };
                             else
@@ -347,21 +348,21 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleSprite)))
                             {
-                                var sprites = data.Sprites.Where(x => x.Textures.Any(t => t.Texture == obj));
+                                var sprites = data.Sprites.Where(x => x is not null).Where(x => x.Textures.Any(t => t.Texture == obj));
                                 if (sprites.Any())
                                     outDict["Sprites"] = checkOne ? sprites.ToEmptyArray() : sprites.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleBackground)))
                             {
-                                var backgrounds = data.Backgrounds.Where(x => x.Texture == obj);
+                                var backgrounds = data.Backgrounds.Where(x => x is not null).Where(x => x.Texture == obj);
                                 if (backgrounds.Any())
                                     outDict[data.IsGameMaker2() ? "Tile sets" : "Backgrounds"] = checkOne ? backgrounds.ToEmptyArray() : backgrounds.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleFont)))
                             {
-                                var fonts = data.Fonts.Where(x => x.Texture == obj);
+                                var fonts = data.Fonts.Where(x => x is not null).Where(x => x.Texture == obj);
                                 if (fonts.Any())
                                     outDict["Fonts"] = checkOne ? fonts.ToEmptyArray() : fonts.ToArray();
                             }
@@ -382,7 +383,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleTexturePageItem obj)
                                 return null;
 
-                            var embImages = data.EmbeddedImages.Where(x => x.TextureEntry == obj);
+                            var embImages = data.EmbeddedImages.Where(x => x is not null).Where(x => x.TextureEntry == obj);
                             if (embImages.Any())
                                 return new() { { "Embedded images", checkOne ? embImages.ToEmptyArray() : embImages.ToArray() } };
                             else
@@ -407,20 +408,20 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleBackground)))
                             {
-                                var backgrounds = data.Backgrounds.Where(x => x.Name == obj);
+                                var backgrounds = data.Backgrounds.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (backgrounds.Any())
                                     outDict[data.IsGameMaker2() ? "Tile sets" : "Backgrounds"] = checkOne ? backgrounds.ToEmptyArray() : backgrounds.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleCode)))
                             {
-                                var codeEntries = data.Code.Where(x => x.Name == obj);
+                                var codeEntries = data.Code.Where(x => x is not null).Where(x => x.Name == obj);
                                 IEnumerable<UndertaleCode> stringRefs;
                                 if (stringReferences is not null)
                                     stringRefs = stringReferences.Where(x => x.Value.Contains(obj))
                                                                  .Select(x => x.Key);
                                 else
-                                    stringRefs = data.Code.Where(x => x.Instructions.Any(
+                                    stringRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
                                                                         i => i.Value is UndertaleResourceById<UndertaleString, UndertaleChunkSTRG> strPtr
                                                                              && strPtr.Resource == obj));
 
@@ -431,38 +432,38 @@ namespace UndertaleModTool.Windows
                             }
                             if (types.Contains(typeof(UndertaleFunction)))
                             {
-                                var functions = data.Functions.Where(x => x.Name == obj);
+                                var functions = data.Functions.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (functions.Any())
                                     outDict["Functions"] = checkOne ? functions.ToEmptyArray() : functions.ToArray();
                             }
                             if (types.Contains(typeof(UndertaleVariable)))
                             {
-                                var variables = data.Variables.Where(x => x.Name == obj);
+                                var variables = data.Variables.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (variables.Any())
                                     outDict["Variables"] = checkOne ? variables.ToEmptyArray() : variables.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleSound)))
                             {
-                                var sounds = data.Sounds.Where(x => x.Name == obj || x.Type == obj || x.File == obj);
+                                var sounds = data.Sounds.Where(x => x is not null).Where(x => x.Name == obj || x.Type == obj || x.File == obj);
                                 if (sounds.Any())
                                     outDict["Sounds"] = checkOne ? sounds.ToEmptyArray() : sounds.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleAudioGroup)))
                             {
-                                var audioGroups = data.AudioGroups.Where(x => x.Name == obj);
+                                var audioGroups = data.AudioGroups.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (audioGroups.Any())
                                     outDict["Audio groups"] = checkOne ? audioGroups.ToEmptyArray() : audioGroups.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleSprite)))
                             {
-                                var sprites = data.Sprites.Where(x => x.Name == obj);
+                                var sprites = data.Sprites.Where(x => x is not null).Where(x => x.Name == obj);
 
                                 if (data.IsVersionAtLeast(2, 3, 0))
                                 {
-                                    sprites = sprites.Concat(data.Sprites.Where(x => x.V2Sequence is not null
+                                    sprites = sprites.Concat(data.Sprites.Where(x => x is not null).Where(x => x.V2Sequence is not null
                                                                                      && x.V2Sequence.Tracks.Count != 0
                                                                                      && (x.V2Sequence.Tracks[0].Name == obj
                                                                                          || x.V2Sequence.Tracks[0].ModelName == obj)));
@@ -475,7 +476,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleExtension)))
                             {
-                                var extensions = data.Extensions.Where(x => x.Name == obj || x.ClassName == obj || x.FolderName == obj);
+                                var extensions = data.Extensions.Where(x => x is not null).Where(x => x.Name == obj || x.ClassName == obj || x.FolderName == obj);
                                 if (extensions.Any())
                                     outDict["Extensions"] = checkOne ? extensions.ToEmptyArray() : extensions.ToArray();
                             }
@@ -533,14 +534,14 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleFont)))
                             {
-                                var fonts = data.Fonts.Where(x => x.Name == obj || x.DisplayName == obj);
+                                var fonts = data.Fonts.Where(x => x is not null).Where(x => x.Name == obj || x.DisplayName == obj);
                                 if (fonts.Any())
                                     outDict["Fonts"] = checkOne ? fonts.ToEmptyArray() : fonts.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleGameObject)))
                             {
-                                var gameObjects = data.GameObjects.Where(x => x.Name == obj);
+                                var gameObjects = data.GameObjects.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (gameObjects.Any())
                                     outDict["Game objects"] = checkOne ? gameObjects.ToEmptyArray() : gameObjects.ToArray();
                             }
@@ -562,28 +563,28 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertalePath)))
                             {
-                                var paths = data.Paths.Where(x => x.Name == obj);
+                                var paths = data.Paths.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (paths.Any())
                                     outDict["Paths"] = checkOne ? paths.ToEmptyArray() : paths.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleRoom)))
                             {
-                                var rooms = data.Rooms.Where(x => x.Name == obj || x.Caption == obj);
+                                var rooms = data.Rooms.Where(x => x is not null).Where(x => x.Name == obj || x.Caption == obj);
                                 if (rooms.Any())
                                     outDict["Rooms"] = checkOne ? rooms.ToEmptyArray() : rooms.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleScript)))
                             {
-                                var scripts = data.Scripts.Where(x => x.Name == obj);
+                                var scripts = data.Scripts.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (scripts.Any())
                                     outDict["Scripts"] = checkOne ? scripts.ToEmptyArray() : scripts.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleShader)))
                             {
-                                var shaders = data.Shaders.Where(x => x.Name == obj
+                                var shaders = data.Shaders.Where(x => x is not null).Where(x => x.Name == obj
                                                                       || x.GLSL_ES_Vertex == obj || x.GLSL_Vertex == obj || x.HLSL9_Vertex == obj
                                                                       || x.GLSL_ES_Fragment == obj || x.GLSL_Fragment == obj || x.HLSL9_Fragment == obj
                                                                       || x.VertexShaderAttributes.Any(a => a.Name == obj));
@@ -593,7 +594,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleTimeline)))
                             {
-                                var timelines = data.Timelines.Where(x => x.Name == obj);
+                                var timelines = data.Timelines.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (timelines.Any())
                                     outDict["Timelines"] = checkOne ? timelines.ToEmptyArray() : timelines.ToArray();
                             }
@@ -607,6 +608,7 @@ namespace UndertaleModTool.Windows
                     {
                         // Bytecode version 15
                         Version = (15, uint.MaxValue, uint.MaxValue),
+                        BeforeVersion = (2024, 8, 0),
                         Predicate = (objSrc, types, checkOne) =>
                         {
                             if (!types.Contains(typeof(UndertaleCodeLocals)))
@@ -615,7 +617,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleString obj)
                                 return null;
 
-                            var codeLocals = data.CodeLocals.Where(x => x.Name == obj || x.Locals.Any(l => l.Name == obj));
+                            var codeLocals = data.CodeLocals.Where(x => x is not null).Where(x => x.Name == obj || x.Locals.Any(l => l.Name == obj));
                             if (codeLocals.Any())
                                 return new() { { "Code locals", checkOne ? codeLocals.ToEmptyArray() : codeLocals.ToArray() } };
                             else
@@ -656,7 +658,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleEmbeddedImage)))
                             {
-                                var embImages = data.EmbeddedImages.Where(x => x.Name == obj);
+                                var embImages = data.EmbeddedImages.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (embImages.Any())
                                     outDict["Embedded images"] = checkOne ? embImages.ToEmptyArray() : embImages.ToArray();
                             }
@@ -714,7 +716,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleString obj)
                                 return null;
 
-                            var textGroups = data.TextureGroupInfo.Where(x => x.Name == obj);
+                            var textGroups = data.TextureGroupInfo.Where(x => x is not null).Where(x => x.Name == obj);
                             if (textGroups.Any())
                                 return new() { { "Texture groups", checkOne ? textGroups.ToEmptyArray() : textGroups.ToArray() } };
                             else
@@ -733,7 +735,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleAnimationCurve)))
                             {
-                                var animCurves = data.AnimationCurves.Where(x => x.Name == obj);
+                                var animCurves = data.AnimationCurves.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (animCurves.Any())
                                     outDict["Animation curves"] = checkOne ? animCurves.ToEmptyArray() : animCurves.ToArray();
                             }
@@ -779,7 +781,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleSequence)))
                             {
-                                var sequences = data.Sequences.Where(x => x.Name == obj
+                                var sequences = data.Sequences.Where(x => x is not null).Where(x => x.Name == obj
                                                                           || x.FunctionIDs.ContainsValue(obj));
                                 if (sequences.Any())
                                     outDict["Sequences"] = checkOne ? sequences.ToEmptyArray() : sequences.ToArray();
@@ -884,7 +886,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleString obj)
                                 return null;
 
-                            var filterEffects = data.FilterEffects.Where(x => x.Name == obj || x.Value == obj);
+                            var filterEffects = data.FilterEffects.Where(x => x is not null).Where(x => x.Name == obj || x.Value == obj);
                             if (filterEffects.Any())
                                 return new() { { "Filter effects", checkOne ? filterEffects.ToEmptyArray() : filterEffects.ToArray() } };
                             else
@@ -980,14 +982,14 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleParticleSystem)))
                             {
-                                var partSystems = data.ParticleSystems.Where(x => x.Name == obj);
+                                var partSystems = data.ParticleSystems.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (partSystems.Any())
                                     outDict["Particle systems"] = checkOne ? partSystems.ToEmptyArray() : partSystems.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleParticleSystemEmitter)))
                             {
-                                var partSysEmitters = data.ParticleSystemEmitters.Where(x => x.Name == obj);
+                                var partSysEmitters = data.ParticleSystemEmitters.Where(x => x is not null).Where(x => x.Name == obj);
                                 if (partSysEmitters.Any())
                                     outDict["Particle system emitters"] = checkOne ? partSysEmitters.ToEmptyArray() : partSysEmitters.ToArray();
                             }
@@ -1136,7 +1138,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleGameObject)))
                             {
-                                var gameObjects = data.GameObjects.Where(x => x.Events.Any(
+                                var gameObjects = data.GameObjects.Where(x => x is not null).Where(x => x.Events.Any(
                                                                             e => e.Any(se => se.Actions.Any(
                                                                                 a => a.CodeId == obj))));
                                 if (gameObjects.Any())
@@ -1145,7 +1147,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleRoom)))
                             {
-                                var rooms = data.Rooms.Where(x => x.CreationCodeId == obj);
+                                var rooms = data.Rooms.Where(x => x is not null).Where(x => x.CreationCodeId == obj);
                                 if (rooms.Any())
                                     outDict["Rooms"] = checkOne ? rooms.ToEmptyArray() : rooms.ToArray();
                             }
@@ -1163,7 +1165,7 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleScript)))
                             {
-                                var scripts = data.Scripts.Where(x => x.Code == obj);
+                                var scripts = data.Scripts.Where(x => x is not null).Where(x => x.Code == obj);
                                 if (scripts.Any())
                                     outDict["Scripts"] = checkOne ? scripts.ToEmptyArray() : scripts.ToArray();
                             }
@@ -1190,7 +1192,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleEmbeddedAudio obj)
                                 return null;
 
-                            var sounds = data.Sounds.Where(x => x.AudioFile == obj);
+                            var sounds = data.Sounds.Where(x => x is not null).Where(x => x.AudioFile == obj);
                             if (sounds.Any())
                                 return new() { { "Sounds", checkOne ? sounds.ToEmptyArray() : sounds.ToArray() } };
                             else
@@ -1214,7 +1216,7 @@ namespace UndertaleModTool.Windows
                             if (objSrc is not UndertaleAudioGroup obj)
                                 return null;
 
-                            var sounds = data.Sounds.Where(x => x.AudioGroup == obj);
+                            var sounds = data.Sounds.Where(x => x is not null).Where(x => x.AudioGroup == obj);
                             if (sounds.Any())
                                 return new() { { "Sounds", checkOne ? sounds.ToEmptyArray() : sounds.ToArray() } };
                             else
@@ -1243,7 +1245,7 @@ namespace UndertaleModTool.Windows
                                 funcRefs = funcReferences.Where(x => x.Value.Contains(obj))
                                                          .Select(x => x.Key);
                             else
-                                funcRefs = data.Code.Where(x => x.Instructions.Any(
+                                funcRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
                                                                   i => i.Function?.Target == obj
                                                                        || i.Value is UndertaleInstruction.Reference<UndertaleFunction> funcRef
                                                                           && funcRef.Target == obj));
@@ -1275,7 +1277,7 @@ namespace UndertaleModTool.Windows
                                 variRefs = variReferences.Where(x => x.Value.Contains(obj))
                                                          .Select(x => x.Key);
                             else
-                                variRefs = data.Code.Where(x => x.Instructions.Any(
+                                variRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
                                                                   i => i.Destination?.Target == obj
                                                                        || i.Value is UndertaleInstruction.Reference<UndertaleVariable> varRef
                                                                           && varRef.Target == obj));
@@ -1391,14 +1393,14 @@ namespace UndertaleModTool.Windows
 
                             if (types.Contains(typeof(UndertaleParticleSystem)))
                             {
-                                var partSystems = data.ParticleSystems.Where(x => x.Emitters.Any(e => e.Resource == obj));
+                                var partSystems = data.ParticleSystems.Where(x => x is not null).Where(x => x.Emitters.Any(e => e.Resource == obj));
                                 if (partSystems.Any())
                                     outDict["Particle systems"] = checkOne ? partSystems.ToEmptyArray() : partSystems.ToArray();
                             }
 
                             if (types.Contains(typeof(UndertaleParticleSystemEmitter)))
                             {
-                                var partSysEmitters = data.ParticleSystemEmitters.Where(x => x.SpawnOnDeath == obj || x.SpawnOnUpdate == obj);
+                                var partSysEmitters = data.ParticleSystemEmitters.Where(x => x is not null).Where(x => x.SpawnOnDeath == obj || x.SpawnOnUpdate == obj);
                                 if (partSysEmitters.Any())
                                     outDict["Particle system emitters"] = checkOne ? partSysEmitters.ToEmptyArray() : partSysEmitters.ToArray();
                             }
@@ -1434,7 +1436,13 @@ namespace UndertaleModTool.Windows
                 else
                     isAtLeast = predicateForVer.Version.CompareTo(ver) <= 0;
 
-                if (isAtLeast)
+                bool isAboveMost = false;
+                if (predicateForVer.BeforeVersion.Minor == uint.MaxValue)
+                    isAboveMost = predicateForVer.BeforeVersion.Major <= data.GeneralInfo.BytecodeVersion;
+                else
+                    isAboveMost = predicateForVer.BeforeVersion.CompareTo(ver) <= 0;
+
+                if (isAtLeast && !isAboveMost)
                 {
                     var result = predicateForVer.Predicate(obj, types, checkOne);
                     if (result is null)
