@@ -1,5 +1,5 @@
 # Just publish_gui_release.yml from the latest UnderAnalyzer
-name: Publish Single File build of UnderAnalyzer GUI
+name: Publish Single File build of UnderAnalyzer GUI ${{ github.event.repository.updated_at}}
 
 on:
   workflow_dispatch:
@@ -9,17 +9,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_gui:
+  Building-GUI:
 
     strategy:
       fail-fast: false
-      matrix:
-        os: [windows-latest]
-        configuration: [Release]
-        bundled: [true]
-        singlefile: [true]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -34,19 +29,19 @@ jobs:
     - name: Build
       run: |
         dotnet build UndertaleModTool --no-restore
-    - name: Publish ${{ matrix.os }} GUI
+    - name: Publish UnderAnalyzer GUI
       run: |
-        dotnet publish UndertaleModTool -c ${{ matrix.configuration }} -r win-x64 --self-contained ${{ matrix.bundled }} -p:PublishSingleFile=${{ matrix.singlefile }} --output ${{ matrix.os }}
+        dotnet publish UndertaleModTool -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true --output windows-latest
     - name: Copy external files
       run: |
-        cp ./README.md ./${{ matrix.os }}
-        cp ./LICENSE.txt ./${{ matrix.os }}
-        cp -r ./UndertaleModLib/GameSpecificData/ ./${{ matrix.os }}/GameSpecificData/
+        cp ./README.md ./windows-latest
+        cp ./LICENSE.txt ./windows-latest
+        cp -r ./UndertaleModLib/GameSpecificData/ ./windows-latest/GameSpecificData/
     - name: Create zip for stable release Windows GUI
       run: |
-        7z a -tzip UnderAnalyzer_GUI-isSingleFile-${{ matrix.singlefile }}.zip ./${{ matrix.os }}/* -mx0 
+        7z a -tzip UnderAnalyzer_GUI-isSingleFile.zip ./windows-latest/* -mx0 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-          name: UnderAnalyzer_GUI-isSingleFile-${{ matrix.singlefile }}
-          path: UnderAnalyzer_GUI-isSingleFile-${{ matrix.singlefile }}.zip
+          name: UnderAnalyzer_GUI-isSingleFile
+          path: UnderAnalyzer_GUI-isSingleFile.zip
