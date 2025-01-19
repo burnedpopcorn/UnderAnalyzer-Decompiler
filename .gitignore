@@ -1,5 +1,7 @@
 .vs/
-UndertaleModTool/bin/
-UndertaleModTool/binOLD/
 UndertaleModTool/obj/
 UndertaleModTool/Compiled_Output/
+Underanalyzer/Underanalyzer/obj/
+Underanalyzer/Underanalyzer/bin/
+UndertaleModLib/obj/
+UndertaleModLib/bin/
