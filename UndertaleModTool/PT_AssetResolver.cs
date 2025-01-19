@@ -446,6 +446,61 @@ namespace UndertaleModTool
 
             // Extra Shit i found
             builtin_vars.Add("particlespr", "Asset.Sprite");
+            // Global Vars that sometimes are used in older builds
+            builtin_vars.Add("heatmeterspr", "Asset.Sprite");
+            builtin_vars.Add("heatmetersprfill", "Asset.Sprite");
+            builtin_vars.Add("heatmetersprpalette", "Asset.Sprite");
+            builtin_vars.Add("pizzascorespr", "Asset.Sprite");
+            builtin_vars.Add("rankshudspr", "Asset.Sprite");
+            builtin_vars.Add("rankshudsprfill", "Asset.Sprite");
+            builtin_vars.Add("tv_combobubble", "Asset.Sprite");
+            builtin_vars.Add("tv_combobubblefill", "Asset.Sprite");
+            builtin_vars.Add("tv_escapeG", "Asset.Sprite");
+            builtin_vars.Add("tv_happyG", "Asset.Sprite");
+            builtin_vars.Add("tv_hurtG", "Asset.Sprite");
+            builtin_vars.Add("tv_idleG", "Asset.Sprite");
+            builtin_vars.Add("tv_barrel", "Asset.Sprite");
+            builtin_vars.Add("tv_bombpep", "Asset.Sprite");
+            builtin_vars.Add("tv_boxxedpep", "Asset.Sprite");
+            builtin_vars.Add("tv_cheeseball", "Asset.Sprite");
+            builtin_vars.Add("tv_cheesepep", "Asset.Sprite");
+            builtin_vars.Add("tv_clown", "Asset.Sprite");
+            builtin_vars.Add("tv_exprcollect", "Asset.Sprite");
+            builtin_vars.Add("tv_exprcombo", "Asset.Sprite");
+            builtin_vars.Add("tv_exprheat", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt", "Asset.Sprite");
+            builtin_vars.Add("tv_exprmach3", "Asset.Sprite");
+            builtin_vars.Add("tv_exprmach4", "Asset.Sprite");
+            builtin_vars.Add("tv_exprpanic", "Asset.Sprite");
+            builtin_vars.Add("tv_fireass", "Asset.Sprite");
+            builtin_vars.Add("tv_firemouth", "Asset.Sprite");
+            builtin_vars.Add("tv_ghost", "Asset.Sprite");
+            builtin_vars.Add("tv_golf", "Asset.Sprite");
+            builtin_vars.Add("tv_idle", "Asset.Sprite");
+            builtin_vars.Add("tv_idlesecret", "Asset.Sprite");
+            builtin_vars.Add("tv_idleanim1", "Asset.Sprite");
+            builtin_vars.Add("tv_idleanim2", "Asset.Sprite");
+            builtin_vars.Add("tv_knight", "Asset.Sprite");
+            builtin_vars.Add("tv_mort", "Asset.Sprite");
+            builtin_vars.Add("tv_rocket", "Asset.Sprite");
+            builtin_vars.Add("tv_scaredjump", "Asset.Sprite");
+            builtin_vars.Add("tv_shotgun", "Asset.Sprite");
+            builtin_vars.Add("tv_squished", "Asset.Sprite");
+            builtin_vars.Add("tv_tumble", "Asset.Sprite");
+            builtin_vars.Add("tv_weenie", "Asset.Sprite");
+            builtin_vars.Add("tv_off", "Asset.Sprite");
+            builtin_vars.Add("tv_open", "Asset.Sprite");
+            builtin_vars.Add("tv_whitenoise", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt1", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt2", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt3", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt4", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt5", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt6", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt7", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt8", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt9", "Asset.Sprite");
+            builtin_vars.Add("tv_exprhurt10", "Asset.Sprite");
 
             // Function Arguments (From UTMTCE)
             builtin_funcs["gml_Script_instance_create_unique"] =
@@ -492,6 +547,7 @@ namespace UndertaleModTool
             builtin_funcs["gml_Script_create_debris"] =
                 new[] { null, null, "Asset.Sprite" };
             // Added it again because for some reason if an argument is missing, it does not load it
+            // this doesn't seem to work anyways :(
             builtin_funcs["gml_Script_create_debris"] =
                 new[] { null, null, "Asset.Sprite", null };
             builtin_funcs["gml_Script_create_collect"] =
