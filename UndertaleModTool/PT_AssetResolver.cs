@@ -50,7 +50,7 @@ namespace UndertaleModTool
 
             // Pizza Tower Enums
             // how these work is that:
-            //                                      v--- Code Entry to search               v--- find state name from, ex: (scr_player_normal(); --> normal)
+            //                                      v--- Code Entry to search               v--- find state name from, ex: (scr_player_normal(); --> normal (it then adds states.))
             // FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), new[] { "scr_player_", "state_player_", "scr_playerN_" });
             try
             {
