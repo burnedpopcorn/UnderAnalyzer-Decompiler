@@ -1,9 +1,0 @@
-{
-  "LoadOrder": 1,
-  "Conditions": [
-    {
-      "ConditionKind": "Always_Check"
-    }
-  ],
-  "UnderanalyzerFilename": "pizzatower.json"
-}

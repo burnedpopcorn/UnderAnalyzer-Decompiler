@@ -20,7 +20,7 @@
         <!-- Suppress all missing XML comment warnings -->
         <NoWarn>1591</NoWarn>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
-        <BaseOutputPath>C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModTool\Compiled_Output</BaseOutputPath>
+        <BaseOutputPath>..\UndertaleModTool\Compiled_Output</BaseOutputPath>
         <AssemblyName>UnderAnalyzer-Decompiler</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
