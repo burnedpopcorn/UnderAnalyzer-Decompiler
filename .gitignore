@@ -1,6 +1,7 @@
 .vs/
 UndertaleModTool/obj/
 UndertaleModTool/Compiled_Output/
+UndertaleModTool/UndertaleModTool.csproj.user
 Underanalyzer/Underanalyzer/obj/
 Underanalyzer/Underanalyzer/bin/
 UndertaleModLib/obj/
