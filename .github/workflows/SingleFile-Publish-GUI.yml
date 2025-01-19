@@ -1,5 +1,5 @@
 # Just publish_gui_release.yml from the latest UnderAnalyzer
-name: Publish Single File build of UnderAnalyzer GUI ${{ github.event.repository.updated_at}}
+name: Publish Single File build of UnderAnalyzer GUI
 
 on:
   workflow_dispatch:
