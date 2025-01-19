@@ -371,24 +371,33 @@ namespace UndertaleModLib
 
             long returnTo = reader.Position;
 
-            uint soundCount = reader.ReadUInt32();
-            if (soundCount >= 2)
+            uint possibleSoundCount = reader.ReadUInt32();
+            List<uint> soundPtrs = new();
+            if (possibleSoundCount > 0)
+            {
+                soundPtrs.Capacity = (int)possibleSoundCount;
+                for (int i = 0; i < possibleSoundCount; i++)
+                {
+                    uint soundPtr = reader.ReadUInt32();
+                    if (soundPtr == 0)
+                        continue;
+                    soundPtrs.Add(soundPtr);
+                }
+            }
+            if (soundPtrs.Count >= 2)
             {
                 // If first sound's theoretical (old) end offset is below the start offset of
                 // the next sound by exactly 4 bytes, then this is 2024.6.
-                uint firstSoundPtr = reader.ReadUInt32();
-                uint secondSoundPtr = reader.ReadUInt32();
-                if ((firstSoundPtr + (4 * 9)) == (secondSoundPtr - 4))
+                if ((soundPtrs[0] + (4 * 9)) == (soundPtrs[1] - 4))
                 {
                     reader.undertaleData.SetGMS2Version(2024, 6);
                 }
             }
-            else if (soundCount == 1)
+            else if (soundPtrs.Count == 1)
             {
                 // If there's a nonzero value where padding should be at the
                 // end of the sound, then this is 2024.6.
-                uint firstSoundPtr = reader.ReadUInt32();
-                reader.AbsPosition = firstSoundPtr + (4 * 9);
+                reader.AbsPosition = soundPtrs[0] + (4 * 9);
                 if ((reader.AbsPosition % 16) != 4)
                 {
                     // If this occurs, then something weird has happened at the start of the chunk?
@@ -639,9 +648,7 @@ namespace UndertaleModLib
 
         internal override void UnserializeChunk(UndertaleReader reader)
         {
-            reader.Position -= 4;
-            int chunkLength = reader.ReadInt32();
-            long chunkEnd = reader.AbsPosition + chunkLength;
+            long chunkEnd = reader.AbsPosition + Length;
 
             long beginPosition = reader.Position;
 
@@ -650,7 +657,14 @@ namespace UndertaleModLib
             uint[] objectLocations = new uint[count + 1];
             for (int i = 0; i < count; i++)
             {
-                objectLocations[i] = (uint)reader.ReadInt32();
+                uint objectLocation = reader.ReadUInt32();
+                if (objectLocation == 0)
+                {
+                    i--;
+                    count--;
+                    continue;
+                }
+                objectLocations[i] = objectLocation;
             }
             objectLocations[count] = (uint)chunkEnd;
 
@@ -1367,6 +1381,55 @@ namespace UndertaleModLib
         public UndertaleSimpleList<UndertaleFunction> Functions = new UndertaleSimpleList<UndertaleFunction>();
         public UndertaleSimpleList<UndertaleCodeLocals> CodeLocals = new UndertaleSimpleList<UndertaleCodeLocals>();
 
+        private static bool checkedFor2024_8;
+
+        private void CheckFor2024_8(UndertaleReader reader)
+        {
+            if (reader.undertaleData.IsVersionAtLeast(2024, 8)
+                || reader.Bytecode14OrLower || Length == 0) // Irrelevant or non-deductible
+            {
+                checkedFor2024_8 = true;
+                return;
+            }
+
+            long returnPos = reader.Position;
+
+            // The CodeLocals list was removed in 2024.8, so we check if Functions
+            // is the only thing in here.
+            uint funcCount = reader.ReadUInt32();
+            // Skip over the (Simple)List
+            // (3*4 is the size of an UndertaleFunction object)
+            reader.Position += 3 * 4 * funcCount;
+            if (reader.Position == returnPos + Length)
+            {
+                // Whatever, let's consider this a win
+                reader.undertaleData.SetGMS2Version(2024, 8);
+                reader.Position = returnPos;
+                checkedFor2024_8 = true;
+                return;
+            }
+
+            // Then align the position
+            int specAlign = reader.undertaleData.PaddingAlignException;
+            while ((reader.AbsPosition & ((specAlign == -1 ? 16 : specAlign) - 1)) != 0)
+            {
+                if (reader.ReadByte() != 0)
+                {
+                    // If we hit a non-zero byte, it can't be padding
+                    reader.Position = returnPos;
+                    checkedFor2024_8 = true;
+                    return;
+                }
+            }
+
+            // Then check if we're at the end of the chunk
+            if (reader.Position == returnPos + Length)
+                reader.undertaleData.SetGMS2Version(2024, 8);
+
+            reader.Position = returnPos;
+            checkedFor2024_8 = true;
+        }
+
         internal override void SerializeChunk(UndertaleWriter writer)
         {
             if (Functions == null && CodeLocals == null)
@@ -1382,12 +1445,16 @@ namespace UndertaleModLib
             else
             {
                 writer.WriteUndertaleObject(Functions);
-                writer.WriteUndertaleObject(CodeLocals);
+                if (!writer.undertaleData.IsVersionAtLeast(2024, 8))
+                    writer.WriteUndertaleObject(CodeLocals);
             }
         }
 
         internal override void UnserializeChunk(UndertaleReader reader)
         {
+            if (!checkedFor2024_8)
+                CheckFor2024_8(reader);
+
             if (Length == 0 && reader.undertaleData.GeneralInfo?.BytecodeVersion > 14) // YYC, 14 < bytecode <= 16, chunk is empty but exists
             {
                 Functions = null;
@@ -1404,16 +1471,24 @@ namespace UndertaleModLib
                 Functions.SetCapacity(Length / 12);
                 while (reader.Position + 12 <= startPosition + Length)
                     Functions.Add(reader.ReadUndertaleObject<UndertaleFunction>());
+
+                CodeLocals = null;
             }
             else
             {
                 Functions = reader.ReadUndertaleObject<UndertaleSimpleList<UndertaleFunction>>();
-                CodeLocals = reader.ReadUndertaleObject<UndertaleSimpleList<UndertaleCodeLocals>>();
+                if (!reader.undertaleData.IsVersionAtLeast(2024, 8))
+                    CodeLocals = reader.ReadUndertaleObject<UndertaleSimpleList<UndertaleCodeLocals>>();
+                else
+                    CodeLocals = null;
             }
         }
 
         internal override uint UnserializeObjectCount(UndertaleReader reader)
         {
+            checkedFor2024_8 = false;
+            CheckFor2024_8(reader);
+
             if (Length == 0 && reader.undertaleData.GeneralInfo?.BytecodeVersion > 14)
                 return 0;
 
@@ -1422,7 +1497,8 @@ namespace UndertaleModLib
             if (!reader.Bytecode14OrLower)
             {
                 count += 1 + UndertaleSimpleList<UndertaleFunction>.UnserializeChildObjectCount(reader);
-                count += 1 + UndertaleSimpleList<UndertaleCodeLocals>.UnserializeChildObjectCount(reader);
+                if (!reader.undertaleData.IsVersionAtLeast(2024, 8))
+                    count += 1 + UndertaleSimpleList<UndertaleCodeLocals>.UnserializeChildObjectCount(reader);
             }
             else
                 count = Length / 12;
@@ -2199,7 +2275,8 @@ namespace UndertaleModLib
                 // Fortunately, consistent padding means we need no parsing here
                 if (Length == 0xF8)
                 {
-                    reader.undertaleData.SetGMS2Version(2023, 8);
+                    if (!reader.undertaleData.IsVersionAtLeast(2023, 8))
+                        reader.undertaleData.SetGMS2Version(2023, 8);
                 }
                 else if (Length == 0xD8)
                 {
@@ -2229,7 +2306,8 @@ namespace UndertaleModLib
             uint secondPtr = reader.ReadUInt32();
             if (secondPtr - firstPtr == 0xEC)
             {
-                reader.undertaleData.SetGMS2Version(2023, 8);
+                if (!reader.undertaleData.IsVersionAtLeast(2023, 8))
+                    reader.undertaleData.SetGMS2Version(2023, 8);
             }
             else if (secondPtr - firstPtr == 0xC0)
             {

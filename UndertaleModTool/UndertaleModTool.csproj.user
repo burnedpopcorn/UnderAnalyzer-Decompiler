@@ -4,11 +4,17 @@
     <_LastSelectedProfileId>C:\Users\juanm\Documents\GitHub\UTMT-UnderAnalyzer-Decompiler\UndertaleModTool\Properties\PublishProfiles\FolderProfile1.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Update="Controls\ResourceListTreeViewItem.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Windows\TextInput.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Controls\ResourceListTreeViewItem.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="NEWVarDefinitionForm.xaml">
       <SubType>Designer</SubType>
     </Page>

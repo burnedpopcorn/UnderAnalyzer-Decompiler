@@ -1239,12 +1239,16 @@ namespace UndertaleModTool
                         {
                             debugData.SourceCode.Add(new UndertaleScriptSource() { SourceCode = debugData.Strings.MakeString(outputs[i]) });
                             debugData.DebugInfo.Add(outputsOffsets[i]);
-                            debugData.LocalVars.Add(Data.CodeLocals[i]);
-                            if (debugData.Strings.IndexOf(Data.CodeLocals[i].Name) < 0)
-                                debugData.Strings.Add(Data.CodeLocals[i].Name);
-                            foreach (var local in Data.CodeLocals[i].Locals)
-                                if (debugData.Strings.IndexOf(local.Name) < 0)
-                                    debugData.Strings.Add(local.Name);
+                            // FIXME: Probably should write something regardless.
+                            if (Data.CodeLocals is not null)
+                            {
+                                debugData.LocalVars.Add(Data.CodeLocals[i]);
+                                if (debugData.Strings.IndexOf(Data.CodeLocals[i].Name) < 0)
+                                    debugData.Strings.Add(Data.CodeLocals[i].Name);
+                                foreach (var local in Data.CodeLocals[i].Locals)
+                                    if (debugData.Strings.IndexOf(local.Name) < 0)
+                                        debugData.Strings.Add(local.Name);
+                            }
                         }
 
                         using (UndertaleWriter writer = new UndertaleWriter(new FileStream(Path.ChangeExtension(FilePath, ".yydebug"), FileMode.Create, FileAccess.Write)))
@@ -1892,7 +1896,7 @@ namespace UndertaleModTool
             return null;
         }
 
-        private void DeleteItem(UndertaleObject obj)
+        internal void DeleteItem(UndertaleObject obj)
         {
             TreeViewItem container = GetNearestParent<TreeViewItem>(GetTreeViewItemFor(obj));
             object source = container.ItemsSource;
@@ -1958,7 +1962,7 @@ namespace UndertaleModTool
                 }
             }
         }
-        private void CopyItemName(object obj)
+        internal void CopyItemName(object obj)
         {
             string name = null;
 
@@ -2078,58 +2082,9 @@ namespace UndertaleModTool
             }
         }
 
-        private void MenuItem_ContextMenuOpened(object sender, RoutedEventArgs e)
-        {
-            var menu = sender as ContextMenu;
-            foreach (var item in menu.Items)
-            {
-                var menuItem = item as MenuItem;
-                if ((menuItem.Header as string) == "Find all references")
-                {
-                    menuItem.Visibility = UndertaleResourceReferenceMap.IsTypeReferenceable(menu.DataContext?.GetType())
-                                          ? Visibility.Visible : Visibility.Collapsed;
-
-                    break;
-                }
-            }
-        }
         private void MenuItem_OpenInNewTab_Click(object sender, RoutedEventArgs e)
         {
             OpenInTab(Highlighted, true);
-        }
-        private void MenuItem_FindAllReferences_Click(object sender, RoutedEventArgs e)
-        {
-            var obj = (sender as FrameworkElement)?.DataContext as UndertaleResource;
-            if (obj is null)
-            {
-                this.ShowError("The selected object is not an \"UndertaleResource\".");
-                return;
-            }
-
-            FindReferencesTypesDialog dialog = null;
-            try
-            {
-                dialog = new(obj, Data);
-                dialog.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                this.ShowError("An error occured in the object references related window.\n" +
-                               $"Please report this on GitHub.\n\n{ex}");
-            }
-            finally
-            {
-                dialog?.Close();
-            }
-        }
-        private void MenuItem_CopyName_Click(object sender, RoutedEventArgs e)
-        {
-            CopyItemName(Highlighted);
-        }
-        private void MenuItem_Delete_Click(object sender, RoutedEventArgs e)
-        {
-            if (Highlighted is UndertaleObject obj)
-                DeleteItem(obj);
         }
 
         private void MenuItem_Add_Click(object sender, RoutedEventArgs e)
@@ -2197,7 +2152,7 @@ namespace UndertaleModTool
                         string prefix = Data.IsVersionAtLeast(2, 3) ? "gml_GlobalScript_" : "gml_Script_";
                         code.Name = Data.Strings.MakeString(prefix + newName);
                         Data.Code.Add(code);
-                        if (Data?.GeneralInfo.BytecodeVersion > 14)
+                        if (Data.CodeLocals is not null)
                         {
                             UndertaleCodeLocals locals = new UndertaleCodeLocals();
                             locals.Name = code.Name;
@@ -2210,7 +2165,7 @@ namespace UndertaleModTool
                         }
                         (obj as UndertaleScript).Code = code;
                     }
-                    if ((obj is UndertaleCode) && (Data.GeneralInfo.BytecodeVersion > 14))
+                    if (obj is UndertaleCode && Data.CodeLocals is not null)
                     {
                         UndertaleCodeLocals locals = new UndertaleCodeLocals();
                         locals.Name = (obj as UndertaleCode).Name;
@@ -2970,7 +2925,18 @@ namespace UndertaleModTool
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            this.ShowMessage("UndertaleModTool and its UI by krzys_h\nUnderAnalyzer Decompiler by colinator27\n\nDecompiling Features and Scripts by burnedpopcorn180\n\nPizza Tower Variable Definitions by @avievie on Github\nPizza Tower Enums by CST1229 and all UTMTCE Contributors", "About");
+            this.ShowMessage(
+                  "UndertaleModTool by krzys_h and the Underminers Team"
+                + "\nUnderAnalyzer Decompiler by colinator27"
+                + "\n2024.11 Fixes by @Dobby233Liu on Github"
+
+                + "\n\nDecompiling Features and Scripts by burnedpopcorn180"
+
+                + "\n\nPizza Tower Variable Definitions by @avievie on Github"
+                + "\nPizza Tower Enums by CST1229 and all UTMTCE Contributors"
+
+                + "\n\nSpecial thanks to CatMateo, for the good advice and help"
+                , "About");
         }
 
         /// From https://github.com/AvaloniaUI/Avalonia/blob/master/src/Avalonia.Dialogs/AboutAvaloniaDialog.xaml.cs
@@ -3427,7 +3393,7 @@ result in loss of work.");
             }
         }
 
-        private void OpenInTab(object obj, bool isNewTab = false, string tabTitle = null)
+        internal void OpenInTab(object obj, bool isNewTab = false, string tabTitle = null)
         {
             if (obj is null)
                 return;
