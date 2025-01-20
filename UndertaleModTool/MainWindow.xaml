@@ -126,8 +126,9 @@
                 <local:MenuItemDark Header="_Variable Definitions Maker">
                     <MenuItem Header="_Make JSON for Pizza Tower Mod" Click="PT_JSON_BUTTON_CLICK"/>
                     <Separator/>
-                    <MenuItem Header="_Make New Custom JSON" Click="OpenVarDefinitionForm_Click"/>
+                    <MenuItem Header="_Make Fulled New Custom JSON (UNIMPLIMENTED)" Click="OpenVarDefinitionForm_Click"/>
                     <MenuItem Header="_Edit Existing Custom JSON" Click="EditVarDefinitionForm_Click"/>
+                    <MenuItem Header="_Make Clean New Custom JSON" Click="OpenVarDefinitionForm_Click"/>
                 </local:MenuItemDark>
 
                 <local:MenuItemDark Header="_Find">

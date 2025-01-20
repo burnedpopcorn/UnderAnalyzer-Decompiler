@@ -588,6 +588,8 @@ namespace UndertaleModLib
             return objectPoolRev[obj];
         }
 
+        // to stop it from spamming it on CU 1.5.1
+        public int misalignedMessage = 0;
         public void ReadUndertaleObject<T>(T obj) where T : UndertaleObject, new()
         {
             try
@@ -595,9 +597,23 @@ namespace UndertaleModLib
                 var expectedAddress = GetAddressForUndertaleObject(obj);
                 if (expectedAddress == 0)
                     return;
-                if (expectedAddress != AbsPosition)
+                if (expectedAddress != AbsPosition && misalignedMessage <= 3)
                 {
                     SubmitWarning("Reading misaligned at " + AbsPosition.ToString("X8") + ", realigning back to " + expectedAddress.ToString("X8") + "\nHIGH RISK OF DATA LOSS! The file is probably corrupted, or uses unsupported features\nProceed at your own risk");
+                    AbsPosition = expectedAddress;
+                    // add one if misalignment is detected, will go to next else after three have already been detected
+                    misalignedMessage++;
+                }
+                else if (expectedAddress != AbsPosition && misalignedMessage == 4) 
+                {
+                    SubmitWarning("Reading misaligned at " + AbsPosition.ToString("X8") + ", realigning back to " + expectedAddress.ToString("X8") + "\nHIGH RISK OF DATA LOSS!\n\nFurther Misalignments will be ignored\nProceed at your risk");
+                    AbsPosition = expectedAddress;
+                    // add one if misalignment is detected, which will go to next else statement
+                    misalignedMessage++;
+                }
+                else if (expectedAddress != AbsPosition && misalignedMessage >= 5) 
+                {
+                    // relign address, but dont notify user after 4 messages
                     AbsPosition = expectedAddress;
                 }
                 unreadObjects.Remove((uint)AbsPosition);
