@@ -265,7 +265,7 @@ namespace UndertaleModTool
         }
 
         #endregion
-        #region Save Button
+        #region Save Main JSON File Function (Shared)
         public void SaveButton_Func()
         {
             // Get data from data.win
@@ -386,7 +386,7 @@ namespace UndertaleModTool
             }
         }
         #endregion
-        #region Loader JSON File Functions
+        #region Save Loader JSON File Buttons
 
         // Function to make Loader JSON File (Only for Specific Game that is Currently Loaded)
         public void SaveButtonSingle_Click(object sender, RoutedEventArgs e)
