@@ -3833,6 +3833,16 @@ result in loss of work.");
             // Show the new window
             varDefinitionWindow.Show();
         }
+        // Open Var Defition Form Window, but in "Editing Mode"
+        private void EditVarDefinitionForm_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a new instance of the VarDefinitionForm window
+            bool editing = true;                 //       Setting this to true enables "Editing Mode"
+            VarDefinitionForm varDefinitionWindow = new VarDefinitionForm(editing);
+
+            // Show the new window
+            varDefinitionWindow.Show();
+        }
 
         private void TabTitleText_Initialized(object sender, EventArgs e)
         {
