@@ -43,6 +43,7 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: v${{ github.run_number }}
         release_name: v${{ github.run_number }}
         body: |
