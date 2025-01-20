@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
+using System.Text.Json.Nodes;
 
 namespace UndertaleModTool
 {
@@ -47,12 +48,19 @@ namespace UndertaleModTool
         #endregion
 
         // Initialize Everything
-        public VarDefinitionForm()
+        public VarDefinitionForm(bool editing = false)
         {
             InitializeComponent();
 
             // Set Initial Variable Row
             AddVarRow();
+
+            // If editing existing one, prompt user for JSON and load
+            // This bool is set true or left false in MainWindow
+            if (editing) 
+            {
+                PromptJSONLoad();
+            }
         }
 
         // List of all Asset Types for DropDown Menu
@@ -82,6 +90,83 @@ namespace UndertaleModTool
             };
         }
 
+        #region Edit Existing JSON
+        public void PromptJSONLoad()
+        {
+            // Open file dialog to select the JSON file to load
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*";
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                LoadExistingJson(filePath); // Load the selected JSON file
+            }
+        }
+        public void LoadExistingJson(string filePath)
+        {
+            try
+            {
+                // Read and deserialize the JSON file into a dynamic object
+                string jsonString = File.ReadAllText(filePath);
+
+                // Try to deserialize the JSON into a JsonDocument for easier inspection
+                var loadedJson = JsonSerializer.Deserialize<JsonDocument>(jsonString);
+
+                if (loadedJson != null)
+                {
+                    // Check if GlobalNames is available
+                    if (loadedJson.RootElement.TryGetProperty("GlobalNames", out var globalNamesElement))
+                    {
+                        // Get Important JSON Properties
+                        var variables = globalNamesElement.GetProperty("Variables");
+                        var functions = globalNamesElement.GetProperty("FunctionArguments");
+
+                        // Clear existing rows before loading new data
+                        VariableRowsPanel.Children.Clear();
+
+                        // Loop through Variables and add them to the UI
+                        foreach (var variable in variables.EnumerateObject())
+                        {
+                            string variableName = variable.Name;
+                            string assetType = variable.Value.ToString();
+                            AddVarRow(variableName, assetType); // Add rows with preloaded data
+                        }
+
+                        // Loop through Functions and add them to the UI
+                        foreach (var function in functions.EnumerateObject())
+                        {
+                            string functionName = function.Name;
+                            // Handling null values and correctly joining arguments
+                            var functionArguments = function.Value.EnumerateArray()
+                                .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString()) // Handling null values
+                                .ToArray();
+                            string functionArgumentsString = string.Join(", ", functionArguments); // Join all arguments with commas
+
+                            AddFunctionRow(functionName, functionArgumentsString); // Add rows with preloaded data
+                        }
+                        // SUCCESS!!!
+                        MessageBox.Show("JSON File Loaded Successfully");
+                    }
+                    // Else FAILURE
+                    // fuck
+                    else
+                    {
+                        MessageBox.Show("No 'GlobalNames' property found in the JSON file.");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Error deserializing the JSON file.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading JSON: {ex.Message}");
+            }
+        }
+        #endregion
+
         #region Variable Functions
 
         // Add Variable Button Press
@@ -93,45 +178,39 @@ namespace UndertaleModTool
 
         // Add Row Function
         // Isn't built in above because of the Initial Row
-        public void AddVarRow()
+        public void AddVarRow(string variableName = "", string assetType = "")
         {
-            // create grid for row
             Grid newRow = new Grid();
 
-            // Define Columns
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Textbox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For ComboBox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
-            // Define Row
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            // Create Variable TextBox
-            TextBox variableTextBox = new TextBox { };
+            TextBox variableTextBox = new TextBox { Text = variableName };  // Set the default text
             newRow.Children.Add(variableTextBox);
-            Grid.SetRow(variableTextBox, 0);  // Place in First Row
-            Grid.SetColumn(variableTextBox, 0); // Place in Left Half of Row
+            Grid.SetRow(variableTextBox, 0);
+            Grid.SetColumn(variableTextBox, 0);
 
-            // Create the ComboBox with Asset Type list
             ComboBoxDark newComboBox = new ComboBoxDark
             {
-                ItemsSource = GetAssetTypes(), // Bind to Asset Types
+                ItemsSource = GetAssetTypes(),
+                SelectedItem = assetType // Set the default selection
             };
             newRow.Children.Add(newComboBox);
-            Grid.SetRow(newComboBox, 0);  // Place in same Row
-            Grid.SetColumn(newComboBox, 1); // Place in Right Half
+            Grid.SetRow(newComboBox, 0);
+            Grid.SetColumn(newComboBox, 1);
 
-            // Delete Row Button
             ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
             };
             newRow.Children.Add(removeButton);
-            Grid.SetRow(removeButton, 0);  // Place in same Row
-            Grid.SetColumn(removeButton, 2); // Place in Right Most Side
+            Grid.SetRow(removeButton, 0);
+            Grid.SetColumn(removeButton, 2);
 
-            // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
         }
 
@@ -147,45 +226,41 @@ namespace UndertaleModTool
         }
 
         // Add Row Function for functions (2 TextBoxes)
-        public void AddFunctionRow()
+        public void AddFunctionRow(string functionName = "gml_Script_", string functionArguments = "")
         {
-            // create grid
             Grid newRow = new Grid();
 
-            // Define Columns
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
-            // Define Row
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            // Create First TextBox (Function Name)
             TextBox functionTextBox1 = new TextBox
             {
-                Text = "gml_Script_" // add this by default because underanalyzer is whack
+                Text = functionName // Default function name
             };
             newRow.Children.Add(functionTextBox1);
-            Grid.SetRow(functionTextBox1, 0);  // Place in First Row
-            Grid.SetColumn(functionTextBox1, 0); // Place in Left Half
+            Grid.SetRow(functionTextBox1, 0);
+            Grid.SetColumn(functionTextBox1, 0);
 
-            // Create Second TextBox (Function Arguments)
-            TextBox functionTextBox2 = new TextBox { };
+            TextBox functionTextBox2 = new TextBox
+            {
+                Text = functionArguments // Default function arguments
+            };
             newRow.Children.Add(functionTextBox2);
-            Grid.SetRow(functionTextBox2, 0);  // Place in same Row
-            Grid.SetColumn(functionTextBox2, 1); // Place in Right Half
+            Grid.SetRow(functionTextBox2, 0);
+            Grid.SetColumn(functionTextBox2, 1);
 
-            // Delete Row Button
             ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
             };
             newRow.Children.Add(removeButton);
-            Grid.SetRow(removeButton, 0);  // Place in same Row
-            Grid.SetColumn(removeButton, 2); // Place on Right Most Side
+            Grid.SetRow(removeButton, 0);
+            Grid.SetColumn(removeButton, 2);
 
-            // Add the new row to the VariableRowsPanel
             VariableRowsPanel.Children.Add(newRow);
         }
 
