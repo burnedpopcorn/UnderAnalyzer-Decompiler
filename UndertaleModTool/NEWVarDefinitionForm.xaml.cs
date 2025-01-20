@@ -46,7 +46,7 @@ namespace UndertaleModTool
         }
 
         #endregion
-
+        #region Initialize
         // Initialize Everything
         public VarDefinitionForm(bool editing = false)
         {
@@ -91,7 +91,7 @@ namespace UndertaleModTool
                 "Constant.VirtualKey"
             };
         }
-
+        #endregion
         #region Edit Existing JSON
         public void PromptJSONLoad()
         {
@@ -168,7 +168,6 @@ namespace UndertaleModTool
             }
         }
         #endregion
-
         #region Variable Functions
 
         // Add Variable Button Press
@@ -217,7 +216,6 @@ namespace UndertaleModTool
         }
 
         #endregion
-
         #region Function Functions
 
         // Add Function Button Press
@@ -267,7 +265,7 @@ namespace UndertaleModTool
         }
 
         #endregion
-
+        #region Save Button
         public void SaveButton_Func()
         {
             // Get data from data.win
@@ -387,7 +385,7 @@ namespace UndertaleModTool
                 MessageBox.Show($"Error saving JSON:\n\n {ex.Message}");
             }
         }
-
+        #endregion
         #region Loader JSON File Functions
 
         // Function to make Loader JSON File (Only for Specific Game that is Currently Loaded)
