@@ -52,14 +52,16 @@ namespace UndertaleModTool
         {
             InitializeComponent();
 
-            // Set Initial Variable Row
-            AddVarRow();
-
             // If editing existing one, prompt user for JSON and load
             // This bool is set true or left false in MainWindow
             if (editing) 
             {
                 PromptJSONLoad();
+            }
+            else
+            {             
+                // Set Initial Variable Row if making a New one
+                AddVarRow();
             }
         }
 
@@ -107,10 +109,9 @@ namespace UndertaleModTool
         {
             try
             {
-                // Read and deserialize the JSON file into a dynamic object
+                // Read file
                 string jsonString = File.ReadAllText(filePath);
-
-                // Try to deserialize the JSON into a JsonDocument for easier inspection
+                // Deserialize the JSON
                 var loadedJson = JsonSerializer.Deserialize<JsonDocument>(jsonString);
 
                 if (loadedJson != null)
@@ -122,7 +123,7 @@ namespace UndertaleModTool
                         var variables = globalNamesElement.GetProperty("Variables");
                         var functions = globalNamesElement.GetProperty("FunctionArguments");
 
-                        // Clear existing rows before loading new data
+                        // Clear existing rows (shouldn't happen, but just in case i guess)
                         VariableRowsPanel.Children.Clear();
 
                         // Loop through Variables and add them to the UI
@@ -130,26 +131,26 @@ namespace UndertaleModTool
                         {
                             string variableName = variable.Name;
                             string assetType = variable.Value.ToString();
-                            AddVarRow(variableName, assetType); // Add rows with preloaded data
+                            AddVarRow(variableName, assetType); // Add Rows with all Vars in JSON
                         }
 
                         // Loop through Functions and add them to the UI
                         foreach (var function in functions.EnumerateObject())
                         {
                             string functionName = function.Name;
-                            // Handling null values and correctly joining arguments
+                            // Add all arguments
                             var functionArguments = function.Value.EnumerateArray()
-                                .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString()) // Handling null values
+                                .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString())
                                 .ToArray();
                             string functionArgumentsString = string.Join(", ", functionArguments); // Join all arguments with commas
 
-                            AddFunctionRow(functionName, functionArgumentsString); // Add rows with preloaded data
+                            AddFunctionRow(functionName, functionArgumentsString); // Add Rows with all Funcs in JSON
                         }
                         // SUCCESS!!!
                         MessageBox.Show("JSON File Loaded Successfully");
                     }
-                    // Else FAILURE
-                    // fuck
+                    // Else FAILURE??????
+                    // FUCKKKKKKKK
                     else
                     {
                         MessageBox.Show("No 'GlobalNames' property found in the JSON file.");
@@ -160,6 +161,7 @@ namespace UndertaleModTool
                     MessageBox.Show("Error deserializing the JSON file.");
                 }
             }
+            // Extra Bad
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading JSON: {ex.Message}");
