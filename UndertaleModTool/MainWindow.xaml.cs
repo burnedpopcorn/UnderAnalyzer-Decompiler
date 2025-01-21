@@ -3821,10 +3821,10 @@ result in loss of work.");
         // Pizza Tower Thing
         private void PT_JSON_BUTTON_CLICK(object sender, RoutedEventArgs e)
         {
-            // VERY WIP SHIT
+            // do the thing
             PT_AssetResolver.InitializeTypes(Data);
         }
-        // Var Defition Form Window
+        // Var Defition Form Window (Clean)
         private void OpenVarDefinitionForm_Click(object sender, RoutedEventArgs e)
         {
             // Create a new instance of the VarDefinitionForm window
@@ -3837,11 +3837,38 @@ result in loss of work.");
         private void EditVarDefinitionForm_Click(object sender, RoutedEventArgs e)
         {
             // Create a new instance of the VarDefinitionForm window
-            bool editing = true;                 //       Setting this to true enables "Editing Mode"
+            int editing = 1;                 //       Setting this to 1 enables "Editing Mode"
             VarDefinitionForm varDefinitionWindow = new VarDefinitionForm(editing);
 
             // Show the new window
             varDefinitionWindow.Show();
+        }
+        // Var Defition Form Window (FILLED)
+        private void FilledVarDefinitionForm_Click(object sender, RoutedEventArgs e)
+        {
+            if (Data == null)
+            {
+                // Failsafe just in case user is dumb
+                this.ShowWarning("No data.win was loaded\nLoad a data.win first");
+            }
+            else {
+
+                MessageBoxResult result = this.ShowQuestion("This will search for Every Varible and Function in the data.win\nIn order to allow you to add Variable Definitions to them\n\nTHIS WILL TAKE A WHILE\n\nProceed?");
+
+                if (result == MessageBoxResult.No)
+                {
+                    return;
+                }
+                else if (result == MessageBoxResult.Yes)
+                {
+                    // Create a new instance of the VarDefinitionForm window
+                    int fill = 2;                 //       Setting this to 2 enables "Fill Mode"
+                    VarDefinitionForm varDefinitionWindow = new VarDefinitionForm(fill);
+
+                    // Show the new window
+                    varDefinitionWindow.Show();
+                }
+            }
         }
 
         private void TabTitleText_Initialized(object sender, EventArgs e)
