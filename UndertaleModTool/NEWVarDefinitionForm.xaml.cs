@@ -48,20 +48,86 @@ namespace UndertaleModTool
         #endregion
         #region Initialize
         // Initialize Everything
-        public VarDefinitionForm(bool editing = false)
+        public VarDefinitionForm(int mode = 0)
         {
             InitializeComponent();
 
-            // If editing existing one, prompt user for JSON and load
+            // if in default "New (Clean) Mode"
+            if (mode == 0)
+            {
+                // Set Initial Variable Row if making a New one
+                AddVarRow();
+            }
+            // If "Editing Mode" aka editing existing one, prompt user for JSON and load
             // This bool is set true or left false in MainWindow
-            if (editing) 
+            else if (mode == 1) 
             {
                 PromptJSONLoad();
             }
-            else
-            {             
-                // Set Initial Variable Row if making a New one
-                AddVarRow();
+            // if in "New (Fill) Mode"
+            else if (mode == 2)
+            {
+                FindnAddAllVars();
+            }
+        }
+
+        public void FindnAddAllVars() 
+        {
+            // Get data.win
+            var data = mainWindow.Data;
+            // Get all existing Vars and Funcs from the data.win
+            var allexistingvars = data.Variables;
+            var allexistingfuncs = data.Functions;
+
+            // Lists to stop it from adding duplicates to a new row
+            List<string> writtenVars = new();
+            List<string> writtenFuncs = new();
+
+            // Find all entries and add them to the thing
+            foreach (var vars in allexistingvars)
+            {
+                string stringvars = vars.ToString();
+                // Filter out useless crap
+                if (
+                    // GameMaker Variables that should DEFINITELY be ignored
+                    !stringvars.Contains("argument") 
+                    && !stringvars.Contains("undefined")
+                    // Just random crap
+                    && !stringvars.Contains("@")
+                    && !stringvars.Contains("$") 
+                    && !stringvars.Contains("__yy_") 
+                    && !stringvars.Contains("__struct__")
+                    )
+                {
+                    // Check if it hasn't already been added
+                    if (!writtenVars.Contains(stringvars))
+                    {
+                        AddVarRow(stringvars, "");
+                        // If it hasn't been added yet, mark as added
+                        writtenVars.Add(stringvars);
+                    }
+                }
+            }
+            foreach (var funcs in allexistingfuncs)
+            {
+                string stringfuncs = funcs.ToString();
+                // Filter out useless crap
+                if (
+                    stringfuncs.Contains("gml_Script_") // this string NEEDS to be a part of func, as that means its a custom one, and not a GM one
+                    && !stringfuncs.Contains("_anon_") // when var = new function() | rarely have any arguments, and im just not supporting those
+                    // Random crap again
+                    && !stringfuncs.Contains("@")
+                    && !stringfuncs.Contains("__struct__")
+                    )
+                {
+                    // Check if it hasn't already been added
+                    if (!writtenFuncs.Contains(stringfuncs))
+                    {
+                        AddFunctionRow(stringfuncs, "");
+                        // If it hasn't been added yet, mark as added
+                        writtenFuncs.Add(stringfuncs);
+                    }
+                }
             }
         }
 
