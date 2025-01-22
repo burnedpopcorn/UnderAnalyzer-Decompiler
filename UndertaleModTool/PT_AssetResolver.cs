@@ -744,10 +744,6 @@ namespace UndertaleModTool
                 );
             }
 
-            // Call for other Enums
-            // was exported to void function so that decompiler script can use it
-            FindOtherEnums(data);
-
             // Merge functionArguments and builtin_funcs
             // Directly include the arrays from builtin_funcs as-is
             var mergedFunctionArguments = functionArguments.Concat(builtin_funcs.ToDictionary(

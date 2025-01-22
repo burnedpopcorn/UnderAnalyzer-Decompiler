@@ -52,9 +52,6 @@ using System.Collections.Generic;
 // because of the new UTMT update
 using ImageMagick;
 
-// PROMOTION!
-ScriptMessage("Welcome to Ultimate_GMS2_Decompiler_UA!\n\nOriginally made by loypoll\nFixed and Improved by burnedpopcorn180\n\n---UnderAnalyzer Version---");
-
 // DO NOT DECLARE ENUMS FOR THE LOVE OF ALL THAT IS HOLY
 if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true) {
 	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\nContinue Anyways?")) {
@@ -5427,50 +5424,112 @@ if (_PJCT.Checked && SCPT && PTEM) {
 
 #endregion
 #region Extract Particle Enums
+
 // if PT Enums Box is selected and at least Project File and Scripts are gonna be decompiled
-public static Dictionary<string, int> particle_enums = new();
 if (_PJCT.Checked && SCPT && PTEM)
 {
-	// goddamn it
-	// i wish C# would JUST FUNCTION FOR A FUCKING SECOND
+	// Setup
+	string universalPath = rootPath + "scripts/GLOBALINIT/GLOBALINIT.gml";
 
-	// if only i could just leave it to UndertaleModTool library... :(
-	if (Data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
+	// Particle Enums
+	string particle_code = "\n// This one normally goes in obj_particlesystem (Create Event)\n";
+	particle_code += "enum particle {\n";
+	foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.particle_enums)
 	{
-		particle_enums = new Dictionary<string, int>
-		{
-			{ "enum_start", 0 }, //just because
-            { "cloudeffect", 1 },
-			{ "crazyrunothereffect", 2 },
-			{ "highjumpcloud1", 3 },
-			{ "highjumpcloud2", 4 },
-			{ "jumpdust", 5 },
-			{ "balloonpop", 6 },
-			{ "shotgunimpact", 7 },
-			{ "impact", 8 },
-			{ "genericpoofeffect", 9 },
-			{ "keyparticles", 10 },
-			{ "teleporteffect", 11 },
-			{ "landcloud", 12 },
-			{ "ratmountballooncloud", 13 },
-			{ "groundpoundeffect", 14 },
-			{ "noisegrounddash", 15 },
-			{ "bubblepop", 16 },
-			{ "enum_length", 17 }, // just because
-        };
-
-		string particlePath = rootPath + "scripts/GLOBALINIT/GLOBALINIT.gml";
-		string particle_code = "\n// This one normally goes in obj_particlesystem (Create Event)\n";
-
-		particle_code += "enum particle {\n";
-		// This one is inverted
-		foreach (KeyValuePair<string, int> kvp in particle_enums)
-		{
-			particle_code += $"    {kvp.Key} = {kvp.Value},\n";
-		}
-		particle_code += "}\n";
-		File.AppendAllText(particlePath, particle_code);
+		particle_code += $"    {kvp.Key} = {kvp.Value},\n";
 	}
+	particle_code += "}\n";
+	File.AppendAllText(universalPath, particle_code);
+
+    // Notification Enums
+    string notification_code = "\n// This one normally goes in notification_push\n";
+    notification_code += "enum notifications {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.notification_enums)
+    {
+        notification_code += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    notification_code += "}\n";
+    File.AppendAllText(universalPath, notification_code);
+
+    // Holiday Enums
+    string holiday_code = "\n// This one normally goes in is_holiday\n";
+    holiday_code += "enum holidays {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.holiday_enums)
+    {
+        holiday_code += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    holiday_code += "}\n";
+    File.AppendAllText(universalPath, holiday_code);
+
+    // TV Prompt Enums
+    string tv_prompttypes = "\n// This one normally goes in tv_push_prompt\n";
+    tv_prompttypes += "enum tv_prompttypes {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.tv_enums)
+    {
+        tv_prompttypes += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    tv_prompttypes += "}\n";
+    File.AppendAllText(universalPath, tv_prompttypes);
+
+    // Text Effect Enums
+    string text_effects = "\n// This one normally goes in scr_draw_text_arr\n";
+    text_effects += "enum text_effects {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.text_enums)
+    {
+        text_effects += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    text_effects += "}\n";
+    File.AppendAllText(universalPath, text_effects);
+
+    // Menu ID Enums
+    string menuids = "\n// This one normally goes in menu_goto\n";
+    menuids += "enum menuids {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.menuID_enums)
+    {
+        menuids += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    menuids += "}\n";
+    File.AppendAllText(universalPath, menuids);
+
+    // Editor Enums (Unused, but might as well)
+    string editorstates = "\n// This one normally goes in editor_set_state\n";
+    editorstates += "enum editorstates {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.editor_enums)
+    {
+        editorstates += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    editorstates += "}\n";
+    File.AppendAllText(universalPath, editorstates);
+
+    // AfterImage Enums
+    string afterimagetype = "\n// This one normally goes in particle_set_scale\n";
+    afterimagetype += "enum afterimagetype {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.afterimg_enums)
+    {
+        afterimagetype += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    afterimagetype += "}\n";
+    File.AppendAllText(universalPath, afterimagetype);
+
+    // TDP Input Enums
+    string tdp_input_actiontypes = "\n// This one normally goes in tdp_get_icon\n";
+    tdp_input_actiontypes += "enum tdp_input_actiontypes {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.tdp_input_enums)
+    {
+        tdp_input_actiontypes += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    tdp_input_actiontypes += "}\n";
+    File.AppendAllText(universalPath, tdp_input_actiontypes);
+
+    // Menu Anchor Enums
+    string menuanchors = "\n// This one normally goes in create_menu_fixed\n";
+    menuanchors += "enum menuanchors {\n";
+    foreach (KeyValuePair<string, int> kvp in PT_AssetResolver.menuanchors_enums)
+    {
+        menuanchors += $"    {kvp.Key} = {kvp.Value},\n";
+    }
+    menuanchors += "}\n";
+    File.AppendAllText(universalPath, menuanchors);
 }
 #endregion
 #region Extract Asset Order Note
