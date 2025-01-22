@@ -35,6 +35,9 @@ namespace UndertaleModTool
         public static Dictionary<string, int> text_enums = new();
         public static Dictionary<string, int> menuID_enums = new();
         public static Dictionary<string, int> editor_enums = new();
+        public static Dictionary<string, int> afterimg_enums = new();
+        public static Dictionary<string, int> tdp_input_enums = new();
+        public static Dictionary<string, int> menuanchors_enums = new();
 
         public class MacroEntry // for new shit
         {
@@ -571,31 +574,6 @@ namespace UndertaleModTool
                     new List<object> { null, "Constant.GamepadButton", null }
                 })
             );
-            functionArguments.Add("gml_Script_create_particle", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, null, "Enum.particle" },
-                    new List<object> { null, null, "Enum.particle", null }
-                })
-            );
-            // WHAT THE FUCK IS THIS
-            functionArguments.Add("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Enum.TDPInputActionType", null },
-                    new List<object> { "Enum.TDPInputActionType", null, null }
-                })
-            );
-            functionArguments.Add("gml_Script_create_menu_fixed", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null },
-                    new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null, null }
-                })
-            );
             functionArguments.Add("gml_Script_palette_unlock", new MacroEntry(
             "Union",
             new List<List<object>>
@@ -821,6 +799,7 @@ namespace UndertaleModTool
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
 
             // Loader JSON
+            string dispnameclean = (data.GeneralInfo.DisplayName + "").Replace("\"", "");
             var loader = new
             {
                 LoadOrder = 1,
@@ -828,7 +807,8 @@ namespace UndertaleModTool
                 {
                     new
                     {
-                        ConditionKind = "Always"
+                        ConditionKind = "DisplayName.Regex",
+                        Value = $"(?i)^{dispnameclean}"
                     }
                 },
                 UnderanalyzerFilename = datanameclean + ".json"
@@ -866,9 +846,16 @@ namespace UndertaleModTool
                     { "bubblepop", 16 },
                     { "enum_length", 17 }, // just because
                 };
-                builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
                 builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
 
+                functionArguments.Add("gml_Script_create_particle", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { null, null, "Enum.particle" },
+                        new List<object> { null, null, "Enum.particle", null }
+                    })
+                );
                 enums.Add(
                    "Enum.particle",
                     new
@@ -1086,8 +1073,93 @@ namespace UndertaleModTool
                     }
                 );
             }
-            // add new ones here
+            // AfterImage Enums
+            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
+            {
+                afterimg_enums = new Dictionary<string, int>
+                {
+                    { "normal", 0 },
+                    { "mach3effect", 1 },
+                    { "heatattack", 2 },
+                    { "firemouth", 3 },
+                    { "blue", 4 },
+                    { "blur", 5 },
+                    { "red", 6 },
+                    { "red_alt", 7 },
+                    { "noise", 8 },
+                    { "last", 9 }
+                };
+                builtin_vars.Add("identifier", "Enum.AfterimageType");
+                builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.AfterimageType", null, null };
+                enums.Add(
+                   "Enum.AfterimageType",
+                    new
+                    {
+                        Name = "afterimagetype",
+                        Values = afterimg_enums
+                    }
+                );
+            }
 
+            // TDP Input Enums
+            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
+            {
+                tdp_input_enums = new Dictionary<string, int>
+                {
+                    { "keyboard", 0 },
+                    { "gamepad_button", 1 },
+                    { "gamepad_axis", 2 }
+                };
+
+                // WHAT THE FUCK IS THIS
+                functionArguments.Add("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                    new List<object> { "Enum.TDPInputActionType", null },
+                    new List<object> { "Enum.TDPInputActionType", null, null }
+                    })
+                );
+
+                enums.Add(
+                   "Enum.TDPInputActionType",
+                    new
+                    {
+                        Name = "tdp_input_actiontypes",
+                        Values = tdp_input_enums
+                    }
+                );
+            }
+
+            // Menu Anchor Enums
+            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
+            {
+                menuanchors_enums = new Dictionary<string, int>
+                {
+                    { "center", 0 },
+                    { "left", 1 }
+                };
+
+                functionArguments.Add("gml_Script_create_menu_fixed", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null },
+                        new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null, null }
+                    })
+                );
+
+                enums.Add(
+                   "Enum.MenuAnchor",
+                    new
+                    {
+                        Name = "menuanchors",
+                        Values = menuanchors_enums
+                    }
+                );
+            }
+
+            // add new ones here
         }
 
         // Detects PT state names (thank you so much utmtce)
