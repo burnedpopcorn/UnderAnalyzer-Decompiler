@@ -11,6 +11,7 @@ using UndertaleModLib;
 using UndertaleModLib.Models;
 // for ShowWarning
 using System.Windows;
+using System.Linq;
 
 namespace UndertaleModTool
 {
@@ -26,7 +27,28 @@ namespace UndertaleModTool
 
         public static Dictionary<string, object> enums = new(); // Main enums
 
-        public static Dictionary<string, int> particle_enums = new(); // for particle enums
+        // All other enums
+        public static Dictionary<string, int> particle_enums = new();
+        public static Dictionary<string, int> notification_enums = new();
+        public static Dictionary<string, int> holiday_enums = new();
+        public static Dictionary<string, int> tv_enums = new();
+        public static Dictionary<string, int> text_enums = new();
+        public static Dictionary<string, int> menuID_enums = new();
+        public static Dictionary<string, int> editor_enums = new();
+
+        public class MacroEntry // for new shit
+        {
+            public string MacroType { get; set; }
+            public List<List<object>> Macros { get; set; }
+
+            public MacroEntry(string macroType, List<List<object>> macros)
+            {
+                MacroType = macroType;
+                Macros = macros;
+            }
+        }
+        // also new stuffs that will merge with builtin_funcs
+        public static Dictionary<string, object> functionArguments = new();
 
         // Make the JSON Files
         public static void InitializeTypes(UndertaleData data)
@@ -46,6 +68,9 @@ namespace UndertaleModTool
             { };
 
             builtin_vars = new Dictionary<string, string>
+            { };
+
+            functionArguments = new Dictionary<string, object>
             { };
 
             // Pizza Tower Enums
@@ -120,10 +145,13 @@ namespace UndertaleModTool
                     builtin_vars.Add("supergrabstate", "Enum.states");
                     builtin_vars.Add("startstate", "Enum.states");
                     builtin_vars.Add("atstate", "Enum.states");
-                    builtin_vars.Add("attack_pool", "Enum.states");
+                    // New ones
+                    builtin_vars.Add("attack_pool", "Array<Enum.states>");
+                    builtin_vars.Add("transformation", "Enum.states");
 
                     // Function Arguments
                     builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
+                    builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
                 }
             }
             catch (Exception e)
@@ -144,21 +172,10 @@ namespace UndertaleModTool
             builtin_vars.Add("hub_array", "Asset.Room");
             builtin_vars.Add("level_array", "Asset.Room");
             builtin_vars.Add("_levelinfo", "Asset.Room");
-            builtin_vars.Add("room_arr", "Asset.Room");
             builtin_vars.Add("rm", "Asset.Room");
             builtin_vars.Add("room_index", "Asset.Room");
-            builtin_vars.Add("levels", "Asset.Room");
 
             // Objects
-            builtin_vars.Add("objectlist", "Asset.Object");
-            builtin_vars.Add("object_arr", "Asset.Object");
-            builtin_vars.Add("objdark_arr", "Asset.Object");
-            builtin_vars.Add("content_arr", "Asset.Object");
-            builtin_vars.Add("spawnpool", "Asset.Object");
-            builtin_vars.Add("spawn_arr", "Asset.Object");
-            builtin_vars.Add("dark_arr", "Asset.Object");
-            builtin_vars.Add("flash_arr", "Asset.Object");
-            builtin_vars.Add("collision_list", "Asset.Object");
             builtin_vars.Add("content", "Asset.Object");
             builtin_vars.Add("player", "Asset.Object");
             builtin_vars.Add("targetplayer", "Asset.Object");
@@ -216,7 +233,6 @@ namespace UndertaleModTool
             builtin_vars.Add("switchend", "Asset.Sprite");
             builtin_vars.Add("_hurt", "Asset.Sprite");
             builtin_vars.Add("_dead", "Asset.Sprite");
-            builtin_vars.Add("treasure_arr", "Asset.Sprite");
             builtin_vars.Add("storedspriteindex", "Asset.Sprite");
             builtin_vars.Add("icon", "Asset.Sprite");
             builtin_vars.Add("spridle", "Asset.Sprite");
@@ -444,6 +460,24 @@ namespace UndertaleModTool
             builtin_vars.Add("spr_shotgunidle", "Asset.Sprite");
             builtin_vars.Add("spr_sworddash", "Asset.Sprite");
 
+            // New shit by CST
+            // bro is literally insane
+            builtin_vars.Add("_face", "Constant.GamepadButton");
+            builtin_vars.Add("objectlist", "Array<Asset.Object>");
+            builtin_vars.Add("object_arr", "Array<Asset.Object>");
+            builtin_vars.Add("objdark_arr", "Array<Asset.Object>");
+            builtin_vars.Add("content_arr", "Array<Asset.Object>");
+            builtin_vars.Add("spawnpool", "Array<Asset.Object>");
+            builtin_vars.Add("spawn_arr", "Array<Asset.Object>");
+            builtin_vars.Add("dark_arr", "Array<Asset.Object>");
+            builtin_vars.Add("flash_arr", "Array<Asset.Object>");
+            builtin_vars.Add("collision_list", "Array<Asset.Object>");
+
+            builtin_vars.Add("levels", "Array<Asset.Room>");
+            builtin_vars.Add("room_arr", "Array<Asset.Room>");
+
+            builtin_vars.Add("treasure_arr", "Array<Asset.Sprite>");
+
             // Extra Shit i found
             builtin_vars.Add("particlespr", "Asset.Sprite");
             // Global Vars that sometimes are used in older builds
@@ -502,6 +536,104 @@ namespace UndertaleModTool
             builtin_vars.Add("tv_exprhurt9", "Asset.Sprite");
             builtin_vars.Add("tv_exprhurt10", "Asset.Sprite");
 
+            builtin_funcs["gml_Script_randomize_animations"] = new[] { "Array<Asset.Sprite>" };
+
+            // Function Arguments that potentially have many arguments
+            functionArguments.Add("gml_Script_scr_boss_genericintro", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, null, "Asset.Sprite" },
+                    new List<object> { null, null, "Asset.Sprite", null }
+                })
+            );
+            functionArguments.Add("gml_Script_create_debris", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sprite" },
+                    new List<object> { "Asset.Sprite", null }
+                })
+            );
+            functionArguments.Add("gml_Script_tdp_action", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, "Constant.GamepadButton" },
+                    new List<object> { null, "Constant.GamepadButton", null }
+                })
+            );
+            functionArguments.Add("gml_Script_tdp_input_action", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, "Constant.GamepadButton" },
+                    new List<object> { null, "Constant.GamepadButton", null }
+                })
+            );
+            functionArguments.Add("gml_Script_create_particle", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, null, "Enum.particle" },
+                    new List<object> { null, null, "Enum.particle", null }
+                })
+            );
+            // WHAT THE FUCK IS THIS
+            functionArguments.Add("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Enum.TDPInputActionType", null },
+                    new List<object> { "Enum.TDPInputActionType", null, null }
+                })
+            );
+            functionArguments.Add("gml_Script_create_menu_fixed", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null },
+                    new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null, null }
+                })
+            );
+            functionArguments.Add("gml_Script_palette_unlock", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, null, null, "Asset.Sprite" },
+                    new List<object> { null, null, null, "Asset.Sprite", null },
+                    new List<object> { null, null, null, "Asset.Sprite", null, null }
+                })
+            );
+
+            functionArguments.Add("gml_Script_scr_sound", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sound" },
+                    new List<object> { "Asset.Sound", null },
+                    new List<object> { "Asset.Sound", null, null }
+                })
+            );
+            functionArguments.Add("gml_Script_scr_soundeffect", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sound" },
+                    new List<object> { "Asset.Sound", null },
+                    new List<object> { "Asset.Sound", null, null }
+                })
+            );
+            functionArguments.Add("gml_Script_scr_music", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sound" },
+                    new List<object> { "Asset.Sound", null },
+                    new List<object> { "Asset.Sound", null, null }
+                })
+            );
+
             // Function Arguments (From UTMTCE)
             builtin_funcs["gml_Script_instance_create_unique"] =
                     new[] { null, null, "Asset.Object" };
@@ -535,21 +667,8 @@ namespace UndertaleModTool
             builtin_funcs["gml_Script_pattern_set"] =
                 new[] { null, "Asset.Sprite", null, null, null, null };
 
-            builtin_funcs["gml_Script_scr_sound"] =
-                new[] { "Asset.Sound" };
-            builtin_funcs["gml_Script_scr_music"] =
-                new[] { "Asset.Sound" };
-            builtin_funcs["gml_Script_scr_soundeffect"] =
-                new[] { "Asset.Sound" };
-
             builtin_funcs["gml_Script_declare_particle"] =
                 new[] { null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_debris"] =
-                new[] { null, null, "Asset.Sprite" };
-            // Added it again because for some reason if an argument is missing, it does not load it
-            // this doesn't seem to work anyways :(
-            builtin_funcs["gml_Script_create_debris"] =
-                new[] { null, null, "Asset.Sprite", null };
             builtin_funcs["gml_Script_create_collect"] =
                 new[] { null, null, "Asset.Sprite", null };
 
@@ -587,8 +706,6 @@ namespace UndertaleModTool
                     null, null, null, null, null,
                     null, null, null, null, null,
                     "Asset.Sprite", null, "Asset.Sprite" };
-            builtin_funcs["gml_Script_scr_boss_genericintro"] =
-                new[] { "Asset.Sprite" };
             builtin_funcs["gml_Script_boss_update_pizzaheadKO"] =
                 new[] { "Asset.Sprite", "Asset.Sprite" };
             builtin_funcs["gml_Script_scr_pizzaface_p3_do_player_attack"] =
@@ -610,8 +727,6 @@ namespace UndertaleModTool
 
             builtin_funcs["gml_Script_achievement_unlock"] =
                 new[] { null, null, "Asset.Sprite", null };
-            builtin_funcs["gml_Script_palette_unlock"] =
-                new[] { null, null, null, "Asset.Sprite" };
 
             builtin_funcs["gml_Script_scr_monsterinvestigate"] =
                 new[] { null, "Asset.Sprite", "Asset.Sprite" };
@@ -655,6 +770,13 @@ namespace UndertaleModTool
             // was exported to void function so that decompiler script can use it
             FindOtherEnums(data);
 
+            // Merge functionArguments and builtin_funcs
+            // Directly include the arrays from builtin_funcs as-is
+            var mergedFunctionArguments = functionArguments.Concat(builtin_funcs.ToDictionary(
+                pair => pair.Key,
+                pair => (object)pair.Value)) // Cast string[] to object so it can merge with the MacroEntry objects
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+
             // Main JSON thingy
             var PTJSON = new
             {
@@ -665,14 +787,21 @@ namespace UndertaleModTool
                     Enums = enums,
                     // Shit just for the Template
                     Constants = new { },
-                    General = new { }
+                    // thank you CST!!!
+                    General = new Dictionary<string, object>
+                    {
+                        { "Array<Asset.Room>", new { MacroType = "ArrayInit", Macro = "Asset.Room" } },
+                        { "Array<Asset.Object>", new { MacroType = "ArrayInit", Macro = "Asset.Object" } },
+                        { "Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" } },
+                        { "Array<Enum.TVPromptTypes>", new { MacroType = "ArrayInit", Macro = "Enum.TVPromptTypes" } }
+                    }
                 },
                 // Other Shit Branch
                 GlobalNames = new
                 {
                     // crackful
                     Variables = builtin_vars,
-                    FunctionArguments = builtin_funcs,
+                    FunctionArguments = mergedFunctionArguments,
                     // Shit just for the Template
                     FunctionReturn = new { }
                 },
@@ -682,6 +811,8 @@ namespace UndertaleModTool
 
             // Convert the parent object to a JSON string
             string jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
+            // goddamn it
+            jsonString = jsonString.Replace("\\u003C", "<").Replace("\\u003E", ">");
 
             // Write main JSON File
             // this is so fucking dumb IT IS A STRING!!!!
@@ -735,7 +866,6 @@ namespace UndertaleModTool
                     { "bubblepop", 16 },
                     { "enum_length", 17 }, // just because
                 };
-                builtin_funcs["gml_Script_create_particle"] = new[] { null, null, "Enum.particle", null };
                 builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
                 builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
 
@@ -748,6 +878,216 @@ namespace UndertaleModTool
                     }
                 );
             }
+
+            // Notification Enums
+            if (data.Code.ByName("gml_Script_notification_push") != null) //Searching for this should work
+            {
+                notification_enums = new Dictionary<string, int>
+                // maybe just public dictionary if i can get the decomp script to work with this
+                {
+                    { "bodyslam_start", 0 },
+                    { "bodyslam_end", 1 },
+                    { "generic_killed", 2 },
+                    { "room_enemiesdead", 3 },
+                    { "enemy_parried", 4 },
+                    { "level_finished", 5 },
+                    { "mortcube_destroyed", 6 },
+                    { "hurt", 7 },
+                    { "fell_into_pit", 8 },
+                    { "beer_knocked", 9 },
+                    { "touched_timedgate", 10 },
+                    { "flush_done", 11 },
+                    { "baddie_killed_projectile", 12 },
+                    { "treasureguy_uncovered", 13 },
+                    { "special_destroyable_destroyed", 14 },
+                    { "custom_destructibles_destroyed", 15 },
+                    { "pizzaball_shot", 16 },
+                    { "pizzaball_kill", 17 },
+                    { "pizzaball_goal", 18 },
+                    { "brickball_start", 19 },
+                    { "john_destroyed", 20 },
+                    { "brickball_kill", 21 },
+                    { "pigcitizen_taunt", 22 },
+                    { "pizzaboy_killed", 23 },
+                    { "touched_mrpinch", 24 },
+                    { "priest_touched", 25 },
+                    { "secret_entered", 26 },
+                    { "secret_exited", 27 },
+                    { "iceblock_bird_freed", 28 },
+                    { "monster_killed", 29 },
+                    { "monster_activated", 30 },
+                    { "jumpscared", 31 },
+                    { "knightpep_bumped", 32 },
+                    { "cheeseblock_destroyed", 33 },
+                    { "rat_destroyed_with_baddie", 34 },
+                    { "rattumble_destroyed", 35 },
+                    { "rat_destroyed", 36 },
+                    { "touched_lava", 37 },
+                    { "touched_cow", 38 },
+                    { "touched_cow_once", 39 },
+                    { "touched_gravesurf_once", 40 },
+                    { "touched_ghostfollow", 41 },
+                    { "ghost_end", 42 },
+                    { "superjump_end", 43 },
+                    { "shotgun_shot", 44 },
+                    { "shotgun_shot_end", 45 },
+                    { "destroyable_destroyed", 46 },
+                    { "bazooka_explosion", 47 },
+                    { "wartimer_finished", 48 },
+                    { "totem_reactivated", 49 },
+                    { "boss_defeated", 50 },
+                    { "combo_end", 51 },
+                    { "achievement_unlocked", 52 },
+                    { "crouched_in_poo", 53 },
+                    { "game_beaten", 54 },
+                    { "taunted", 55 },
+                    { "john_resurrected", 56 },
+                    { "knight_obtained", 57 },
+                    { "mooney_unlocked", 58 },
+                    { "unknown59", 59 },
+                    { "pumpkin_gotten", 60 },
+                    { "pumpkindoor_entered", 61 },
+                    { "trickytreat_failed", 62 },
+                    { "trickytreat_door_entered", 63 },
+                    { "tornadoattack_end", 64 },
+                    { "gate_taunted", 65 },
+                    { "noisebomb_wasted", 66 },
+                    { "got_endingrank", 67 },
+                    { "breakdance_start", 68 },
+                    { "touched_banana", 69 },
+                    { "level_finished_pizzaface", 70 },
+                    { "player_antigrav", 71 },
+                    { "ptg_seen", 72 },
+                    { "touched_granny", 73 },
+                };
+                builtin_funcs["gml_Script_notification_push"] = new[] { "Enum.Notification", null };
+
+                enums.Add(
+                   "Enum.Notification",
+                    new
+                    {
+                        Name = "notifications",
+                        Values = notification_enums
+                    }
+                );
+            }
+
+            // HOLIDAY
+            if (data.Code.ByName("gml_Script_is_holiday") != null)
+            {
+                holiday_enums = new Dictionary<string, int>
+                {
+                    { "normal", 0 },
+                    { "halloween", 1 }
+                };
+                builtin_funcs["gml_Script_is_holiday"] = new[] { "Enum.Holiday" };
+                enums.Add(
+                   "Enum.Holiday",
+                    new
+                    {
+                        Name = "holidays",
+                        Values = holiday_enums
+                    }
+                );
+            }
+
+            // TV Prompt Enums
+            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
+            {
+                tv_enums = new Dictionary<string, int>
+                {
+                    { "start", 0 },
+                    { "highprio", 1 },
+                    { "normal", 2 }
+                };
+
+                builtin_funcs["gml_Script_tv_push_prompt"] = new[] { null, "Enum.TVPromptTypes", null, null };
+                enums.Add(
+                   "Enum.TVPromptTypes",
+                    new
+                    {
+                        Name = "tv_prompttypes",
+                        Values = tv_enums
+                    }
+                );
+            }
+
+            // Text Enums
+            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
+            {
+                text_enums = new Dictionary<string, int>
+                {
+                    { "none", 0 },
+                    { "shake", 1 },
+                    { "wave", 2 }
+                };
+
+                builtin_funcs["gml_Script_scr_draw_text_arr"] = new[] { null, null, null, null, "Enum.TextEffect" };
+                enums.Add(
+                   "Enum.TextEffect",
+                    new
+                    {
+                        Name = "text_effects",
+                        Values = text_enums
+                    }
+                );
+            }
+
+            // Menu ID Enums
+            if (data.Code.ByName("gml_Script_menu_goto") != null)
+            {
+                menuID_enums = new Dictionary<string, int>
+                {
+                    { "categories", 0 },
+                    { "audio", 1 },
+                    { "video", 2 },
+                    { "window", 3 },
+                    { "resolution", 4 },
+                    { "unknown5", 5 },
+                    { "game", 6 },
+                    { "controls", 7 },
+                    { "controller", 8 },
+                    { "keyboard", 9 },
+                    { "deadzones", 10 },
+                    { "last", 11 }
+                };
+
+                builtin_funcs["gml_Script_menu_goto"] = new[] { "Enum.MenuIDs" };
+                enums.Add(
+                   "Enum.MenuIDs",
+                    new
+                    {
+                        Name = "menuids",
+                        Values = menuID_enums
+                    }
+                );
+            }
+
+            // Editor Enums (Unused, but might as well)
+            if (data.Code.ByName("gml_Script_editor_set_state") != null)
+            {
+                editor_enums = new Dictionary<string, int>
+                {
+                    { "init", 0 },
+                    { "instance_edit", 1 },
+                    { "unknown2", 2 },
+                    { "resize_room", 3 },
+                    { "save_level", 4 },
+                    { "load_level", 5 }
+                };
+
+                builtin_funcs["gml_Script_editor_set_state"] = new[] { "Enum.EditorState" };
+                enums.Add(
+                   "Enum.EditorState",
+                    new
+                    {
+                        Name = "editorstates",
+                        Values = editor_enums
+                    }
+                );
+            }
+            // add new ones here
+
         }
 
         // Detects PT state names (thank you so much utmtce)

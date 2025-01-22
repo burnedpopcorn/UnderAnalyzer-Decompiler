@@ -1,4 +1,4 @@
-// Made by GitMuslim
+// Made by GitMuslim, Some fixes by NC-devC
 
 using System;
 using System.Text;
@@ -24,7 +24,7 @@ string dataPath = Path.Combine(Path.GetDirectoryName(ScriptPath), "TouchControls
 Dictionary<string, UndertaleEmbeddedTexture> textures = new Dictionary<string, UndertaleEmbeddedTexture>();
 
 UndertaleEmbeddedTexture controlsTexturePage = new UndertaleEmbeddedTexture();
-controlsTexturePage.TextureData.TextureBlob = File.ReadAllBytes(Path.Combine(dataPath, "controls.png"));
+controlsTexturePage.TextureData.Image = GMImage.FromPng(File.ReadAllBytes(Path.Combine(dataPath, "controls.png"))); // TODO: generate other formats
 Data.EmbeddedTextures.Add(controlsTexturePage);
 textures.Add(Path.GetFileName(Path.Combine(dataPath, "controls.png")), controlsTexturePage);
 
@@ -38,7 +38,21 @@ UndertaleTexturePageItem AddNewTexturePageItem(ushort sourceX, ushort sourceY, u
     ushort boundingHeight = sourceHeight;
     var texturePage = textures["controls.png"];
 
-    UndertaleTexturePageItem tpItem = new UndertaleTexturePageItem { SourceX = sourceX, SourceY = sourceY, SourceWidth = sourceWidth, SourceHeight = sourceHeight, TargetX = targetX, TargetY = targetY, TargetWidth = targetWidth, TargetHeight = targetHeight, BoundingWidth = boundingWidth, BoundingHeight = boundingHeight, TexturePage = texturePage };
+    UndertaleTexturePageItem tpItem = new() 
+    { 
+        SourceX = sourceX, 
+        SourceY = sourceY, 
+        SourceWidth = sourceWidth, 
+        SourceHeight = sourceHeight, 
+        TargetX = targetX, 
+        TargetY = targetY, 
+        TargetWidth = targetWidth, 
+        TargetHeight = targetHeight, 
+        BoundingWidth = boundingWidth, 
+        BoundingHeight = boundingHeight, 
+        TexturePage = texturePage,
+        Name = new UndertaleString($"PageItem {Data.TexturePageItems.Count}")
+    };
     Data.TexturePageItems.Add(tpItem);
     return tpItem;
 }
@@ -73,9 +87,10 @@ void AddNewUndertaleSprite(string spriteName, ushort width, ushort height, Under
     int marginBottom = height - 1;
 
     var sItem = new UndertaleSprite { Name = name, Width = width, Height = height, MarginLeft = marginLeft, MarginRight = marginRight, MarginTop = marginTop, MarginBottom = marginBottom };
-    foreach (var spriteTexture in spriteTextures) {
+    foreach (var spriteTexture in spriteTextures) 
+    {
         sItem.Textures.Add(new UndertaleSprite.TextureEntry() { Texture = spriteTexture });
-    };
+    }
     Data.Sprites.Add(sItem);
 }
 
@@ -124,7 +139,7 @@ builder.Replace("{_font}", currentFont);
 builder.Replace("{_settingsnumx}", Convert.ToString(settingsnumx));
 mobileControlsCreate = builder.ToString();
 
-ImportGMLString("gml_Object_obj_mobilecontrols_Create_0.gml", mobileControlsCreate);
+ImportGMLString("gml_Object_obj_mobilecontrols_Create_0", mobileControlsCreate);
 ImportGMLFile(Path.Combine(dataPath, "gml_Object_obj_mobilecontrols_Draw_64.gml"), true, false, true);
 ImportGMLFile(Path.Combine(dataPath, "gml_Object_obj_mobilecontrols_Other_4.gml"), true, false, true);
 Data.Scripts.Add(new UndertaleScript() { Name = Data.Strings.MakeString("scr_add_keys"), Code = Data.Code.ByName("gml_Object_obj_mobilecontrols_Other_4") });
