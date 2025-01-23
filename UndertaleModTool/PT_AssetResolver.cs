@@ -65,21 +65,12 @@ namespace UndertaleModTool
                 return;
             }
 
+            // Clear all if already filled
             PT_AssetResolver.PTStates.Clear();
-
-            // do this to eventually convert to json
-            // so that it can be read by GameSpecificRegistry(Convertor) or something
-            builtin_funcs = new Dictionary<string, string[]>
-            { };
-
-            builtin_vars = new Dictionary<string, string>
-            { };
-
-            functionArguments = new Dictionary<string, object>
-            { };
-
-            generalarrays = new Dictionary<string, object>
-            { };
+            builtin_funcs = new Dictionary<string, string[]> { };
+            builtin_vars = new Dictionary<string, string> { };
+            functionArguments = new Dictionary<string, object> { };
+            generalarrays = new Dictionary<string, object> { };
 
             // Pizza Tower Enums
             // how these work is that:
@@ -761,7 +752,10 @@ namespace UndertaleModTool
             }
 
             // Calls this function to search for other enums
+            // Also used in the GMS2 Decomp Script
             FindOtherEnums(data);
+            // Because this codebase hates me
+            AddOtherEnums(data);
 
             // Init these Arrays
             generalarrays.TryAdd("Array<Asset.Room>", new { MacroType = "ArrayInit", Macro = "Asset.Room" });
@@ -834,33 +828,198 @@ namespace UndertaleModTool
             // Notify User that it is done
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
-
+        #region Other Enum Shit
         public static void FindOtherEnums(UndertaleData data) 
         {
             // Particle Enums
             if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
             {
-                particle_enums = new Dictionary<string, int>
-                {
-                    { "enum_start", 0 }, //just because
-                    { "cloudeffect", 1 },
-                    { "crazyrunothereffect", 2 },
-                    { "highjumpcloud1", 3 },
-                    { "highjumpcloud2", 4 },
-                    { "jumpdust", 5 },
-                    { "balloonpop", 6 },
-                    { "shotgunimpact", 7 },
-                    { "impact", 8 },
-                    { "genericpoofeffect", 9 },
-                    { "keyparticles", 10 },
-                    { "teleporteffect", 11 },
-                    { "landcloud", 12 },
-                    { "ratmountballooncloud", 13 },
-                    { "groundpoundeffect", 14 },
-                    { "noisegrounddash", 15 },
-                    { "bubblepop", 16 },
-                    { "enum_length", 17 }, // just because
-                };
+                particle_enums.TryAdd("enum_start", 0); // just because
+                particle_enums.TryAdd("cloudeffect", 1);
+                particle_enums.TryAdd("crazyrunothereffect", 2);
+                particle_enums.TryAdd("highjumpcloud1", 3);
+                particle_enums.TryAdd("highjumpcloud2", 4);
+                particle_enums.TryAdd("jumpdust", 5);
+                particle_enums.TryAdd("balloonpop", 6);
+                particle_enums.TryAdd("shotgunimpact", 7);
+                particle_enums.TryAdd("impact", 8);
+                particle_enums.TryAdd("genericpoofeffect", 9);
+                particle_enums.TryAdd("keyparticles", 10);
+                particle_enums.TryAdd("teleporteffect", 11);
+                particle_enums.TryAdd("landcloud", 12);
+                particle_enums.TryAdd("ratmountballooncloud", 13);
+                particle_enums.TryAdd("groundpoundeffect", 14);
+                particle_enums.TryAdd("noisegrounddash", 15);
+                particle_enums.TryAdd("bubblepop", 16);
+                particle_enums.TryAdd("enum_length", 17); // just because
+            }
+
+            // Notification Enums
+            if (data.Code.ByName("gml_Script_notification_push") != null) //Searching for this should work
+            {
+                notification_enums.TryAdd("bodyslam_start", 0);
+                notification_enums.TryAdd("bodyslam_end", 1);
+                notification_enums.TryAdd("generic_killed", 2);
+                notification_enums.TryAdd("room_enemiesdead", 3);
+                notification_enums.TryAdd("enemy_parried", 4);
+                notification_enums.TryAdd("level_finished", 5);
+                notification_enums.TryAdd("mortcube_destroyed", 6);
+                notification_enums.TryAdd("hurt", 7);
+                notification_enums.TryAdd("fell_into_pit", 8);
+                notification_enums.TryAdd("beer_knocked", 9);
+                notification_enums.TryAdd("touched_timedgate", 10);
+                notification_enums.TryAdd("flush_done", 11);
+                notification_enums.TryAdd("baddie_killed_projectile", 12);
+                notification_enums.TryAdd("treasureguy_uncovered", 13);
+                notification_enums.TryAdd("special_destroyable_destroyed", 14);
+                notification_enums.TryAdd("custom_destructibles_destroyed", 15);
+                notification_enums.TryAdd("pizzaball_shot", 16);
+                notification_enums.TryAdd("pizzaball_kill", 17);
+                notification_enums.TryAdd("pizzaball_goal", 18);
+                notification_enums.TryAdd("brickball_start", 19);
+                notification_enums.TryAdd("john_destroyed", 20);
+                notification_enums.TryAdd("brickball_kill", 21);
+                notification_enums.TryAdd("pigcitizen_taunt", 22);
+                notification_enums.TryAdd("pizzaboy_killed", 23);
+                notification_enums.TryAdd("touched_mrpinch", 24);
+                notification_enums.TryAdd("priest_touched", 25);
+                notification_enums.TryAdd("secret_entered", 26);
+                notification_enums.TryAdd("secret_exited", 27);
+                notification_enums.TryAdd("iceblock_bird_freed", 28);
+                notification_enums.TryAdd("monster_killed", 29);
+                notification_enums.TryAdd("monster_activated", 30);
+                notification_enums.TryAdd("jumpscared", 31);
+                notification_enums.TryAdd("knightpep_bumped", 32);
+                notification_enums.TryAdd("cheeseblock_destroyed", 33);
+                notification_enums.TryAdd("rat_destroyed_with_baddie", 34);
+                notification_enums.TryAdd("rattumble_destroyed", 35);
+                notification_enums.TryAdd("rat_destroyed", 36);
+                notification_enums.TryAdd("touched_lava", 37);
+                notification_enums.TryAdd("touched_cow", 38);
+                notification_enums.TryAdd("touched_cow_once", 39);
+                notification_enums.TryAdd("touched_gravesurf_once", 40);
+                notification_enums.TryAdd("touched_ghostfollow", 41);
+                notification_enums.TryAdd("ghost_end", 42);
+                notification_enums.TryAdd("superjump_end", 43);
+                notification_enums.TryAdd("shotgun_shot", 44);
+                notification_enums.TryAdd("shotgun_shot_end", 45);
+                notification_enums.TryAdd("destroyable_destroyed", 46);
+                notification_enums.TryAdd("bazooka_explosion", 47);
+                notification_enums.TryAdd("wartimer_finished", 48);
+                notification_enums.TryAdd("totem_reactivated", 49);
+                notification_enums.TryAdd("boss_defeated", 50);
+                notification_enums.TryAdd("combo_end", 51);
+                notification_enums.TryAdd("achievement_unlocked", 52);
+                notification_enums.TryAdd("crouched_in_poo", 53);
+                notification_enums.TryAdd("game_beaten", 54);
+                notification_enums.TryAdd("taunted", 55);
+                notification_enums.TryAdd("john_resurrected", 56);
+                notification_enums.TryAdd("knight_obtained", 57);
+                notification_enums.TryAdd("mooney_unlocked", 58);
+                notification_enums.TryAdd("unknown59", 59);
+                notification_enums.TryAdd("pumpkin_gotten", 60);
+                notification_enums.TryAdd("pumpkindoor_entered", 61);
+                notification_enums.TryAdd("trickytreat_failed", 62);
+                notification_enums.TryAdd("trickytreat_door_entered", 63);
+                notification_enums.TryAdd("tornadoattack_end", 64);
+                notification_enums.TryAdd("gate_taunted", 65);
+                notification_enums.TryAdd("noisebomb_wasted", 66);
+                notification_enums.TryAdd("got_endingrank", 67);
+                notification_enums.TryAdd("breakdance_start", 68);
+                notification_enums.TryAdd("touched_banana", 69);
+                notification_enums.TryAdd("level_finished_pizzaface", 70);
+                notification_enums.TryAdd("player_antigrav", 71);
+                notification_enums.TryAdd("ptg_seen", 72);
+                notification_enums.TryAdd("touched_granny", 73);
+            }
+
+            // HOLIDAY
+            if (data.Code.ByName("gml_Script_is_holiday") != null)
+            {
+                holiday_enums.TryAdd("normal", 0);
+                holiday_enums.TryAdd("halloween", 1);
+            }
+
+            // TV Prompt Enums
+            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
+            {
+                tv_enums.TryAdd("start", 0);
+                tv_enums.TryAdd("highprio", 1);
+                tv_enums.TryAdd("normal", 2);
+            }
+
+            // Text Enums
+            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
+            {
+                text_enums.TryAdd("none", 0);
+                text_enums.TryAdd("shake", 1);
+                text_enums.TryAdd("wave", 2);
+            }
+
+            // Menu ID Enums
+            if (data.Code.ByName("gml_Script_menu_goto") != null)
+            {
+                menuID_enums.TryAdd("categories", 0);
+                menuID_enums.TryAdd("audio", 1);
+                menuID_enums.TryAdd("video", 2);
+                menuID_enums.TryAdd("window", 3);
+                menuID_enums.TryAdd("resolution", 4);
+                menuID_enums.TryAdd("unknown5", 5);
+                menuID_enums.TryAdd("game", 6);
+                menuID_enums.TryAdd("controls", 7);
+                menuID_enums.TryAdd("controller", 8);
+                menuID_enums.TryAdd("keyboard", 9);
+                menuID_enums.TryAdd("deadzones", 10);
+                menuID_enums.TryAdd("last", 11);
+            }
+
+            // Editor Enums (Unused, but might as well)
+            if (data.Code.ByName("gml_Script_editor_set_state") != null)
+            {
+                editor_enums.TryAdd("init", 0);
+                editor_enums.TryAdd("instance_edit", 1);
+                editor_enums.TryAdd("unknown2", 2);
+                editor_enums.TryAdd("resize_room", 3);
+                editor_enums.TryAdd("save_level", 4);
+                editor_enums.TryAdd("load_level", 5);
+            }
+            // AfterImage Enums
+            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
+            {
+                afterimg_enums.TryAdd("normal", 0);
+                afterimg_enums.TryAdd("mach3effect", 1);
+                afterimg_enums.TryAdd("heatattack", 2);
+                afterimg_enums.TryAdd("firemouth", 3);
+                afterimg_enums.TryAdd("blue", 4);
+                afterimg_enums.TryAdd("blur", 5);
+                afterimg_enums.TryAdd("red", 6);
+                afterimg_enums.TryAdd("red_alt", 7);
+                afterimg_enums.TryAdd("noise", 8);
+                afterimg_enums.TryAdd("last", 9);
+            }
+
+            // TDP Input Enums
+            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
+            {
+                tdp_input_enums.TryAdd("keyboard", 0);
+                tdp_input_enums.TryAdd("gamepad_button", 1);
+                tdp_input_enums.TryAdd("gamepad_axis", 2);
+            }
+
+            // Menu Anchor Enums
+            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
+            {
+                menuanchors_enums.TryAdd("center", 0);
+                menuanchors_enums.TryAdd("left", 1);
+            }
+
+            // add new ones here
+        }
+
+        public static void AddOtherEnums(UndertaleData data) 
+        {
+            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null) 
+            {
                 builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
                 builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
 
@@ -881,88 +1040,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // Notification Enums
-            if (data.Code.ByName("gml_Script_notification_push") != null) //Searching for this should work
+            if (data.Code.ByName("gml_Script_notification_push") != null) 
             {
-                notification_enums = new Dictionary<string, int>
-                // maybe just public dictionary if i can get the decomp script to work with this
-                {
-                    { "bodyslam_start", 0 },
-                    { "bodyslam_end", 1 },
-                    { "generic_killed", 2 },
-                    { "room_enemiesdead", 3 },
-                    { "enemy_parried", 4 },
-                    { "level_finished", 5 },
-                    { "mortcube_destroyed", 6 },
-                    { "hurt", 7 },
-                    { "fell_into_pit", 8 },
-                    { "beer_knocked", 9 },
-                    { "touched_timedgate", 10 },
-                    { "flush_done", 11 },
-                    { "baddie_killed_projectile", 12 },
-                    { "treasureguy_uncovered", 13 },
-                    { "special_destroyable_destroyed", 14 },
-                    { "custom_destructibles_destroyed", 15 },
-                    { "pizzaball_shot", 16 },
-                    { "pizzaball_kill", 17 },
-                    { "pizzaball_goal", 18 },
-                    { "brickball_start", 19 },
-                    { "john_destroyed", 20 },
-                    { "brickball_kill", 21 },
-                    { "pigcitizen_taunt", 22 },
-                    { "pizzaboy_killed", 23 },
-                    { "touched_mrpinch", 24 },
-                    { "priest_touched", 25 },
-                    { "secret_entered", 26 },
-                    { "secret_exited", 27 },
-                    { "iceblock_bird_freed", 28 },
-                    { "monster_killed", 29 },
-                    { "monster_activated", 30 },
-                    { "jumpscared", 31 },
-                    { "knightpep_bumped", 32 },
-                    { "cheeseblock_destroyed", 33 },
-                    { "rat_destroyed_with_baddie", 34 },
-                    { "rattumble_destroyed", 35 },
-                    { "rat_destroyed", 36 },
-                    { "touched_lava", 37 },
-                    { "touched_cow", 38 },
-                    { "touched_cow_once", 39 },
-                    { "touched_gravesurf_once", 40 },
-                    { "touched_ghostfollow", 41 },
-                    { "ghost_end", 42 },
-                    { "superjump_end", 43 },
-                    { "shotgun_shot", 44 },
-                    { "shotgun_shot_end", 45 },
-                    { "destroyable_destroyed", 46 },
-                    { "bazooka_explosion", 47 },
-                    { "wartimer_finished", 48 },
-                    { "totem_reactivated", 49 },
-                    { "boss_defeated", 50 },
-                    { "combo_end", 51 },
-                    { "achievement_unlocked", 52 },
-                    { "crouched_in_poo", 53 },
-                    { "game_beaten", 54 },
-                    { "taunted", 55 },
-                    { "john_resurrected", 56 },
-                    { "knight_obtained", 57 },
-                    { "mooney_unlocked", 58 },
-                    { "unknown59", 59 },
-                    { "pumpkin_gotten", 60 },
-                    { "pumpkindoor_entered", 61 },
-                    { "trickytreat_failed", 62 },
-                    { "trickytreat_door_entered", 63 },
-                    { "tornadoattack_end", 64 },
-                    { "gate_taunted", 65 },
-                    { "noisebomb_wasted", 66 },
-                    { "got_endingrank", 67 },
-                    { "breakdance_start", 68 },
-                    { "touched_banana", 69 },
-                    { "level_finished_pizzaface", 70 },
-                    { "player_antigrav", 71 },
-                    { "ptg_seen", 72 },
-                    { "touched_granny", 73 },
-                };
                 builtin_funcs["gml_Script_notification_push"] = new[] { "Enum.Notification", null };
 
                 enums.TryAdd(
@@ -974,15 +1053,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // HOLIDAY
-            if (data.Code.ByName("gml_Script_is_holiday") != null)
+            if (data.Code.ByName("gml_Script_is_holiday") != null) 
             {
-                holiday_enums = new Dictionary<string, int>
-                {
-                    { "normal", 0 },
-                    { "halloween", 1 }
-                };
                 builtin_funcs["gml_Script_is_holiday"] = new[] { "Enum.Holiday" };
                 enums.TryAdd(
                    "Enum.Holiday",
@@ -993,17 +1065,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // TV Prompt Enums
-            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
+            if (data.Code.ByName("gml_Script_tv_push_prompt") != null) 
             {
-                tv_enums = new Dictionary<string, int>
-                {
-                    { "start", 0 },
-                    { "highprio", 1 },
-                    { "normal", 2 }
-                };
-
                 builtin_funcs["gml_Script_tv_push_prompt"] = new[] { null, "Enum.TVPromptTypes", null, null };
                 generalarrays.TryAdd("Array<Enum.TVPromptTypes>", new { MacroType = "ArrayInit", Macro = "Enum.TVPromptTypes" });
                 enums.TryAdd(
@@ -1015,17 +1078,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // Text Enums
-            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
+            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null) 
             {
-                text_enums = new Dictionary<string, int>
-                {
-                    { "none", 0 },
-                    { "shake", 1 },
-                    { "wave", 2 }
-                };
-
                 builtin_funcs["gml_Script_scr_draw_text_arr"] = new[] { null, null, null, null, "Enum.TextEffect" };
                 enums.TryAdd(
                    "Enum.TextEffect",
@@ -1036,26 +1090,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // Menu ID Enums
-            if (data.Code.ByName("gml_Script_menu_goto") != null)
+            if (data.Code.ByName("gml_Script_menu_goto") != null) 
             {
-                menuID_enums = new Dictionary<string, int>
-                {
-                    { "categories", 0 },
-                    { "audio", 1 },
-                    { "video", 2 },
-                    { "window", 3 },
-                    { "resolution", 4 },
-                    { "unknown5", 5 },
-                    { "game", 6 },
-                    { "controls", 7 },
-                    { "controller", 8 },
-                    { "keyboard", 9 },
-                    { "deadzones", 10 },
-                    { "last", 11 }
-                };
-
                 builtin_funcs["gml_Script_menu_goto"] = new[] { "Enum.MenuIDs" };
                 enums.TryAdd(
                    "Enum.MenuIDs",
@@ -1066,20 +1102,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // Editor Enums (Unused, but might as well)
-            if (data.Code.ByName("gml_Script_editor_set_state") != null)
+            if (data.Code.ByName("gml_Script_editor_set_state") != null) 
             {
-                editor_enums = new Dictionary<string, int>
-                {
-                    { "init", 0 },
-                    { "instance_edit", 1 },
-                    { "unknown2", 2 },
-                    { "resize_room", 3 },
-                    { "save_level", 4 },
-                    { "load_level", 5 }
-                };
-
                 builtin_funcs["gml_Script_editor_set_state"] = new[] { "Enum.EditorState" };
                 enums.TryAdd(
                    "Enum.EditorState",
@@ -1090,22 +1114,9 @@ namespace UndertaleModTool
                     }
                 );
             }
-            // AfterImage Enums
-            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
+            // AfterImages
+            if (data.Code.ByName("gml_Script_particle_set_scale") != null) 
             {
-                afterimg_enums = new Dictionary<string, int>
-                {
-                    { "normal", 0 },
-                    { "mach3effect", 1 },
-                    { "heatattack", 2 },
-                    { "firemouth", 3 },
-                    { "blue", 4 },
-                    { "blur", 5 },
-                    { "red", 6 },
-                    { "red_alt", 7 },
-                    { "noise", 8 },
-                    { "last", 9 }
-                };
                 builtin_vars.TryAdd("identifier", "Enum.AfterimageType");
                 enums.TryAdd(
                    "Enum.AfterimageType",
@@ -1116,17 +1127,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // TDP Input Enums
-            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
+            if (data.Code.ByName("gml_Script_tdp_get_icon") != null) 
             {
-                tdp_input_enums = new Dictionary<string, int>
-                {
-                    { "keyboard", 0 },
-                    { "gamepad_button", 1 },
-                    { "gamepad_axis", 2 }
-                };
-
                 // WHAT THE FUCK IS THIS
                 functionArguments.TryAdd("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
                 "Union",
@@ -1146,24 +1148,16 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // Menu Anchor Enums
-            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
+            if (data.Code.ByName("gml_Script_create_menu_fixed") != null) 
             {
-                menuanchors_enums = new Dictionary<string, int>
-                {
-                    { "center", 0 },
-                    { "left", 1 }
-                };
-
                 functionArguments.TryAdd("gml_Script_create_menu_fixed", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
+                    "Union",
+                    new List<List<object>>
+                        {
                         new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null },
                         new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null, null }
-                    })
-                );
+                        })
+                    );
 
                 enums.TryAdd(
                    "Enum.MenuAnchor",
@@ -1174,9 +1168,8 @@ namespace UndertaleModTool
                     }
                 );
             }
-
-            // add new ones here
         }
+        #endregion
 
         // Detects PT state names (thank you so much utmtce)
         public static void FindStateNames(UndertaleCode code, string[] statePrefix)

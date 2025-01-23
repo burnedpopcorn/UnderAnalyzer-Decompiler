@@ -5423,13 +5423,14 @@ if (_PJCT.Checked && SCPT && PTEM) {
 }
 
 #endregion
-#region Extract Particle Enums
+#region Extract Other Enums
 
 // if PT Enums Box is selected and at least Project File and Scripts are gonna be decompiled
 if (_PJCT.Checked && SCPT && PTEM)
 {
 	// Setup
-	string universalPath = rootPath + "scripts/GLOBALINIT/GLOBALINIT.gml";
+	PT_AssetResolver.FindOtherEnums(Data);
+    string universalPath = rootPath + "scripts/GLOBALINIT/GLOBALINIT.gml";
 
 	// Particle Enums
 	string particle_code = "\n// This one normally goes in obj_particlesystem (Create Event)\n";
