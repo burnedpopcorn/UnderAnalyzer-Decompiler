@@ -47,6 +47,7 @@ using System.Windows.Controls.Primitives;
 using System.Runtime.CompilerServices;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using static UndertaleModTool.PT_AssetResolver;
 
 namespace UndertaleModTool
 {
@@ -1145,11 +1146,6 @@ namespace UndertaleModTool
                         GMS_Version_readable = "\n\nThis File was Compiled using the GMS1";
                 }
             }
-            // Probably is gonna fail, but it should do something for the decomp scripts
-            try 
-            {
-                PT_AssetResolver.FindOtherEnums(Data);
-            } catch (Exception) { }
 
             Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + GMS_Version_readable);
             OpenInTab(Highlighted);
