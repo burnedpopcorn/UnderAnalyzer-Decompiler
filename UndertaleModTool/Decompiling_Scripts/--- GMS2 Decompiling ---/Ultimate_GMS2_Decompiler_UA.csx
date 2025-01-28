@@ -2675,7 +2675,7 @@ void DumpTileset(UndertaleBackground bg)
 
 void DumpScript(UndertaleScript scr)
 {
-	if ((scr.Code != null && scr.Code.ParentEntry != null) || (scr.Code == null && scr.Name.Content.StartsWith("gml_Script_")))
+	if ((scr.Code != null && scr.Code.ParentEntry != null) || (scr.Code == null && scr.Name.Content.StartsWith("gml_Script_")) || scr.Name.Content.StartsWith("gml_Room"))// thanks cystallizedsparkle
 	{
 		UpdateProgress();
 		return;

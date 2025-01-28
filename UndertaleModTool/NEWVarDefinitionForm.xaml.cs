@@ -13,6 +13,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
 using System.Text.Json.Nodes;
+using Newtonsoft.Json.Linq;
+using static UndertaleModTool.PT_AssetResolver;
 
 namespace UndertaleModTool
 {
@@ -34,6 +36,19 @@ namespace UndertaleModTool
 
             public string TexBox { get; set; }
         }
+
+        public class FuncOptional // for new shit
+        {
+            public string MacroType { get; set; }
+            public List<List<object>> Macros { get; set; }
+
+            public FuncOptional(string macroType, List<List<object>> macros)
+            {
+                MacroType = macroType;
+                Macros = macros;
+            }
+        }
+        public static Dictionary<string, object> optionalfunc = new();
 
         // For Dark Mode Title Bar
         private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -296,12 +311,14 @@ namespace UndertaleModTool
         {
             Grid newRow = new Grid();
 
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox (Function Name)
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox (Function Arguments)
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Third TextBox (Macro Input)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
+            // First TextBox for Function Name
             TextBox functionTextBox1 = new TextBox
             {
                 Text = functionName // Default function name
@@ -310,6 +327,7 @@ namespace UndertaleModTool
             Grid.SetRow(functionTextBox1, 0);
             Grid.SetColumn(functionTextBox1, 0);
 
+            // Second TextBox for Function Arguments
             TextBox functionTextBox2 = new TextBox
             {
                 Text = functionArguments // Default function arguments
@@ -318,6 +336,16 @@ namespace UndertaleModTool
             Grid.SetRow(functionTextBox2, 0);
             Grid.SetColumn(functionTextBox2, 1);
 
+            // Third TextBox for Macro Input
+            TextBox functionTextBox3 = new TextBox
+            {
+                Text = "" // Default is empty (no macro)
+            };
+            newRow.Children.Add(functionTextBox3);
+            Grid.SetRow(functionTextBox3, 0);
+            Grid.SetColumn(functionTextBox3, 2);
+
+            // Remove Button
             ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
@@ -325,10 +353,11 @@ namespace UndertaleModTool
             };
             newRow.Children.Add(removeButton);
             Grid.SetRow(removeButton, 0);
-            Grid.SetColumn(removeButton, 2);
+            Grid.SetColumn(removeButton, 3);
 
             VariableRowsPanel.Children.Add(newRow);
         }
+
 
         #endregion
         #region Save Main JSON File Function (Shared)
@@ -342,6 +371,7 @@ namespace UndertaleModTool
             // Dictionaries for storing user input separately for function rows and variable rows
             Dictionary<string, string> variableRows = new Dictionary<string, string>(); // Variable name and asset type
             all_funcs = new Dictionary<string, string[]> { };
+            optionalfunc = new Dictionary<string, object> { };
 
             // Loop through all rows in VariableRowsPanel
             foreach (var item in VariableRowsPanel.Children)
@@ -355,6 +385,8 @@ namespace UndertaleModTool
                     // Function TextBox
                     TextBox textBox2 = null;
 
+                    TextBox textBox3 = null;
+
                     // Check the children of the row (either TextBox, ComboBox, or both)
                     foreach (var child in row.Children)
                     {
@@ -363,8 +395,10 @@ namespace UndertaleModTool
                             // If the first TextBox is found, assign it to textBox1
                             if (textBox1 == null)
                                 textBox1 = tBox;
-                            else
+                            else if (textBox2 == null)
                                 textBox2 = tBox; // If a second TextBox is found, assign it to textBox2 (function argument)
+                            else
+                                textBox3 = tBox;
                         }
                         else if (child is ComboBox cBox)
                         {
@@ -386,6 +420,7 @@ namespace UndertaleModTool
                         // Get the function name and function argument from the two TextBoxes
                         string functionName = textBox1.Text;
                         string functionArgumentString = textBox2.Text;
+                        string macroInput = textBox3?.Text;
 
                         // Separate "Asset." and null
                         var functionArguments = functionArgumentString
@@ -394,7 +429,41 @@ namespace UndertaleModTool
                             .Select(arg => arg == "null" ? null : arg)  // Handle "null" as a null value
                             .ToArray();
 
-                        all_funcs[functionName] = functionArguments;
+                        // If optional args were added
+                        if (!string.IsNullOrEmpty(macroInput))
+                        {
+                            // If the third TextBox is filled, use the complex format with Macros
+                            var macros = new List<List<object>>();
+                            var macroArgs = macroInput
+                                .Split(',')
+                                .Select(arg => arg.Trim()) // Trim any extra spaces
+                                .Select(arg => arg == "null" ? null : arg) // Convert "null" string to null
+                                .ToList();
+
+                            // Combine all function arguments into a single list
+                            var combinedArguments = functionArguments.ToList(); // Combine function arguments (Asset.Sound, Asset.Object, etc.)
+
+                            // Add the base macro with the combined arguments (without any macros yet)
+                            macros.Add(new List<object>(combinedArguments));
+
+                            // Iterate through macro arguments and add them progressively
+                            for (int i = 0; i < macroArgs.Count; i++)
+                            {
+                                var newMacro = new List<object>(combinedArguments); // Start with the combined function arguments
+                                // progressively add more arguments
+                                newMacro.AddRange(macroArgs.Take(i + 1));
+                                macros.Add(newMacro);
+                            }
+
+                            // Store the result in the dictionary
+                            optionalfunc.TryAdd(functionName, new MacroEntry("Union", macros));
+                        }
+                        else
+                        {
+                            // else, if no optional args were input
+                            // use simpler one
+                            all_funcs[functionName] = functionArguments;
+                        }
                     }
                     // Check if there's one TextBox and one ComboBox (Variable row)
                     else if (textBox1 != null && comboBox != null)
@@ -414,6 +483,12 @@ namespace UndertaleModTool
 
             try
             {
+                // to merge function stuffs
+                var mergedFunctionArguments = optionalfunc.Concat(all_funcs.ToDictionary(
+                pair => pair.Key,
+                pair => (object)pair.Value))
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
+
                 // Main JSON structure
                 var JSON = new
                 {
@@ -432,7 +507,7 @@ namespace UndertaleModTool
                         // Store the variables in the "Variables" section
                         Variables = variableRows,
                         // and funcs in the FunctionArguments section
-                        FunctionArguments = all_funcs,
+                        FunctionArguments = mergedFunctionArguments,
                         // Shit just for the Template
                         FunctionReturn = new { }
                     },
