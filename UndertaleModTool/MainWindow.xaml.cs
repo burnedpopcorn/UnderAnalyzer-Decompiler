@@ -308,7 +308,7 @@ namespace UndertaleModTool
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
-        private void UpdateTree()
+        public void UpdateTree()
         {
             foreach (var child in (MainTree.Items[0] as TreeViewItem).Items)
                 ((child as TreeViewItem).ItemsSource as ICollectionView)?.Refresh();
@@ -2897,15 +2897,17 @@ namespace UndertaleModTool
             this.ShowMessage(
                   "UndertaleModTool by krzys_h & the Underminers Team"
                 + "\nUnderAnalyzer Decompiler by colinator27"
-                + "\n2024.11 Fixes by @Dobby233Liu on Github"
-                + "\nBetter UI by @luizzeroxis on Github"
 
                 + "\n\nDecompiling Features and Scripts by burnedpopcorn180"
 
                 + "\n\nPizza Tower Variable Definitions by @avievie on Github"
                 + "\nPizza Tower Enums by CST1229 and all UTMTCE Contributors"
 
-                + "\n\nSpecial thanks to CatMateo, for the good advice and help"
+                + "\n\nSpecial thanks to CatMateo, for the good advice"
+
+                + "\n\n2024.11 Fixes by @Dobby233Liu (#2013)"
+                + "\nBetter UI by @luizzeroxis (#1992)"
+                + "\nHidden Child Entries Setting by @zivmaor (#1926)"
                 , "About");
         }
 
