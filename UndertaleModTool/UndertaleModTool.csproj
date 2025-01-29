@@ -171,7 +171,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</Content>
-      <Content Include="icon.ico" />
+      <Resource Include="icon.ico" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Properties\Settings.Designer.cs">

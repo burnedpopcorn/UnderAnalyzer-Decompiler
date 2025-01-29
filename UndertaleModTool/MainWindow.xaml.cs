@@ -47,7 +47,6 @@ using System.Windows.Controls.Primitives;
 using System.Runtime.CompilerServices;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using static UndertaleModTool.PT_AssetResolver;
 
 namespace UndertaleModTool
 {
@@ -566,10 +565,21 @@ namespace UndertaleModTool
             if (enable)
             {
                 Theme.WPF.Themes.ThemesController.SetTheme(Theme.WPF.Themes.ThemeType.DeepDark);
+
+                // Only kept for SimpleTextInput
+                Windows.TextInput.BGColor = System.Drawing.Color.FromArgb(32, 32, 32);
+                Windows.TextInput.TextBoxBGColor = System.Drawing.Color.FromArgb(48, 48, 48);
+                Windows.TextInput.TextColor = System.Drawing.Color.FromArgb(222, 222, 222);
             }
             else
             {
                 Theme.WPF.Themes.ThemesController.SetTheme(Theme.WPF.Themes.ThemeType.LightTheme);
+
+                // also for SimpleTextInput
+                // not so simple anymore tho...
+                Windows.TextInput.BGColor = System.Drawing.SystemColors.Window;
+                Windows.TextInput.TextBoxBGColor = System.Drawing.SystemColors.ControlLight;
+                Windows.TextInput.TextColor = System.Drawing.SystemColors.ControlText;
             }
 
             if (!isStartup)
@@ -1096,7 +1106,7 @@ namespace UndertaleModTool
                     if (Data.GeneralInfo.Major == 2)
                         GMS_Version_readable = "\n\nThis File was Compiled using a very early version of GMS2\nEariler than the 2022 LTS";
                     else if (Data.GeneralInfo.Major == 1)
-                        GMS_Version_readable = "\n\nThis File was Compiled using the GMS1";
+                        GMS_Version_readable = "\n\nThis File was Compiled using GMS1";
                 }
             }
 
@@ -2799,6 +2809,7 @@ namespace UndertaleModTool
             });
         }
 
+        #pragma warning disable CA1416 // Validate platform compatibility
         public string SimpleTextInput(string titleText, string labelText, string defaultInputBoxText, bool isMultiline, bool showDialog = true)
         {
             TextInput input = new TextInput(labelText, titleText, defaultInputBoxText, isMultiline);
@@ -2827,6 +2838,8 @@ namespace UndertaleModTool
             TextInput textOutput = new TextInput(labelText, titleText, message, isMultiline, true); //read-only mode
             textOutput.Show();
         }
+
+        #pragma warning restore CA1416 // Validate platform compatibility
         public async Task ClickableSearchOutput(string title, string query, int resultsCount, IOrderedEnumerable<KeyValuePair<string, List<(int lineNum, string codeLine)>>> resultsDict, bool showInDecompiledView, IOrderedEnumerable<string> failedList = null)
         {
             await Task.Delay(150); //wait until progress bar status is displayed
