@@ -84,7 +84,17 @@ namespace UndertaleModTool
 		/// <returns>A <see cref="MessageBoxResult"/> value that specifies which message box button is clicked by the user.</returns>
 		private static MessageBoxResult ShowCore(this Window window, string text, string title, MessageBoxButton buttons, MessageBoxImage image)
 		{
-			return window.Dispatcher.Invoke(() => MessageBox.Show(window, text, title, buttons, image));
-		}
+            return window.Dispatcher.Invoke(() =>
+            {
+                MessageDialog w = new();
+                w.Owner = window;
+                w.Text = text;
+                w.Title = title;
+                w.Buttons = buttons;
+                w.SetIcon(image);
+                w.ShowDialog();
+                return w.Result;
+            });
+        }
 	}
 }
