@@ -219,14 +219,57 @@ namespace UndertaleModTool
                         foreach (var function in functions.EnumerateObject())
                         {
                             string functionName = function.Name;
-                            // Add all arguments
-                            var functionArguments = function.Value.EnumerateArray()
-                                .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString())
-                                .ToArray();
-                            string functionArgumentsString = string.Join(", ", functionArguments); // Join all arguments with commas
+                            var functionValue = function.Value;
 
-                            AddFunctionRow(functionName, functionArgumentsString); // Add Rows with all Funcs in JSON
+                            // If it's a simple function
+                            if (functionValue.ValueKind == JsonValueKind.Array)
+                            {
+                                var functionArguments = functionValue.EnumerateArray()
+                                    .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString())
+                                    .ToArray();
+                                string functionArgumentsString = string.Join(", ", functionArguments);
+
+                                // Add the function row
+                                AddFunctionRow(functionName, functionArgumentsString);
+                            }
+                            // else if it's a complex optional function
+                            else if (functionValue.TryGetProperty("MacroType", out var macroTypeElement) && macroTypeElement.GetString() == "Union")
+                            {
+                                // Why i call them macros?
+                                // because i can, and because optional_* gets long
+                                var macros = functionValue.GetProperty("Macros").EnumerateArray()
+                                    .Select(macro => macro.EnumerateArray()
+                                        .Select(arg => arg.ValueKind == JsonValueKind.Null ? "null" : arg.ToString())
+                                        .ToArray())
+                                    .ToList();
+
+                                if (macros.Count > 0)
+                                {
+                                    // the first macro array (main arguments) always goes into the second textbox
+                                    string secondTextboxArgs = string.Join(", ", macros[0]);
+
+                                    // compare first and last macro arrays to get third textbox stuffs
+                                    var firstMacro = macros[0];
+                                    var lastMacro = macros[macros.Count - 1];
+                                    // Find the missing arguments in the last array compared to the first array
+                                    var thirdTextboxArgs = lastMacro.Skip(firstMacro.Length)
+                                        .Select(arg => arg == "null" ? "null" : arg)
+                                        .ToArray();
+
+                                    // Convert thing to strings
+                                    string thirdTextboxArgsString = string.Join(", ", thirdTextboxArgs);
+
+                                    // Add the complex function row
+                                    AddFunctionRow(functionName, secondTextboxArgs, thirdTextboxArgsString);
+                                }
+                            }
+                            else
+                            {
+                                // shit hit the fan guys
+                                MessageBox.Show($"Unexpected data format for {functionName}");
+                            }
                         }
+
                         // SUCCESS!!!
                         MessageBox.Show("JSON File Loaded Successfully");
                     }
@@ -307,13 +350,13 @@ namespace UndertaleModTool
         }
 
         // Add Row Function for functions (2 TextBoxes)
-        public void AddFunctionRow(string functionName = "gml_Script_", string functionArguments = "")
+        public void AddFunctionRow(string functionName = "gml_Script_", string functionArguments = "", string optionalArgumentsString = "")
         {
             Grid newRow = new Grid();
 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox (Function Name)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox (Function Arguments)
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Third TextBox (Macro Input)
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Third TextBox (Optional args Input)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
@@ -339,7 +382,7 @@ namespace UndertaleModTool
             // Third TextBox for Macro Input
             TextBox functionTextBox3 = new TextBox
             {
-                Text = "" // Default is empty (no macro)
+                Text = optionalArgumentsString // Default optional func args
             };
             newRow.Children.Add(functionTextBox3);
             Grid.SetRow(functionTextBox3, 0);
