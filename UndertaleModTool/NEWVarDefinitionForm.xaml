@@ -9,8 +9,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:Settings}"
         ResizeMode="NoResize"
-        Title="Variable Definition Maker" Height="400" Width="700" MaxHeight="400" MaxWidth="700" SizeToContent="Height" WindowStartupLocation="CenterOwner">
-
+        Title="Variable Definition Maker" Height="400" Width="700" MaxHeight="400" MaxWidth="700" SizeToContent="Height" WindowStartupLocation="CenterOwner"
+        Style="{DynamicResource DefaultWindowStyle}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel>
             <TextBlock Text="Variable Definition Maker" Margin="10,10,10,4" FontWeight="Bold"
@@ -35,11 +35,13 @@
                             <LineBreak/>
                             To add a Function, press the 'Add Function' button
                             <LineBreak/>
-                            In the First Textbox, input the Function you wish to define (keep the gml_Script_)
+                            In the First Textbox, input the Function you wish to define
                             <LineBreak/>
-                            In the Second Textbox, type out the Asset Types of all arguments the function takes 
+                            In the Second Textbox, type out the Asset Types of ALL arguments the function takes 
                             <LineBreak/>
                             (if you dont want to specify an argument, just input null)
+                            <LineBreak/>
+                            In the Third Textbox, type out the Asset Types of all OPTIONAL arguments that the function sometimes uses
                             <LineBreak/>
                             <LineBreak/>
                             Example: gml_Script_scr_sound   |   Asset.Sound, null, Bool
@@ -75,13 +77,13 @@
 
             <!-- Buttons for Add and Save -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0">
-                <local:ButtonDark Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Variable">Add Variable</local:ButtonDark>
+                <Button Width="100" Margin="10" Click="AddVarRowButton_Click" ToolTip="Add a Row for a New Variable">Add Variable</Button>
                 <!-- New button for adding function row -->
-                <local:ButtonDark Width="100" Margin="10" Click="AddFunctionRowButton_Click" ToolTip="Add a Row for a New Function">Add Function</local:ButtonDark>
+                <Button Width="100" Margin="10" Click="AddFunctionRowButton_Click" ToolTip="Add a Row for a New Function">Add Function</Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Width="340">
-                <local:ButtonDark Width="150" Margin="10" Click="SaveButtonMulti_Click" ToolTip="Save JSON to work with any Game Loaded">Any Game Save</local:ButtonDark>
-                <local:ButtonDark Width="150" Margin="10" Click="SaveButtonSingle_Click" ToolTip="Save JSON to work with only the Game Loaded">Specific Game Save</local:ButtonDark>
+                <Button Width="150" Margin="10" Click="SaveButtonMulti_Click" ToolTip="Save JSON to work with any Game Loaded">Any Game Save</Button>
+                <Button Width="150" Margin="10" Click="SaveButtonSingle_Click" ToolTip="Save JSON to work with only the Game Loaded">Specific Game Save</Button>
             </StackPanel>
 
         </StackPanel>

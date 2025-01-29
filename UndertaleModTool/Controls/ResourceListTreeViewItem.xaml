@@ -14,19 +14,19 @@
 
         <local:ImplementsInterfaceConverter x:Key="ImplementsInterfaceConverter"/>
 
-        <local:ContextMenuDark x:Key="UndertaleResourceMenu" Opened="MenuItem_ContextMenuOpened">
+        <ContextMenu x:Key="UndertaleResourceMenu" Opened="MenuItem_ContextMenuOpened">
             <MenuItem Header="Open in new tab" Click="MenuItem_OpenInNewTab_Click"/>
             <MenuItem Header="Find all references" Click="MenuItem_FindAllReferences_Click"/>
             <MenuItem Header="Copy name to clipboard" Click="MenuItem_CopyName_Click"/>
             <MenuItem Header="Delete" Click="MenuItem_Delete_Click"/>
-        </local:ContextMenuDark>
+        </ContextMenu>
 
         <!-- TODO: Would need some way to know the ID, IndexOf won't be reliable
-        <local:ContextMenuDark x:Key="NullItemReplaceMenu" Opened="MenuItem_ContextMenuOpened_NullItem">
+        <ContextMenu x:Key="NullItemReplaceMenu" Opened="MenuItem_ContextMenuOpened_NullItem">
             <MenuItem IsEnabled="False" Header="ID: " Name="ObjectIdLabel" />
             <Separator />
             <MenuItem Header="_Add in place" />
-        </local:ContextMenuDark>
+        </ContextMenu>
         -->
 
         <Style x:Key="UndertaleModTool.ResourceListTreeViewItem.ItemContainerStyle" TargetType="{x:Type TreeViewItem}">

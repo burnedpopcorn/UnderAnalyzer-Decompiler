@@ -1,9 +1,8 @@
-﻿// VERY WIP
-// Variable Definition JSON Maker
+﻿// Variable Definition JSON Maker
 // with UI, because yeah
 
 // only does Variables and Function Arguments at the moment
-// Enums will be done soon maybe
+// Enums are being considered, but probably wont happen
 
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,6 @@ using System.Windows.Controls;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json.Linq;
-using static UndertaleModTool.PT_AssetResolver;
 
 namespace UndertaleModTool
 {
@@ -318,7 +316,7 @@ namespace UndertaleModTool
             Grid.SetRow(variableTextBox, 0);
             Grid.SetColumn(variableTextBox, 0);
 
-            ComboBoxDark newComboBox = new ComboBoxDark
+            ComboBox newComboBox = new ComboBox
             {
                 ItemsSource = GetAssetTypes(),
                 SelectedItem = assetType // Set the default selection
@@ -327,7 +325,7 @@ namespace UndertaleModTool
             Grid.SetRow(newComboBox, 0);
             Grid.SetColumn(newComboBox, 1);
 
-            ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
+            Button removeButton = new Button { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
@@ -389,7 +387,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox3, 2);
 
             // Remove Button
-            ButtonDark removeButton = new ButtonDark { Content = "DEL", Width = 30 };
+            Button removeButton = new Button { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
@@ -499,7 +497,7 @@ namespace UndertaleModTool
                             }
 
                             // Store the result in the dictionary
-                            optionalfunc.TryAdd(functionName, new MacroEntry("Union", macros));
+                            optionalfunc.TryAdd(functionName, new FuncOptional("Union", macros));
                         }
                         else
                         {

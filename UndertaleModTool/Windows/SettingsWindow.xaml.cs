@@ -217,10 +217,11 @@ namespace UndertaleModTool
                 Settings.Save();
 
                 MainWindow.SetDarkMode(value);
-
+                /*
                 if (value)
                     mainWindow.ShowWarning("The message boxes (like this one) aren't compatible with the dark mode.\n" +
                                            "This will be fixed in future versions.");
+                */
             }
         }
 

@@ -208,24 +208,6 @@ namespace UndertaleModTool
         public static string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 #endif
 
-        private static readonly Color darkColor = Color.FromArgb(255, 32, 32, 32);
-        private static readonly Color darkLightColor = Color.FromArgb(255, 48, 48, 48);
-        private static readonly Color whiteColor = Color.FromArgb(255, 222, 222, 222);
-        private static readonly SolidColorBrush grayTextBrush = new(Color.FromArgb(255, 179, 179, 179));
-        private static readonly SolidColorBrush inactiveSelectionBrush = new(Color.FromArgb(255, 212, 212, 212));
-        private static readonly Dictionary<ResourceKey, object> appDarkStyle = new()
-        {
-            { SystemColors.WindowTextBrushKey, new SolidColorBrush(whiteColor) },
-            { SystemColors.ControlTextBrushKey, new SolidColorBrush(whiteColor) },
-            { SystemColors.WindowBrushKey, new SolidColorBrush(darkColor) },
-            { SystemColors.ControlBrushKey, new SolidColorBrush(darkLightColor) },
-            { SystemColors.ControlLightBrushKey, new SolidColorBrush(Color.FromArgb(255, 60, 60, 60)) },
-            { SystemColors.MenuTextBrushKey, new SolidColorBrush(whiteColor) },
-            { SystemColors.MenuBrushKey, new SolidColorBrush(darkLightColor) },
-            { SystemColors.GrayTextBrushKey, new SolidColorBrush(Color.FromArgb(255, 136, 136, 136)) },
-            { SystemColors.InactiveSelectionHighlightBrushKey, new SolidColorBrush(Color.FromArgb(255, 112, 112, 112)) }
-        };
-
         public MainWindow()
         {
             InitializeComponent();
@@ -266,11 +248,6 @@ namespace UndertaleModTool
                                                 typeof(Underanalyzer.Decompiler.DecompileContext).Assembly)
                                 .WithEmitDebugInformation(true); //when script throws an exception, add a exception location (line number)
             });
-
-            var resources = Application.Current.Resources;
-            resources["CustomTextBrush"] = SystemColors.ControlTextBrush;
-            resources[SystemColors.GrayTextBrushKey] = grayTextBrush;
-            resources[SystemColors.InactiveSelectionHighlightBrushKey] = inactiveSelectionBrush;
         }
 
         /// <summary>
@@ -586,37 +563,13 @@ namespace UndertaleModTool
 
         public static void SetDarkMode(bool enable, bool isStartup = false)
         {
-            var resources = Application.Current.Resources;
-
-            var mainWindow = Application.Current.MainWindow as MainWindow;
-            mainWindow.TabController.SetDarkMode(enable);
-            
             if (enable)
             {
-                foreach (var pair in appDarkStyle)
-                    resources[pair.Key] = pair.Value;
-
-                Windows.TextInput.BGColor = System.Drawing.Color.FromArgb(darkColor.R,
-                                                                          darkColor.G,
-                                                                          darkColor.B);
-                Windows.TextInput.TextBoxBGColor = System.Drawing.Color.FromArgb(darkLightColor.R,
-                                                                                 darkLightColor.G,
-                                                                                 darkLightColor.B);
-                Windows.TextInput.TextColor = System.Drawing.Color.FromArgb(whiteColor.R,
-                                                                            whiteColor.G,
-                                                                            whiteColor.B);
+                Theme.WPF.Themes.ThemesController.SetTheme(Theme.WPF.Themes.ThemeType.DeepDark);
             }
             else
             {
-                foreach (ResourceKey key in appDarkStyle.Keys)
-                    resources.Remove(key);
-
-                resources[SystemColors.GrayTextBrushKey] = grayTextBrush;
-                resources[SystemColors.InactiveSelectionHighlightBrushKey] = inactiveSelectionBrush;
-
-                Windows.TextInput.BGColor = System.Drawing.SystemColors.Window;
-                Windows.TextInput.TextBoxBGColor = System.Drawing.SystemColors.ControlLight;
-                Windows.TextInput.TextColor = System.Drawing.SystemColors.ControlText;
+                Theme.WPF.Themes.ThemesController.SetTheme(Theme.WPF.Themes.ThemeType.LightTheme);
             }
 
             if (!isStartup)
@@ -2258,7 +2211,7 @@ namespace UndertaleModTool
 
                     var subDirName = subDirectory.Name;
                     // In addition to the _ comment from above, we also need to add at least one item, so that WPF uses this as a submenuitem
-                    MenuItemDark subItem = new() {Header = subDirName.Replace("_", "__"), Items = {new MenuItem {Header = "(loading...)", IsEnabled = false}}};
+                    MenuItem subItem = new() {Header = subDirName.Replace("_", "__"), Items = {new MenuItem {Header = "(loading...)", IsEnabled = false}}};
                     subItem.SubmenuOpened += (o, args) => MenuItem_RunScript_SubmenuOpened(o, args, subDirectory.FullName);
                     item.Items.Add(subItem);
                 }
@@ -2272,15 +2225,6 @@ namespace UndertaleModTool
             }
 
             item.UpdateLayout();
-            Popup popup = FindVisualChild<Popup>(item);
-            var content = popup?.Child as Border;
-            if (content is not null)
-            {
-                if (Settings.Instance.EnableDarkMode)
-                    content.Background = appDarkStyle[SystemColors.MenuBrushKey] as SolidColorBrush;
-                else
-                    content.Background = SystemColors.MenuBrush;
-            }
 
             // If we're at the complete root, we need to add the "Run other script" button as well
             if (item.Name != "RootScriptItem") return;
@@ -2938,9 +2882,10 @@ namespace UndertaleModTool
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
             this.ShowMessage(
-                  "UndertaleModTool by krzys_h and the Underminers Team"
+                  "UndertaleModTool by krzys_h & the Underminers Team"
                 + "\nUnderAnalyzer Decompiler by colinator27"
                 + "\n2024.11 Fixes by @Dobby233Liu on Github"
+                + "\nBetter UI by @luizzeroxis on Github"
 
                 + "\n\nDecompiling Features and Scripts by burnedpopcorn180"
 
@@ -3755,7 +3700,7 @@ result in loss of work.");
         // source - https://stackoverflow.com/a/10738247/12136394
         private void TabItem_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (e.Source is not TabItemDark tabItem || e.OriginalSource is Button)
+            if (e.Source is not TabItem tabItem || e.OriginalSource is Button)
                 return;
 
             if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed)
@@ -3779,8 +3724,8 @@ result in loss of work.");
         }
         private void TabItem_Drop(object sender, DragEventArgs e)
         {
-            if (e.Source is TabItemDark tabItemTarget &&
-                e.Data.GetData(typeof(TabItemDark)) is TabItemDark tabItemSource &&
+            if (e.Source is TabItem tabItemTarget &&
+                e.Data.GetData(typeof(TabItem)) is TabItem tabItemSource &&
                 !tabItemTarget.Equals(tabItemSource))
             {
                 int sourceIndex = tabItemSource.TabIndex;
