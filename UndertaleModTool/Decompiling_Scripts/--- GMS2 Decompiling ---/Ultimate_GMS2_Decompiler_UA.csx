@@ -2146,10 +2146,10 @@ void DumpRoom(UndertaleRoom room)
 								ass.y = (float)i.Y;
 								ass.w = i.Width;
 								ass.h = i.Height;
-								ass.u0 = i.SourceX;
-								ass.v0 = i.SourceY;
-								ass.u1 = i.SourceX + i.Width;
-								ass.v1 = i.SourceY + i.Height;
+								ass.u0 = (uint)i.SourceX;
+								ass.v0 = (uint)i.SourceY;
+								ass.u1 = (uint)i.SourceX + i.Width;
+								ass.v1 = (uint)i.SourceY + i.Height;
 								ass.name = instName((int)i.InstanceID);
 
 								if (i.ObjectDefinition != null)
@@ -2307,10 +2307,10 @@ void DumpRoom(UndertaleRoom room)
 						y = (float)i.Y,
 						w = i.Width,
 						h = i.Height,
-						u0 = i.SourceX,
-						v0 = i.SourceY,
-						u1 = i.SourceX + i.Width,
-						v1 = i.SourceY + i.Height,
+						u0 = (uint)i.SourceX,
+						v0 = (uint)i.SourceY,
+						u1 = (uint)i.SourceX + i.Width,
+						v1 = (uint)i.SourceY + i.Height,
 						colour = i.Color
 					};
 					tilelayer.assets.Add(graphic);
