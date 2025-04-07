@@ -23,25 +23,21 @@ internal sealed class AssetReferenceNode : IConstantASTNode
     public int AssetId { get; init; }
 
     /// <inheritdoc/>
-    public IToken? NearbyToken => _token;
-
-    // Reference to original asset reference token
-    private readonly TokenAssetReference _token;
+    public IToken? NearbyToken { get; init; }
 
     public AssetReferenceNode(TokenAssetReference token)
     {
         AssetId = token.AssetId;
-        _token = token;
+        NearbyToken = token;
     }
 
     /// <inheritdoc/>
     public IASTNode PostProcess(ParseContext context)
     {
         // If not using typed asset references, just convert to numeric form
-        IGameContext gameContext = context.CompileContext.GameContext;
-        if (!gameContext.UsingAssetReferences || (_token.IsRoomInstanceAsset && !gameContext.UsingRoomInstanceReferences))
+        if (!context.CompileContext.GameContext.UsingAssetReferences)
         {
-            return new NumberNode(AssetId, _token);
+            return new NumberNode(AssetId, NearbyToken);
         }
 
         return this;

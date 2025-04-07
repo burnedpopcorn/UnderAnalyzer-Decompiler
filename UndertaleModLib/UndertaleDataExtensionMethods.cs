@@ -265,43 +265,34 @@ public static class UndertaleDataExtensionMethods
         return newVariable;
     }
 
-    public static UndertaleVariable DefineLocal(this IList<UndertaleVariable> list, IList<UndertaleVariable> originalReferencedLocalVars, int localId, string name, IList<UndertaleString> strg, UndertaleData data)
-	{
-		bool bytecode14 = (data?.GeneralInfo?.BytecodeVersion <= 14);
-        if (bytecode14 || data?.CodeLocals is null)
+    public static UndertaleVariable DefineLocal(this IList<UndertaleVariable> list, UndertaleData data, int varId, UndertaleString nameString, int nameStringId)
+    {
+        // In bytecode 14, look up on entire variable list for existing locals...
+        bool bytecode14 = data.GeneralInfo.BytecodeVersion <= 14;
+        if (bytecode14)
         {
-            UndertaleVariable search = list.Where((x) => x.Name.Content == name && (bytecode14 || x.InstanceType == UndertaleInstruction.InstanceType.Local)).FirstOrDefault();
-            if (search != null)
-				return search;
-		}
+            foreach (UndertaleVariable variable in list)
+            {
+                if (variable.Name == nameString && (bytecode14 || variable.InstanceType == UndertaleInstruction.InstanceType.Local))
+                {
+                    return variable;
+                }
+            }
+        }
 
-		// Use existing registered variables.
-		if (originalReferencedLocalVars != null)
-		{
-			UndertaleVariable refvar;
-			if (data?.IsVersionAtLeast(2, 3) == true)
-				refvar = originalReferencedLocalVars.Where((x) => x.Name.Content == name).FirstOrDefault();
-			else
-				refvar = originalReferencedLocalVars.Where((x) => x.Name.Content == name && x.VarID == localId).FirstOrDefault();
-			if (refvar != null)
-				return refvar;
-		}
+        // Define new local
+        UndertaleVariable vari = new()
+        {
+            Name = nameString,
+            InstanceType = bytecode14 ? UndertaleInstruction.InstanceType.Undefined : UndertaleInstruction.InstanceType.Local,
+            VarID = bytecode14 ? 0 : varId,
+            NameStringID = nameStringId
+        };
+        list.Add(vari);
+        return vari;
+    }
 
-		var str = strg.MakeString(name, out int id);
-		if (data?.IsVersionAtLeast(2, 3) == true)
-			localId = id;
-		UndertaleVariable vari = new UndertaleVariable()
-		{
-			Name = str,
-			InstanceType = bytecode14 ? UndertaleInstruction.InstanceType.Undefined : UndertaleInstruction.InstanceType.Local,
-			VarID = bytecode14 ? 0 : localId,
-			NameStringID = id
-		};
-		list.Add(vari);
-		return vari;
-	}
-
-	public static UndertaleExtensionFunction DefineExtensionFunction(this IList<UndertaleExtensionFunction> extfuncs, IList<UndertaleFunction> funcs, IList<UndertaleString> strg, uint id, uint kind, string name, UndertaleExtensionVarType rettype, string extname, params UndertaleExtensionVarType[] args)
+    public static UndertaleExtensionFunction DefineExtensionFunction(this IList<UndertaleExtensionFunction> extfuncs, IList<UndertaleFunction> funcs, IList<UndertaleString> strg, uint id, uint kind, string name, UndertaleExtensionVarType rettype, string extname, params UndertaleExtensionVarType[] args)
 	{
 		var func = new UndertaleExtensionFunction()
 		{

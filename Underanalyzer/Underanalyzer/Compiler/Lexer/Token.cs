@@ -219,10 +219,6 @@ internal enum KeywordKind
     Div,        // div
     Mod,        // mod
 
-    And,        // and
-    Or,         // or
-    Xor,        // xor
-
     Enum,       // enum
 
     Try,        // try
@@ -269,9 +265,6 @@ internal sealed record TokenKeyword(LexContext Context, int TextPosition, Keywor
             KeywordKind.Not => "not",
             KeywordKind.Div => "div",
             KeywordKind.Mod => "mod",
-            KeywordKind.And => "and",
-            KeywordKind.Or => "or",
-            KeywordKind.Xor => "xor",
             KeywordKind.Enum => "enum",
             KeywordKind.Try => "try",
             KeywordKind.Catch => "catch",
@@ -430,7 +423,7 @@ internal sealed record TokenVariable : IToken
 /// Token representing an asset name reference in code.
 /// </summary>
 /// <param name="Text">Verbatim text used for the asset reference identifier.</param>
-internal sealed record TokenAssetReference(LexContext Context, int TextPosition, string Text, int AssetId, bool IsRoomInstanceAsset) : IToken
+internal sealed record TokenAssetReference(LexContext Context, int TextPosition, string Text, int AssetId) : IToken
 {
     public override string ToString()
     {
