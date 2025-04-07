@@ -195,15 +195,9 @@ internal sealed class LexContext : ISubCompileContext
                 }
 
                 // Check if this identifier is a game asset (but not a script)
-                bool isAsset = CompileContext.GameContext.GetAssetId(text, out int assetId);
-                bool isRoomInstanceAsset = false;
-                if (!isAsset)
+                if (CompileContext.GameContext.GetAssetId(text, out int assetId) && !CompileContext.GameContext.GetScriptId(text, out _))
                 {
-                    isRoomInstanceAsset = CompileContext.GameContext.GetRoomInstanceId(text, out assetId);
-                }
-                if ((isAsset || isRoomInstanceAsset) && !CompileContext.GameContext.GetScriptId(text, out _))
-                {
-                    Tokens[i] = new TokenAssetReference(identifier.Context, identifier.TextPosition, identifier.Text, assetId, isRoomInstanceAsset);
+                    Tokens[i] = new TokenAssetReference(identifier.Context, identifier.TextPosition, identifier.Text, assetId);
                     continue;
                 }
 
