@@ -178,6 +178,21 @@ internal sealed class BlockSimulator
                     $"Dup read too much data from stack ({(dupSize + 1) * dupTypeSize} -> {size})");
             }
 
+            // If duplication type is boolean, then cast all non-converted int16s being duplicated to booleans
+            if (dupType == DataType.Boolean)
+            {
+                for (int i = 0; i < toDuplicate.Count; i++)
+                {
+                    if (toDuplicate[i] is Int16Node { Value: 0 or 1, StackType: not DataType.Boolean } i16)
+                    {
+                        toDuplicate[i] = new BooleanNode(i16.Value == 1)
+                        {
+                            StackType = i16.StackType
+                        };
+                    }
+                }
+            }
+
             // Push data back to the stack twice (duplicating it, while maintaining internal order)
             for (int i = 0; i < 2; i++)
             {
@@ -407,16 +422,16 @@ internal sealed class BlockSimulator
                 }
             }
 
-            // Check for compound assignment
-            if (variable.Left.Duplicated && binary is { Left: VariableNode })
+            // Check for compound assignment (also check for quirk with division converting to double when NOT a compound assignment)
+            if (variable.Left.Duplicated && binary is { Left: VariableNode } && 
+                (binary.Instruction.Kind != Opcode.Divide || binary.Right is DoubleNode || binary.Right.StackType != DataType.Double))
             {
                 // Compound detected
-                // TODO: do we need to verify "binary.Left" is the same as "variable"?
 
+                // Check for a special instruction pattern that suggests this is a postfix statement
                 if (binary.Instruction.Kind is Opcode.Add or Opcode.Subtract &&
                     binary.Right is Int16Node compoundI16 && compoundI16.Value == 1 && compoundI16.RegularPush)
                 {
-                    // Special instruction pattern suggests that this is a postfix statement
                     output.Add(new AssignNode(variable, AssignNode.AssignType.Postfix, binary.Instruction));
                     return;
                 }
@@ -595,14 +610,6 @@ internal sealed class BlockSimulator
 
         if (top is Int16Node i16 && i16.Value is 0 or 1)
         {
-            // If we convert from integer to boolean, turn into true/false if 1 or 0, respectively
-            if (instr is { Type1: DataType.Int32, Type2: DataType.Boolean })
-            {
-                builder.ExpressionStack.Pop();
-                builder.ExpressionStack.Push(new BooleanNode(i16.Value == 1));
-                return;
-            }
-            
             // If we convert from boolean to anything else, and we have an Int16 on the stack,
             // we know that we had a boolean on the stack previously, so change that.
             if (instr is { Type1: DataType.Boolean })
