@@ -273,8 +273,6 @@ public class UndertaleInstruction : UndertaleObject, IGMInstruction
         get => (short)(_firstWord & 0x0000FFFF);
         set => _firstWord = (_firstWord & 0xFFFF0000) | ((uint)value & 0xFFFF);
     }
-    // i cant be bothered
-    public uint Address { get; internal set; }
     public int ValueInt { get => _primitiveValue.AsInt; set => _primitiveValue = new(value); }
     public long ValueLong { get => _primitiveValue.AsLong; set => _primitiveValue = new(value); }
     public double ValueDouble { get => _primitiveValue.AsDouble; set => _primitiveValue = new(value); }
@@ -1499,14 +1497,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
             long instructionEndPos = instructionStartPos + Length;
             Instructions.Clear();
             Instructions.Capacity = (int)reader.BytecodeAddresses[(uint)instructionStartPos].InstructionCount;
-            long here = reader.AbsPosition;//
             while (reader.AbsPosition < instructionEndPos)
             {
                 Instructions.Add(reader.ReadUndertaleObject<UndertaleInstruction>());
-
-                uint a = (uint)(reader.AbsPosition - here) / 4;//
-                UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();//
-                instr.Address = a;//
             }
 
             // Set this flag for code editor, etc. to not get confused later
@@ -1554,10 +1547,6 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
                 while (reader.AbsPosition < instructionEndPos)
                 {
                     Instructions.Add(reader.ReadUndertaleObject<UndertaleInstruction>());
-
-                    uint a = (uint)(reader.AbsPosition - _bytecodeAbsoluteAddress) / 4;//
-                    UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();//
-                    instr.Address = a;//
                 }
 
                 // Return from instruction blob
@@ -1639,19 +1628,9 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
         uint addr = 0;
         foreach (UndertaleInstruction instr in Instructions)
         {
-            instr.Address = addr;
             addr += instr.CalculateInstructionSize();
         }
         Length = addr * 4;
-    }
-
-    public UndertaleInstruction GetInstructionFromAddress(uint address)
-    {
-        UpdateLength();
-        foreach (UndertaleInstruction instr in Instructions)
-            if (instr.Address == address)
-                return instr;
-        return null;
     }
 
     /// <summary>

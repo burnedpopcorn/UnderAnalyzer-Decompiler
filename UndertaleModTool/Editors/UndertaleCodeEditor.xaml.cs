@@ -29,7 +29,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
-using System.Windows.Shell;
 using System.Xml;
 using UndertaleModLib;
 using UndertaleModLib.Compiler;
@@ -50,6 +49,9 @@ namespace UndertaleModTool
         public UndertaleCode CurrentDisassembled = null;
         public UndertaleCode CurrentDecompiled = null;
         public List<string> CurrentLocals = new();
+        public string ProfileHash = mainWindow.ProfileHash;
+        public string MainPath = Path.Combine(Settings.ProfilesFolder, mainWindow.ProfileHash, "Main");
+        public string TempPath = Path.Combine(Settings.ProfilesFolder, mainWindow.ProfileHash, "Temp");
 
         public bool DecompiledFocused = false;
         public bool DecompiledChanged = false;
@@ -257,6 +259,8 @@ namespace UndertaleModTool
         private async void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UndertaleCode code = this.DataContext as UndertaleCode;
+            Directory.CreateDirectory(MainPath);
+            Directory.CreateDirectory(TempPath);
             if (code == null)
                 return;
 
@@ -488,6 +492,8 @@ namespace UndertaleModTool
 
         private void DisassembleCode(UndertaleCode code, bool first)
         {
+            code.UpdateAddresses();
+
             string text;
 
             int currLine = 1;
@@ -558,14 +564,14 @@ namespace UndertaleModTool
             gettext = new Dictionary<string, string>();
             string[] decompilationOutput;
             GlobalDecompileContext context = new(data);
-            if (!SettingsWindow.ProfileModeEnabled || mainWindow.ProfileHash is not string currentMD5)
+            if (!SettingsWindow.ProfileModeEnabled)
             {
                 decompilationOutput = new Underanalyzer.Decompiler.DecompileContext(context, gettextCode, data.ToolInfo.DecompilerSettings)
                     .DecompileToString().Split('\n');
             }
             else
             {
-                string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", gettextCode.Name.Content + ".gml");
+                string path = Path.Combine(TempPath, gettextCode.Name.Content + ".gml");
                 if (File.Exists(path))
                 {
                     try
@@ -734,23 +740,15 @@ namespace UndertaleModTool
                     Exception e = null;
                     try
                     {
-                        if (!SettingsWindow.ProfileModeEnabled || mainWindow.ProfileHash is not string currentMD5)
+                        string path = Path.Combine(TempPath, code.Name.Content + ".gml");
+                        if (!SettingsWindow.ProfileModeEnabled || !File.Exists(path))
                         {
                             decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
                                 .DecompileToString();
                         }
                         else
                         {
-                            string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
-                            if (!File.Exists(path))
-                            {
-                                decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
-                                    .DecompileToString();
-                            }
-                            else
-                            {
-                                decompiled = File.ReadAllText(path);
-                            }
+                            decompiled = File.ReadAllText(path);
                         }
                     }
                     catch (Exception ex)
@@ -846,6 +844,9 @@ namespace UndertaleModTool
 
                             if (existingDialog is not null)                      //if code was edited (and compiles after it)
                             {
+                                dataa.GMLCacheChanged.Add(code.Name.Content);
+                                dataa.GMLCacheFailed?.Remove(code.Name.Content); //remove that code name, since that code compiles now
+
                                 openSaveDialog = mainWindow.IsSaving;
                             }
                         }
@@ -948,52 +949,68 @@ namespace UndertaleModTool
                 // This is still a problem in rare cases for some unknown reason
             }
 
-            CompileResult compileResult = new();
-            string rootException = null;
+            CompileContext compileContext = null;
             string text = DecompiledEditor.Text;
             var dispatcher = Dispatcher;
             Task t = Task.Run(() =>
             {
                 try
                 {
-                    CompileGroup group = new(data);
-                    group.MainThreadAction = (f) => { dispatcher.Invoke(() => f()); };
-                    group.QueueCodeReplace(code, text);
-                    compileResult = group.Compile();
+                    compileContext = Compiler.CompileGMLText(text, data, code, (f) => { dispatcher.Invoke(() => f()); });
                 }
                 catch (Exception ex)
                 {
-                    rootException = ex.ToString();
+                    compileContext = new(data, code)
+                    {
+                        HasError = true,
+                        ResultError = ex.ToString()
+                    };
                 }
             });
             await t;
 
-            if (rootException is not null)
+            if (compileContext == null)
             {
                 dialog.TryClose();
-                mainWindow.ShowError(Truncate(rootException, 512), "Compiler error");
+                mainWindow.ShowError("Compile context was null for some reason...", "This shouldn't happen");
                 return;
             }
 
-            if (!compileResult.Successful)
+            if (compileContext.HasError)
             {
                 dialog.TryClose();
-                mainWindow.ShowError(Truncate(compileResult.PrintAllErrors(false), 512), "Compiler error");
+                mainWindow.ShowError(Truncate(compileContext.ResultError, 512), "Compiler error");
                 return;
             }
 
-            if (SettingsWindow.ProfileModeEnabled && mainWindow.ProfileHash is string currentMD5)
+            if (!compileContext.SuccessfulCompile)
             {
-                try
+                dialog.TryClose();
+                mainWindow.ShowError("(unknown error message)", "Compile failed");
+                return;
+            }
+
+            code.Replace(compileContext.ResultAssembly);
+            try
+            {
+                string path = Path.Combine(TempPath, code.Name.Content + ".gml");
+                if (SettingsWindow.ProfileModeEnabled)
                 {
                     // Write text, only if in the profile mode.
-                    string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
                     File.WriteAllText(path, DecompiledEditor.Text);
                 }
-                catch (Exception exc)
+                else
                 {
-                    mainWindow.ShowError("Error during writing of GML code to profile:\n" + exc);
+                    // Destroy file with comments if it's been edited outside the profile mode.
+                    // We're dealing with the decompiled code only, it has to happen.
+                    // Otherwise it will cause a desync, which is more important to prevent.
+                    if (File.Exists(path))
+                        File.Delete(path);
                 }
+            }
+            catch (Exception exc)
+            {
+                mainWindow.ShowError("Error during writing of GML code to profile:\n" + exc);
             }
 
             // Invalidate gettext if necessary
@@ -1069,6 +1086,7 @@ namespace UndertaleModTool
             {
                 var instructions = Assembler.Assemble(DisassemblyEditor.Text, data);
                 code.Replace(instructions);
+                mainWindow.NukeProfileGML(code.Name.Content);
             }
             catch (Exception ex)
             {
@@ -1089,6 +1107,8 @@ namespace UndertaleModTool
 
             if (!DisassemblyEditor.IsReadOnly)
             {
+                data.GMLCacheChanged.Add(code.Name.Content);
+
                 if (mainWindow.IsSaving)
                 {
                     mainWindow.IsSaving = false;
@@ -1408,7 +1428,7 @@ namespace UndertaleModTool
                             else
                             {
                                 // Resolve 2.3 sub-functions for their parent entry
-                                if (data.GlobalFunctions?.TryGetFunction(nameText, out Underanalyzer.IGMFunction f) == true)
+                                if (data.GlobalFunctions?.NameToFunction?.TryGetValue(nameText, out Underanalyzer.IGMFunction f) == true)
                                 {
                                     ScriptsDict.TryGetValue(f.Name.Content, out val);
                                     val = (val as UndertaleScript)?.Code?.ParentEntry;
@@ -1435,7 +1455,7 @@ namespace UndertaleModTool
                         if (val is UndertaleScript)
                             val = null; // in GMS2.3 scripts are never referenced directly
 
-                        if (data.GlobalFunctions?.TryGetFunction(nameText, out Underanalyzer.IGMFunction globalFunc) == true &&
+                        if (data.GlobalFunctions?.NameToFunction?.TryGetValue(nameText, out Underanalyzer.IGMFunction globalFunc) == true &&
                             globalFunc is UndertaleFunction utGlobalFunc)
                         {
                             // Try getting script that this function reference belongs to
