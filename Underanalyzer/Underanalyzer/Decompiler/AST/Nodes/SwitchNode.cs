@@ -23,16 +23,10 @@ public class SwitchNode(IExpressionNode expression, BlockNode body) : IStatement
     /// </summary>
     public BlockNode Body { get; private set; } = body;
 
-    /// <inheritdoc/>
     public bool SemicolonAfter => false;
-
-    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
-
-    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
-    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         Expression = Expression.Clean(cleaner);
@@ -56,7 +50,6 @@ public class SwitchNode(IExpressionNode expression, BlockNode body) : IStatement
         return this;
     }
 
-    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         Expression = Expression.PostClean(cleaner);
@@ -64,7 +57,6 @@ public class SwitchNode(IExpressionNode expression, BlockNode body) : IStatement
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write("switch (");
@@ -77,7 +69,6 @@ public class SwitchNode(IExpressionNode expression, BlockNode body) : IStatement
         Body.Print(printer);
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;

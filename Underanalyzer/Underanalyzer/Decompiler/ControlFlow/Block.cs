@@ -39,7 +39,6 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
     {
         HashSet<int> addresses = [0, code.Length];
 
-        int address = 0;
         for (int i = 0; i < code.InstructionCount; i++)
         {
             IGMInstruction instr = code.GetInstruction(i);
@@ -49,22 +48,19 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
                 case IGMInstruction.Opcode.BranchTrue:
                 case IGMInstruction.Opcode.BranchFalse:
                 case IGMInstruction.Opcode.PushWithContext:
-                    addresses.Add(address + 4);
-                    addresses.Add(address + instr.BranchOffset);
-                    address += 4;
+                    addresses.Add(instr.Address + 4);
+                    addresses.Add(instr.Address + instr.BranchOffset);
                     break;
                 case IGMInstruction.Opcode.PopWithContext:
                     if (!instr.PopWithContextExit)
                     {
-                        addresses.Add(address + 4);
-                        addresses.Add(address + instr.BranchOffset);
+                        addresses.Add(instr.Address + 4);
+                        addresses.Add(instr.Address + instr.BranchOffset);
                     }
-                    address += 4;
                     break;
                 case IGMInstruction.Opcode.Exit:
                 case IGMInstruction.Opcode.Return:
-                    addresses.Add(address + 4);
-                    address += 4;
+                    addresses.Add(instr.Address + 4);
                     break;
                 case IGMInstruction.Opcode.Call:
                     // Handle try hook addresses
@@ -98,13 +94,9 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
                         }
 
                         // Split this try hook into its own block - removes edge cases in later graph operations
-                        addresses.Add(address - 24 /* address of finallyInstr */);
-                        addresses.Add(address + 12 /* end address of popInstr */);
+                        addresses.Add(finallyInstr.Address);
+                        addresses.Add(popInstr.Address + IGMInstruction.GetSize(popInstr));
                     }
-                    address += 8;
-                    break;
-                default:
-                    address += IGMInstruction.GetSize(instr);
                     break;
             }
         }
@@ -134,30 +126,26 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
         blocksByAddress = [];
         List<Block> blocks = [];
         Block? current = null;
-        int address = 0;
         for (int i = 0; i < code.InstructionCount; i++)
         {
             // Check if we have a new block at the current instruction's address
             IGMInstruction instr = code.GetInstruction(i);
-            if (addresses.Contains(address))
+            if (addresses.Contains(instr.Address))
             {
                 // End previous block
                 if (current is not null)
                 {
-                    current.EndAddress = address;
+                    current.EndAddress = instr.Address;
                 }
 
                 // Make new block
-                current = new(address, -1, blocks.Count, []);
+                current = new(instr.Address, -1, blocks.Count, []);
                 blocks.Add(current);
                 blocksByAddress[current.StartAddress] = current;
             }
 
             // Add current instruction to our currently-building block
             current!.Instructions.Add(instr);
-
-            // Move to next instruction address
-            address += IGMInstruction.GetSize(instr);
         }
 
         // End current block, if applicable
@@ -185,7 +173,7 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
                 case IGMInstruction.Opcode.Branch:
                     {
                         // Connect to block at destination address
-                        Block dest = blocksByAddress[(b.EndAddress - 4) + last.BranchOffset];
+                        Block dest = blocksByAddress[last.Address + last.BranchOffset];
                         b.Successors.Add(dest);
                         dest.Predecessors.Add(b);
                     }
@@ -200,7 +188,7 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
                         next.Predecessors.Add(b);
 
                         // Connect to block at destination address, second
-                        Block dest = blocksByAddress[(b.EndAddress - 4) + last.BranchOffset];
+                        Block dest = blocksByAddress[last.Address + last.BranchOffset];
                         b.Successors.Add(dest);
                         dest.Predecessors.Add(b);
                     }
@@ -214,7 +202,7 @@ internal sealed class Block(int startAddr, int endAddr, int blockIndex, List<IGM
                         next.Predecessors.Add(b);
 
                         // Connect to block at destination address, second
-                        Block dest = blocksByAddress[(b.EndAddress - 4) + last.BranchOffset];
+                        Block dest = blocksByAddress[last.Address + last.BranchOffset];
                         b.Successors.Add(dest);
                         dest.Predecessors.Add(b);
                     }

@@ -53,7 +53,7 @@ internal sealed class ShortCircuit(int startAddress, int endAddress, ShortCircui
                     {
                         Instructions: [
                         {
-                            Kind: IGMInstruction.Opcode.Push or IGMInstruction.Opcode.PushImmediate,
+                            Kind: IGMInstruction.Opcode.PushImmediate,
                             Type1: IGMInstruction.DataType.Int16
                         }]
                     }
@@ -144,18 +144,6 @@ internal sealed class ShortCircuit(int startAddress, int endAddress, ShortCircui
         for (int i = 1; i < Children.Count; i++)
         {
             conditions.Add(builder.BuildExpression(Children[i]));
-        }
-
-        // If any condition was an int16 that was directly used without conversion, that means it was a boolean
-        for (int i = 0; i < conditions.Count; i++)
-        {
-            if (conditions[i] is Int16Node { Value: 0 or 1, StackType: not IGMInstruction.DataType.Boolean } i16)
-            {
-                conditions[i] = new BooleanNode(i16.Value == 1)
-                {
-                    StackType = i16.StackType
-                };
-            }
         }
 
         builder.ExpressionStack.Push(new ShortCircuitNode(conditions, LogicKind));

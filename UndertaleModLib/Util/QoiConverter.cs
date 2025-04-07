@@ -24,6 +24,24 @@ namespace UndertaleModLib.Util
         private const byte QOI_MASK_3 = 0xe0;
         private const byte QOI_MASK_4 = 0xf0;
 
+        private static byte[] sharedBuffer;
+        private static bool isBufferEmpty = true;
+
+        /// <summary>
+        /// Frees up <see cref="sharedBuffer"/> from memory.
+        /// </summary>
+        public static void ClearSharedBuffer() => sharedBuffer = null;
+
+        /// <summary>
+        /// Initializes <see cref="sharedBuffer"/> with a specified size.
+        /// </summary>
+        /// <param name="size">Size of <see cref="sharedBuffer"/> in bytes</param>
+        public static void InitSharedBuffer(int size)
+        {
+            isBufferEmpty = true;
+            sharedBuffer = new byte[size];
+        }
+
         /// <summary>
         /// Creates a raw format <see cref="GMImage"/> from a <see cref="Stream"/>.
         /// </summary>
@@ -165,7 +183,7 @@ namespace UndertaleModLib.Util
         /// <param name="useSharedBuffer">True if the QOI shared buffer should be used; false if a newly-allocated buffer should be used.</param>
         /// <returns>A QOI Image as a byte array.</returns>
         /// <exception cref="Exception">If there was an error with stride width.</exception>
-        public static byte[] GetArrayFromImage(GMImage img) => GetSpanFromImage(img).ToArray();
+        public static byte[] GetArrayFromImage(GMImage img, bool useSharedBuffer = true) => GetSpanFromImage(img, useSharedBuffer).ToArray();
 
         /// <summary>
         /// Creates a QOI image as a <see cref="Span{TKey}"/> from a <see cref="GMImage"/>.
@@ -174,13 +192,31 @@ namespace UndertaleModLib.Util
         /// <param name="useSharedBuffer">True if the QOI shared buffer should be used; false if a newly-allocated buffer should be used.</param>
         /// <returns>A QOI Image as a byte array.</returns>
         /// <exception cref="Exception">If there was an error with stride width.</exception>
-        public static unsafe Span<byte> GetSpanFromImage(GMImage img)
+        public static unsafe Span<byte> GetSpanFromImage(GMImage img, bool useSharedBuffer = true)
         {
             ArgumentNullException.ThrowIfNull(img);
 
             // Prepare buffer
+            byte[] buffer;
             int requiredSize = (img.Width * img.Height * MaxChunkSize) + HeaderSize;
-            byte[] buffer = new byte[requiredSize];
+            if (useSharedBuffer)
+            {
+                // Use shared buffer (ensure it has enough space)
+                if (sharedBuffer is null || sharedBuffer.Length < requiredSize)
+                {
+                    InitSharedBuffer(requiredSize);
+                }
+                if (!isBufferEmpty)
+                {
+                    Array.Clear(sharedBuffer);
+                }
+                buffer = sharedBuffer;
+            }
+            else
+            {
+                // Allocate a new buffer
+                buffer = new byte[requiredSize];
+            }
 
             // Little-endian QOIF image magic
             buffer[0] = (byte)'f';
@@ -297,6 +333,11 @@ namespace UndertaleModLib.Util
             buffer[9] = (byte)((length >> 8) & 0xff);
             buffer[10] = (byte)((length >> 16) & 0xff);
             buffer[11] = (byte)((length >> 24) & 0xff);
+
+            if (useSharedBuffer)
+            {
+                isBufferEmpty = false;
+            }
 
             return buffer.AsSpan()[..resPos];
         }

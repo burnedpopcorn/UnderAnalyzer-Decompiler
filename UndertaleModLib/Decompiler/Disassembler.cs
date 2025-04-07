@@ -44,9 +44,9 @@ namespace UndertaleModLib.Decompiler
         public static string Disassemble(this UndertaleCode code, IList<UndertaleVariable> vars, UndertaleCodeLocals locals)
         {
             // This StringBuilder is shared with the ToString method of the code instructions.
-            // Experimentation has shown that 200 is a good enough starting value for it (now changed to 256).
+            // Experimentation has shown that 200 is a good enough starting value for it. 
             // 300 seemed too high and 100 too low. This may change in the future.
-            StringBuilder sb = new(256);
+            StringBuilder sb = new StringBuilder(200);
             if (locals is null && !code.WeirdLocalFlag)
                 sb.AppendLine("; WARNING: Missing code locals, possibly due to unsupported bytecode version or a brand new code entry.");
             else
@@ -60,18 +60,17 @@ namespace UndertaleModLib.Decompiler
 
             List<uint> blocks = FindBlockAddresses(code);
 
-            uint address = 0;
             foreach (var inst in code.Instructions)
             {
                 bool doNewline = true;
-                if (fragments.TryGetValue(address, out string entry))
+                if (fragments.TryGetValue(inst.Address, out string entry))
                 {
                     sb.AppendLine();
                     sb.AppendLine($"> {entry}");
                     doNewline = false;
                 }
 
-                int ind = blocks.IndexOf(address);
+                int ind = blocks.IndexOf(inst.Address);
                 if (ind != -1)
                 {
                     if (doNewline)
@@ -79,10 +78,8 @@ namespace UndertaleModLib.Decompiler
                     sb.AppendLine($":[{ind}]");
                 }
 
-                inst.ToString(sb, code, address, blocks);
+                inst.ToString(sb, code, blocks);
                 sb.AppendLine();
-
-                address += inst.CalculateInstructionSize();
             }
 
             sb.AppendLine();
@@ -98,7 +95,6 @@ namespace UndertaleModLib.Decompiler
             if (code.Instructions.Count != 0)
                 addresses.Add(0);
 
-            uint address = 0;
             foreach (var inst in code.Instructions)
             {
                 switch (inst.Kind)
@@ -107,16 +103,16 @@ namespace UndertaleModLib.Decompiler
                     case UndertaleInstruction.Opcode.Bf:
                     case UndertaleInstruction.Opcode.Bt:
                     case UndertaleInstruction.Opcode.PushEnv:
-                        addresses.Add(address + 1);
-                        addresses.Add((uint)(address + inst.JumpOffset));
+                        addresses.Add(inst.Address + 1);
+                        addresses.Add((uint)(inst.Address + inst.JumpOffset));
                         break;
                     case UndertaleInstruction.Opcode.PopEnv:
                         if (!inst.JumpOffsetPopenvExitMagic)
-                            addresses.Add((uint)(address + inst.JumpOffset));
+                            addresses.Add((uint)(inst.Address + inst.JumpOffset));
                         break;
                     case UndertaleInstruction.Opcode.Exit:
                     case UndertaleInstruction.Opcode.Ret:
-                        addresses.Add(address + 1);
+                        addresses.Add(inst.Address + 1);
                         break;
                 }
             }

@@ -21,16 +21,10 @@ public class WithLoopNode(IExpressionNode target, BlockNode body) : IStatementNo
     /// </summary>
     public BlockNode Body { get; private set; } = body;
 
-    /// <inheritdoc/>
     public bool SemicolonAfter { get => false; }
-
-    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
-
-    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
-    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         Target = Target.Clean(cleaner);
@@ -47,7 +41,6 @@ public class WithLoopNode(IExpressionNode target, BlockNode body) : IStatementNo
         return this;
     }
 
-    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         Target = Target.PostClean(cleaner);
@@ -59,7 +52,6 @@ public class WithLoopNode(IExpressionNode target, BlockNode body) : IStatementNo
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write("with (");
@@ -79,7 +71,6 @@ public class WithLoopNode(IExpressionNode target, BlockNode body) : IStatementNo
         }
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;

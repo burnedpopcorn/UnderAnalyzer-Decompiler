@@ -382,7 +382,7 @@ namespace UndertaleModLib
                 return 0;
 
             long pointersStart = reader.Position;
-            uint[] pointers = reader.ListPtrsPool.Rent((int)count);
+            uint[] pointers = reader.utListPtrsPool.Rent((int)count);
             for (uint i = 0; i < count; i++)
             {
                 uint pos = reader.ReadUInt32();
@@ -407,7 +407,7 @@ namespace UndertaleModLib
             }
             if (count == 0)
             {
-                reader.ListPtrsPool.Return(pointers);
+                reader.utListPtrsPool.Return(pointers);
                 return 0;
             }
 
@@ -425,7 +425,7 @@ namespace UndertaleModLib
                 reader.Position = pointersStart + count * 4;
                 reader.Position += count * subSize;
 
-                reader.ListPtrsPool.Return(pointers);
+                reader.utListPtrsPool.Return(pointers);
 
                 return count + count * subCount;
             }
@@ -433,7 +433,7 @@ namespace UndertaleModLib
             uint firstItem = pointers.Where(x => x != 0).FirstOrDefault();
             if (firstItem == 0)
             {
-                reader.ListPtrsPool.Return(pointers);
+                reader.utListPtrsPool.Return(pointers);
                 return 0;
             }
             if (reader.AbsPosition != firstItem)
@@ -455,12 +455,12 @@ namespace UndertaleModLib
                 }
                 catch (UndertaleSerializationException e)
                 {
-                    reader.ListPtrsPool.Return(pointers);
+                    reader.utListPtrsPool.Return(pointers);
                     throw new UndertaleSerializationException(e.Message + "\nwhile reading child object count of item " + (i + 1) + " of " + count + " in a list of " + typeof(T).FullName, e);
                 }
             }
 
-            reader.ListPtrsPool.Return(pointers);
+            reader.utListPtrsPool.Return(pointers);
 
             return totalCount;
         }

@@ -21,16 +21,10 @@ public class DoUntilLoopNode(BlockNode body, IExpressionNode condition) : IState
     /// </summary>
     public IExpressionNode Condition { get; private set; } = condition;
 
-    /// <inheritdoc/>
     public bool SemicolonAfter => true;
-
-    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
-
-    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
-    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         ElseToContinueCleanup.Clean(cleaner, Body);
@@ -43,7 +37,6 @@ public class DoUntilLoopNode(BlockNode body, IExpressionNode condition) : IState
         return this;
     }
 
-    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         cleaner.TopFragmentContext!.PushLocalScope(cleaner.Context, cleaner.TopFragmentContext!.CurrentPostCleanupBlock!, this);
@@ -54,7 +47,6 @@ public class DoUntilLoopNode(BlockNode body, IExpressionNode condition) : IState
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write("do");
@@ -84,7 +76,6 @@ public class DoUntilLoopNode(BlockNode body, IExpressionNode condition) : IState
         printer.Write(')');
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;
