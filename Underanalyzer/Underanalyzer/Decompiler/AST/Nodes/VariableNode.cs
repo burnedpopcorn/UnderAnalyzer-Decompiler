@@ -43,25 +43,11 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
     /// </summary>
     public bool RegularPush { get; } = regularPush;
 
-    /// <summary>
-    /// Whether this variable node should be forced to print "self." if it is able to.
-    /// Meant for tracking obscure compiler quirks.
-    /// </summary>
-    public bool ForceSelf { get; set; } = false;
-
-    /// <inheritdoc/>
     public bool Duplicated { get; set; } = false;
-
-    /// <inheritdoc/>
     public bool Group { get; set; } = false;
-
-    /// <inheritdoc/>
     public DataType StackType { get; set; } = DataType.Variable;
 
-    /// <inheritdoc/>
     public string ConditionalTypeName => "Variable";
-
-    /// <inheritdoc/>
     public string ConditionalValue => Variable.Name.Content;
 
     /// <summary>
@@ -208,7 +194,6 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
         return true;
     }
 
-    /// <inheritdoc/>
     public IExpressionNode Clean(ASTCleaner cleaner)
     {
         // Clean up left side of variable, and get basic instance type, or 0 if none
@@ -277,18 +262,14 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
                     cleaner.TopFragmentContext.MaxReferencedArgument = num;
                 }
 
-                if (!cleaner.TopFragmentContext.IsRootFragment)
-                {
-                    // Generate named argument for later, in case it hasn't already been generated
-                    cleaner.TopFragmentContext.GetNamedArgumentName(cleaner.Context, num);
-                }
+                // Generate named argument for later, in case it hasn't already been generated
+                cleaner.TopFragmentContext.GetNamedArgumentName(cleaner.Context, num);
             }
         }
 
         return this;
     }
 
-    /// <inheritdoc/>
     public IExpressionNode PostClean(ASTCleaner cleaner)
     {
         Left = Left.PostClean(cleaner);
@@ -323,7 +304,6 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         // Print out left side, if necessary
@@ -352,14 +332,10 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
                 {
                     case (int)InstanceType.Self:
                     case (int)InstanceType.Builtin:
-                        if (ForceSelf || 
-                            (value == (int)InstanceType.Self && printer.Context.GameContext.UsingSelfToBuiltin) ||
-                            leftInstType is { FromBuiltinFunction: true } ||
-                            printer.LocalVariableNames.Contains(Variable.Name.Content) ||
+                        if (printer.LocalVariableNames.Contains(Variable.Name.Content) ||
                             printer.TopFragmentContext!.NamedArguments.Contains(Variable.Name.Content))
                         {
-                            // Need an explicit self in order to not conflict with local,
-                            // or a specific compiler quirk involving "self." was found.
+                            // Need an explicit self in order to not conflict with local
                             printer.Write("self.");
                         }
                         break;
@@ -402,7 +378,7 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
 
         int argIndex = GetArgumentIndex(printer.TopFragmentContext!.MaxReferencedArgument);
         bool namedArgumentArray = false;
-        if (argIndex == -1 || printer.TopFragmentContext.IsRootFragment)
+        if (argIndex == -1)
         {
             // Variable name
             printer.Write(Variable.Name.Content);
@@ -467,7 +443,6 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
         }
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         if (Left.RequiresMultipleLines(printer))
@@ -487,13 +462,11 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
         return false;
     }
 
-    /// <inheritdoc/>
     public IMacroType? GetExpressionMacroType(ASTCleaner cleaner)
     {
         return cleaner.GlobalMacroResolver.ResolveVariableType(cleaner, Variable.Name.Content);
     }
 
-    /// <inheritdoc/>
     public IExpressionNode? ResolveMacroType(ASTCleaner cleaner, IMacroType type)
     {
         if (type is IMacroTypeConditional conditional)
@@ -507,20 +480,13 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
     /// Returns the argument index this variable represents, or -1 if this is not an argument variable.
     /// </summary>
     /// <remarks>
-    /// Meant for named arguments, so this returns -1 for cases such as a direct argument0 or argument[0].
+    /// Meant for named arguments, so this returns -1 for cases such as argument[0].
     /// </remarks>
     public int GetArgumentIndex(int maxArgumentArrayIndex)
     {
-        // Check for argument instance type
-        if (Left is not (InstanceTypeNode { InstanceType: InstanceType.Argument } or 
-                         Int16Node { Value: (short)InstanceType.Argument } ))
-        {
-            return -1;
-        }
-
-        // Check variable name and array accessor
         string variableName = Variable.Name.Content;
-        if (variableName.StartsWith("argument", StringComparison.Ordinal))
+
+        if (variableName.StartsWith("argument", StringComparison.InvariantCulture))
         {
             if (variableName.Length >= "argument".Length + 1 &&
                 variableName.Length <= "argument".Length + 2)

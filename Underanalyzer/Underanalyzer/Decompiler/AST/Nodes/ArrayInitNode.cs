@@ -19,22 +19,13 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
     /// </summary>
     public List<IExpressionNode> Elements { get; } = elements;
 
-    /// <inheritdoc/>
     public bool Duplicated { get; set; } = false;
-
-    /// <inheritdoc/>
     public bool Group { get; set; } = false;
-
-    /// <inheritdoc/>
     public IGMInstruction.DataType StackType { get; set; } = IGMInstruction.DataType.Variable;
 
-    /// <inheritdoc/>
     public string ConditionalTypeName => "ArrayInit";
-
-    /// <inheritdoc/>
     public string ConditionalValue => "";
 
-    /// <inheritdoc/>
     public IExpressionNode Clean(ASTCleaner cleaner)
     {
         for (int i = 0; i < Elements.Count; i++)
@@ -44,7 +35,6 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
         return this;
     }
 
-    /// <inheritdoc/>
     public IExpressionNode PostClean(ASTCleaner cleaner)
     {
         for (int i = 0; i < Elements.Count; i++)
@@ -54,7 +44,6 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write('[');
@@ -69,7 +58,6 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
         printer.Write(']');
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         for (int i = 0; i < Elements.Count; i++)
@@ -82,7 +70,6 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
         return false;
     }
 
-    /// <inheritdoc/>
     public IExpressionNode? ResolveMacroType(ASTCleaner cleaner, IMacroType type)
     {
         if (type is IMacroTypeArrayInit typeArrayInit)

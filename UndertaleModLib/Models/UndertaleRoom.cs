@@ -7,7 +7,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UndertaleModLib.Util;
 
 namespace UndertaleModLib.Models;
 
@@ -273,6 +272,20 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
     /// <inheritdoc />
     public void Serialize(UndertaleWriter writer)
     {
+        if (writer.undertaleData.IsGameMaker2())
+        {
+            foreach (var layer in Layers)
+            {
+                if (layer.InstancesData != null)
+                {
+                    foreach (var inst in layer.InstancesData.Instances)
+                    {
+                        if (!GameObjects.Contains(inst))
+                            throw new Exception("Nonexistent instance " + inst.InstanceID);
+                    }
+                }
+            }
+        }
         writer.WriteUndertaleString(Name);
         writer.WriteUndertaleString(Caption);
         writer.Write(Width);
@@ -384,12 +397,20 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
                             layer.InstancesData.Instances.Add(gameObj);
                         else
                         {
-                            // Object with this instance ID doesn't actually exist. Create a nonexistent object in its place.
-                            layer.InstancesData.Instances.Add(new GameObject()
+                            /* Attempt to resolve null objects.
+                             * Sometimes, the instance ID in GameObjects will end up a duplicate
+                             * of a previous ID, rather than the correct one.
+                             * So, we traverse the object list a little to find the correct one.
+                             * If you can get two broken objects in a row... it'll probably crash.
+                             */
+                            int foundIndex = GameObjects.IndexOf(GameObjects.ByInstanceID(id - 1));
+                            if (GameObjects.Count - 1 <= foundIndex)
                             {
-                                InstanceID = id,
-                                Nonexistent = true
-                            });
+                                Debug.WriteLine($"The object instance with ID {id} of a layer (ID {layer.LayerId}) is not found.");
+                                continue;
+                            }
+                            
+                            layer.InstancesData.Instances.Add(GameObjects[foundIndex + 1]);
                         }
                     }
                 }
@@ -903,7 +924,6 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
         private UndertaleResourceById<UndertaleGameObject, UndertaleChunkOBJT> _objectDefinition = new();
         private UndertaleResourceById<UndertaleCode, UndertaleChunkCODE> _creationCode = new();
         private UndertaleResourceById<UndertaleCode, UndertaleChunkCODE> _preCreateCode = new();
-        private FloatAsInt _rotation;
 
         /// <summary>
         /// The x coordinate of this object.
@@ -946,7 +966,7 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
         /// <summary>
         /// The rotation of this object.
         /// </summary>
-        public float Rotation { get => _rotation.AsFloat(); set => _rotation = (FloatAsInt)value; }
+        public float Rotation { get; set; }
 
         /// <summary>
         /// The pre creation code of this object.
@@ -962,11 +982,6 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
         /// The image index of this object. Game Maker: Studio 2 only.
         /// </summary>
         public int ImageIndex { get; set; }
-
-        /// <summary>
-        /// Whether this game object actually exists or not; <see langword="true"/> if it does not exist.
-        /// </summary>
-        public bool Nonexistent { get; set; }
 
         /// <summary>
         /// A wrapper for <see cref="ImageIndex"/> that returns the value being wrapped around available frames of the sprite.<br/>
@@ -1058,7 +1073,7 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
                 writer.Write(ImageIndex);
             }
             writer.Write(Color);
-            writer.Write(_rotation.AsUInt());
+            writer.Write(Rotation);
             if (writer.undertaleData.GeneralInfo.BytecodeVersion >= 16) // TODO: is that dependent on bytecode or something else?
                 writer.WriteUndertaleObject(_preCreateCode);         // Note: Appears in GM:S 1.4.9999 as well, so that's probably the closest it gets
         }
@@ -1079,22 +1094,14 @@ public class UndertaleRoom : UndertaleNamedResource, INotifyPropertyChanged, IDi
                 ImageIndex = reader.ReadInt32();
             }
             Color = reader.ReadUInt32();
-            _rotation = new FloatAsInt(reader.ReadUInt32());
-            if (reader.undertaleData.GeneralInfo.BytecodeVersion >= 16)
+            Rotation = reader.ReadSingle();
+            if (reader.undertaleData.GeneralInfo.BytecodeVersion >= 16) // TODO: is that dependent on bytecode or something else?
                 _preCreateCode = reader.ReadUndertaleObject<UndertaleResourceById<UndertaleCode, UndertaleChunkCODE>>(); // Note: Appears in GM:S 1.4.9999 as well, so that's probably the closest it gets
         }
 
         public override string ToString()
         {
-            if (Nonexistent)
-            {
-                return $"Instance {InstanceID} (nonexistent)";
-            }
-            if (ObjectDefinition is null)
-            {
-                return $"Instance {InstanceID} (empty instance)";
-            }
-            return $"Instance {InstanceID} of {ObjectDefinition.Name?.Content ?? "(null object name)"}";
+            return "Instance " + InstanceID + " of " + (ObjectDefinition?.Name?.Content ?? "?");
         }
 
         /// <inheritdoc/>

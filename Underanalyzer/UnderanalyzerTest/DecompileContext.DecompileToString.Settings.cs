@@ -1093,8 +1093,6 @@ public class DecompileContext_DecompileToString_Settings
             bf [3]
 
             :[2]
-            pushi.e 1
-            pop.v.i self.d
             push.v self.b
             push.e 1
             add.i.v
@@ -1103,17 +1101,16 @@ public class DecompileContext_DecompileToString_Settings
 
             :[3]
             pushi.e 1
-            pop.v.i self.e
+            pop.v.i self.d
             """,
             """
             a = 1;
 
             for (b = 0; b < c; b++)
             {
-                d = 1;
             }
 
-            e = 1;
+            d = 1;
             """,
             null,
             new DecompileSettings()

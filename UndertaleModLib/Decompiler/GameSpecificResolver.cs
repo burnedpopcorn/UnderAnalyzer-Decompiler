@@ -48,7 +48,6 @@ public class GameSpecificResolver
             return ConditionResult.Ignore;
         },
     };
-    private static readonly object _lock = new();
     private static readonly List<GameSpecificDefinition> _definitions = new();
     private static bool _loadedDefinitions = false;
 
@@ -132,25 +131,21 @@ public class GameSpecificResolver
     /// </summary>
     public static void ReloadDefinitions()
     {
-        lock (_lock)
+        // Mark definitions as loaded, and reset existing definitions
+        _loadedDefinitions = true;
+
+        // Scan directory for files, if it exists
+        string dir = Path.Combine(BaseDirectory, "GameSpecificData", "Definitions");
+        if (Directory.Exists(dir))
         {
-            // Mark definitions as loaded, and reset existing definitions
-            _loadedDefinitions = true;
-            _definitions.Clear();
-
-            // Scan directory for files, if it exists
-            string dir = Path.Combine(BaseDirectory, "GameSpecificData", "Definitions");
-            if (Directory.Exists(dir))
+            foreach (string file in Directory.EnumerateFiles(dir, "*.json", SearchOption.TopDirectoryOnly))
             {
-                foreach (string file in Directory.EnumerateFiles(dir, "*.json", SearchOption.TopDirectoryOnly))
-                {
-                    _definitions.Add(JsonSerializer.Deserialize<GameSpecificDefinition>(File.ReadAllText(file)));
-                }
+                _definitions.Add(JsonSerializer.Deserialize<GameSpecificDefinition>(File.ReadAllText(file)));
             }
-
-            // Sort all definitions by their load order
-            _definitions.Sort((a, b) => a.LoadOrder);
         }
+
+        // Sort all definitions by their load order
+        _definitions.Sort((a, b) => a.LoadOrder);
     }
 
     /// <summary>
@@ -158,12 +153,7 @@ public class GameSpecificResolver
     /// </summary>
     public static void LoadDefinitions()
     {
-        bool loadedDefinitions;
-        lock (_lock)
-        {
-            loadedDefinitions = _loadedDefinitions;
-        }
-        if (!loadedDefinitions)
+        if (!_loadedDefinitions)
         {
             ReloadDefinitions();
         }

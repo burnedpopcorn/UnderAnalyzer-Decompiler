@@ -16,16 +16,10 @@ public class StaticInitNode(BlockNode body) : IStatementNode
     /// </summary>
     public BlockNode Body { get; private set; } = body;
 
-    /// <inheritdoc/>
     public bool SemicolonAfter => false;
-
-    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
-
-    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
-    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         Body.Clean(cleaner);
@@ -36,14 +30,12 @@ public class StaticInitNode(BlockNode body) : IStatementNode
         return this;
     }
 
-    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         Body.PostClean(cleaner);
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         bool prevStaticInitState = printer.TopFragmentContext!.InStaticInitialization;
@@ -54,7 +46,6 @@ public class StaticInitNode(BlockNode body) : IStatementNode
         printer.TopFragmentContext.InStaticInitialization = prevStaticInitState;
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return Body.RequiresMultipleLines(printer);

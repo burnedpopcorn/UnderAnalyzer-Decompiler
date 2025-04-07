@@ -25,7 +25,7 @@ internal sealed class Switch : IControlFlowNode
         public bool MayBeMisdetected { get; set; } = mayBeMisdetected;
     }
 
-    public sealed class CaseJumpNode(int address, bool isBooleanType) : IControlFlowNode
+    public sealed class CaseJumpNode(int address) : IControlFlowNode
     {
         public int StartAddress { get; private set; } = address;
 
@@ -41,11 +41,6 @@ internal sealed class Switch : IControlFlowNode
 
         public bool Unreachable { get; set; } = false;
 
-        /// <summary>
-        /// Whether this case's expression is compared as a boolean type.
-        /// </summary>
-        public bool IsBooleanType { get; set; } = isBooleanType;
-
         public override string ToString()
         {
             return $"{nameof(CaseJumpNode)} (address {StartAddress}, {Predecessors.Count} predecessors, {Successors.Count} successors)";
@@ -53,21 +48,8 @@ internal sealed class Switch : IControlFlowNode
 
         public void BuildAST(ASTBuilder builder, List<IStatementNode> output)
         {
-            // Take expression from stack
-            IExpressionNode expression = builder.ExpressionStack.Pop();
-
-            // If this is a boolean type case, and the expression was an int16 that was directly
-            // used without conversion, that means it was a boolean
-            if (IsBooleanType && expression is Int16Node { Value: 0 or 1, StackType: not IGMInstruction.DataType.Boolean } i16)
-            {
-                expression = new BooleanNode(i16.Value == 1)
-                {
-                    StackType = i16.StackType
-                };
-            }
-
             // Queue our expression to be used later, when the case destination is processed
-            builder.SwitchCases!.Enqueue(expression);
+            builder.SwitchCases!.Enqueue(builder.ExpressionStack.Pop());
 
             // Get rid of duplicated expression
             builder.ExpressionStack.Pop();
@@ -551,10 +533,9 @@ internal sealed class Switch : IControlFlowNode
                 {
                     throw new DecompilerException("Expected Compare instruction in switch case");
                 }
-                bool caseIsBooleanType = currentBlock.Instructions[^2].Type1 == IGMInstruction.DataType.Boolean;
                 currentBlock.Instructions.RemoveRange(currentBlock.Instructions.Count - 2, 2);
                 IControlFlowNode.DisconnectSuccessor(currentBlock, 1);
-                CaseJumpNode caseJumpNode = new(currentBlock.EndAddress, caseIsBooleanType);
+                CaseJumpNode caseJumpNode = new(currentBlock.EndAddress);
                 IControlFlowNode.InsertSuccessor(currentBlock, 0, caseJumpNode);
                 if (i == 0)
                 {

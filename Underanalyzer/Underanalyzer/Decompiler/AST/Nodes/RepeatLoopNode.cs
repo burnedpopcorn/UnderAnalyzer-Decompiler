@@ -21,16 +21,10 @@ public class RepeatLoopNode(IExpressionNode timesToRepeat, BlockNode body) : ISt
     /// </summary>
     public BlockNode Body { get; private set; } = body;
 
-    /// <inheritdoc/>
     public bool SemicolonAfter => false;
-
-    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
-
-    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
-    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         TimesToRepeat = TimesToRepeat.Clean(cleaner);
@@ -42,7 +36,6 @@ public class RepeatLoopNode(IExpressionNode timesToRepeat, BlockNode body) : ISt
         return this;
     }
 
-    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         TimesToRepeat = TimesToRepeat.PostClean(cleaner);
@@ -54,7 +47,6 @@ public class RepeatLoopNode(IExpressionNode timesToRepeat, BlockNode body) : ISt
         return this;
     }
 
-    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write("repeat (");
@@ -74,7 +66,6 @@ public class RepeatLoopNode(IExpressionNode timesToRepeat, BlockNode body) : ISt
         }
     }
 
-    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;

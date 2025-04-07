@@ -233,8 +233,10 @@ namespace UndertaleModLib
         public IList GetList() => List;
         public void GenerateIndexDict()
         {
-            IndexDict = new(List.Count);
+            if (IndexDict is not null)
+                return;
 
+            IndexDict = new();
             for (int i = 0; i < List.Count; i++)
             {
                 if (List[i] is not null)

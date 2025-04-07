@@ -649,7 +649,7 @@ public class GMImage
             case ImageFormat.Bz2Qoi:
                 {
                     // Encode image as QOI
-                    return new GMImage(ImageFormat.Qoi, Width, Height, QoiConverter.GetArrayFromImage(this));
+                    return new GMImage(ImageFormat.Qoi, Width, Height, QoiConverter.GetArrayFromImage(this, false));
                 }
             case ImageFormat.Qoi:
                 {
@@ -708,7 +708,7 @@ public class GMImage
             case ImageFormat.Png:
                 {
                     // Encode image as QOI, first
-                    byte[] data = QoiConverter.GetArrayFromImage(this);
+                    byte[] data = QoiConverter.GetArrayFromImage(this, false);
                     return CompressQoiData(Width, Height, data, sharedStream);
                 }
             case ImageFormat.Qoi:
