@@ -1182,10 +1182,10 @@ namespace UndertaleModTool
                     if (
                         UndertaleInstruction.GetInstructionType(instr.Kind)
                         != UndertaleInstruction.InstructionType.PushInstruction
-                        //|| !((instr.Value is int) || (instr.Value is short) || (instr.Value is long))
+                        || !((instr.Value is int) || (instr.Value is short) || (instr.Value is long))
                     ) continue;
 
-                    int stateID = instr.ValueInt;//Convert.ToInt32(instr.Value);
+                    int stateID = Convert.ToInt32(instr.Value);
                     if (PTStates.ContainsKey(stateID)) continue;
 
                     UndertaleInstruction next = code.Instructions[i + 1];
@@ -1217,12 +1217,7 @@ namespace UndertaleModTool
                         UndertaleInstruction thisInstr = code.Instructions[j];
                         if (UndertaleInstruction.GetInstructionType(thisInstr.Kind)
                             != UndertaleInstruction.InstructionType.CallInstruction) continue;
-
-                        string funcName = null;
-                        if (thisInstr.ValueFunction is UndertaleFunction function)
-                            funcName = function.Name?.Content;
-
-                        //string funcName = thisInstr?.Function?.Target?.Name?.Content;
+                        string funcName = thisInstr?.Function?.Target?.Name?.Content;
                         if (funcName is null)
                             continue;
                         string stateName = null;

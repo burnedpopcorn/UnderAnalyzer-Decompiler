@@ -33,7 +33,6 @@ namespace UndertaleModTool.Windows
     {
         public (uint Major, uint Minor, uint Release) Version { get; set; }
         public (uint Major, uint Minor, uint Release) BeforeVersion { get; set; } = (uint.MaxValue, uint.MaxValue, uint.MaxValue);
-        public bool DisableForLTS2022 { get; set; } = false;
         public Func<object, HashSetTypesOverride, bool, Dictionary<string, object[]>> Predicate { get; set; }
     }
 
@@ -170,7 +169,6 @@ namespace UndertaleModTool.Windows
                     new PredicateForVersion()
                     {
                         Version = (2023, 2, 0),
-                        DisableForLTS2022 = true,
                         Predicate = (objSrc, types, checkOne) =>
                         {
                             if (!types.Contains(typeof(UndertaleParticleSystemEmitter)))
@@ -423,7 +421,9 @@ namespace UndertaleModTool.Windows
                                     stringRefs = stringReferences.Where(x => x.Value.Contains(obj))
                                                                  .Select(x => x.Key);
                                 else
-                                     stringRefs = data.Code.Where(x => x.Instructions.Any(i => i.ValueString?.Resource == obj));
+                                    stringRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
+                                                                        i => i.Value is UndertaleResourceById<UndertaleString, UndertaleChunkSTRG> strPtr
+                                                                             && strPtr.Resource == obj));
 
                                 codeEntries = codeEntries.Concat(stringRefs);
 
@@ -973,7 +973,6 @@ namespace UndertaleModTool.Windows
                     new PredicateForVersion()
                     {
                         Version = (2023, 2, 0),
-                        DisableForLTS2022 = true,
                         Predicate = (objSrc, types, checkOne) =>
                         {
                             if (objSrc is not UndertaleString obj)
@@ -1246,7 +1245,10 @@ namespace UndertaleModTool.Windows
                                 funcRefs = funcReferences.Where(x => x.Value.Contains(obj))
                                                          .Select(x => x.Key);
                             else
-                                funcRefs = data.Code.Where(x => x.Instructions.Any(i => i.ValueFunction == obj));
+                                funcRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
+                                                                  i => i.Function?.Target == obj
+                                                                       || i.Value is UndertaleInstruction.Reference<UndertaleFunction> funcRef
+                                                                          && funcRef.Target == obj));
                             if (funcRefs.Any())
                                 return new() { { "Code", checkOne ? funcRefs.ToEmptyArray() : funcRefs.ToArray() } };
                             else
@@ -1275,7 +1277,10 @@ namespace UndertaleModTool.Windows
                                 variRefs = variReferences.Where(x => x.Value.Contains(obj))
                                                          .Select(x => x.Key);
                             else
-                                variRefs = data.Code.Where(x => x.Instructions.Any(i => i.ValueVariable == obj));
+                                variRefs = data.Code.Where(x => x is not null).Where(x => x.Instructions.Any(
+                                                                  i => i.Destination?.Target == obj
+                                                                       || i.Value is UndertaleInstruction.Reference<UndertaleVariable> varRef
+                                                                          && varRef.Target == obj));
                             if (variRefs.Any())
                                 return new() { { "Code", checkOne ? variRefs.ToEmptyArray() : variRefs.ToArray() } };
                             else
@@ -1339,7 +1344,6 @@ namespace UndertaleModTool.Windows
                     new PredicateForVersion()
                     {
                         Version = (2023, 2, 0),
-                        DisableForLTS2022 = true,
                         Predicate = (objSrc, types, checkOne) =>
                         {
                             if (!types.Contains(typeof(UndertaleRoom.ParticleSystemInstance)))
@@ -1380,7 +1384,6 @@ namespace UndertaleModTool.Windows
                     new PredicateForVersion()
                     {
                         Version = (2023, 2, 0),
-                        DisableForLTS2022 = true,
                         Predicate = (objSrc, types, checkOne) =>
                         {
                             if (objSrc is not UndertaleParticleSystemEmitter obj)
@@ -1439,11 +1442,7 @@ namespace UndertaleModTool.Windows
                 else
                     isAboveMost = predicateForVer.BeforeVersion.CompareTo(ver) <= 0;
 
-                bool disableDueToLTS = false;
-                if (data.GeneralInfo.Branch == UndertaleGeneralInfo.BranchType.LTS2022_0)
-                    disableDueToLTS = predicateForVer.DisableForLTS2022;
-
-                if (isAtLeast && !isAboveMost && !disableDueToLTS)
+                if (isAtLeast && !isAboveMost)
                 {
                     var result = predicateForVer.Predicate(obj, types, checkOne);
                     if (result is null)
@@ -1491,14 +1490,18 @@ namespace UndertaleModTool.Windows
                 var variables = new HashSet<UndertaleVariable>();
                 foreach (var inst in code.Instructions)
                 {
-                    if (inst.ValueString?.Resource is UndertaleString str)
-                        strings.Add(str);
+                    if (inst.Value is UndertaleResourceById<UndertaleString, UndertaleChunkSTRG> strPtr)
+                        strings.Add(strPtr.Resource);
 
-                    if (inst.ValueVariable is UndertaleVariable variable)
-                        variables.Add(variable);
+                    if (inst.Destination?.Target is not null)
+                        variables.Add(inst.Destination.Target);
+                    if (inst.Value is UndertaleInstruction.Reference<UndertaleVariable> varRef && varRef.Target is not null)
+                        variables.Add(varRef.Target);
 
-                    if (inst.ValueFunction is UndertaleFunction function)
-                        functions.Add(function);
+                    if (inst.Function?.Target is not null)
+                        functions.Add(inst.Function.Target);
+                    if (inst.Value is UndertaleInstruction.Reference<UndertaleFunction> funcRef && funcRef.Target is not null)
+                        functions.Add(funcRef.Target);
                 }
 
                 if (strings.Count != 0)

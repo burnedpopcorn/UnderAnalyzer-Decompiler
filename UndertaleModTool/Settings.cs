@@ -18,16 +18,12 @@ namespace UndertaleModTool
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnderAnalyzer");//"UndertaleModTool");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
-        /// <summary>
-        /// Whether file associations settings should be prompted for on startup.
-        /// </summary>
-        public static bool ShouldPromptForAssociations { get; set; } = false;
-
         public string Version { get; set; } = MainWindow.Version;
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
         public string GameMakerStudio2RuntimesPath { get; set; } = "%ProgramData%\\GameMakerStudio2\\Cache\\runtimes";
         public bool AssetOrderSwappingEnabled { get; set; } = false;
         public bool ProfileModeEnabled { get; set; } = false;
+        public bool UseGMLCache { get; set; } = false;
         public bool ProfileMessageShown { get; set; } = false;
         public bool AutomaticFileAssociation { get; set; } = true;
         public bool TempRunMessageShow { get; set; } = true;
@@ -69,7 +65,7 @@ namespace UndertaleModTool
 
         public bool ShowNullEntriesInDataHierarchy { get; set; } = false;
 
-        public static Settings Instance { get; private set; }
+        public static Settings Instance;
 
         public static JsonSerializerOptions JsonOptions = new()
         {
@@ -96,8 +92,6 @@ namespace UndertaleModTool
                     // No settings JSON exists, so make a new one
                     _ = new Settings() { DecompilerSettings = existingDecompilerSettings ?? new() };
                     Save();
-                    // This is theoretically a first bootup, so prompt for file associations
-                    ShouldPromptForAssociations = true;
                     return;
                 }
 
@@ -119,12 +113,6 @@ namespace UndertaleModTool
 
                 // If no settings were supplied at all, generate a new one (can be caused from downgrading)
                 Instance.DecompilerSettings ??= new();
-
-                // Auto-remove "argument{0}" syntax (become "arg{0}" by default)
-                if (Instance.DecompilerSettings.UnknownArgumentNamePattern == "argument{0}")
-                {
-                    Instance.DecompilerSettings.UnknownArgumentNamePattern = "arg{0}";
-                }
 
                 // Update the version to this version
                 Instance.Version = MainWindow.Version;
@@ -177,7 +165,7 @@ namespace UndertaleModTool
         [JsonIgnore]
         private DecompileSettings InnerSettings { get; } = new DecompileSettings()
         {
-            UnknownArgumentNamePattern = "arg{0}",
+            UnknownArgumentNamePattern = "argument{0}",
             RemoveSingleLineBlockBraces = true,
             EmptyLineAroundBranchStatements = true,
             EmptyLineBeforeSwitchCases = true
