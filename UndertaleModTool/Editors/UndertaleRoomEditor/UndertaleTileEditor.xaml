@@ -11,7 +11,6 @@
         Title="Edit Tile Data"
         Height="400" Width="800" MinHeight="300" MinWidth="300"
         WindowStartupLocation="CenterOwner"
-        Style="{DynamicResource DefaultWindowStyle}"
 >
     <Window.Resources>
         <local:CachedTileDataLoader x:Key="CachedTileDataLoader"/>
