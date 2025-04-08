@@ -6,20 +6,6 @@ And I mean TRUE Decompiling (and NOT just patching a game)
 As in you can literally make a GameMaker Studio 2 or 1 Project from a Compiled Game
 
 
-# NOTICE
-I've gotten pretty tired of having to manually update this with the current UTMT repo
-<br>
-which to be honest, is a fault of my own dumb mistakes, but was still bearable with small updates
-<br><br>
-But now with MANY updates being added, UTMTCE advancing quicker and matching with features, and me just generally wanting to work on less projects
-<br>
-I have now decided to stop work on this project entirely
-<br><br>
-I will still be working on Improvements to the Decompiling Scripts themselves, but as for the Application itself?
-<br>
-It's probably best to move on back to either UTMT or UTMTCE for you Pizza Tower Modders, as this will most likely become too outdated to be of much use
-
-
 # Downloads
 
 Only the GUI versions will be Included
