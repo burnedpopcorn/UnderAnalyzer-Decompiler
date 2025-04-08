@@ -376,10 +376,10 @@
             <Border Grid.Column="1" BorderBrush="#828790" BorderThickness="0,1,1,1"
                     Height="Auto" VerticalAlignment="Top" Margin="-3,0,0,0">
                 <StackPanel Name="MoveButtonsPanel" Margin="1,1,1,1">
-                    <local:RepeatButtonDark FontFamily="Marlett" FontSize="14" Content="5" Margin="0,0,0,2"
+                    <RepeatButton FontFamily="Marlett" FontSize="14" Content="5" Margin="0,0,0,2"
                                             ToolTip="Move item up (-)" ToolTipService.InitialShowDelay="250"
                                             Click="TreeViewMoveUpButton_Click" PreviewMouseLeftButtonUp="TreeViewMoveButton_MouseLeftButtonUp"/>
-                    <local:RepeatButtonDark FontFamily="Marlett" FontSize="14" Content="6"
+                    <RepeatButton FontFamily="Marlett" FontSize="14" Content="6"
                                             ToolTip="Move item down (+)" ToolTipService.InitialShowDelay="250"
                                             Click="TreeViewMoveDownButton_Click" PreviewMouseLeftButtonUp="TreeViewMoveButton_MouseLeftButtonUp"/>
                 </StackPanel>
@@ -412,14 +412,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleStringReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
                             <local:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>

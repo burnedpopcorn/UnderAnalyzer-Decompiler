@@ -496,7 +496,7 @@
                         <ScrollViewer Grid.Column="0" Name="TabScrollViewer" Height="26"
                                       HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"
                                       PreviewMouseWheel="TabScrollViewer_PreviewMouseWheel" PreviewMouseDown="TabScrollViewer_PreviewMouseDown">
-                            <local:TabControlDark x:Name="TabController" Height="22" TabStripPlacement="Top" ItemsSource="{Binding Tabs, Mode=OneWay}" SelectedIndex="{Binding CurrentTabIndex}"
+                            <TabControl x:Name="TabController" Height="22" TabStripPlacement="Top" ItemsSource="{Binding Tabs, Mode=OneWay}" SelectedIndex="{Binding CurrentTabIndex}"
                                                   SelectionChanged="TabController_SelectionChanged">
                                 <TabControl.Resources>
                                     <ContextMenu x:Key="TabMenu">
@@ -539,7 +539,7 @@
                                             <Button Background="Transparent" Width="16" Height="16" BorderThickness="0" Margin="12,0,0,0"
                                                               Click="TabCloseButton_OnClick" MouseEnter="TabCloseButton_MouseEnter" MouseLeave="TabCloseButton_MouseLeave">
                                                 <Button.Style>
-                                                    <Style TargetType="Button">
+                                                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding TabTitle, Mode=OneTime}" Value="Welcome!">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -555,7 +555,7 @@
                                 <TabControl.ContentTemplate>
                                     <DataTemplate DataType="{x:Type local:Tab}"/>
                                 </TabControl.ContentTemplate>
-                            </local:TabControlDark>
+                            </TabControl>
                         </ScrollViewer>
                         <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal" RenderOptions.BitmapScalingMode="NearestNeighbor">
                             <StackPanel.Visibility>
