@@ -22,6 +22,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
     <ItemGroup>
+      <None Remove="BuildDate.txt" />
       <None Remove="Corrections\README.txt" />
       <None Remove="Resources\tabs_left_button.png" />
       <None Remove="Resources\tabs_right_button.png" />
@@ -153,9 +154,19 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         </Content>
+		<Folder Include="Decompiling_Scripts" />
+		<Content Include="Decompiling_Scripts/**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</Content>
         <Content Include="Corrections/**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         </Content>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="BuildDate.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 </Project>
