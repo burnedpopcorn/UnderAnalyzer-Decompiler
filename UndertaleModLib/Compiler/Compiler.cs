@@ -206,10 +206,7 @@ namespace UndertaleModLib.Compiler
             {
                 for (int i = 0; i < list.Count; i++)
                 {
-                    T item = list[i];
-                    if (item is null)
-                        continue;
-                    string name = item.Name?.Content;
+                    string name = list[i].Name?.Content;
                     if (name != null)
                     {
                         // Typed asset refs pack their type into the ID
@@ -221,10 +218,7 @@ namespace UndertaleModLib.Compiler
             {
                 for (int i = 0; i < list.Count; i++)
                 {
-                    T item = list[i];
-                    if (item is null)
-                        continue;
-                    string name = item.Name?.Content;
+                    string name = list[i].Name?.Content;
                     if (name != null)
                         assetIds[name] = i;
                 }

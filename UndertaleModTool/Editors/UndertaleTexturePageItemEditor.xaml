@@ -38,10 +38,10 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Margin="3" Text="{Binding SourceX}"/>
-            <TextBox Grid.Column="1" Margin="3" Text="{Binding SourceY}"/>
-            <TextBox Grid.Column="2" Margin="3" Text="{Binding SourceWidth}"/>
-            <TextBox Grid.Column="3" Margin="3" Text="{Binding SourceHeight}"/>
+            <local:TextBoxDark Grid.Column="0" Margin="3" Text="{Binding SourceX}"/>
+            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding SourceY}"/>
+            <local:TextBoxDark Grid.Column="2" Margin="3" Text="{Binding SourceWidth}"/>
+            <local:TextBoxDark Grid.Column="3" Margin="3" Text="{Binding SourceHeight}"/>
         </Grid>
 
         <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Target position/size</TextBlock>
@@ -52,10 +52,10 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Margin="3" Text="{Binding TargetX}"/>
-            <TextBox Grid.Column="1" Margin="3" Text="{Binding TargetY}"/>
-            <TextBox Grid.Column="2" Margin="3" Text="{Binding TargetWidth}"/>
-            <TextBox Grid.Column="3" Margin="3" Text="{Binding TargetHeight}"/>
+            <local:TextBoxDark Grid.Column="0" Margin="3" Text="{Binding TargetX}"/>
+            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding TargetY}"/>
+            <local:TextBoxDark Grid.Column="2" Margin="3" Text="{Binding TargetWidth}"/>
+            <local:TextBoxDark Grid.Column="3" Margin="3" Text="{Binding TargetHeight}"/>
         </Grid>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Bounding size</TextBlock>
@@ -64,15 +64,15 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Margin="3" Text="{Binding BoundingWidth}"/>
-            <TextBox Grid.Column="1" Margin="3" Text="{Binding BoundingHeight}"/>
+            <local:TextBoxDark Grid.Column="0" Margin="3" Text="{Binding BoundingWidth}"/>
+            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding BoundingHeight}"/>
         </Grid>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Texture</TextBlock>
         <local:UndertaleObjectReference Grid.Row="3" Grid.Column="1" Margin="3" ObjectReference="{Binding TexturePage}" ObjectType="{x:Type undertale:UndertaleEmbeddedTexture}"/>
 
-        <Button Grid.Row="4" Grid.ColumnSpan="3" Width="230" Margin="3"
-                          Click="FindReferencesButton_Click">Find all references to this page item</Button>
+        <local:ButtonDark Grid.Row="4" Grid.ColumnSpan="3" Width="230" Margin="3"
+                          Click="FindReferencesButton_Click">Find all references to this page item</local:ButtonDark>
 
         <Viewbox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Uniform" StretchDirection="DownOnly" Margin="3">
             <Border Background="{StaticResource TransparencyGridBrushBrush}">
@@ -87,8 +87,8 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="Import" Click="Import_Click"/>
-            <Button Grid.Column="3" Content="Export" Click="Export_Click"/>
+            <local:ButtonDark Grid.Column="0" Content="Import" Click="Import_Click"/>
+            <local:ButtonDark Grid.Column="3" Content="Export" Click="Export_Click"/>
         </Grid>
 
         <Viewbox Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Uniform" StretchDirection="DownOnly"
@@ -100,7 +100,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+
                 <Image Grid.Row="0" Grid.Column="1" Name="ItemTextureBGImage" Opacity="0.2"/>
+
                 <Image Grid.Row="0" Grid.Column="1" Name="ItemTextureImage">
                     <Image.Clip>
                         <RectangleGeometry>

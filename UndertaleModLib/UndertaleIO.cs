@@ -78,26 +78,10 @@ namespace UndertaleModLib
                 }
                 else
                 {
-                    int newCachedId;
                     if (typeof(ChunkT) == typeof(UndertaleChunkAGRP))
-                        newCachedId = 0;
+                        CachedId = 0;
                     else
-                        newCachedId = -1;
-
-                    if (CachedId > 0 || (typeof(ChunkT) != typeof(UndertaleChunkAGRP) && CachedId == 0))
-                    {
-                        if (chunk.List.Count > CachedId && chunk.List[CachedId] is not null)
-                        {
-                            int firstNullOccurrence = chunk.List.IndexOf(default);
-                            if (firstNullOccurrence != -1)
-                                newCachedId = firstNullOccurrence;
-                        }
-                        else
-                        {
-                            newCachedId = CachedId;
-                        }
-                    }
-                    CachedId = newCachedId;
+                        CachedId = -1;
                 }
             }
             return CachedId;
@@ -127,20 +111,6 @@ namespace UndertaleModLib
                     return;
                 }
                 Resource = CachedId >= 0 ? list[CachedId] : default;
-                if (Resource == null && CachedId >= 0)
-                {
-                    // Naturally this can only happen with 2024.11 data files.
-                    // FIXME: Is this a good idea?
-                    if (reader.undertaleData.IsGameMaker2())
-                    {
-                        if (!reader.undertaleData.IsVersionAtLeast(2024, 11))
-                            reader.undertaleData.SetGMS2Version(2024, 11);
-                    }
-                    else
-                    {
-                        reader.SubmitWarning("ID reference to null object found on file built with GMS pre-2!");
-                    }
-                }
             }
         }
 
@@ -597,32 +567,14 @@ namespace UndertaleModLib
             return objectPoolRev[obj];
         }
 
-        // to stop it from spamming it on CU 1.5.1
-        public int misalignedMessage = 0;
         public void ReadUndertaleObject<T>(T obj) where T : UndertaleObject, new()
         {
             try
             {
                 var expectedAddress = GetAddressForUndertaleObject(obj);
-                if (expectedAddress == 0)
-                    return;
-                if (expectedAddress != AbsPosition && misalignedMessage <= 3)
+                if (expectedAddress != AbsPosition)
                 {
                     SubmitWarning("Reading misaligned at " + AbsPosition.ToString("X8") + ", realigning back to " + expectedAddress.ToString("X8") + "\nHIGH RISK OF DATA LOSS! The file is probably corrupted, or uses unsupported features\nProceed at your own risk");
-                    AbsPosition = expectedAddress;
-                    // add one if misalignment is detected, will go to next else after three have already been detected
-                    misalignedMessage++;
-                }
-                else if (expectedAddress != AbsPosition && misalignedMessage == 4) 
-                {
-                    SubmitWarning("Reading misaligned at " + AbsPosition.ToString("X8") + ", realigning back to " + expectedAddress.ToString("X8") + "\nHIGH RISK OF DATA LOSS!\n\nFurther Misalignments will be ignored\nProceed at your risk");
-                    AbsPosition = expectedAddress;
-                    // add one if misalignment is detected, which will go to next else statement
-                    misalignedMessage++;
-                }
-                else if (expectedAddress != AbsPosition && misalignedMessage >= 5) 
-                {
-                    // relign address, but dont notify user after 4 messages
                     AbsPosition = expectedAddress;
                 }
                 unreadObjects.Remove((uint)AbsPosition);
@@ -823,13 +775,6 @@ namespace UndertaleModLib
 
         public void WriteUndertaleObject<T>(T obj) where T : UndertaleObject, new()
         {
-            if (obj is null)
-            {
-                // We simply shouldn't write anything.
-                // Pointers to this "object" are simply written as 0, and we don't need to
-                // put it in the pool
-                return;
-            }
             try
             {
                 // This isn't a major issue, and this is a performance waster

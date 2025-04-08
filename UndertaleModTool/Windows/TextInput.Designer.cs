@@ -50,9 +50,9 @@ namespace UndertaleModTool.Windows
             richTextBox1.BackColor = System.Drawing.SystemColors.ControlLight;
             richTextBox1.ContextMenuStrip = textCommandsMenu;
             richTextBox1.HideSelection = false;
-            richTextBox1.Location = new System.Drawing.Point(10, 53);
+            richTextBox1.Location = new System.Drawing.Point(12, 57);
             richTextBox1.Name = "richTextBox1";
-            richTextBox1.Size = new System.Drawing.Size(498, 266);
+            richTextBox1.Size = new System.Drawing.Size(569, 283);
             richTextBox1.TabIndex = 0;
             richTextBox1.Text = "Input Text Here";
             richTextBox1.TextChanged += richTextBox1_TextChanged;
@@ -101,9 +101,9 @@ namespace UndertaleModTool.Windows
             // button1
             // 
             button1.BackColor = System.Drawing.SystemColors.Control;
-            button1.Location = new System.Drawing.Point(185, 324);
+            button1.Location = new System.Drawing.Point(211, 346);
             button1.Name = "button1";
-            button1.Size = new System.Drawing.Size(165, 38);
+            button1.Size = new System.Drawing.Size(189, 41);
             button1.TabIndex = 1;
             button1.Text = "Done";
             button1.UseCompatibleTextRendering = true;
@@ -116,7 +116,7 @@ namespace UndertaleModTool.Windows
             label1.Dock = System.Windows.Forms.DockStyle.Top;
             label1.Location = new System.Drawing.Point(0, 0);
             label1.Name = "label1";
-            label1.Size = new System.Drawing.Size(112, 15);
+            label1.Size = new System.Drawing.Size(133, 17);
             label1.TabIndex = 2;
             label1.Text = "Default Prompt Text";
             label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -127,14 +127,14 @@ namespace UndertaleModTool.Windows
             textCopyMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { copyMenuItem1, copyAllMenuItem1 });
             textCopyMenu.Name = "textCopyMenu";
             textCopyMenu.ShowImageMargin = false;
-            textCopyMenu.Size = new System.Drawing.Size(93, 48);
+            textCopyMenu.Size = new System.Drawing.Size(118, 48);
             textCopyMenu.Opening += textCopyMenu_Opening;
             // 
             // copyMenuItem1
             // 
             copyMenuItem1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             copyMenuItem1.Name = "copyMenuItem1";
-            copyMenuItem1.Size = new System.Drawing.Size(92, 22);
+            copyMenuItem1.Size = new System.Drawing.Size(117, 22);
             copyMenuItem1.Text = "Copy";
             copyMenuItem1.Click += copyMenuItem_Click;
             // 
@@ -142,16 +142,16 @@ namespace UndertaleModTool.Windows
             // 
             copyAllMenuItem1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             copyAllMenuItem1.Name = "copyAllMenuItem1";
-            copyAllMenuItem1.Size = new System.Drawing.Size(92, 22);
+            copyAllMenuItem1.Size = new System.Drawing.Size(117, 22);
             copyAllMenuItem1.Text = "Copy all";
             copyAllMenuItem1.Click += copyAllMenuItem_Click;
             // 
             // TextInput
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.SystemColors.Window;
-            ClientSize = new System.Drawing.Size(520, 372);
+            ClientSize = new System.Drawing.Size(594, 397);
             Controls.Add(label1);
             Controls.Add(button1);
             Controls.Add(richTextBox1);

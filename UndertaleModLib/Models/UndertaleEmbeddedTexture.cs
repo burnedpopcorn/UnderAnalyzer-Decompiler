@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UndertaleModLib.Util;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace UndertaleModLib.Models;
 
@@ -57,7 +56,6 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         set => _textureData = value;
     }
     private TexData _textureData = new();
-
 
     /// <summary>
     /// Helper variable for whether or not this texture is to be stored externally or not.
@@ -305,8 +303,8 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         /// <summary>
         /// The underlying image of the texture.
         /// </summary>
-        public GMImage Image
-        {
+        public GMImage Image 
+        { 
             get => _image;
             set
             {
@@ -357,7 +355,7 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
 
         /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
-
+        
         /// <summary>
         /// Invoked whenever the effective value of any dependency property has been updated.
         /// </summary>

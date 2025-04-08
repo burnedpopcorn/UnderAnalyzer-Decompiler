@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+#pragma warning disable CA1416 // Validate platform compatibility
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.Win32;
@@ -72,6 +73,7 @@ namespace UndertaleModTool
         public static RoutedUICommand RestoreClosedTabCommand = new RoutedUICommand("Restore last closed tab", "RestoreClosedTab", typeof(MainWindow));
         public static RoutedUICommand SwitchToNextTabCommand = new RoutedUICommand("Switch to the next tab", "SwitchToNextTab", typeof(MainWindow));
         public static RoutedUICommand SwitchToPrevTabCommand = new RoutedUICommand("Switch to the previous tab", "SwitchToPrevTab", typeof(MainWindow));
+        public static RoutedUICommand SearchInCodeCommand = new("Search in code", "SearchInCode", typeof(MainWindow));
         public ObservableCollection<Tab> Tabs { get; set; } = new();
         public Tab CurrentTab
         {
@@ -207,6 +209,24 @@ namespace UndertaleModTool
         public static string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 #endif
 
+        private static readonly Color darkColor = Color.FromArgb(255, 32, 32, 32);
+        private static readonly Color darkLightColor = Color.FromArgb(255, 48, 48, 48);
+        private static readonly Color whiteColor = Color.FromArgb(255, 222, 222, 222);
+        private static readonly SolidColorBrush grayTextBrush = new(Color.FromArgb(255, 179, 179, 179));
+        private static readonly SolidColorBrush inactiveSelectionBrush = new(Color.FromArgb(255, 212, 212, 212));
+        private static readonly Dictionary<ResourceKey, object> appDarkStyle = new()
+        {
+            { SystemColors.WindowTextBrushKey, new SolidColorBrush(whiteColor) },
+            { SystemColors.ControlTextBrushKey, new SolidColorBrush(whiteColor) },
+            { SystemColors.WindowBrushKey, new SolidColorBrush(darkColor) },
+            { SystemColors.ControlBrushKey, new SolidColorBrush(darkLightColor) },
+            { SystemColors.ControlLightBrushKey, new SolidColorBrush(Color.FromArgb(255, 60, 60, 60)) },
+            { SystemColors.MenuTextBrushKey, new SolidColorBrush(whiteColor) },
+            { SystemColors.MenuBrushKey, new SolidColorBrush(darkLightColor) },
+            { SystemColors.GrayTextBrushKey, new SolidColorBrush(Color.FromArgb(255, 136, 136, 136)) },
+            { SystemColors.InactiveSelectionHighlightBrushKey, new SolidColorBrush(Color.FromArgb(255, 112, 112, 112)) }
+        };
+
         public MainWindow()
         {
             InitializeComponent();
@@ -224,10 +244,7 @@ namespace UndertaleModTool
             }
             OpenInTab(Highlighted);
 
-            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.6.0.0";
-
-            // accidently got rid of his name, IM SORRY
-            //TitleMain = "UndertaleModTool v:" + Version;
+            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.7.0.0";
 
             CanSave = false;
             CanSafelySave = false;
@@ -247,6 +264,11 @@ namespace UndertaleModTool
                                                 typeof(Underanalyzer.Decompiler.DecompileContext).Assembly)
                                 .WithEmitDebugInformation(true); //when script throws an exception, add a exception location (line number)
             });
+
+            var resources = Application.Current.Resources;
+            resources["CustomTextBrush"] = SystemColors.ControlTextBrush;
+            resources[SystemColors.GrayTextBrushKey] = grayTextBrush;
+            resources[SystemColors.InactiveSelectionHighlightBrushKey] = inactiveSelectionBrush;
         }
 
         /// <summary>
@@ -342,6 +364,7 @@ namespace UndertaleModTool
                 SetDarkMode(true, true);
                 SetDarkTitleBarForWindow(this, true, false);
             }
+
             try
             {
                 SetTransparencyGridColors(Settings.Instance.TransparencyGridColor1, Settings.Instance.TransparencyGridColor2);
@@ -494,9 +517,6 @@ namespace UndertaleModTool
             // Copy the known code corrections into the profile, if they don't already exist.
             ApplyCorrections();
             CrashCheck();
-
-            //RunGMSDebuggerItem.Visibility = Settings.Instance.ShowDebuggerOption
-            //                                ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public Dictionary<string, NamedPipeServerStream> childFiles = new Dictionary<string, NamedPipeServerStream>();
@@ -764,8 +784,7 @@ namespace UndertaleModTool
                 Debug.WriteLine(ex);
                 return SaveResult.Error;
             }
-            
-            #pragma warning disable CA1416
+
             if (codeEditor.DecompiledChanged || codeEditor.DisassemblyChanged)
             {
                 IsSaving = true;
@@ -776,7 +795,6 @@ namespace UndertaleModTool
                 result = IsSaving ? SaveResult.Error : SaveResult.Saved;
                 IsSaving = false;
             }
-            #pragma warning restore CA1416
 
             return result;
         }
@@ -807,8 +825,6 @@ namespace UndertaleModTool
                 e.Cancel = true;
 
                 bool save = false;
-                
-                // If it should warn you before leaving
                 if (SettingsWindow.WarnOnClose)
                 {
                     MessageBoxResult result = this.ShowQuestionWithCancel("Save changes before quitting?");
@@ -929,6 +945,12 @@ namespace UndertaleModTool
             GoForward();
         }
 
+        private void Command_SearchInCode(object sender, ExecutedRoutedEventArgs e)
+        {
+            SearchInCodeWindow searchInCodeWindow = new();
+            searchInCodeWindow.Show();
+        }
+		
         private void DisposeGameData()
         {
             if (Data is not null)
@@ -960,8 +982,10 @@ namespace UndertaleModTool
             dialog.Owner = this;
 
             DisposeGameData();
+
             Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", 
                 "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them");
+				
             OpenInTab(Highlighted);
 
             GameSpecificResolver.BaseDirectory = ExePath;
@@ -1112,7 +1136,6 @@ namespace UndertaleModTool
 
             Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "Go to the Decompiling Scripts Tab to start Decompiling some Games\nor Double click on the items on the left to individually view them\n\n\nGame Loaded:  " + Data.GeneralInfo.Name + "\nGame Name:  " + Data.GeneralInfo.DisplayName + "\n\nGameMaker Version Detected:  " + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + GMS_Version_readable);
             OpenInTab(Highlighted);
-
         }
 
         private async Task SaveFile(string filename, bool suppressDebug = false)
@@ -1636,13 +1659,6 @@ namespace UndertaleModTool
             if (e.NewValue is TreeViewItem)
             {
                 string item = (e.NewValue as TreeViewItem).Header?.ToString();
-                /*
-                if (item == "Data")
-                {
-                    Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", Data != null ? "Go to the Decompiling Scripts Tab to start Decompiling some Games\n or Double click on the items on the left to individually view them" : "Open data.win file to get started");
-                    return;
-                }
-                */
 
                 // Default
                 string GMS_Version_readable = "";
@@ -1937,6 +1953,7 @@ namespace UndertaleModTool
                 }
             }
         }
+
         internal void CopyItemName(object obj)
         {
             string name = null;
@@ -2057,9 +2074,60 @@ namespace UndertaleModTool
             }
         }
 
+        private void MenuItem_ContextMenuOpened(object sender, RoutedEventArgs e)
+        {
+            var menu = sender as ContextMenu;
+            foreach (var item in menu.Items)
+            {
+                var menuItem = item as MenuItem;
+                if ((menuItem.Header as string) == "Find all references")
+                {
+                    menuItem.Visibility = UndertaleResourceReferenceMap.IsTypeReferenceable(menu.DataContext?.GetType())
+                                          ? Visibility.Visible : Visibility.Collapsed;
+
+                    break;
+                }
+            }
+        }
+
         private void MenuItem_OpenInNewTab_Click(object sender, RoutedEventArgs e)
         {
             OpenInTab(Highlighted, true);
+        }
+
+        private void MenuItem_FindAllReferences_Click(object sender, RoutedEventArgs e)
+        {
+            var obj = (sender as FrameworkElement)?.DataContext as UndertaleResource;
+            if (obj is null)
+            {
+                this.ShowError("The selected object is not an \"UndertaleResource\".");
+                return;
+            }
+
+            FindReferencesTypesDialog dialog = null;
+            try
+            {
+                dialog = new(obj, Data);
+                dialog.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                this.ShowError("An error occured in the object references related window.\n" +
+                               $"Please report this on GitHub.\n\n{ex}");
+            }
+            finally
+            {
+                dialog?.Close();
+            }
+        }
+        private void MenuItem_CopyName_Click(object sender, RoutedEventArgs e)
+        {
+            CopyItemName(Highlighted);
+        }
+        private void MenuItem_Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (Highlighted is UndertaleObject obj)
+                DeleteItem(obj);
         }
 
         private void MenuItem_Add_Click(object sender, RoutedEventArgs e)
@@ -2221,7 +2289,7 @@ namespace UndertaleModTool
 
                     var subDirName = subDirectory.Name;
                     // In addition to the _ comment from above, we also need to add at least one item, so that WPF uses this as a submenuitem
-                    MenuItem subItem = new() {Header = subDirName.Replace("_", "__"), Items = {new MenuItem {Header = "(loading...)", IsEnabled = false}}};
+                    MenuItemDark subItem = new() {Header = subDirName.Replace("_", "__"), Items = {new MenuItem {Header = "(loading...)", IsEnabled = false}}};
                     subItem.SubmenuOpened += (o, args) => MenuItem_RunScript_SubmenuOpened(o, args, subDirectory.FullName);
                     item.Items.Add(subItem);
                 }
@@ -2235,6 +2303,16 @@ namespace UndertaleModTool
             }
 
             item.UpdateLayout();
+
+            Popup popup = FindVisualChild<Popup>(item);
+            var content = popup?.Child as Border;
+            if (content is not null)
+            {
+                if (Settings.Instance.EnableDarkMode)
+                    content.Background = appDarkStyle[SystemColors.MenuBrushKey] as SolidColorBrush;
+                else
+                    content.Background = SystemColors.MenuBrush;
+            }
 
             // If we're at the complete root, we need to add the "Run other script" button as well
             if (item.Name != "RootScriptItem") return;
@@ -2763,7 +2841,6 @@ namespace UndertaleModTool
             return folderBrowser.ShowDialog() == true ? folderBrowser.SelectedPath + "/" : null;
         }
 
-        #pragma warning disable CA1416
         public void PlayInformationSound()
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
@@ -3715,7 +3792,7 @@ result in loss of work.");
         // source - https://stackoverflow.com/a/10738247/12136394
         private void TabItem_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (e.Source is not TabItem tabItem || e.OriginalSource is Button)
+            if (e.Source is not TabItemDark tabItem || e.OriginalSource is Button)
                 return;
 
             if (Mouse.PrimaryDevice.LeftButton == MouseButtonState.Pressed)
@@ -3739,8 +3816,8 @@ result in loss of work.");
         }
         private void TabItem_Drop(object sender, DragEventArgs e)
         {
-            if (e.Source is TabItem tabItemTarget &&
-                e.Data.GetData(typeof(TabItem)) is TabItem tabItemSource &&
+            if (e.Source is TabItemDark tabItemTarget &&
+                e.Data.GetData(typeof(TabItemDark)) is TabItemDark tabItemSource &&
                 !tabItemTarget.Equals(tabItemSource))
             {
                 int sourceIndex = tabItemSource.TabIndex;
@@ -3920,3 +3997,5 @@ result in loss of work.");
         }
     }
 }
+
+#pragma warning restore CA1416 // Validate platform compatibility

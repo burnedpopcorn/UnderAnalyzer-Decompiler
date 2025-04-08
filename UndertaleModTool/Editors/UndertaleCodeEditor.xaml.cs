@@ -1230,10 +1230,10 @@ namespace UndertaleModTool
                                 possibleObjects.Add(data.ParticleSystems[id]);
                         }
 
-                        ContextMenu contextMenu = new();
+                        ContextMenuDark contextMenu = new();
                         foreach (UndertaleObject obj in possibleObjects)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = obj.ToString().Replace("_", "__");
                             item.PreviewMouseDown += (sender2, ev2) =>
                             {
@@ -1260,7 +1260,7 @@ namespace UndertaleModTool
                         }
                         if (id > 0x00050000)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = "0x" + id.ToString("X6") + " (color)";
                             item.Click += (sender2, ev2) =>
                             {
@@ -1277,7 +1277,7 @@ namespace UndertaleModTool
                         var myKey = list.Constants.FirstOrDefault(x => x.Value == (double)id).Key;
                         if (myKey != null)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = myKey.Replace("_", "__") + " (constant)";
                             item.Click += (sender2, ev2) =>
                             {
@@ -1290,7 +1290,7 @@ namespace UndertaleModTool
                             };
                             contextMenu.Items.Add(item);
                         }
-                        contextMenu.Items.Add(new MenuItem() { Header = id + " (number)", IsEnabled = false });
+                        contextMenu.Items.Add(new MenuItemDark() { Header = id + " (number)", IsEnabled = false });
 
                         contextMenu.IsOpen = true;
                     }
@@ -1311,10 +1311,8 @@ namespace UndertaleModTool
             private static readonly SolidColorBrush ConstantBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
             private static readonly SolidColorBrush InstanceBrush = new(Color.FromRgb(0x58, 0xE3, 0x5A));
             private static readonly SolidColorBrush LocalBrush = new(Color.FromRgb(0xFF, 0xF8, 0x99));
-            // ENUMS
-            private static readonly SolidColorBrush EnumBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
 
-            private static ContextMenu contextMenu;
+            private static ContextMenuDark contextMenu;
 
             // <offset, length>
             private readonly Dictionary<int, int> lineNameSections = new();
@@ -1326,7 +1324,7 @@ namespace UndertaleModTool
                 highlighterInst = textAreaInst.GetService(typeof(IHighlighter)) as IHighlighter;
                 textEditorInst = textAreaInst.GetService(typeof(TextEditor)) as TextEditor;
 
-                var menuItem = new MenuItem()
+                var menuItem = new MenuItemDark()
                 {
                     Header = "Open in new tab"
                 };
@@ -1386,9 +1384,6 @@ namespace UndertaleModTool
 
                 return -1;
             }
-
-            // Only here because of fucking bullshit compiler
-            public Dictionary<string, double> Enums = null;
 
             /// Constructs an element at the specified offset.
             /// May return null if no element should be constructed.
@@ -1502,42 +1497,6 @@ namespace UndertaleModTool
                                                            GlobalBrush);
                         }
                     }
-
-                    // For Colors for Second Dynamic Value in Enums
-                    if (offset >= 7)
-                    {
-                        if (doc.GetText(offset - 7, 7) == "states.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
-                    if (offset >= 12)
-                    {
-                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
-                    if (offset >= 9)
-                    {
-                        if (doc.GetText(offset - 9, 9) == "particle.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
-                    // Because fucking the COMPILER IS ACTUALLY MORE RETARDED THAN ME
-                    // HOW IS THAT EVEN POSSIBLE!!11!1!!11!!
-                    Enums = new Dictionary<string, double>();
-                    // Custom Enums
-                    Enums["UnknownEnum"] = 0.0;
-                    Enums["states"] = 1.0;
-                    Enums["particle"] = 2.0;
-
-                    // Color Enums Red if its even there
-                    if (Enums.ContainsKey(nameText))
-                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                    //
-
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
                                                        ConstantBrush);

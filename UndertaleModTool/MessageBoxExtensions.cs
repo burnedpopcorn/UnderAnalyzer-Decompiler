@@ -20,31 +20,31 @@ namespace UndertaleModTool
 			return ShowCore(window, messageBoxText, title, MessageBoxButton.OK, MessageBoxImage.Information);
 		}
 
-        /// <summary>
-        /// Shows a <see cref="MessageBox"/> prompting for a yes/no/cancel question with <paramref name="window"/> as the parent.
-        /// </summary>
-        /// <param name="window">The parent from which the <see cref="MessageBox"/> will show.</param>
-        /// <param name="messageBoxText">A <see cref="string"/> that specifies the text to display.</param>
-        /// <param name="icon">The <see cref="MessageBoxImage"/> to display.</param>
-        /// <param name="title">A <see cref="string"/> that specifies the title bar caption to display.</param>
-        /// <returns><see cref="MessageBoxResult.Yes"/>, <see cref="MessageBoxResult.No"/> or <see cref="MessageBoxResult.Cancel"/> depending on the users' answer.
-        public static MessageBoxResult ShowQuestionWithCancel(this Window window, string messageBoxText, MessageBoxImage icon = MessageBoxImage.Question, string title = "UndertaleModTool")
-        {
-            return ShowCore(window, messageBoxText, title, MessageBoxButton.YesNoCancel, icon);
-        }
-
-        /// <summary>
-        /// Shows a <see cref="MessageBox"/> prompting for a yes/no question with <paramref name="window"/> as the parent.
-        /// </summary>
-        /// <param name="window">The parent from which the <see cref="MessageBox"/> will show.</param>
-        /// <param name="messageBoxText">A <see cref="string"/> that specifies the text to display.</param>
-        /// <param name="icon">The <see cref="MessageBoxImage"/> to display.</param>
-        /// <param name="title">A <see cref="string"/> that specifies the title bar caption to display.</param>
-        /// <returns><see cref="MessageBoxResult.Yes"/> or <see cref="MessageBoxResult.No"/> depending on the users' answer.
-        /// <see cref="MessageBoxResult.None"/> if the <see cref="MessageBox"/> was cancelled.</returns>
-        public static MessageBoxResult ShowQuestion(this Window window, string messageBoxText, MessageBoxImage icon = MessageBoxImage.Question, string title = "UndertaleModTool")
+		/// <summary>
+		/// Shows a <see cref="MessageBox"/> prompting for a yes/no question with <paramref name="window"/> as the parent.
+		/// </summary>
+		/// <param name="window">The parent from which the <see cref="MessageBox"/> will show.</param>
+		/// <param name="messageBoxText">A <see cref="string"/> that specifies the text to display.</param>
+		/// <param name="icon">The <see cref="MessageBoxImage"/> to display.</param>
+		/// <param name="title">A <see cref="string"/> that specifies the title bar caption to display.</param>
+		/// <returns><see cref="MessageBoxResult.Yes"/> or <see cref="MessageBoxResult.No"/> depending on the users' answer.
+		/// <see cref="MessageBoxResult.None"/> if the <see cref="MessageBox"/> was cancelled.</returns>
+		public static MessageBoxResult ShowQuestion(this Window window, string messageBoxText, MessageBoxImage icon = MessageBoxImage.Question, string title = "UndertaleModTool")
 		{
 			return ShowCore(window, messageBoxText, title, MessageBoxButton.YesNo, icon);
+		}
+
+		/// <summary>
+		/// Shows a <see cref="MessageBox"/> prompting for a yes/no/cancel question with <paramref name="window"/> as the parent.
+		/// </summary>
+		/// <param name="window">The parent from which the <see cref="MessageBox"/> will show.</param>
+		/// <param name="messageBoxText">A <see cref="string"/> that specifies the text to display.</param>
+		/// <param name="icon">The <see cref="MessageBoxImage"/> to display.</param>
+		/// <param name="title">A <see cref="string"/> that specifies the title bar caption to display.</param>
+		/// <returns><see cref="MessageBoxResult.Yes"/>, <see cref="MessageBoxResult.No"/> or <see cref="MessageBoxResult.Cancel"/> depending on the users' answer.</returns>
+		public static MessageBoxResult ShowQuestionWithCancel(this Window window, string messageBoxText, MessageBoxImage icon = MessageBoxImage.Question, string title = "UndertaleModTool")
+		{
+			return ShowCore(window, messageBoxText, title, MessageBoxButton.YesNoCancel, icon);
 		}
 
 		/// <summary>
@@ -84,17 +84,7 @@ namespace UndertaleModTool
 		/// <returns>A <see cref="MessageBoxResult"/> value that specifies which message box button is clicked by the user.</returns>
 		private static MessageBoxResult ShowCore(this Window window, string text, string title, MessageBoxButton buttons, MessageBoxImage image)
 		{
-            return window.Dispatcher.Invoke(() =>
-            {
-                MessageDialog w = new();
-                w.Owner = window;
-                w.Text = text;
-                w.Title = title;
-                w.Buttons = buttons;
-                w.SetIcon(image);
-                w.ShowDialog();
-                return w.Result;
-            });
-        }
+			return window.Dispatcher.Invoke(() => MessageBox.Show(window, text, title, buttons, image));
+		}
 	}
 }

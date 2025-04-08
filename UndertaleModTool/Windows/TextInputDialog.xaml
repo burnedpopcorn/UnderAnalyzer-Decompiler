@@ -6,8 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UndertaleModTool"
         mc:Ignorable="d"
-        Title="{Binding MessageTitle}" Height="150" Width="400" MinHeight="150" MinWidth="400" WindowStartupLocation="CenterOwner"
-        Style="{DynamicResource DefaultWindowStyle}">
+        Title="{Binding MessageTitle}" Height="150" Width="400" MinHeight="150" MinWidth="400" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -15,7 +14,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" VerticalAlignment="Center" Text="{Binding Message}"/>
-        <TextBox Grid.Row="1" VerticalAlignment="Center" AcceptsReturn="{Binding IsMultiline}" Text="{Binding InputText}"/>
+        <local:TextBoxDark Grid.Row="1" VerticalAlignment="Center" AcceptsReturn="{Binding IsMultiline}" Text="{Binding InputText}"/>
 
         <Grid Grid.Row="2" Name="Buttons">
             <Grid.ColumnDefinitions>
@@ -25,8 +24,8 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Button Grid.Row="2" Grid.Column="0" Margin="3,3" VerticalAlignment="Center" Visibility="{Binding CancelButtonVisibility}" Content="{Binding CancelButtonTitle}" Click="CancelButton_Click"></Button>
-            <Button Grid.Row="2" Grid.Column="1" Margin="3,3" VerticalAlignment="Center" Content="{Binding ButtonTitle}" Click="Button_Click"></Button>
+            <local:ButtonDark Grid.Row="2" Grid.Column="0" Margin="3,3" VerticalAlignment="Center" Visibility="{Binding CancelButtonVisibility}" Content="{Binding CancelButtonTitle}" Click="CancelButton_Click"></local:ButtonDark>
+            <local:ButtonDark Grid.Row="2" Grid.Column="1" Margin="3,3" VerticalAlignment="Center" Content="{Binding ButtonTitle}" Click="Button_Click"></local:ButtonDark>
         </Grid>
         
     </Grid>

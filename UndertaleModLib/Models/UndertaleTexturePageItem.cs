@@ -3,7 +3,6 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using UndertaleModLib.Util;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace UndertaleModLib.Models;
 
@@ -147,7 +146,6 @@ public class UndertaleTexturePageItem : UndertaleNamedResource, INotifyPropertyC
     /// Replaces the current image of this texture page item to hold a new image.
     /// </summary>
     /// <param name="replaceImage">The new image that shall be applied to this texture page item.</param>
-    /// <param name="disposeImage">Whether to dispose <paramref name="replaceImage"/> afterwards.</param>
     public void ReplaceTexture(MagickImage replaceImage)
     {
         // Resize image to bounds on texture page

@@ -11,7 +11,7 @@
         <Grid.Resources>
             <local:CharConverter x:Key="CharConverter"/>
             <local:IsVersionAtLeastConverter x:Key="IsVersionAtLeastConverter"/>
-            <Style x:Key="glyphsOperationButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Style x:Key="glyphsOperationButtonStyle" TargetType="Button">
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding Glyphs.Count, Mode=OneWay, FallbackValue=0}" Value="0">
                         <Setter Property="IsEnabled" Value="False"/>
@@ -60,7 +60,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Text="{Binding EmSize}"/>
+            <local:TextBoxDark Grid.Column="0" Text="{Binding EmSize}"/>
             <TextBlock Grid.Column="1" Text=" em"/>
         </Grid>
 
@@ -77,16 +77,16 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Margin="3" Text="{Binding RangeStart}"/>
+            <local:TextBoxDark Grid.Column="0" Margin="3" Text="{Binding RangeStart}"/>
             <TextBlock Grid.Column="1" Margin="3" Text=" - "/>
-            <TextBox Grid.Column="2" Margin="3" Text="{Binding RangeEnd}"/>
+            <local:TextBoxDark Grid.Column="2" Margin="3" Text="{Binding RangeEnd}"/>
         </Grid>
 
         <TextBlock Grid.Row="6" Grid.Column="0" Margin="3">Charset</TextBlock>
-        <TextBox Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Charset}"/>
+        <local:TextBoxDark Grid.Row="6" Grid.Column="1" Margin="3" Text="{Binding Charset}"/>
 
         <TextBlock Grid.Row="7" Grid.Column="0" Margin="3">Anti Aliasing</TextBlock>
-        <TextBox Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding AntiAliasing}"/>
+        <local:TextBoxDark Grid.Row="7" Grid.Column="1" Margin="3" Text="{Binding AntiAliasing}"/>
 
         <TextBlock Grid.Row="8" Grid.Column="0" Margin="3">Texture</TextBlock>
         <local:UndertaleObjectReference Grid.Row="8" Grid.Column="1" Margin="3" ObjectReference="{Binding Texture}" ObjectType="{x:Type undertale:UndertaleTexturePageItem}"/>
@@ -97,28 +97,28 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Margin="3" Text="{Binding ScaleX}"/>
-            <TextBox Grid.Column="1" Margin="3" Text="{Binding ScaleY}"/>
+            <local:TextBoxDark Grid.Column="0" Margin="3" Text="{Binding ScaleX}"/>
+            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding ScaleY}"/>
         </Grid>
 
         <TextBlock Grid.Row="10" Grid.Column="0" Margin="3" Text="Ascender"
                    Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.2}"/>
-        <TextBox Grid.Row="10" Grid.Column="1" Margin="3" Text="{Binding Ascender}"
+        <local:TextBoxDark Grid.Row="10" Grid.Column="1" Margin="3" Text="{Binding Ascender}"
                            Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.2}"/>
 
         <TextBlock Grid.Row="11" Grid.Column="0" Margin="3" Text="Ascender offset"
                    Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.2}"/>
-        <TextBox Grid.Row="11" Grid.Column="1" Margin="3" Text="{Binding AscenderOffset}"
+        <local:TextBoxDark Grid.Row="11" Grid.Column="1" Margin="3" Text="{Binding AscenderOffset}"
                            Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2022.2}"/>
 
         <TextBlock Grid.Row="12" Grid.Column="0" Margin="3" Text="SDF spread value"
                    Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2023.2}"/>
-        <TextBox Grid.Row="12" Grid.Column="1" Margin="3" Text="{Binding SDFSpread}"
+        <local:TextBoxDark Grid.Row="12" Grid.Column="1" Margin="3" Text="{Binding SDFSpread}"
                            Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2023.2}"/>
 
         <TextBlock Grid.Row="13" Grid.Column="0" Margin="3" Text="Line height"
                    Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2023.6}"/>
-        <TextBox Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding LineHeight}"
+        <local:TextBoxDark Grid.Row="13" Grid.Column="1" Margin="3" Text="{Binding LineHeight}"
                            Visibility="{Binding Mode=OneTime, Converter={StaticResource IsVersionAtLeastConverter}, ConverterParameter=2023.6}"/>
 
         <TextBlock Grid.Row="14" Grid.ColumnSpan="2" Margin="3,30,3,3" HorizontalAlignment="Center" Foreground="DarkGray" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center">
@@ -205,9 +205,9 @@
         </Viewbox>
 
         <StackPanel Grid.Row="16" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Margin="3" Width="220" Click="EditRectangleButton_Click">
+            <local:ButtonDark Margin="3" Width="220" Click="EditRectangleButton_Click">
                 <Button.Style>
-                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                    <Style TargetType="Button">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SelectedItem, ElementName=GlyphsGrid, Mode=OneWay}"
                                          Value="{x:Null}">
@@ -219,7 +219,7 @@
                 <Button.Content>
                     <TextBlock>
                         <TextBlock.Style>
-                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Style TargetType="TextBlock">
                                 <Setter Property="Text" Value="Edit a selected glyph rectangle"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedItem.SourceWidth, ElementName=GlyphsGrid, Mode=OneWay, FallbackValue=-1}"
@@ -235,20 +235,30 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </Button.Content>
-            </Button>
+            </local:ButtonDark>
 
-            <Button Margin="3" Width="200" Content="Create an empty glyph" Click="CreateGlyphButton_Click"/>
+            <local:ButtonDark Margin="3" Width="200" Content="Create an empty glyph" Click="CreateGlyphButton_Click"/>
         </StackPanel>
 
         <TextBlock Name="GlyphsLabel" Grid.Row="17" Grid.ColumnSpan="2" Margin="3" HorizontalAlignment="Left">Glyphs:</TextBlock>
         <Grid Grid.Row="18" Grid.ColumnSpan="2" MaxHeight="370" Margin="3">
-            <DataGrid x:Name="GlyphsGrid" ItemsSource="{Binding Glyphs, Mode=OneWay}"
-                                AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
+            <local:DataGridDark x:Name="GlyphsGrid" ItemsSource="{Binding Glyphs, Mode=OneWay}"
+                                AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
                                 ScrollViewer.CanContentScroll="True"
                                 VirtualizingPanel.IsVirtualizing="True"
                                 VirtualizingPanel.VirtualizationMode="Recycling">
                 <DataGrid.Resources>
-                    <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
+                    <Style TargetType="{x:Type DataGridCell}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                    <Grid Background="{TemplateBinding Background}">
+                                        <ContentPresenter VerticalAlignment="Center" />
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="{x:Static CollectionView.NewItemPlaceholder}">
                                 <Setter Property="Template">
@@ -261,7 +271,7 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                    <Style x:Key="kerningButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                    <Style x:Key="kerningButtonStyle" TargetType="Button">
                         <Setter Property="Content" Value="Edit"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Kerning.Count, Mode=OneWay, FallbackValue=0}"
@@ -275,11 +285,11 @@
                     <DataGridTemplateColumn Header="Char" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Character, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource CharConverter}}"
+                                <local:TextBoxDark Text="{Binding Character, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource CharConverter}}"
                                                    Margin="20,0,0,0" MaxLength="1"
                                                    ToolTip="{Binding Character, Mode=OneWay}" ToolTipService.InitialShowDelay="250">
                                     <TextBox.Style>
-                                        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                                        <Style TargetType="TextBox">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Character, Mode=OneWay}" Value="0">
                                                     <Setter Property="ToolTipService.IsEnabled" Value="False"/>
@@ -287,7 +297,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </TextBox.Style>
-                                </TextBox>
+                                </local:TextBoxDark>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -301,10 +311,10 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0" Text="{Binding SourceX, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBox Grid.Column="1" Text="{Binding SourceY, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBox Grid.Column="2" Text="{Binding SourceWidth, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBox Grid.Column="3" Text="{Binding SourceHeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                    <local:TextBoxDark Grid.Column="0" Text="{Binding SourceX, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                    <local:TextBoxDark Grid.Column="1" Text="{Binding SourceY, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                    <local:TextBoxDark Grid.Column="2" Text="{Binding SourceWidth, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                    <local:TextBoxDark Grid.Column="3" Text="{Binding SourceHeight, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -320,7 +330,7 @@
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Shift, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                <local:TextBoxDark Text="{Binding Shift, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -335,19 +345,19 @@
                         </DataGridTemplateColumn.Header>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding Offset, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                <local:TextBoxDark Text="{Binding Offset, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="Kerning" Width="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Margin="0,-1" Click="EditKerningButton_Click" Style="{StaticResource kerningButtonStyle}"/>
+                                <local:ButtonDark Margin="0,-1" Click="EditKerningButton_Click" Style="{StaticResource kerningButtonStyle}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
-            </DataGrid>
+            </local:DataGridDark>
 
             <Border Name="GlyphKerningBorder" BorderBrush="#FFABADB3" BorderThickness="1" Visibility="Collapsed">
                 <Border.CommandBindings>
@@ -355,7 +365,7 @@
                 </Border.CommandBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="2">
-                        <Button Click="KerningBackButton_Click" Width="40" Height="19">
+                        <local:ButtonDark Click="KerningBackButton_Click" Width="40" Height="19">
                             <Image Name="BackButtonImage" Stretch="None">
                                 <Image.Style>
                                     <Style TargetType="Image">
@@ -370,17 +380,27 @@
                                     </Style>
                                 </Image.Style>
                             </Image>
-                        </Button>
+                        </local:ButtonDark>
                         <TextBlock Text="Go back" Margin="3,-1,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <DataGrid x:Name="GlyphKerningGrid" IsEnabled="False" Visibility="{Binding Visibility, Mode=OneWay, ElementName=GlyphKerningBorder}"
-                                        AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
+                    <local:DataGridDark x:Name="GlyphKerningGrid" IsEnabled="False" Visibility="{Binding Visibility, Mode=OneWay, ElementName=GlyphKerningBorder}"
+                                        AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow"
                                         ScrollViewer.CanContentScroll="True"
                                         VirtualizingPanel.IsVirtualizing="True"
                                         VirtualizingPanel.VirtualizationMode="Recycling">
                         <DataGrid.Resources>
-                            <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#FF26A0DA"/>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                            <Grid Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center" />
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" Value="{x:Static CollectionView.NewItemPlaceholder}">
                                         <Setter Property="Template">
@@ -398,10 +418,10 @@
                             <DataGridTemplateColumn Header="Preceeding char" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBox Text="{Binding Character, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource CharConverter}}"
+                                        <local:TextBoxDark Text="{Binding Character, Mode=TwoWay, UpdateSourceTrigger=LostFocus, Converter={StaticResource CharConverter}}"
                                                            MaxLength="1" ToolTip="{Binding Character, Mode=OneWay}" ToolTipService.InitialShowDelay="250">
                                             <TextBox.Style>
-                                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                <Style TargetType="TextBox">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Character, Mode=OneWay}" Value="0">
                                                             <Setter Property="ToolTipService.IsEnabled" Value="False"/>
@@ -409,19 +429,19 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBox.Style>
-                                        </TextBox>
+                                        </local:TextBoxDark>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="Add. shift" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBox Text="{Binding ShiftModifier, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                        <local:TextBoxDark Text="{Binding ShiftModifier, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
-                    </DataGrid>
+                    </local:DataGridDark>
                 </StackPanel>
             </Border>
         </Grid>
@@ -430,7 +450,7 @@
             Note that the glyphs need to be specified in ascending order.<LineBreak/>
             Press the button below to sort them appropriately.
         </TextBlock>
-        <Button Grid.Row="20" Grid.ColumnSpan="2" Margin="3" Click="Button_Sort_Click"
+        <local:ButtonDark Grid.Row="20" Grid.ColumnSpan="2" Margin="3" Click="Button_Sort_Click"
                           Content="Sort glyphs" Width="200" FontSize="14" Style="{StaticResource glyphsOperationButtonStyle}"/>
 
         <TextBlock Grid.Row="21" Grid.ColumnSpan="2" Margin="3,6,3,3" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center">
@@ -438,7 +458,7 @@
             of an existing glyph, you should update the font range.<LineBreak/>
             Press the button below to do that.
         </TextBlock>
-        <Button Grid.Row="22" Grid.ColumnSpan="2" Margin="3" Click="Button_UpdateRange_Click"
+        <local:ButtonDark Grid.Row="22" Grid.ColumnSpan="2" Margin="3" Click="Button_UpdateRange_Click"
                           Content="Update range" Width="200" FontSize="14" Style="{StaticResource glyphsOperationButtonStyle}"/>
     </Grid>
 </local:DataUserControl>

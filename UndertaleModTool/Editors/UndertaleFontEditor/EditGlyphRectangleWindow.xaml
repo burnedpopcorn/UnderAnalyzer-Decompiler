@@ -8,8 +8,7 @@
         xmlns:undertale="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
         mc:Ignorable="d"
         Title="Edit a font glyph rectangle" Name="editGlyphRectangleWindow" Height="575" Width="800"
-        Loaded="Window_Loaded" IsVisibleChanged="Window_IsVisibleChanged" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Style="{DynamicResource DefaultWindowStyle}">
+        Loaded="Window_Loaded" IsVisibleChanged="Window_IsVisibleChanged" DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
         <Grid.Resources>
             <utmt:EqualityConverter x:Key="EqualityConverter"/>
@@ -21,13 +20,16 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Button Grid.Row="0" Margin="3" FontSize="16" Width="100" Height="26"
+        <utmt:ButtonDark Grid.Row="0" Margin="3" FontSize="16" Width="100" Height="26"
                          Content="Get help" Click="HelpButton_Click" Focusable="False"/>
 
         <ScrollViewer Name="TextureScroll" Grid.Row="1" Margin="3"
                       HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
                       PreviewMouseWheel="TextureScroll_MouseWheel" ScrollChanged="TextureScroll_ScrollChanged"
                       PreviewKeyDown="TextureScroll_PreviewKeyDown" PreviewKeyUp="TextureScroll_PreviewKeyUp">
+            <ScrollViewer.Background>
+                <DynamicResource ResourceKey="{x:Static SystemColors.MenuBrushKey}"/>
+            </ScrollViewer.Background>
             <Viewbox Grid.Row="1" Name="TextureViewbox"
                      Stretch="Uniform" StretchDirection="DownOnly"
                      SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True"
@@ -51,7 +53,7 @@
                             </Style>
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.Resources>
-                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Style TargetType="TextBlock">
                                 <!-- Hide "{NewItemPlaceholder}" -->
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </Style>
@@ -175,7 +177,7 @@
             </Viewbox>
         </ScrollViewer>
 
-        <Button Grid.Row="2" Margin="3,9,3,12" Click="SaveButton_Click" Width="160" Height="50"
-                         FontSize="18">Save changes</Button>
+        <utmt:ButtonDark Grid.Row="2" Margin="3,9,3,12" Click="SaveButton_Click" Width="160" Height="50"
+                         FontSize="18">Save changes</utmt:ButtonDark>
     </Grid>
 </Window>

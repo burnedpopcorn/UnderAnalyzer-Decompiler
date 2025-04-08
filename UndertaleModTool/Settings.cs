@@ -15,7 +15,7 @@ namespace UndertaleModTool
     public class Settings
     {
         public static string AppDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnderAnalyzer");//"UndertaleModTool");
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnderAnalyzer");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
         public string Version { get; set; } = MainWindow.Version;
@@ -62,9 +62,7 @@ namespace UndertaleModTool
         public bool ShowDebuggerOption { get; set; } = false;
         public DecompilerSettings DecompilerSettings { get; set; }
         public string InstanceIdPrefix { get; set; } = "inst_";
-
         public bool ShowNullEntriesInDataHierarchy { get; set; } = false;
-
         public static Settings Instance;
 
         public static JsonSerializerOptions JsonOptions = new()

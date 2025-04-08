@@ -193,6 +193,7 @@ namespace UndertaleModTool
                 Settings.Save();
             }
         }
+
         public static string TransparencyGridColor1
         {
             get => Settings.Instance.TransparencyGridColor1;
@@ -201,12 +202,14 @@ namespace UndertaleModTool
                 try
                 {
                     MainWindow.SetTransparencyGridColors(value, TransparencyGridColor2);
+
                     Settings.Instance.TransparencyGridColor1 = value;
                     Settings.Save();
                 }
                 catch (FormatException) { }
             }
         }
+
         public static string TransparencyGridColor2
         {
             get => Settings.Instance.TransparencyGridColor2;
@@ -215,12 +218,14 @@ namespace UndertaleModTool
                 try
                 {
                     MainWindow.SetTransparencyGridColors(TransparencyGridColor1, value);
+
                     Settings.Instance.TransparencyGridColor2 = value;
                     Settings.Save();
                 }
                 catch (FormatException) { }
             }
         }
+
         public static bool EnableDarkMode
         {
             get => Settings.Instance.EnableDarkMode;
@@ -230,11 +235,6 @@ namespace UndertaleModTool
                 Settings.Save();
 
                 MainWindow.SetDarkMode(value);
-                /*
-                if (value)
-                    mainWindow.ShowWarning("The message boxes (like this one) aren't compatible with the dark mode.\n" +
-                                           "This will be fixed in future versions.");
-                */
             }
         }
 
@@ -246,7 +246,6 @@ namespace UndertaleModTool
                 Settings.Instance.ShowDebuggerOption = value;
                 Settings.Save();
 
-                //mainWindow.RunGMSDebuggerItem.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
