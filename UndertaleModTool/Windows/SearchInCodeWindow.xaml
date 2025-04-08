@@ -7,7 +7,8 @@
         xmlns:UndertaleModTool="clr-namespace:UndertaleModTool" x:Class="UndertaleModTool.Windows.SearchInCodeWindow"
         mc:Ignorable="d"
         Title="Search in code" Height="500" Width="800" Closing="Window_Closing" IsVisibleChanged="Window_IsVisibleChanged" WindowStartupLocation="CenterScreen"
-        FocusManager.FocusedElement="{Binding ElementName=SearchTextBox}" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
+        FocusManager.FocusedElement="{Binding ElementName=SearchTextBox}" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}"
+        Style="{DynamicResource DefaultWindowStyle}">
     <Window.Resources>
         <ContextMenu x:Key="ListViewItemContextMenu">
             <MenuItem Header="Open" Click="MenuItemOpen_Click"/>
@@ -17,18 +18,18 @@
         </ContextMenu>
     </Window.Resources>
     <DockPanel>
-        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource TextBox.Static.Background}">
             <StatusBarItem>
                 <TextBlock Name="StatusBarTextBlock"></TextBlock>
             </StatusBarItem>
         </StatusBar>
         <Grid>
-            <UndertaleModTool:TextBoxDark x:Name="SearchTextBox" Margin="10,10,10,0" TextWrapping="Wrap" AcceptsReturn="True" Height="36" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" PreviewKeyDown="SearchTextBox_PreviewKeyDown"/>
-            <UndertaleModTool:ButtonDark x:Name="SearchButton" Content="Search" Margin="0,51,10,0" VerticalAlignment="Top" Click="SearchButton_Click" HorizontalAlignment="Right" Width="39" IsDefault="True"/>
+            <TextBox x:Name="SearchTextBox" Margin="10,10,10,0" TextWrapping="Wrap" AcceptsReturn="True" Height="36" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto" PreviewKeyDown="SearchTextBox_PreviewKeyDown"/>
+            <Button x:Name="SearchButton" Content="Search" Margin="0,51,10,0" VerticalAlignment="Top" Click="SearchButton_Click" HorizontalAlignment="Right" Width="39" IsDefault="True"/>
             <CheckBox x:Name="CaseSensitiveCheckBox" Content="Case sensitive" HorizontalAlignment="Left" Margin="10,51,0,0" Height="15" VerticalAlignment="Top"/>
             <CheckBox x:Name="RegexSearchCheckBox" Content="Regex search" HorizontalAlignment="Left" Margin="108,51,0,0" VerticalAlignment="Top"/>
             <CheckBox x:Name="InAssemblyCheckBox" Content="In assembly" HorizontalAlignment="Left" Margin="204,51,0,0" VerticalAlignment="Top"/>
-            <ListView ItemsSource="{Binding Results}" x:Name="ResultsListView" Margin="10,76,10,10" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
+            <ListView ItemsSource="{Binding Results}" x:Name="ResultsListView" Margin="10,76,10,10" Foreground="{DynamicResource ABrush.Foreground.Static}">
                 <ListView.CommandBindings>
                     <CommandBinding Command="Copy" Executed="CopyCommand_Executed"/>
                 </ListView.CommandBindings>
@@ -36,10 +37,10 @@
                     <Style TargetType="ListViewItem">
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="true">
-                                <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+                                <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+                                <Setter Property="Background" Value="{DynamicResource TextBox.Focus.Border}" />
                             </Trigger>
                         </Style.Triggers>
                         <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick"/>
@@ -67,12 +68,32 @@
                     <GridView>
                         <GridView.ColumnHeaderContainerStyle>
                             <Style TargetType="{x:Type GridViewColumnHeader}">
-                                <Setter Property="Foreground" Value="Black" />
+                                <Setter Property="Background" Value="{DynamicResource ABrush.Tone4.Border.Static}" />
                             </Style>
                         </GridView.ColumnHeaderContainerStyle>
-                        <GridViewColumn Header="Code" DisplayMemberBinding="{Binding Code}" Width="auto"/>
-                        <GridViewColumn Header="Line" DisplayMemberBinding="{Binding LineNumber}" Width="auto"/>
-                        <GridViewColumn Header="Text" DisplayMemberBinding="{Binding LineText}" Width="auto"/>
+                        <GridViewColumn Header="Code" DisplayMemberBinding="{Binding Code}" Width="auto">
+                            <GridViewColumn.HeaderContainerStyle>
+                                <Style TargetType="GridViewColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                </Style>
+                            </GridViewColumn.HeaderContainerStyle>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Line" DisplayMemberBinding="{Binding LineNumber}" Width="auto">
+                            <GridViewColumn.HeaderContainerStyle>
+                                <Style TargetType="GridViewColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                </Style>
+                            </GridViewColumn.HeaderContainerStyle>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="Text" DisplayMemberBinding="{Binding LineText}" Width="auto">
+                            <GridViewColumn.HeaderContainerStyle>
+                                <Style TargetType="GridViewColumnHeader">
+                                    <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                </Style>
+                            </GridViewColumn.HeaderContainerStyle>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
