@@ -1922,8 +1922,7 @@ public class DecompileContext_DecompileToString
     {
         var context = new Underanalyzer.Mock.GameContextMock();
         var func = new Underanalyzer.Mock.GMFunction("gml_Script_TestA");
-        context.GlobalFunctions.FunctionToName[func] = "TestA";
-        context.GlobalFunctions.NameToFunction["TestA"] = func;
+        ((GlobalFunctions)context.GlobalFunctions).DefineFunction("TestA", func);
 
         TestUtil.VerifyDecompileResult(
             """
@@ -2758,18 +2757,62 @@ public class DecompileContext_DecompileToString
     }
 
     [Fact]
+    public void TestCallVariable()
+    {
+        // TODO: make this test with asset references included
+        TestUtil.VerifyDecompileResult(
+            """
+            push.s "a"
+            conv.s.v
+            call.i show_debug_message 1
+            popz.v
+            push.s "a"
+            conv.s.v
+            call.i @@This@@ 0
+            push.v builtin.test
+            callv.v 1
+            popz.v
+            call.i @@This@@ 0
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.test
+            callv.v 1
+            popz.v
+            push.v self.a
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.b
+            callv.v 1
+            popz.v
+            """,
+            """
+            show_debug_message("a");
+            test("a");
+            self.test("a");
+            a.b("a");
+            """
+        );
+    }
+
+    [Fact]
     public void TestNewConstructorSetStatic()
     {
         TestUtil.VerifyDecompileResult(
             """
             :[0]
             b [2]
+
             > gml_Script_Test (locals=0, args=1)
             :[1]
             call.i @@SetStatic@@ 0
             push.v arg.argument0
             pop.v.v builtin.test
             exit.i
+
             :[2]
             push.i [function]gml_Script_Test
             conv.i.v
@@ -2787,48 +2830,50 @@ public class DecompileContext_DecompileToString
             }
             """
         );
-		
-		[Fact]
-		public void TestStructSelfArgument()
-		{
-			// Note about this test case: -1 (self) values are generally -15 (arguments), but seems like either
-			// different GameMaker versions or mod tooling(?) generates code that uses self...
-			TestUtil.VerifyDecompileResult(
-				"""
-				:[0]
-				call.i @@NewGMLArray@@ 0
-				call.i @@NewGMLArray@@ 0
-				b [2]
-				> test_struct (locals=0, args=0)
-				:[1]
-				pushi.e -1
-				pushi.e 0
-				push.v [array]self.argument
-				pop.v.v self.a
-				pushi.e -1
-				pushi.e 1
-				push.v [array]self.argument
-				pop.v.v self.b
-				exit.i
-				:[2]
-				push.i [function]test_struct
-				conv.i.v
-				call.i @@NullObject@@ 0
-				call.i method 2
-				dup.v 0
-				pushi.e -16
-				pop.v.v [stacktop]static.test_struct
-				call.i @@NewGMLObject@@ 3
-				pop.v.v self.c
-				""",
-				"""
-				c = 
-				{
-					a: [],
-					b: []
-				};
-				"""
-			);
-		}
+    }
+
+    [Fact]
+    public void TestStructSelfArgument()
+    {
+        // Note about this test case: -1 (self) values are generally -15 (arguments), but seems like either
+        // different GameMaker versions or mod tooling(?) generates code that uses self...
+        TestUtil.VerifyDecompileResult(
+            """
+            :[0]
+            call.i @@NewGMLArray@@ 0
+            call.i @@NewGMLArray@@ 0
+            b [2]
+
+            > test_struct (locals=0, args=0)
+            :[1]
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.argument
+            pop.v.v self.a
+            pushi.e -1
+            pushi.e 1
+            push.v [array]self.argument
+            pop.v.v self.b
+            exit.i
+
+            :[2]
+            push.i [function]test_struct
+            conv.i.v
+            call.i @@NullObject@@ 0
+            call.i method 2
+            dup.v 0
+            pushi.e -16
+            pop.v.v [stacktop]static.test_struct
+            call.i @@NewGMLObject@@ 3
+            pop.v.v self.c
+            """,
+            """
+            c = 
+            {
+                a: [],
+                b: []
+            };
+            """
+        );
     }
 }

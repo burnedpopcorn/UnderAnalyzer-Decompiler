@@ -14,69 +14,89 @@ namespace Underanalyzer.Decompiler.AST;
 /// </summary>
 public class StringNode(IGMString value) : IConstantNode<IGMString>, IConditionalValueNode
 {
+    /// <inheritdoc/>
     public IGMString Value { get; } = value;
 
+    /// <inheritdoc/>
     public bool Duplicated { get; set; } = false;
+
+    /// <inheritdoc/>
     public bool Group { get; set; } = false;
+
+    /// <inheritdoc/>
     public IGMInstruction.DataType StackType { get; set; } = IGMInstruction.DataType.String;
 
+    /// <inheritdoc/>
     public string ConditionalTypeName => "String";
+
+    /// <inheritdoc/>
     public string ConditionalValue => Value.Content;
 
+    /// <inheritdoc/>
     public IExpressionNode Clean(ASTCleaner cleaner)
     {
         return this;
     }
 
+    /// <inheritdoc/>
     public IExpressionNode PostClean(ASTCleaner cleaner)
     {
         return this;
     }
 
+    /// <summary>
+    /// Helper to print a GMS2-style escaped string.
+    /// </summary>
+    public static void PrintGMS2String(ASTPrinter printer, ReadOnlySpan<char> content)
+    {
+        printer.Write('"');
+        foreach (char c in content)
+        {
+            switch (c)
+            {
+                case '\n':
+                    printer.Write("\\n");
+                    break;
+                case '\r':
+                    printer.Write("\\r");
+                    break;
+                case '\b':
+                    printer.Write("\\b");
+                    break;
+                case '\f':
+                    printer.Write("\\f");
+                    break;
+                case '\t':
+                    printer.Write("\\t");
+                    break;
+                case '\v':
+                    printer.Write("\\v");
+                    break;
+                case '\a':
+                    printer.Write("\\a");
+                    break;
+                case '\\':
+                    printer.Write("\\\\");
+                    break;
+                case '\"':
+                    printer.Write("\\\"");
+                    break;
+                default:
+                    printer.Write(c);
+                    break;
+            }
+        }
+        printer.Write('"');
+    }
+
+    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         ReadOnlySpan<char> content = Value.Content;
         if (printer.Context.GameContext.UsingGMS2OrLater)
         {
             // Handle string escaping.
-            printer.Write('"');
-            foreach (char c in content)
-            {
-                switch (c)
-                {
-                    case '\n':
-                        printer.Write("\\n");
-                        break;
-                    case '\r':
-                        printer.Write("\\r");
-                        break;
-                    case '\b':
-                        printer.Write("\\b");
-                        break;
-                    case '\f':
-                        printer.Write("\\f");
-                        break;
-                    case '\t':
-                        printer.Write("\\t");
-                        break;
-                    case '\v':
-                        printer.Write("\\v");
-                        break;
-                    case '\a':
-                        printer.Write("\\a");
-                        break;
-                    case '\\':
-                        printer.Write("\\\\");
-                        break;
-                    case '\"':
-                        printer.Write("\\\"");
-                        break;
-                    default:
-                        printer.Write(c);
-                        break;
-                }
-            }
-            printer.Write('"');
+            PrintGMS2String(printer, content);
         }
         else
         {
@@ -119,11 +139,13 @@ public class StringNode(IGMString value) : IConstantNode<IGMString>, IConditiona
         }
     }
 
+    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return false;
     }
 
+    /// <inheritdoc/>
     public IExpressionNode? ResolveMacroType(ASTCleaner cleaner, IMacroType type)
     {
         if (type is IMacroTypeConditional conditional)
