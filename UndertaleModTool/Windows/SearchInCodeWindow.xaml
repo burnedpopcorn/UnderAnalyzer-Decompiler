@@ -69,12 +69,18 @@
                         <GridView.ColumnHeaderContainerStyle>
                             <Style TargetType="{x:Type GridViewColumnHeader}">
                                 <Setter Property="Background" Value="{DynamicResource ABrush.Tone4.Border.Static}" />
+                                <!-- Remove the white grid lines -->
+                                <Setter Property="BorderBrush" Value="Transparent" />
+                                <Setter Property="BorderThickness" Value="0" />
                             </Style>
                         </GridView.ColumnHeaderContainerStyle>
+
                         <GridViewColumn Header="Code" DisplayMemberBinding="{Binding Code}" Width="auto">
                             <GridViewColumn.HeaderContainerStyle>
                                 <Style TargetType="GridViewColumnHeader">
                                     <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderThickness" Value="0" />
                                 </Style>
                             </GridViewColumn.HeaderContainerStyle>
                         </GridViewColumn>
@@ -83,6 +89,8 @@
                             <GridViewColumn.HeaderContainerStyle>
                                 <Style TargetType="GridViewColumnHeader">
                                     <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderThickness" Value="0" />
                                 </Style>
                             </GridViewColumn.HeaderContainerStyle>
                         </GridViewColumn>
@@ -91,10 +99,13 @@
                             <GridViewColumn.HeaderContainerStyle>
                                 <Style TargetType="GridViewColumnHeader">
                                     <Setter Property="Background" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource TextBox.MouseOver.Border}" />
+                                    <Setter Property="BorderThickness" Value="0" />
                                 </Style>
                             </GridViewColumn.HeaderContainerStyle>
                         </GridViewColumn>
                     </GridView>
+
                 </ListView.View>
             </ListView>
         </Grid>
