@@ -246,6 +246,8 @@ public class UndertaleInstruction : UndertaleObject, IGMInstruction
         GT = 6,
     }
 
+    // i dont give a fuck
+    public uint Address { get; internal set; }
     public Opcode Kind 
     { 
         get => (Opcode)(_firstWord >> 24); 
@@ -1503,6 +1505,10 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
             while (reader.AbsPosition < instructionEndPos)
             {
                 Instructions.Add(reader.ReadUndertaleObject<UndertaleInstruction>());
+
+                uint a = (uint)(reader.AbsPosition - instructionStartPos) / 4;
+                UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();
+                instr.Address = a;
             }
 
             // Set this flag for code editor, etc. to not get confused later
@@ -1550,6 +1556,10 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
                 while (reader.AbsPosition < instructionEndPos)
                 {
                     Instructions.Add(reader.ReadUndertaleObject<UndertaleInstruction>());
+
+                    uint a = (uint)(reader.AbsPosition - instructionStartPos) / 4;
+                    UndertaleInstruction instr = reader.ReadUndertaleObject<UndertaleInstruction>();
+                    instr.Address = a;
                 }
 
                 // Return from instruction blob
@@ -1634,6 +1644,15 @@ public class UndertaleCode : UndertaleNamedResource, UndertaleObjectWithBlobs, I
             addr += instr.CalculateInstructionSize();
         }
         Length = addr * 4;
+    }
+
+    public UndertaleInstruction GetInstructionFromAddress(uint address)
+    {
+        UpdateLength();
+        foreach (UndertaleInstruction instr in Instructions)
+            if (instr.Address == address)
+                return instr;
+        return null;
     }
 
     /// <summary>
