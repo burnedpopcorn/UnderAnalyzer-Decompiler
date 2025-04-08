@@ -9,12 +9,12 @@
         Title="Search in code" Height="500" Width="800" Closing="Window_Closing" IsVisibleChanged="Window_IsVisibleChanged" WindowStartupLocation="CenterScreen"
         FocusManager.FocusedElement="{Binding ElementName=SearchTextBox}" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
     <Window.Resources>
-        <local:ContextMenuDark x:Key="ListViewItemContextMenu">
+        <ContextMenu x:Key="ListViewItemContextMenu">
             <MenuItem Header="Open" Click="MenuItemOpen_Click"/>
             <MenuItem Header="Open in new tab" Click="MenuItemOpenInNewTab_Click"/>
             <MenuItem Header="Copy" Command="Copy"/>
             <MenuItem Header="Copy all" Click="MenuItemCopyAll_Click"/>
-        </local:ContextMenuDark>
+        </ContextMenu>
     </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
