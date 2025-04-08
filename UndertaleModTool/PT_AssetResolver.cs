@@ -1174,6 +1174,7 @@ namespace UndertaleModTool
         // Detects PT state names (thank you so much utmtce)
         public static void FindStateNames(UndertaleCode code, string[] statePrefix)
         {
+            /*
             if (code != null)
             {
                 for (var i = 0; i < code.Instructions.Count; i++)
@@ -1253,6 +1254,7 @@ namespace UndertaleModTool
                     }
                 }
             }
+            */
         }
     }
 }

@@ -230,7 +230,7 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
 
     // 1x1 blank image
     private static readonly TexData _placeholderTexture = new() { Image = new GMImage(1, 1) };
-    private static readonly object _textureLoadLock = new();
+    private readonly object _textureLoadLock = new();
 
     /// <summary>
     /// Attempts to load the corresponding external texture. Should only happen in 2022.9 and above.
@@ -375,6 +375,10 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         /// </summary>
         public void Serialize(FileBinaryWriter writer, bool gm2022_5)
         {
+            if (Image is null)
+            {
+                throw new Exception("No image assigned to embedded texture");
+            }
             if (Image.Format == GMImage.ImageFormat.RawBgra)
             {
                 throw new Exception("Unexpected raw RGBA image");
