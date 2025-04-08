@@ -371,33 +371,24 @@ namespace UndertaleModLib
 
             long returnTo = reader.Position;
 
-            uint possibleSoundCount = reader.ReadUInt32();
-            List<uint> soundPtrs = new();
-            if (possibleSoundCount > 0)
-            {
-                soundPtrs.Capacity = (int)possibleSoundCount;
-                for (int i = 0; i < possibleSoundCount; i++)
-                {
-                    uint soundPtr = reader.ReadUInt32();
-                    if (soundPtr == 0)
-                        continue;
-                    soundPtrs.Add(soundPtr);
-                }
-            }
-            if (soundPtrs.Count >= 2)
+            uint soundCount = reader.ReadUInt32();
+            if (soundCount >= 2)
             {
                 // If first sound's theoretical (old) end offset is below the start offset of
                 // the next sound by exactly 4 bytes, then this is 2024.6.
-                if ((soundPtrs[0] + (4 * 9)) == (soundPtrs[1] - 4))
+                uint firstSoundPtr = reader.ReadUInt32();
+                uint secondSoundPtr = reader.ReadUInt32();
+                if ((firstSoundPtr + (4 * 9)) == (secondSoundPtr - 4))
                 {
                     reader.undertaleData.SetGMS2Version(2024, 6);
                 }
             }
-            else if (soundPtrs.Count == 1)
+            else if (soundCount == 1)
             {
                 // If there's a nonzero value where padding should be at the
                 // end of the sound, then this is 2024.6.
-                reader.AbsPosition = soundPtrs[0] + (4 * 9);
+                uint firstSoundPtr = reader.ReadUInt32();
+                reader.AbsPosition = firstSoundPtr + (4 * 9);
                 if ((reader.AbsPosition % 16) != 4)
                 {
                     // If this occurs, then something weird has happened at the start of the chunk?
@@ -471,8 +462,8 @@ namespace UndertaleModLib
                 int marginRight = reader.ReadInt32();
                 int marginBottom = reader.ReadInt32();
                 int marginTop = reader.ReadInt32();
-                (uint bboxWidth, uint bboxHeight) = UndertaleSprite.CalculateBboxMaskDimensions(marginRight, marginLeft, marginBottom, marginTop);
-                (uint normalWidth, uint normalHeight) = UndertaleSprite.CalculateFullMaskDimensions(width, height);
+                (int bboxWidth, int bboxHeight) = UndertaleSprite.CalculateBboxMaskDimensions(marginRight, marginLeft, marginBottom, marginTop);
+                (int normalWidth, int normalHeight) = UndertaleSprite.CalculateFullMaskDimensions((int)width, (int)height);
                 if (bboxWidth == normalWidth && bboxHeight == normalHeight)
                 {
                     // We can't determine anything from this sprite
@@ -515,11 +506,11 @@ namespace UndertaleModLib
                     // We can't determine anything from this sprite
                     continue;
                 }
-                uint fullLength = (normalWidth + 7) / 8 * normalHeight;
+                uint fullLength = (uint)((normalWidth + 7) / 8 * normalHeight);
                 fullLength *= maskCount;
                 if ((fullLength % 4) != 0)
                     fullLength += (4 - (fullLength % 4));
-                uint bboxLength = (bboxWidth + 7) / 8 * bboxHeight;
+                uint bboxLength = (uint)((bboxWidth + 7) / 8 * bboxHeight);
                 bboxLength *= maskCount;
                 if ((bboxLength % 4) != 0)
                     bboxLength += (4 - (bboxLength % 4));
@@ -648,7 +639,9 @@ namespace UndertaleModLib
 
         internal override void UnserializeChunk(UndertaleReader reader)
         {
-            long chunkEnd = reader.AbsPosition + Length;
+            reader.Position -= 4;
+            int chunkLength = reader.ReadInt32();
+            long chunkEnd = reader.AbsPosition + chunkLength;
 
             long beginPosition = reader.Position;
 
@@ -657,14 +650,7 @@ namespace UndertaleModLib
             uint[] objectLocations = new uint[count + 1];
             for (int i = 0; i < count; i++)
             {
-                uint objectLocation = reader.ReadUInt32();
-                if (objectLocation == 0)
-                {
-                    i--;
-                    count--;
-                    continue;
-                }
-                objectLocations[i] = objectLocation;
+                objectLocations[i] = (uint)reader.ReadInt32();
             }
             objectLocations[count] = (uint)chunkEnd;
 
@@ -1432,7 +1418,7 @@ namespace UndertaleModLib
 
         internal override void SerializeChunk(UndertaleWriter writer)
         {
-            if (Functions == null && CodeLocals == null)
+            if (Functions is null && CodeLocals is null)
                 return;
 
             UndertaleInstruction.Reference<UndertaleFunction>.SerializeReferenceChain(writer, writer.undertaleData.Code, Functions);
@@ -1471,7 +1457,6 @@ namespace UndertaleModLib
                 Functions.SetCapacity(Length / 12);
                 while (reader.Position + 12 <= startPosition + Length)
                     Functions.Add(reader.ReadUndertaleObject<UndertaleFunction>());
-
                 CodeLocals = null;
             }
             else

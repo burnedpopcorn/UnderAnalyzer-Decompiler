@@ -186,7 +186,6 @@ namespace UndertaleModLib.Util
             {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
-
             if (chunkBuffer.Position + count > _length)
             {
                 throw new IOException("Reading out of chunk bounds");
@@ -215,7 +214,6 @@ namespace UndertaleModLib.Util
             {
                 throw new ArgumentOutOfRangeException(nameof(count));
             }
-
             if (chunkBuffer.Position + count > _length)
             {
                 throw new IOException("Reading out of chunk bounds");
@@ -313,6 +311,7 @@ namespace UndertaleModLib.Util
 
             return res;
         }
+
         public void SkipGMString()
         {
             int length = BinaryPrimitives.ReadInt32LittleEndian(ReadToBuffer(4));

@@ -70,8 +70,6 @@ namespace UndertaleModTool.Windows
         {
             InitializeComponent();
 
-            // if you add a new icon, make sure the "Build Action" property is "Resource"
-            // or else you will tear your hair out trying to find the reason why your code dont work anymore
             Icon = new Icon(App.GetResourceStream(new Uri("pack://application:,,,/icon.ico")).Stream); // "UndertaleModTool/icon.ico"
             Message = message;
             Title = title;
@@ -89,6 +87,7 @@ namespace UndertaleModTool.Windows
 
             label1.AutoSize = false;
 
+            // dark mode related
             BackColor = BGColor;
             richTextBox1.BackColor = TextBoxBGColor;
             label1.ForeColor = TextColor;

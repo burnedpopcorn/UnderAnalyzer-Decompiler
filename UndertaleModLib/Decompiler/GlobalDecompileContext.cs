@@ -63,6 +63,8 @@ public class GlobalDecompileContext : IGameContext
             // If an error occurs, just default to empty
             data.GlobalFunctions = new GlobalFunctions();
         }
+
+        // TODO: add extension functions to global functions lookup
     }
 
     // Enumerates over all global script code entries
@@ -70,9 +72,6 @@ public class GlobalDecompileContext : IGameContext
     {
         foreach (UndertaleGlobalInit script in data.GlobalInitScripts)
         {
-            // TODO: is this correct?
-            if (script is null || script.Code is null)
-                continue;
             yield return script.Code;
         }
     }
@@ -85,7 +84,6 @@ public class GlobalDecompileContext : IGameContext
             return null;
         }
 
-        UndertaleNamedResource asset = null;
         switch (assetType)
         {
             case AssetType.Object:
@@ -93,92 +91,79 @@ public class GlobalDecompileContext : IGameContext
                 {
                     return null;
                 }
-                asset = Data.GameObjects[assetIndex];
-                break;
+                return Data.GameObjects[assetIndex].Name?.Content;
             case AssetType.Sprite:
                 if (assetIndex >= Data.Sprites.Count)
                 {
                     return null;
                 }
-                asset = Data.Sprites[assetIndex];
-                break;
+                return Data.Sprites[assetIndex].Name?.Content;
             case AssetType.Sound:
                 if (assetIndex >= Data.Sounds.Count)
                 {
                     return null;
                 }
-                asset = Data.Sounds[assetIndex];
-                break;
+                return Data.Sounds[assetIndex].Name?.Content;
             case AssetType.Room:
                 if (assetIndex >= Data.Rooms.Count)
                 {
                     return null;
                 }
-                asset = Data.Rooms[assetIndex];
-                break;
+                return Data.Rooms[assetIndex].Name?.Content;
             case AssetType.Background:
                 if (assetIndex >= Data.Backgrounds.Count)
                 {
                     return null;
                 }
-                asset = Data.Backgrounds[assetIndex];
-                break;
+                return Data.Backgrounds[assetIndex].Name?.Content;
             case AssetType.Path:
                 if (assetIndex >= Data.Paths.Count)
                 {
                     return null;
                 }
-                asset = Data.Paths[assetIndex];
-                break;
+                return Data.Paths[assetIndex].Name?.Content;
             case AssetType.Script:
                 if (assetIndex >= Data.Scripts.Count)
                 {
                     return null;
                 }
-                asset = Data.Scripts[assetIndex];
-                break;
+                return Data.Scripts[assetIndex].Name?.Content;
             case AssetType.Font:
                 if (assetIndex >= Data.Fonts.Count)
                 {
                     return null;
                 }
-                asset = Data.Fonts[assetIndex];
-                break;
+                return Data.Fonts[assetIndex].Name?.Content;
             case AssetType.Timeline:
                 if (assetIndex >= Data.Timelines.Count)
                 {
                     return null;
                 }
-                asset = Data.Timelines[assetIndex];
-                break;
+                return Data.Timelines[assetIndex].Name?.Content;
             case AssetType.Shader:
                 if (assetIndex >= Data.Shaders.Count)
                 {
                     return null;
                 }
-                asset = Data.Shaders[assetIndex];
-                break;
+                return Data.Shaders[assetIndex].Name?.Content;
             case AssetType.Sequence:
                 if (assetIndex >= Data.Sequences.Count)
                 {
                     return null;
                 }
-                asset = Data.Sequences[assetIndex];
-                break;
+                return Data.Sequences[assetIndex].Name?.Content;
             case AssetType.AnimCurve:
                 if (assetIndex >= Data.AnimationCurves.Count)
                 {
                     return null;
                 }
-                asset = Data.AnimationCurves[assetIndex];
-                break;
+                return Data.AnimationCurves[assetIndex].Name?.Content;
             case AssetType.ParticleSystem:
                 if (assetIndex >= Data.ParticleSystems.Count)
                 {
                     return null;
                 }
-                asset = Data.ParticleSystems[assetIndex];
-                break;
+                return Data.ParticleSystems[assetIndex].Name?.Content;
             case AssetType.RoomInstance:
                 if (assetIndex < 100000)
                 {
@@ -187,10 +172,6 @@ public class GlobalDecompileContext : IGameContext
                 return $"{Data.ToolInfo.InstanceIdPrefix()}{assetIndex}";
         }
 
-        if (asset is null)
-        {
-            return null;
-        }
-        return asset.Name?.Content;
+        return null;
     }
 }

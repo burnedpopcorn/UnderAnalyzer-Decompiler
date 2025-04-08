@@ -23,6 +23,7 @@ namespace UndertaleModTool.Windows
     public partial class FindReferencesTypesDialog : Window
     {
         private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+
         private readonly UndertaleResource sourceObj;
         private readonly UndertaleData data;
         private readonly bool dontShowWindow = false;
@@ -155,6 +156,7 @@ namespace UndertaleModTool.Windows
                     dialog?.Close();
 
                 }
+
             }
             else
             {
