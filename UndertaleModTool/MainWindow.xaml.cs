@@ -2562,7 +2562,7 @@ namespace UndertaleModTool
 
         private void MenuItem_GitHub_Click(object sender, RoutedEventArgs e)
         {
-            OpenBrowser("https://github.com/burnedpopcorn/UTMT-Enhanced-Tools");
+            OpenBrowser("https://github.com/burnedpopcorn/UnderAnalyzer-Decompiler");
         }
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
@@ -2655,7 +2655,7 @@ namespace UndertaleModTool
         public async void UpdateApp(SettingsWindow window)
         {
             // yeah, im not gonna make an Updater for this, sooo....
-            OpenBrowser("https://github.com/burnedpopcorn/UTMT-Enhanced-Tools");
+            OpenBrowser("https://github.com/burnedpopcorn/UnderAnalyzer-Decompiler");
         }
 
         private async void Command_Run(object sender, ExecutedRoutedEventArgs e)
