@@ -43,6 +43,30 @@ namespace UndertaleModTool
     /// Logika interakcji dla klasy UndertaleCodeEditor.xaml
     /// </summary>
     [SupportedOSPlatform("windows7.0")]
+
+    #region really hacky way to get enums
+    public class MacroData
+    {
+        public MacroTypes Types { get; set; } = new();
+        public class MacroTypes
+        {
+            public Dictionary<string, EnumData> Enums { get; set; } = new();
+        }
+    }
+
+    public class EnumData
+    {
+        public EnumData(string name, Dictionary<string, long>? values)
+        {
+            this.Name = name;
+            if (values is not null)
+                this.Values = values;
+        }
+        public Dictionary<string, long> Values { get; set; } = new();
+        public string Name { get; set; }
+    }
+#endregion
+
     public partial class UndertaleCodeEditor : DataUserControl
     {
         private static MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
@@ -71,6 +95,9 @@ namespace UndertaleModTool
         private static readonly Dictionary<string, UndertaleNamedResource> ScriptsDict = new();
         private static readonly Dictionary<string, UndertaleNamedResource> FunctionsDict = new();
         private static readonly Dictionary<string, UndertaleNamedResource> CodeDict = new();
+
+        // Custom Enums (mainly for colors)
+        public static Dictionary<string, int> Enums = new Dictionary<string, int>();
 
         public enum CodeEditorTab
         {
@@ -1289,6 +1316,8 @@ namespace UndertaleModTool
             private static readonly SolidColorBrush ConstantBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
             private static readonly SolidColorBrush InstanceBrush = new(Color.FromRgb(0x58, 0xE3, 0x5A));
             private static readonly SolidColorBrush LocalBrush = new(Color.FromRgb(0xFF, 0xF8, 0x99));
+            // ENUMS
+            private static readonly SolidColorBrush EnumBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
 
             private static ContextMenuDark contextMenu;
 
@@ -1475,6 +1504,88 @@ namespace UndertaleModTool
                                                            GlobalBrush);
                         }
                     }
+
+                    //
+                    string definitionDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Definitions\\";
+                    string macroDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\";
+                    string[] defs = Directory.GetFiles(definitionDir);
+
+                    var ii = 0;
+                    // manually set UnknownEnums, because they're not in GameSpecificData
+                    Enums["UnknownEnum"] = ii;
+                    if (offset >= 12)
+                    {
+                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
+                    // Find all Enums in GameSpecificData
+                    foreach (string def in defs)
+                    {
+                        GameSpecificResolver.GameSpecificDefinition currentDef = System.Text.Json.JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
+
+                        foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
+                        {
+                            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(data.GeneralInfo.DisplayName.Content, condition.Value)) || condition.ConditionKind == "Always")
+                            {
+                                string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
+                                if (File.Exists(macroPath))
+                                {
+                                    MacroData macro = System.Text.Json.JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
+                                    foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
+                                    {
+                                        // builtin enums
+                                        if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
+                                            continue;
+
+                                        // For Colors for Second Dynamic Value in Enums
+                                        var stringCount = kvp.Value.Name.Length;
+                                        if (offset >= stringCount)
+                                        {
+                                            if (doc.GetText(offset - stringCount, stringCount) == kvp.Value.Name + ".")
+                                            {
+                                                Enums[kvp.Value.Name] = ii++;
+                                                return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    // For Colors for First Static Value in Enums
+                    if (Enums.ContainsKey(nameText))
+                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+
+                    /*
+                    // Add Enums
+                    // TODO: uhhh get it from GameSPecificData and make code a for loop
+                    Enums["UnknownEnum"] = 0;
+                    Enums["states"] = 1;
+
+                    // For Colors for Second Dynamic Value in Enums
+                    if (offset >= 7)
+                    {
+                        if (doc.GetText(offset - 7, 7) == "states.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
+                    if (offset >= 12)
+                    {
+                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
+                        {
+                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                        }
+                    }
+                    // For Colors for First Static Value in Enums
+                    if (Enums.ContainsKey(nameText))
+                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                    // this is VERY hacky, but i cant think of a better way
+                    */
+
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
                                                        ConstantBrush);
