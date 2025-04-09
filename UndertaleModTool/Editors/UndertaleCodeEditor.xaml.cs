@@ -1505,13 +1505,10 @@ namespace UndertaleModTool
                         }
                     }
 
-                    //
-                    string definitionDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Definitions\\";
-                    string macroDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\";
-                    string[] defs = Directory.GetFiles(definitionDir);
-
+                    // wayyyy better than my hardcoded solution from old versions
+                    #region Color Enums
+                    // manually set UnknownEnums, because they're not in GameSpecificData, and they are always Enums
                     var ii = 0;
-                    // manually set UnknownEnums, because they're not in GameSpecificData
                     Enums["UnknownEnum"] = ii;
                     if (offset >= 12)
                     {
@@ -1521,70 +1518,55 @@ namespace UndertaleModTool
                         }
                     }
                     // Find all Enums in GameSpecificData
+                    // mostly from zyle's thing, but repurposed
+                    string[] defs = Directory.GetFiles($"{Program.GetExecutableDirectory()}\\GameSpecificData\\Definitions\\");
                     foreach (string def in defs)
                     {
                         GameSpecificResolver.GameSpecificDefinition currentDef = System.Text.Json.JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
 
                         foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
                         {
+                            // check if json file is allowed to be applied to the current game loaded
                             if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(data.GeneralInfo.DisplayName.Content, condition.Value)) || condition.ConditionKind == "Always")
                             {
-                                string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
+                                string macroPath = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\{currentDef.UnderanalyzerFilename}";
                                 if (File.Exists(macroPath))
                                 {
                                     MacroData macro = System.Text.Json.JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
                                     foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
                                     {
-                                        // builtin enums
                                         if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
                                             continue;
 
-                                        // For Colors for Second Dynamic Value in Enums
-                                        var stringCount = kvp.Value.Name.Length;
+                                        // add Enum set to list (for Static Value below)
+                                        Enums[kvp.Value.Name] = ii++;
+
+                                        // For Colors for Second (Dynamic) Value in Enums
+                                        //          this thing
+                                        //               |
+                                        //               v
+                                        // UnknownEnum.Value_1
+                                        var stringCount = kvp.Value.Name.Length + 1;
                                         if (offset >= stringCount)
                                         {
                                             if (doc.GetText(offset - stringCount, stringCount) == kvp.Value.Name + ".")
                                             {
-                                                Enums[kvp.Value.Name] = ii++;
                                                 return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
                                             }
                                         }
                                     }
                                 }
                             }
-
                         }
                     }
-                    // For Colors for First Static Value in Enums
+                    // For Colors for First (Static) Value in Enums
+                    //  this thing
+                    //      |
+                    //      v
+                    // UnknownEnum.Value_1
                     if (Enums.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-
-                    /*
-                    // Add Enums
-                    // TODO: uhhh get it from GameSPecificData and make code a for loop
-                    Enums["UnknownEnum"] = 0;
-                    Enums["states"] = 1;
-
-                    // For Colors for Second Dynamic Value in Enums
-                    if (offset >= 7)
-                    {
-                        if (doc.GetText(offset - 7, 7) == "states.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
-                    if (offset >= 12)
-                    {
-                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
-                    // For Colors for First Static Value in Enums
-                    if (Enums.ContainsKey(nameText))
-                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                    // this is VERY hacky, but i cant think of a better way
-                    */
+                    #endregion
 
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,
