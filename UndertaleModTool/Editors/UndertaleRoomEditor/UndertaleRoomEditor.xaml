@@ -7,7 +7,8 @@
              xmlns:undertale="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance undertale:UndertaleRoom}" x:Name="RoomEditor">
+             d:DesignHeight="450" d:DesignWidth="800" d:DataContext="{d:DesignInstance undertale:UndertaleRoom}" x:Name="RoomEditor"
+             >
     <UserControl.Resources>
         <ResourceDictionary>
             <local:GridConverter x:Key="GridConverter"/>
@@ -228,7 +229,7 @@
                             </ContextMenu>
                         </TreeViewItem.Resources>
                         <TreeViewItem.Style>
-                            <Style TargetType="{x:Type TreeViewItem}">
+                            <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                                 <Setter Property="ContextMenu" Value="{StaticResource cm}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Flags, Mode=OneTime, Converter={StaticResource IsGMS2Converter}}" Value="False">
@@ -502,12 +503,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Enabled</TextBlock>
                             <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Enabled}"/>
@@ -568,12 +563,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Enabled</TextBlock>
                             <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Enabled}"/>
@@ -658,9 +647,6 @@
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
                             </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Position</TextBlock>
@@ -747,12 +733,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Position</TextBlock>
                             <Grid Grid.Row="0" Grid.Column="2">
@@ -861,12 +841,6 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleStringReference" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Layer name</TextBlock>
                             <local:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding LayerName}"/>
@@ -930,10 +904,6 @@
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
-                                            <Grid.Resources>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                            </Grid.Resources>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Size</TextBlock>
                                             <Grid Grid.Row="0" Grid.Column="2">
@@ -981,13 +951,6 @@
                                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                             </Grid.RowDefinitions>
-                                            <Grid.Resources>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                                <Style TargetType="CheckBox" BasedOn="{StaticResource Centered}"/>
-                                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
-                                            </Grid.Resources>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Visible</TextBlock>
                                             <CheckBox Grid.Row="0" Grid.Column="2" Margin="3" IsChecked="{Binding Visible}"/>
@@ -1055,14 +1018,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="ComboBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleStringReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
                             <local:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>
@@ -1127,14 +1082,6 @@
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                                 <RowDefinition Height="Auto" SharedSizeGroup="s22"/>
                             </Grid.RowDefinitions>
-                            <Grid.Resources>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="TextBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="ComboBox" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleStringReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:UndertaleObjectReference" BasedOn="{StaticResource Centered}"/>
-                                <Style TargetType="local:ColorPicker" BasedOn="{StaticResource Centered}"/>
-                            </Grid.Resources>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Name</TextBlock>
                             <local:UndertaleStringReference Grid.Row="0" Grid.Column="2" Margin="3" ObjectReference="{Binding Name}"/>
