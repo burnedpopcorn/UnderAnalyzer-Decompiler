@@ -27,16 +27,18 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
     /// </summary>
     public bool MustBeWhileLoop { get; } = mustBeWhileLoop;
 
+    /// <inheritdoc/>
     public bool SemicolonAfter { get => false; }
+
+    /// <inheritdoc/>
     public bool EmptyLineBefore { get; set; }
+
+    /// <inheritdoc/>
     public bool EmptyLineAfter { get; set; }
 
+    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
-        Condition = Condition.Clean(cleaner);
-        Condition.Group = false;
-        Body.Clean(cleaner);
-
         EmptyLineAfter = EmptyLineBefore = cleaner.Context.Settings.EmptyLineAroundBranchStatements;
 
         if (!MustBeWhileLoop)
@@ -44,7 +46,8 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
             // Check if we can turn into a for (;;) loop
             if (Condition is Int64Node i64 && i64.Value == 1)
             {
-                return new ForLoopNode(null, null, null, Body)
+                ElseToContinueCleanup.Clean(cleaner, Body);
+                return new ForLoopNode(null, null, null, (BlockNode)Body.Clean(cleaner))
                 {
                     EmptyLineBefore = EmptyLineBefore,
                     EmptyLineAfter = EmptyLineAfter
@@ -52,9 +55,14 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
             }
         }
 
+        Condition = Condition.Clean(cleaner);
+        Condition.Group = false;
+        Body.Clean(cleaner);
+
         return this;
     }
 
+    /// <inheritdoc/>
     public int BlockClean(ASTCleaner cleaner, BlockNode block, int i)
     {
         // Check if we should convert this loop into a for loop
@@ -86,6 +94,12 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
                 return i;
             }
 
+            // Finally, if the for loop body would be empty, there's no need to convert over
+            if (Body.Children.Count == 1)
+            {
+                return i;
+            }
+
             // Convert into for loop!
             Body.Children.RemoveAt(Body.Children.Count - 1);
             BlockNode incrementorBlock = new(Body.FragmentContext);
@@ -100,6 +114,7 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
         return i;
     }
 
+    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         Condition = Condition.PostClean(cleaner);
@@ -112,6 +127,7 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
         return this;
     }
 
+    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         printer.Write("while (");
@@ -131,6 +147,7 @@ public class WhileLoopNode(IExpressionNode condition, BlockNode body, bool mustB
         }
     }
 
+    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;

@@ -100,7 +100,9 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+
                 <Image Grid.Row="0" Grid.Column="1" Name="ItemTextureBGImage" Opacity="0.2"/>
+
                 <Image Grid.Row="0" Grid.Column="1" Name="ItemTextureImage">
                     <Image.Clip>
                         <RectangleGeometry>

@@ -191,7 +191,7 @@ public interface IGMInstruction
         Negate = 0x11,
 
         /// <summary>
-        /// Performs a boolean NOT operation on the top value of the stack (modifying it).
+        /// Performs a boolean or bitwise NOT operation on the top value of the stack (modifying it).
         /// Mnemonic: "not"
         /// </summary>
         [OpcodeInfo("not")]
@@ -403,18 +403,21 @@ public interface IGMInstruction
 
         /// <summary>
         /// Pushes a boolean value to the stack, indicating whether static initialization has already occurred for this function (true), or otherwise false.
-        /// Enters a static variable initialization state.
         /// Mnemonic: "isstaticok"
         /// </summary>
         [OpcodeInfo("isstaticok")]
         HasStaticInitialized = -6,
 
         /// <summary>
-        /// Exits a static variable initialization state.
+        /// Marks the current function to no longer be able to enter its own static initialization.
         /// Mnemonic: "setstatic"
         /// </summary>
+        /// <remarks>
+        /// This can either occur at the beginning or end of a static block, depending on whether "AllowReentrantStatic" is enabled by a 
+        /// game's developer (enabled by default before GameMaker 2024.11; disabled by default otherwise).
+        /// </remarks>
         [OpcodeInfo("setstatic")]
-        ResetStatic = -7,
+        SetStaticInitialized = -7,
 
         /// <summary>
         /// Keeps track of an array reference temporarily. Used in multi-dimensional array compound assignment statements.
@@ -603,11 +606,6 @@ public interface IGMInstruction
     }
 
     /// <summary>
-    /// The address of this instruction, in bytes, from the start of the containing code entry. 
-    /// </summary>
-    public int Address { get; }
-
-    /// <summary>
     /// The opcode of this instruction. Generally indicates what operation the instruction will perform.
     /// </summary>
     public Opcode Kind { get; }
@@ -673,11 +671,6 @@ public interface IGMInstruction
     public long ValueLong { get; }
 
     /// <summary>
-    /// Represents a boolean value for instructions that use it.
-    /// </summary>
-    public bool ValueBool { get; }
-
-    /// <summary>
     /// Represents a string value for instructions that push strings.
     /// </summary>
     public IGMString? ValueString { get; }
@@ -731,34 +724,33 @@ public interface IGMInstruction
     /// </summary>
     internal static int GetSize(IGMInstruction instr)
     {
+        // If the instruction has a variable or function, it takes 4 extra bytes for the reference
         if (instr.Variable is not null || instr.Function is not null)
         {
             return 8;
         }
-        switch (instr.Kind)
+
+        // Push instructions take extra space to store data (aside from 16-bit integers)
+        if (instr.Kind is Opcode.Push or Opcode.PushLocal or Opcode.PushGlobal or 
+                          Opcode.PushBuiltin or Opcode.PushImmediate)
         {
-            case Opcode.Push or 
-                 Opcode.PushLocal or 
-                 Opcode.PushGlobal or
-                 Opcode.PushBuiltin or 
-                 Opcode.PushImmediate:
-                if (instr.Type1 is (DataType.Double or DataType.Int64))
-                {
-                    return 12;
-                }
-                if (instr.Type1 != DataType.Int16)
-                {
-                    return 8;
-                }
-                break;
-            
-            case Opcode.Extended:
-                if (instr.Type1 == DataType.Int32)
-                {
-                    return 8;
-                }
-                break;
+            if (instr.Type1 is DataType.Double or DataType.Int64)
+            {
+                return 12;
+            }
+            if (instr.Type1 != DataType.Int16)
+            {
+                return 8;
+            }
         }
+
+        // Extended opcodes with an integer argument take an extra 4 bytes
+        if (instr is { Kind: Opcode.Extended, Type1: DataType.Int32 })
+        {
+            return 8;
+        }
+
+        // All other instructions are just 4 bytes
         return 4;
     }
 }

@@ -7,8 +7,7 @@
         xmlns:local="clr-namespace:UndertaleModTool.Windows"
         mc:Ignorable="d"
         Title="The references of game object &quot;&quot;" Height="600" Width="450" IsVisibleChanged="Window_IsVisibleChanged"
-        WindowStartupLocation="CenterOwner"
-        Style="{DynamicResource DefaultWindowStyle}">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <local:ChildInstanceNameConverter x:Key="ChildInstanceNameConverter"/>
         <utmt:StringTitleConverter x:Key="StringTitleConverter"/>
@@ -18,9 +17,9 @@
         <HierarchicalDataTemplate x:Key="StringTemplate">
             <TextBlock Text="{Binding Content, Mode=OneWay, Converter={StaticResource StringTitleConverter}}" />
         </HierarchicalDataTemplate>
-        <ContextMenu x:Key="StandaloneTabMenu">
+        <utmt:ContextMenuDark x:Key="StandaloneTabMenu">
             <MenuItem Header="Open in new tab" Click="MenuItem_OpenInNewTab_Click"/>
-        </ContextMenu>
+        </utmt:ContextMenuDark>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -33,13 +32,13 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Name="label" Text="The search results for the game object&#x0a;&quot;&quot;." HorizontalAlignment="Left" Padding="5" Margin="10,10,0,0"
                    FontSize="22" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="70"/>
-        <Rectangle Grid.Row="1" Margin="10,0,20,0" Height="2" Fill="{DynamicResource ABrush.Foreground.Static}"/>
+        <Rectangle Grid.Row="1" Margin="10,0,20,0" Height="2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
 
-        <TextBox Grid.Row="2" x:Name="SearchBox" ToolTip="Search" TextChanged="SearchBox_TextChanged"
+        <utmt:TextBoxDark Grid.Row="2" x:Name="SearchBox" ToolTip="Search" TextChanged="SearchBox_TextChanged"
                           Margin="10,15,20,0" FontSize="14">
             <!-- Source - https://stackoverflow.com/a/7433840/12136394 -->
             <TextBox.Style>
-                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Style TargetType="TextBox">
                     <Style.Resources>
                         <VisualBrush x:Key="CueBannerBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
                             <VisualBrush.Visual>
@@ -60,7 +59,7 @@
                     </Style.Triggers>
                 </Style>
             </TextBox.Style>
-        </TextBox>
+        </utmt:TextBoxDark>
         <TreeView Grid.Row="3" Name="ResultsTree" Margin="10,5,20,0" FontSize="14"
                   SelectedItemChanged="ResultsTree_SelectedItemChanged" MouseDown="ResultsTree_MouseDown"
                   MouseDoubleClick="ResultsTree_MouseDoubleClick" KeyUp="ResultsTree_KeyUp" PreviewMouseRightButtonDown="ResultsTree_PreviewMouseRightButtonDown"
@@ -70,11 +69,11 @@
                 <DynamicResource ResourceKey="{x:Static SystemColors.ControlLightBrushKey}"/>
             </TreeView.Background>
             <TreeView.Resources>
-                <ContextMenu x:Key="UndertaleResourceMenu" Opened="MenuItem_ContextMenuOpened">
+                <utmt:ContextMenuDark x:Key="UndertaleResourceMenu" Opened="MenuItem_ContextMenuOpened">
                     <MenuItem Header="Open in new tab" Click="MenuItem_OpenInNewTab_Click"/>
                     <MenuItem Header="Copy name to clipboard" Click="MenuItem_CopyName_Click"/>
                     <MenuItem Header="Find all references" Click="MenuItem_FindAllReferences_Click"/>
-                </ContextMenu>
+                </utmt:ContextMenuDark>
                 <Style TargetType="TreeViewItem">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Items.Count, RelativeSource={RelativeSource Self}}" Value="0">
@@ -90,9 +89,9 @@
                    Margin="10,0,20,0" FontStyle="Italic" Foreground="Gray"/>
 
         <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,20">
-            <Button Content="Export results" FontSize="18" Width="144" Height="40" Click="ExportButton_Click" Margin="0,0,10,0">
+            <utmt:ButtonDark Content="Export results" FontSize="18" Width="144" Height="40" Click="ExportButton_Click" Margin="0,0,10,0">
                 <Button.Style>
-                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                    <Style TargetType="Button">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Items.Count, ElementName=ResultsTree, Mode=OneWay}" Value="0">
                                 <Setter Property="IsEnabled" Value="False"/>
@@ -100,8 +99,8 @@
                         </Style.Triggers>
                     </Style>
                 </Button.Style>
-            </Button>
-            <Button Content="Done" FontSize="18" Width="134" Height="40" Click="DoneButton_Click"/>
+            </utmt:ButtonDark>
+            <utmt:ButtonDark Content="Done" FontSize="18" Width="134" Height="40" Click="DoneButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>

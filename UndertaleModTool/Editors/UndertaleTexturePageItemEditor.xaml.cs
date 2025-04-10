@@ -29,6 +29,7 @@ namespace UndertaleModTool
         /// Handle on the texture data where we're listening for updates from.
         /// </summary>
         private UndertaleEmbeddedTexture.TexData _textureDataContext = null;
+
         public UndertaleTexturePageItemEditor()
         {
             InitializeComponent();

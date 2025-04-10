@@ -196,7 +196,8 @@ namespace UndertaleModLib
         public override string Name => "EXTN";
         public List<byte[]> productIdData = new List<byte[]>();
 
-        private static bool checkedFor2022_6, checkedFor2023_4;
+        private bool checkedFor2022_6 = false;
+        private bool checkedFor2023_4 = false;
         private void CheckFor2022_6(UndertaleReader reader)
         {
             if (!reader.undertaleData.IsVersionAtLeast(2, 3) || reader.undertaleData.IsVersionAtLeast(2022, 6))
@@ -289,7 +290,7 @@ namespace UndertaleModLib
                 // Go to the first extension
                 reader.AbsPosition = reader.ReadUInt32();
 
-                // Skip the miminal amount of strings
+                // Skip the minimal amount of strings
                 reader.Position += 4 * 3;
 
                 uint filesPtr = reader.ReadUInt32();
@@ -360,7 +361,7 @@ namespace UndertaleModLib
     {
         public override string Name => "SOND";
 
-        private static bool checkedFor2024_6;
+        private bool checkedFor2024_6 = false;
         private void CheckForGM2024_6(UndertaleReader reader)
         {
             if (!reader.undertaleData.IsNonLTSVersionAtLeast(2023, 2) || reader.undertaleData.IsVersionAtLeast(2024, 6))
@@ -371,33 +372,24 @@ namespace UndertaleModLib
 
             long returnTo = reader.Position;
 
-            uint possibleSoundCount = reader.ReadUInt32();
-            List<uint> soundPtrs = new();
-            if (possibleSoundCount > 0)
-            {
-                soundPtrs.Capacity = (int)possibleSoundCount;
-                for (int i = 0; i < possibleSoundCount; i++)
-                {
-                    uint soundPtr = reader.ReadUInt32();
-                    if (soundPtr == 0)
-                        continue;
-                    soundPtrs.Add(soundPtr);
-                }
-            }
-            if (soundPtrs.Count >= 2)
+            uint soundCount = reader.ReadUInt32();
+            if (soundCount >= 2)
             {
                 // If first sound's theoretical (old) end offset is below the start offset of
                 // the next sound by exactly 4 bytes, then this is 2024.6.
-                if ((soundPtrs[0] + (4 * 9)) == (soundPtrs[1] - 4))
+                uint firstSoundPtr = reader.ReadUInt32();
+                uint secondSoundPtr = reader.ReadUInt32();
+                if ((firstSoundPtr + (4 * 9)) == (secondSoundPtr - 4))
                 {
                     reader.undertaleData.SetGMS2Version(2024, 6);
                 }
             }
-            else if (soundPtrs.Count == 1)
+            else if (soundCount == 1)
             {
                 // If there's a nonzero value where padding should be at the
                 // end of the sound, then this is 2024.6.
-                reader.AbsPosition = soundPtrs[0] + (4 * 9);
+                uint firstSoundPtr = reader.ReadUInt32();
+                reader.AbsPosition = firstSoundPtr + (4 * 9);
                 if ((reader.AbsPosition % 16) != 4)
                 {
                     // If this occurs, then something weird has happened at the start of the chunk?
@@ -440,7 +432,7 @@ namespace UndertaleModLib
     {
         public override string Name => "SPRT";
 
-        private static bool checkedFor2024_6;
+        private bool checkedFor2024_6 = false;
         private void CheckForGM2024_6(UndertaleReader reader)
         {
             if (!reader.undertaleData.IsNonLTSVersionAtLeast(2023, 2) || reader.undertaleData.IsVersionAtLeast(2024, 6))
@@ -471,8 +463,8 @@ namespace UndertaleModLib
                 int marginRight = reader.ReadInt32();
                 int marginBottom = reader.ReadInt32();
                 int marginTop = reader.ReadInt32();
-                (uint bboxWidth, uint bboxHeight) = UndertaleSprite.CalculateBboxMaskDimensions(marginRight, marginLeft, marginBottom, marginTop);
-                (uint normalWidth, uint normalHeight) = UndertaleSprite.CalculateFullMaskDimensions(width, height);
+                (int bboxWidth, int bboxHeight) = UndertaleSprite.CalculateBboxMaskDimensions(marginRight, marginLeft, marginBottom, marginTop);
+                (int normalWidth, int normalHeight) = UndertaleSprite.CalculateFullMaskDimensions((int)width, (int)height);
                 if (bboxWidth == normalWidth && bboxHeight == normalHeight)
                 {
                     // We can't determine anything from this sprite
@@ -515,11 +507,11 @@ namespace UndertaleModLib
                     // We can't determine anything from this sprite
                     continue;
                 }
-                uint fullLength = (normalWidth + 7) / 8 * normalHeight;
+                uint fullLength = (uint)((normalWidth + 7) / 8 * normalHeight);
                 fullLength *= maskCount;
                 if ((fullLength % 4) != 0)
                     fullLength += (4 - (fullLength % 4));
-                uint bboxLength = (bboxWidth + 7) / 8 * bboxHeight;
+                uint bboxLength = (uint)((bboxWidth + 7) / 8 * bboxHeight);
                 bboxLength *= maskCount;
                 if ((bboxLength % 4) != 0)
                     bboxLength += (4 - (bboxLength % 4));
@@ -648,7 +640,9 @@ namespace UndertaleModLib
 
         internal override void UnserializeChunk(UndertaleReader reader)
         {
-            long chunkEnd = reader.AbsPosition + Length;
+            reader.Position -= 4;
+            int chunkLength = reader.ReadInt32();
+            long chunkEnd = reader.AbsPosition + chunkLength;
 
             long beginPosition = reader.Position;
 
@@ -657,14 +651,7 @@ namespace UndertaleModLib
             uint[] objectLocations = new uint[count + 1];
             for (int i = 0; i < count; i++)
             {
-                uint objectLocation = reader.ReadUInt32();
-                if (objectLocation == 0)
-                {
-                    i--;
-                    count--;
-                    continue;
-                }
-                objectLocations[i] = objectLocation;
+                objectLocations[i] = (uint)reader.ReadInt32();
             }
             objectLocations[count] = (uint)chunkEnd;
 
@@ -690,8 +677,8 @@ namespace UndertaleModLib
         public override string Name => "FONT";
         public byte[] Padding;
 
-        private static bool checkedFor2022_2;
-        private static bool checkedFor2023_6;
+        private bool checkedFor2022_2 = false;
+        private bool checkedFor2023_6 = false;
         private void CheckForGM2022_2(UndertaleReader reader)
         {
            /* This code performs four checks to identify GM2022.2.
@@ -853,7 +840,7 @@ namespace UndertaleModLib
     {
         public override string Name => "OBJT";
 
-        private static bool checkedFor2022_5;
+        private bool checkedFor2022_5 = false;
 
         // Simple chunk parser to check for 2022.5, assumes old format until shown otherwise
         private void CheckFor2022_5(UndertaleReader reader)
@@ -964,7 +951,7 @@ namespace UndertaleModLib
             return base.UnserializeObjectCount(reader);
         }
 
-        private static bool checkedFor2022_1;
+        private bool checkedFor2022_1 = false;
         private void CheckForEffectData(UndertaleReader reader)
         {
             // Do a length check on room layers to see if this is 2022.1 or higher
@@ -1054,7 +1041,7 @@ namespace UndertaleModLib
             checkedFor2022_1 = true;
         }
 
-        private static bool checkedForGMS2_2_2_302;
+        private bool checkedForGMS2_2_2_302 = false;
         private void CheckForImageSpeed(UndertaleReader reader)
         {
             // Check the size of the first GameObject in a room
@@ -1108,8 +1095,8 @@ namespace UndertaleModLib
             checkedForGMS2_2_2_302 = true;
         }
 
-        private static bool checkedFor2024_2;
-        private static bool checkedFor2024_4;
+        private bool checkedFor2024_2 = false;
+        private bool checkedFor2024_4 = false;
         private void CheckForTileCompression(UndertaleReader reader)
         {
             if (!reader.undertaleData.IsVersionAtLeast(2023, 2) || reader.undertaleData.IsVersionAtLeast(2024, 4))
@@ -1263,29 +1250,28 @@ namespace UndertaleModLib
                 return;
             }
 
-            UndertaleCode.CurrCodeIndex = 0;
             base.UnserializeChunk(reader);
-
-            reader.InstructionArraysLengths = null;
+            reader.BytecodeAddresses = null;
         }
 
         internal override uint UnserializeObjectCount(UndertaleReader reader)
         {
-            if (Length == 0)
+            if (Length == 0) // YYC, bytecode <= 16, chunk is empty but exists
+            {
                 return 0;
+            }
 
             if (reader.undertaleData.UnsupportedBytecodeVersion)
+            {
+                // In unsupported bytecode versions, there's no instructions parsed (so count is equivalent to the code count)
                 return reader.ReadUInt32();
+            }
 
             int codeCount = (int)reader.ReadUInt32();
             reader.Position -= 4;
 
-            reader.GMS2BytecodeAddresses = new(codeCount);
-            reader.InstructionArraysLengths = new int[codeCount];
-            UndertaleCode.CurrCodeIndex = 0;
-
+            reader.BytecodeAddresses = new(codeCount);
             uint count = base.UnserializeObjectCount(reader);
-            reader.GMS2BytecodeAddresses.Clear();
 
             return count;
         }
@@ -1316,7 +1302,7 @@ namespace UndertaleModLib
             if (writer.undertaleData.UnsupportedBytecodeVersion)
                 return;
 
-            UndertaleInstruction.Reference<UndertaleVariable>.SerializeReferenceChain(writer, writer.undertaleData.Code, List);
+            UndertaleInstruction.SerializeReferenceChain(writer, writer.undertaleData.Code, List);
 
             if (!writer.Bytecode14OrLower)
             {
@@ -1381,7 +1367,7 @@ namespace UndertaleModLib
         public UndertaleSimpleList<UndertaleFunction> Functions = new UndertaleSimpleList<UndertaleFunction>();
         public UndertaleSimpleList<UndertaleCodeLocals> CodeLocals = new UndertaleSimpleList<UndertaleCodeLocals>();
 
-        private static bool checkedFor2024_8;
+        private bool checkedFor2024_8 = false;
 
         private void CheckFor2024_8(UndertaleReader reader)
         {
@@ -1432,10 +1418,10 @@ namespace UndertaleModLib
 
         internal override void SerializeChunk(UndertaleWriter writer)
         {
-            if (Functions == null && CodeLocals == null)
+            if (Functions is null && CodeLocals is null)
                 return;
 
-            UndertaleInstruction.Reference<UndertaleFunction>.SerializeReferenceChain(writer, writer.undertaleData.Code, Functions);
+            UndertaleInstruction.SerializeReferenceChain(writer, writer.undertaleData.Code, Functions);
 
             if (writer.Bytecode14OrLower)
             {
@@ -1471,7 +1457,6 @@ namespace UndertaleModLib
                 Functions.SetCapacity(Length / 12);
                 while (reader.Position + 12 <= startPosition + Length)
                     Functions.Add(reader.ReadUndertaleObject<UndertaleFunction>());
-
                 CodeLocals = null;
             }
             else
@@ -1537,8 +1522,8 @@ namespace UndertaleModLib
     {
         public override string Name => "TXTR";
 
-        private static bool checkedFor2022_3;
-        private static bool checkedFor2_0_6;
+        private bool checkedFor2022_3 = false;
+        private bool checkedFor2_0_6 = false;
 
         private void CheckFor2022_3And5(UndertaleReader reader)
         {
@@ -1620,26 +1605,6 @@ namespace UndertaleModLib
             base.SerializeChunk(writer);
 
             // texture blobs
-            if (List.Count > 0)
-            {
-                bool anythingUsesQoi = false;
-                foreach (var tex in List)
-                {
-                    if (tex.TextureExternal && !tex.TextureLoaded)
-                        continue; // don't accidentally load everything...
-                    if (tex.TextureData.FormatQOI)
-                    {
-                        anythingUsesQoi = true;
-                        break;
-                    }
-                }
-                if (anythingUsesQoi)
-                {
-                    // Calculate maximum size of QOI converter buffer
-                    int maxSize = (List.Max(x => x.TextureData.Width * x.TextureData.Height) * QoiConverter.MaxChunkSize) + QoiConverter.HeaderSize;
-                    QoiConverter.InitSharedBuffer(maxSize);
-                }
-            }
             foreach (UndertaleEmbeddedTexture obj in List)
                 obj.SerializeBlob(writer);
 
@@ -1836,7 +1801,7 @@ namespace UndertaleModLib
     {
         public override string Name => "TGIN";
 
-        private static bool checkedFor2022_9;
+        private bool checkedFor2022_9 = false;
         private void CheckFor2022_9And2023(UndertaleReader reader)
         {
             if (!reader.undertaleData.IsVersionAtLeast(2, 3)
@@ -1940,7 +1905,7 @@ namespace UndertaleModLib
     {
         public override string Name => "ACRV";
 
-        private static bool checkedForGMS2_3_1;
+        private bool checkedForGMS2_3_1 = false;
 
         // See also a similar check in UndertaleAnimationCurve.cs, necessary for embedded animation curves.
         private void CheckForGMS2_3_1(UndertaleReader reader)
@@ -2241,7 +2206,7 @@ namespace UndertaleModLib
     public class UndertaleChunkPSEM : UndertaleListChunk<UndertaleParticleSystemEmitter>
     {
         public override string Name => "PSEM";
-        private static bool checkedPsemVersion;
+        private bool checkedPsemVersion = false;
 
         private void CheckPsemVersion(UndertaleReader reader)
         {

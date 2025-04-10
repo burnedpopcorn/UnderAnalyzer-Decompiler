@@ -4,6 +4,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
+using System;
 using Underanalyzer.Decompiler.GameSpecific;
 using static Underanalyzer.IGMInstruction;
 
@@ -39,9 +40,16 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
     /// </summary>
     public bool DeclareLocalVar { get; set; } = false;
 
+    /// <inheritdoc/>
     public bool SemicolonAfter { get => true; }
+
+    /// <inheritdoc/>
     public bool Duplicated { get; set; } = false;
+
+    /// <inheritdoc/>
     public bool Group { get; set; } = false;
+
+    /// <inheritdoc/>
     public bool EmptyLineBefore 
     { 
         get => Value is IStatementNode stmt && stmt.EmptyLineBefore; 
@@ -53,6 +61,8 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
             }
         }
     }
+
+    /// <inheritdoc/>
     public bool EmptyLineAfter
     {
         get => Value is IStatementNode stmt && stmt.EmptyLineAfter;
@@ -64,6 +74,8 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
             }
         }
     }
+
+    /// <inheritdoc/>
     public DataType StackType { get; set; } = DataType.Variable;
 
     /// <summary>
@@ -102,6 +114,7 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
         // TODO: do we need a special StackType to prevent nesting stack size issues?
     }
 
+    /// <inheritdoc/>
     public IStatementNode Clean(ASTCleaner cleaner)
     {
         if (AssignKind == AssignType.Normal)
@@ -140,9 +153,10 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
                     return this;
                 }
 
-                // Ensure we actually are a compound operation (Push vs. specialized Push instruction)
-                if (cleaner.Context.OlderThanBytecode15 ||
-                    binVariable.RegularPush || binVariable.Variable.InstanceType == InstanceType.Self)
+                // Ensure we actually are a compound operation (Push vs. specialized Push instruction, as well as
+                // quirk with division converting to double when NOT a compound assignment)
+                if ((cleaner.Context.OlderThanBytecode15 || binVariable.RegularPush || binVariable.Variable.InstanceType == InstanceType.Self) &&
+                    (binary.Instruction.Kind != Opcode.Divide || binary.Right is DoubleNode || binary.Right.StackType != DataType.Double))
                 {
                     AssignKind = AssignType.Compound;
                     BinaryInstruction = binary.Instruction;
@@ -156,6 +170,7 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
         return this;
     }
 
+    /// <inheritdoc/>
     public IStatementNode PostClean(ASTCleaner cleaner)
     {
         if (cleaner.Context.Settings.CleanupLocalVarDeclarations &&
@@ -182,18 +197,21 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
         return this;
     }
 
+    /// <inheritdoc/>
     IExpressionNode IASTNode<IExpressionNode>.Clean(ASTCleaner cleaner)
     {
         Variable = Variable.Clean(cleaner);
         return this;
     }
 
+    /// <inheritdoc/>
     IExpressionNode IASTNode<IExpressionNode>.PostClean(ASTCleaner cleaner)
     {
         Variable = Variable.PostClean(cleaner);
         return this;
     }
 
+    /// <inheritdoc/>
     public int BlockClean(ASTCleaner cleaner, BlockNode block, int i)
     {
         // Check if our variable is a local that needs to be purged
@@ -223,13 +241,13 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
             return i;
         }
         if (Variable is not VariableNode breakVariable ||
-            !breakVariable.Variable.Name.Content.StartsWith(VMConstants.TryBreakVariable) ||
+            !breakVariable.Variable.Name.Content.StartsWith(VMConstants.TryBreakVariable, StringComparison.Ordinal) ||
             Value is not Int16Node { Value: 0 })
         {
             return i;
         }
         if (assign2.Variable is not VariableNode continueVariable ||
-            !continueVariable.Variable.Name.Content.StartsWith(VMConstants.TryContinueVariable) ||
+            !continueVariable.Variable.Name.Content.StartsWith(VMConstants.TryContinueVariable, StringComparison.Ordinal) ||
             assign2.Value is not Int16Node { Value: 0 })
         {
             return i;
@@ -274,6 +292,44 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
         return i - 1;
     }
 
+    /// <summary>
+    /// Returns whether a variable name is a valid GML identifier or not.
+    /// </summary>
+    private bool VariableNameIsValidIdentifier(string name)
+    {
+        // If name is empty, it's clearly not valid
+        if (name.Length == 0)
+        {
+            return false;
+        }
+
+        // Check first character
+        char firstChar = name[0];
+        if ((firstChar < 'a' || firstChar > 'z') && 
+            (firstChar < 'A' || firstChar > 'Z') && 
+            firstChar != '_')
+        {
+            return false;
+        }
+
+        // Check all other characters
+        for (int i = 1; i < name.Length; i++)
+        {
+            char c = name[i];
+            if ((c < 'a' || c > 'z') &&
+                (c < 'A' || c > 'Z') &&
+                (c < '0' || c > '9') &&
+                c != '_')
+            {
+                return false;
+            }
+        }
+
+        // Every character was valid!
+        return true;
+    }
+
+    /// <inheritdoc/>
     public void Print(ASTPrinter printer)
     {
         switch (AssignKind)
@@ -282,7 +338,22 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
                 if (printer.StructArguments is not null)
                 {
                     // We're inside a struct initialization block
-                    Variable.Print(printer);
+                    if (Variable is VariableNode { Variable.Name.Content: string variableName })
+                    {
+                        // Write just the variable name if possible
+                        if (VariableNameIsValidIdentifier(variableName))
+                        {
+                            printer.Write(variableName);
+                        }
+                        else
+                        {
+                            StringNode.PrintGMS2String(printer, variableName);
+                        }
+                    }
+                    else
+                    {
+                        Variable.Print(printer);
+                    }
                     printer.Write(": ");
                     Value!.Print(printer);
                 }
@@ -349,6 +420,7 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
         }
     }
 
+    /// <inheritdoc/>
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         if (Variable.RequiresMultipleLines(printer))
@@ -356,6 +428,10 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
             return true;
         }
         if (Value is not null && Value.RequiresMultipleLines(printer))
+        {
+            return true;
+        }
+        if (DeclareLocalVar && printer.Context.Settings.CleanupLocalVarDeclarations && Variable is VariableNode { ArrayIndices: not null })
         {
             return true;
         }

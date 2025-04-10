@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UndertaleModLib.Util;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace UndertaleModLib.Models;
 
@@ -57,7 +56,6 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         set => _textureData = value;
     }
     private TexData _textureData = new();
-
 
     /// <summary>
     /// Helper variable for whether or not this texture is to be stored externally or not.
@@ -232,7 +230,7 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
 
     // 1x1 blank image
     private static readonly TexData _placeholderTexture = new() { Image = new GMImage(1, 1) };
-    private static readonly object _textureLoadLock = new();
+    private readonly object _textureLoadLock = new();
 
     /// <summary>
     /// Attempts to load the corresponding external texture. Should only happen in 2022.9 and above.
@@ -305,8 +303,8 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         /// <summary>
         /// The underlying image of the texture.
         /// </summary>
-        public GMImage Image
-        {
+        public GMImage Image 
+        { 
             get => _image;
             set
             {
@@ -357,7 +355,7 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
 
         /// <inheritdoc />
         public event PropertyChangedEventHandler PropertyChanged;
-
+        
         /// <summary>
         /// Invoked whenever the effective value of any dependency property has been updated.
         /// </summary>
@@ -377,6 +375,10 @@ public class UndertaleEmbeddedTexture : UndertaleNamedResource, IDisposable
         /// </summary>
         public void Serialize(FileBinaryWriter writer, bool gm2022_5)
         {
+            if (Image is null)
+            {
+                throw new Exception("No image assigned to embedded texture");
+            }
             if (Image.Format == GMImage.ImageFormat.RawBgra)
             {
                 throw new Exception("Unexpected raw RGBA image");

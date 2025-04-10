@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
@@ -48,7 +48,10 @@ namespace UndertaleModLib.Util
         public byte ReadByte()
         {
             if (Stream.Position + 1 > _length)
+            {
                 throw new IOException("Reading out of bounds");
+            }
+
             return (byte)Stream.ReadByte();
         }
 

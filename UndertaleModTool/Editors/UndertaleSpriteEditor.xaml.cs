@@ -90,6 +90,7 @@ namespace UndertaleModTool
                 try
                 {
                     bool includePadding = (mainWindow.ShowQuestion("Include padding?") == MessageBoxResult.Yes);
+
                     using TextureWorker worker = new();
                     if (sprite.Textures.Count > 1)
                     {
@@ -136,7 +137,7 @@ namespace UndertaleModTool
 
         private void MaskList_AddingNewItem(object sender, AddingNewItemEventArgs e)
         {
-            e.NewItem = (this.DataContext as UndertaleSprite).NewMaskEntry();
+            e.NewItem = (this.DataContext as UndertaleSprite).NewMaskEntry(mainWindow.Data);
         }
 
         private void MaskImport_Click(object sender, RoutedEventArgs e)
@@ -152,8 +153,8 @@ namespace UndertaleModTool
             {
                 try
                 {
-                    (uint maskWidth, uint maskHeight) = sprite.CalculateMaskDimensions(mainWindow.Data);
-                    target.Data = TextureWorker.ReadMaskData(dlg.FileName, (int)maskWidth, (int)maskHeight);
+                    (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(mainWindow.Data);
+                    target.Data = TextureWorker.ReadMaskData(dlg.FileName, maskWidth, maskHeight);
                     target.Width = maskWidth;
                     target.Height = maskHeight;
                 }
@@ -178,8 +179,8 @@ namespace UndertaleModTool
             {
                 try
                 {
-                    (uint maskWidth, uint maskHeight) = sprite.CalculateMaskDimensions(mainWindow.Data);
-                    TextureWorker.ExportCollisionMaskPNG(target, dlg.FileName, (int)maskWidth, (int)maskHeight);
+                    (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(mainWindow.Data);
+                    TextureWorker.ExportCollisionMaskPNG(target, dlg.FileName, maskWidth, maskHeight);
                 }
                 catch (Exception ex)
                 {
@@ -193,13 +194,11 @@ namespace UndertaleModTool
             var objRef = sender as UndertaleObjectReference;
 
             objRef.ClearRemoveClickHandler();
-            /*
             objRef.RemoveButton.Click += Remove_Click_Override;
             objRef.RemoveButton.ToolTip = "Remove texture entry";
             objRef.RemoveButton.IsEnabled = true;
             objRef.DetailsButton.ToolTip = "Open texture entry";
             objRef.ObjectText.PreviewKeyDown += ObjectText_PreviewKeyDown;
-            */
         }
         private void ObjectText_PreviewKeyDown(object sender, KeyEventArgs e)
         {

@@ -7,12 +7,12 @@ using System.Windows;
 // Ogólne informacje o zestawie są kontrolowane poprzez następujący
 // zestaw atrybutów. Zmień wartości tych atrybutów, aby zmodyfikować informacje
 // powiązane z zestawem.
-[assembly: AssemblyTitle("UnderAnalyzer Decompiler")]
-[assembly: AssemblyDescription("A UnderAnalyzer Decompiler, but with the Frontend of UTMT")]
+[assembly: AssemblyTitle("UndertaleModTool")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("UnderAnalyzer Decompiler")]
-[assembly: AssemblyCopyright("All Rights to the UnderMiners Team")]
+[assembly: AssemblyProduct("UndertaleModTool")]
+[assembly: AssemblyCopyright("Copyright ©  2018-2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
