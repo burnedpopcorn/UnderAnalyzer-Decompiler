@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0-windows7.0</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <RollForward>LatestMajor</RollForward>
         <OutputType>WinExe</OutputType>
         <!-- TODO: this should properly get migrated and get rid of -->
@@ -19,16 +19,12 @@
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
         <!-- Suppress all missing XML comment warnings -->
         <NoWarn>1591</NoWarn>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
-        <BaseOutputPath>..\UndertaleModTool\Compiled_Output</BaseOutputPath>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
         <AssemblyName>UnderAnalyzer-Decompiler</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="BuildDate.txt" />
       <None Remove="Corrections\README.txt" />
-      <None Remove="Decompiling_Scripts\--- GMS1 Decompiling ---\BetterExportAssetOrder.csx" />
-      <None Remove="Decompiling_Scripts\--- GMS1 Decompiling ---\Export2GMS1FIXED_UA.csx" />
-      <None Remove="Decompiling_Scripts\--- GMS2 Decompiling ---\Ultimate_GMS2_Decompiler_UA.csx" />
       <None Remove="Resources\tabs_left_button.png" />
       <None Remove="Resources\tabs_right_button.png" />
       <None Remove="Resources\X_Down.png" />
@@ -63,6 +59,9 @@
         <Resource Include="Resources\arrow_red.png" />
     </ItemGroup>
     <ItemGroup>
+        <Resource Include="icon.ico" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="AvalonEdit">
             <Version>6.3.0.90</Version>
         </PackageReference>
@@ -70,17 +69,17 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-		<PackageReference Include="log4net" Version="3.0.3" />
+        <PackageReference Include="log4net" Version="3.0.3" />
         <PackageReference Include="Microsoft-WindowsAPICodePack-Shell">
             <Version>1.1.5</Version>
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
-			<Version>3.11.0</Version>
+            <Version>3.11.0</Version>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting">
-			<Version>4.11.0</Version>
+            <Version>4.11.0</Version>
         </PackageReference>
         <PackageReference Include="NAudio">
             <Version>2.2.1</Version>
@@ -132,7 +131,7 @@
         <PackageReference Include="System.Xml.XPath.XDocument">
             <Version>4.3.0</Version>
         </PackageReference>
-		<PackageReference Include="Microsoft.Windows.Compatibility" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Windows.Compatibility" Version="9.0.0" />
     </ItemGroup>
     <Target Name="AfterResolveReferences">
         <ItemGroup>
@@ -156,6 +155,11 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         </Content>
+		<Folder Include="Decompiling_Scripts" />
+		<Content Include="Decompiling_Scripts/**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</Content>
         <Content Include="Corrections/**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -163,28 +167,8 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include="BuildDate.txt">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	  </Content>
-		<Folder Include="Decompiling_Scripts" />
-		<Content Include="Decompiling_Scripts/**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		</Content>
-      <Resource Include="icon.ico" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Properties\Settings.Designer.cs">
-        <DesignTimeSharedInput>True</DesignTimeSharedInput>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>Settings.settings</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
-      <None Update="Properties\Settings.settings">
-        <Generator>SettingsSingleFileGenerator</Generator>
-        <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-      </None>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
       <Exec Command="echo %25date%25 %25time%25 &gt; &quot;$(ProjectDir)\BuildDate.txt&quot;" />

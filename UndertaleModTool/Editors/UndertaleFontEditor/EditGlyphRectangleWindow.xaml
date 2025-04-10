@@ -8,8 +8,7 @@
         xmlns:undertale="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
         mc:Ignorable="d"
         Title="Edit a font glyph rectangle" Name="editGlyphRectangleWindow" Height="575" Width="800"
-        Loaded="Window_Loaded" IsVisibleChanged="Window_IsVisibleChanged" DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Style="{DynamicResource DefaultWindowStyle}">
+        Loaded="Window_Loaded" IsVisibleChanged="Window_IsVisibleChanged" DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
         <Grid.Resources>
             <utmt:EqualityConverter x:Key="EqualityConverter"/>
@@ -28,6 +27,9 @@
                       HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible"
                       PreviewMouseWheel="TextureScroll_MouseWheel" ScrollChanged="TextureScroll_ScrollChanged"
                       PreviewKeyDown="TextureScroll_PreviewKeyDown" PreviewKeyUp="TextureScroll_PreviewKeyUp">
+            <ScrollViewer.Background>
+                <DynamicResource ResourceKey="{x:Static SystemColors.MenuBrushKey}"/>
+            </ScrollViewer.Background>
             <Viewbox Grid.Row="1" Name="TextureViewbox"
                      Stretch="Uniform" StretchDirection="DownOnly"
                      SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor" UseLayoutRounding="True"
@@ -51,7 +53,7 @@
                             </Style>
                         </ItemsControl.ItemContainerStyle>
                         <ItemsControl.Resources>
-                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Style TargetType="TextBlock">
                                 <!-- Hide "{NewItemPlaceholder}" -->
                                 <Setter Property="Visibility" Value="Collapsed"/>
                             </Style>

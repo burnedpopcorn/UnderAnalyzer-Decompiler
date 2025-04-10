@@ -29,6 +29,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
+using System.Windows.Shell;
 using System.Xml;
 using UndertaleModLib;
 using UndertaleModLib.Compiler;
@@ -42,6 +43,30 @@ namespace UndertaleModTool
     /// Logika interakcji dla klasy UndertaleCodeEditor.xaml
     /// </summary>
     [SupportedOSPlatform("windows7.0")]
+
+    #region really hacky way to get enums
+    public class MacroData
+    {
+        public MacroTypes Types { get; set; } = new();
+        public class MacroTypes
+        {
+            public Dictionary<string, EnumData> Enums { get; set; } = new();
+        }
+    }
+
+    public class EnumData
+    {
+        public EnumData(string name, Dictionary<string, long>? values)
+        {
+            this.Name = name;
+            if (values is not null)
+                this.Values = values;
+        }
+        public Dictionary<string, long> Values { get; set; } = new();
+        public string Name { get; set; }
+    }
+#endregion
+
     public partial class UndertaleCodeEditor : DataUserControl
     {
         private static MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
@@ -49,9 +74,6 @@ namespace UndertaleModTool
         public UndertaleCode CurrentDisassembled = null;
         public UndertaleCode CurrentDecompiled = null;
         public List<string> CurrentLocals = new();
-        public string ProfileHash = mainWindow.ProfileHash;
-        public string MainPath = Path.Combine(Settings.ProfilesFolder, mainWindow.ProfileHash, "Main");
-        public string TempPath = Path.Combine(Settings.ProfilesFolder, mainWindow.ProfileHash, "Temp");
 
         public bool DecompiledFocused = false;
         public bool DecompiledChanged = false;
@@ -73,6 +95,9 @@ namespace UndertaleModTool
         private static readonly Dictionary<string, UndertaleNamedResource> ScriptsDict = new();
         private static readonly Dictionary<string, UndertaleNamedResource> FunctionsDict = new();
         private static readonly Dictionary<string, UndertaleNamedResource> CodeDict = new();
+
+        // Custom Enums (mainly for colors)
+        public static Dictionary<string, int> Enums = new Dictionary<string, int>();
 
         public enum CodeEditorTab
         {
@@ -259,8 +284,6 @@ namespace UndertaleModTool
         private async void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UndertaleCode code = this.DataContext as UndertaleCode;
-            Directory.CreateDirectory(MainPath);
-            Directory.CreateDirectory(TempPath);
             if (code == null)
                 return;
 
@@ -492,8 +515,6 @@ namespace UndertaleModTool
 
         private void DisassembleCode(UndertaleCode code, bool first)
         {
-            code.UpdateAddresses();
-
             string text;
 
             int currLine = 1;
@@ -564,14 +585,14 @@ namespace UndertaleModTool
             gettext = new Dictionary<string, string>();
             string[] decompilationOutput;
             GlobalDecompileContext context = new(data);
-            if (!SettingsWindow.ProfileModeEnabled)
+            if (!SettingsWindow.ProfileModeEnabled || mainWindow.ProfileHash is not string currentMD5)
             {
                 decompilationOutput = new Underanalyzer.Decompiler.DecompileContext(context, gettextCode, data.ToolInfo.DecompilerSettings)
                     .DecompileToString().Split('\n');
             }
             else
             {
-                string path = Path.Combine(TempPath, gettextCode.Name.Content + ".gml");
+                string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", gettextCode.Name.Content + ".gml");
                 if (File.Exists(path))
                 {
                     try
@@ -740,15 +761,23 @@ namespace UndertaleModTool
                     Exception e = null;
                     try
                     {
-                        string path = Path.Combine(TempPath, code.Name.Content + ".gml");
-                        if (!SettingsWindow.ProfileModeEnabled || !File.Exists(path))
+                        if (!SettingsWindow.ProfileModeEnabled || mainWindow.ProfileHash is not string currentMD5)
                         {
                             decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
                                 .DecompileToString();
                         }
                         else
                         {
-                            decompiled = File.ReadAllText(path);
+                            string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
+                            if (!File.Exists(path))
+                            {
+                                decompiled = new Underanalyzer.Decompiler.DecompileContext(context, code, dataa.ToolInfo.DecompilerSettings)
+                                    .DecompileToString();
+                            }
+                            else
+                            {
+                                decompiled = File.ReadAllText(path);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -844,9 +873,6 @@ namespace UndertaleModTool
 
                             if (existingDialog is not null)                      //if code was edited (and compiles after it)
                             {
-                                dataa.GMLCacheChanged.Add(code.Name.Content);
-                                dataa.GMLCacheFailed?.Remove(code.Name.Content); //remove that code name, since that code compiles now
-
                                 openSaveDialog = mainWindow.IsSaving;
                             }
                         }
@@ -949,68 +975,52 @@ namespace UndertaleModTool
                 // This is still a problem in rare cases for some unknown reason
             }
 
-            CompileContext compileContext = null;
+            CompileResult compileResult = new();
+            string rootException = null;
             string text = DecompiledEditor.Text;
             var dispatcher = Dispatcher;
             Task t = Task.Run(() =>
             {
                 try
                 {
-                    compileContext = Compiler.CompileGMLText(text, data, code, (f) => { dispatcher.Invoke(() => f()); });
+                    CompileGroup group = new(data);
+                    group.MainThreadAction = (f) => { dispatcher.Invoke(() => f()); };
+                    group.QueueCodeReplace(code, text);
+                    compileResult = group.Compile();
                 }
                 catch (Exception ex)
                 {
-                    compileContext = new(data, code)
-                    {
-                        HasError = true,
-                        ResultError = ex.ToString()
-                    };
+                    rootException = ex.ToString();
                 }
             });
             await t;
 
-            if (compileContext == null)
+            if (rootException is not null)
             {
                 dialog.TryClose();
-                mainWindow.ShowError("Compile context was null for some reason...", "This shouldn't happen");
+                mainWindow.ShowError(Truncate(rootException, 512), "Compiler error");
                 return;
             }
 
-            if (compileContext.HasError)
+            if (!compileResult.Successful)
             {
                 dialog.TryClose();
-                mainWindow.ShowError(Truncate(compileContext.ResultError, 512), "Compiler error");
+                mainWindow.ShowError(Truncate(compileResult.PrintAllErrors(false), 512), "Compiler error");
                 return;
             }
 
-            if (!compileContext.SuccessfulCompile)
+            if (SettingsWindow.ProfileModeEnabled && mainWindow.ProfileHash is string currentMD5)
             {
-                dialog.TryClose();
-                mainWindow.ShowError("(unknown error message)", "Compile failed");
-                return;
-            }
-
-            code.Replace(compileContext.ResultAssembly);
-            try
-            {
-                string path = Path.Combine(TempPath, code.Name.Content + ".gml");
-                if (SettingsWindow.ProfileModeEnabled)
+                try
                 {
                     // Write text, only if in the profile mode.
+                    string path = Path.Combine(MainWindow.ProfilesFolder, currentMD5, "Temp", code.Name.Content + ".gml");
                     File.WriteAllText(path, DecompiledEditor.Text);
                 }
-                else
+                catch (Exception exc)
                 {
-                    // Destroy file with comments if it's been edited outside the profile mode.
-                    // We're dealing with the decompiled code only, it has to happen.
-                    // Otherwise it will cause a desync, which is more important to prevent.
-                    if (File.Exists(path))
-                        File.Delete(path);
+                    mainWindow.ShowError("Error during writing of GML code to profile:\n" + exc);
                 }
-            }
-            catch (Exception exc)
-            {
-                mainWindow.ShowError("Error during writing of GML code to profile:\n" + exc);
             }
 
             // Invalidate gettext if necessary
@@ -1030,8 +1040,6 @@ namespace UndertaleModTool
 
             // Decompile new code
             await DecompileCode(code, false, dialog);
-
-            //GMLCacheChanged.Add() is inside DecompileCode()
         }
         private void DecompiledEditor_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -1086,7 +1094,6 @@ namespace UndertaleModTool
             {
                 var instructions = Assembler.Assemble(DisassemblyEditor.Text, data);
                 code.Replace(instructions);
-                mainWindow.NukeProfileGML(code.Name.Content);
             }
             catch (Exception ex)
             {
@@ -1107,8 +1114,6 @@ namespace UndertaleModTool
 
             if (!DisassemblyEditor.IsReadOnly)
             {
-                data.GMLCacheChanged.Add(code.Name.Content);
-
                 if (mainWindow.IsSaving)
                 {
                     mainWindow.IsSaving = false;
@@ -1142,7 +1147,7 @@ namespace UndertaleModTool
                 {
                     int line = docLine.LineNumber;
                     var highlighter = highlighterInst;
-                    
+
                     HighlightedLine highlighted;
                     try
                     {
@@ -1188,10 +1193,10 @@ namespace UndertaleModTool
                     return null;
 
                 var doc = CurrentContext.Document;
-                string numText = doc.GetText(offset, numLength); 
+                string numText = doc.GetText(offset, numLength);
 
                 var line = new ClickVisualLineText(numText, CurrentContext.VisualLine, numLength);
-                
+
                 line.Clicked += (text, inNewTab) =>
                 {
                     if (int.TryParse(text, out int id))
@@ -1230,10 +1235,10 @@ namespace UndertaleModTool
                                 possibleObjects.Add(data.ParticleSystems[id]);
                         }
 
-                        ContextMenu contextMenu = new();
+                        ContextMenuDark contextMenu = new();
                         foreach (UndertaleObject obj in possibleObjects)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = obj.ToString().Replace("_", "__");
                             item.PreviewMouseDown += (sender2, ev2) =>
                             {
@@ -1245,7 +1250,7 @@ namespace UndertaleModTool
                                 {
                                     mainWindow.Focus();
                                     mainWindow.ChangeSelection(obj, true);
-                                    
+
                                 }
                                 else if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)
                                     mainWindow.ChangeSelection(obj);
@@ -1260,7 +1265,7 @@ namespace UndertaleModTool
                         }
                         if (id > 0x00050000)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = "0x" + id.ToString("X6") + " (color)";
                             item.Click += (sender2, ev2) =>
                             {
@@ -1277,7 +1282,7 @@ namespace UndertaleModTool
                         var myKey = list.Constants.FirstOrDefault(x => x.Value == (double)id).Key;
                         if (myKey != null)
                         {
-                            MenuItem item = new();
+                            MenuItemDark item = new();
                             item.Header = myKey.Replace("_", "__") + " (constant)";
                             item.Click += (sender2, ev2) =>
                             {
@@ -1290,7 +1295,7 @@ namespace UndertaleModTool
                             };
                             contextMenu.Items.Add(item);
                         }
-                        contextMenu.Items.Add(new MenuItem() { Header = id + " (number)", IsEnabled = false });
+                        contextMenu.Items.Add(new MenuItemDark() { Header = id + " (number)", IsEnabled = false });
 
                         contextMenu.IsOpen = true;
                     }
@@ -1314,7 +1319,7 @@ namespace UndertaleModTool
             // ENUMS
             private static readonly SolidColorBrush EnumBrush = new(Color.FromRgb(0xFF, 0x80, 0x80));
 
-            private static ContextMenu contextMenu;
+            private static ContextMenuDark contextMenu;
 
             // <offset, length>
             private readonly Dictionary<int, int> lineNameSections = new();
@@ -1326,7 +1331,7 @@ namespace UndertaleModTool
                 highlighterInst = textAreaInst.GetService(typeof(IHighlighter)) as IHighlighter;
                 textEditorInst = textAreaInst.GetService(typeof(TextEditor)) as TextEditor;
 
-                var menuItem = new MenuItem()
+                var menuItem = new MenuItemDark()
                 {
                     Header = "Open in new tab"
                 };
@@ -1387,9 +1392,6 @@ namespace UndertaleModTool
                 return -1;
             }
 
-            // Only here because of fucking bullshit compiler
-            public Dictionary<string, double> Enums = null;
-
             /// Constructs an element at the specified offset.
             /// May return null if no element should be constructed.
             public override VisualLineElement ConstructElement(int offset)
@@ -1428,7 +1430,7 @@ namespace UndertaleModTool
                             else
                             {
                                 // Resolve 2.3 sub-functions for their parent entry
-                                if (data.GlobalFunctions?.NameToFunction?.TryGetValue(nameText, out Underanalyzer.IGMFunction f) == true)
+                                if (data.GlobalFunctions?.TryGetFunction(nameText, out Underanalyzer.IGMFunction f) == true)
                                 {
                                     ScriptsDict.TryGetValue(f.Name.Content, out val);
                                     val = (val as UndertaleScript)?.Code?.ParentEntry;
@@ -1451,11 +1453,11 @@ namespace UndertaleModTool
                 {
                     NamedObjDict.TryGetValue(nameText, out val);
                     if (data.IsVersionAtLeast(2, 3))
-                    { 
+                    {
                         if (val is UndertaleScript)
                             val = null; // in GMS2.3 scripts are never referenced directly
 
-                        if (data.GlobalFunctions?.NameToFunction?.TryGetValue(nameText, out Underanalyzer.IGMFunction globalFunc) == true &&
+                        if (data.GlobalFunctions?.TryGetFunction(nameText, out Underanalyzer.IGMFunction globalFunc) == true &&
                             globalFunc is UndertaleFunction utGlobalFunc)
                         {
                             // Try getting script that this function reference belongs to
@@ -1503,14 +1505,11 @@ namespace UndertaleModTool
                         }
                     }
 
-                    // For Colors for Second Dynamic Value in Enums
-                    if (offset >= 7)
-                    {
-                        if (doc.GetText(offset - 7, 7) == "states.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
+                    // wayyyy better than my hardcoded solution from old versions
+                    #region Color Enums
+                    // manually set UnknownEnums, because they're not in GameSpecificData, and they are always Enums
+                    var ii = 0;
+                    Enums["UnknownEnum"] = ii;
                     if (offset >= 12)
                     {
                         if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
@@ -1518,25 +1517,56 @@ namespace UndertaleModTool
                             return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
                         }
                     }
-                    if (offset >= 9)
+                    // Find all Enums in GameSpecificData
+                    // mostly from zyle's thing, but repurposed
+                    string[] defs = Directory.GetFiles($"{Program.GetExecutableDirectory()}\\GameSpecificData\\Definitions\\");
+                    foreach (string def in defs)
                     {
-                        if (doc.GetText(offset - 9, 9) == "particle.")
+                        GameSpecificResolver.GameSpecificDefinition currentDef = System.Text.Json.JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
+
+                        foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
                         {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                            // check if json file is allowed to be applied to the current game loaded
+                            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(data.GeneralInfo.DisplayName.Content, condition.Value)) || condition.ConditionKind == "Always")
+                            {
+                                string macroPath = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\{currentDef.UnderanalyzerFilename}";
+                                if (File.Exists(macroPath))
+                                {
+                                    MacroData macro = System.Text.Json.JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
+                                    foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
+                                    {
+                                        if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
+                                            continue;
+
+                                        // add Enum set to list (for Static Value below)
+                                        Enums[kvp.Value.Name] = ii++;
+
+                                        // For Colors for Second (Dynamic) Value in Enums
+                                        //          this thing
+                                        //               |
+                                        //               v
+                                        // UnknownEnum.Value_1
+                                        var stringCount = kvp.Value.Name.Length + 1;
+                                        if (offset >= stringCount)
+                                        {
+                                            if (doc.GetText(offset - stringCount, stringCount) == kvp.Value.Name + ".")
+                                            {
+                                                return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    // Because fucking the COMPILER IS ACTUALLY MORE RETARDED THAN ME
-                    // HOW IS THAT EVEN POSSIBLE!!11!1!!11!!
-                    Enums = new Dictionary<string, double>();
-                    // Custom Enums
-                    Enums["UnknownEnum"] = 0.0;
-                    Enums["states"] = 1.0;
-                    Enums["particle"] = 2.0;
-
-                    // Color Enums Red if its even there
+                    // For Colors for First (Static) Value in Enums
+                    //  this thing
+                    //      |
+                    //      v
+                    // UnknownEnum.Value_1
                     if (Enums.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                    //
+                    #endregion
 
                     if (data.BuiltinList.Constants.ContainsKey(nameText))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength,

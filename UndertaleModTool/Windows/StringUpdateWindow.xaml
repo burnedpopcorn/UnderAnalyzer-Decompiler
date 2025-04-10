@@ -6,8 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UndertaleModTool"
         mc:Ignorable="d"
-        Title="String reference changed" Height="Auto" Width="400" SizeToContent="Height" WindowStartupLocation="CenterOwner"
-        Style="{DynamicResource DefaultWindowStyle}">
+        Title="String reference changed" Height="Auto" Width="400" SizeToContent="Height" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

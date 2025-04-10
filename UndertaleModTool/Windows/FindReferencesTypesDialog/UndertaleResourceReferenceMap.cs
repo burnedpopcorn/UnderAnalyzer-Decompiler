@@ -162,7 +162,6 @@ namespace UndertaleModTool.Windows
                             (typeof(UndertaleGameObject), "Game objects"),
                             (typeof(UndertaleGeneralInfo), "General info"),
                             (typeof(UndertaleOptions.Constant), "Game options constants"),
-                            (typeof(UndertaleLanguage), "Languages"),
                             (typeof(UndertalePath), "Paths"),
                             (typeof(UndertaleRoom), "Rooms"),
                             (typeof(UndertaleScript), "Scripts"),
