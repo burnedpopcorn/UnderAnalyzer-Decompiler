@@ -60,7 +60,7 @@ namespace UndertaleModTool
         public static Dictionary<string, object> functionArguments = new();
 
         // Make the JSON Files
-        public static void InitializeTypes(UndertaleData data)
+        public static void InitializeTypes(UndertaleData data, bool usedefaults = false)
         {
             if (data == null)
             {
@@ -69,106 +69,110 @@ namespace UndertaleModTool
                 return;
             }
 
-            // Clear all if already filled
-            PT_AssetResolver.PTStates.Clear();
-            builtin_funcs = new Dictionary<string, string[]> { };
-            builtin_vars = new Dictionary<string, string> { };
-            functionArguments = new Dictionary<string, object> { };
-            generalarrays = new Dictionary<string, object> { };
-
-            // Pizza Tower Enums
-            try
+            // if using default settings
+            if (usedefaults)
             {
-                // Check Pizza Tower States in these Scripts
-                FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), // Code Entry to search
-                    "state",                                            // Switch Var Name, ex: switch (state)
-                    new[] { "scr_player_", "state_player_", "scr_playerN_" }, data  // scripts of state name, ex: (scr_player_normal(); --> normal
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_cheeseslime_Step_0"),
-                    "state",
-                    new[] { "scr_enemy_", "scr_pizzagoblin_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_pepperman_Step_0"),
-                    "state",
-                    new[] { "scr_boss_", "scr_pepperman_", "scr_enemy_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_vigilanteboss_Step_0"),
-                    "state",
-                    new[] { "scr_vigilante_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_noiseboss_Step_0"),
-                    "state",
-                    new[] { "scr_noise_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_fakepepboss_Step_0"),
-                    "state",
-                    new[] { "scr_fakepepboss_", "scr_boss_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_pizzafaceboss_Step_0"),
-                    "state",
-                    new[] { "scr_pizzaface_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_pizzafaceboss_p2_Step_0"),
-                    "state",
-                    new[] { "scr_pizzaface_p2_", "scr_pizzaface_" }, data
-                );
-                FindStateNames(
-                    data.Code.ByName("gml_Object_obj_pizzafaceboss_p3_Step_0"),
-                    "state",
-                    new[] { "scr_pizzaface_p3_" }, data
-                );
+                // Clear all if already filled
+                PTStates.Clear();
+                builtin_funcs = new Dictionary<string, string[]> { };
+                builtin_vars = new Dictionary<string, string> { };
+                functionArguments = new Dictionary<string, object> { };
+                generalarrays = new Dictionary<string, object> { };
 
-                // ONLY Add if the FindStateNames Function actually found states
-                if (JSON_PTStates.Count > 0)
+                // Pizza Tower Enums
+                try
                 {
-                    // Variables that should == Enum
-                    builtin_vars.TryAdd("state", "Enum.states");
-                    builtin_vars.TryAdd("_state", "Enum.states");
-                    builtin_vars.TryAdd("prevstate", "Enum.states");
-                    builtin_vars.TryAdd("_prevstate", "Enum.states");
-                    builtin_vars.TryAdd("substate", "Enum.states");
-                    builtin_vars.TryAdd("arenastate", "Enum.states");
-                    builtin_vars.TryAdd("player_state", "Enum.states");
-                    builtin_vars.TryAdd("tauntstoredstate", "Enum.states");
-                    builtin_vars.TryAdd("taunt_storedstate", "Enum.states");
-                    builtin_vars.TryAdd("storedstate", "Enum.states");
-                    builtin_vars.TryAdd("chosenstate", "Enum.states");
-                    builtin_vars.TryAdd("superattackstate", "Enum.states");
-                    builtin_vars.TryAdd("text_state", "Enum.states");
-                    builtin_vars.TryAdd("ministate", "Enum.states");
-                    builtin_vars.TryAdd("dropstate", "Enum.states");
-                    builtin_vars.TryAdd("verticalstate", "Enum.states");
-                    builtin_vars.TryAdd("walkstate", "Enum.states");
-                    builtin_vars.TryAdd("hitstate", "Enum.states");
-                    builtin_vars.TryAdd("toppin_state", "Enum.states");
-                    builtin_vars.TryAdd("bossintrostate", "Enum.states");
-                    builtin_vars.TryAdd("introstate", "Enum.states");
-                    builtin_vars.TryAdd("fadeoutstate", "Enum.states");
-                    builtin_vars.TryAdd("supergrabstate", "Enum.states");
-                    builtin_vars.TryAdd("startstate", "Enum.states");
-                    builtin_vars.TryAdd("atstate", "Enum.states");
-                    // New ones
-                    builtin_vars.TryAdd("attack_pool", "Array<Enum.states>");
-                    builtin_vars.TryAdd("transformation", "Enum.states");
-
-                    // Function Arguments
-                    builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
-                    builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
-
-                    // Apply States to Arrays as well
-                    generalarrays.TryAdd("Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" });
+                    // Check Pizza Tower States in these Scripts
+                    FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), // Code Entry to search
+                        "state",                                            // Switch Var Name, ex: switch (state)
+                        new[] { "scr_player_", "state_player_", "scr_playerN_" }, data  // scripts of state name, ex: (scr_player_normal(); --> normal
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_cheeseslime_Step_0"),
+                        "state",
+                        new[] { "scr_enemy_", "scr_pizzagoblin_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_pepperman_Step_0"),
+                        "state",
+                        new[] { "scr_boss_", "scr_pepperman_", "scr_enemy_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_vigilanteboss_Step_0"),
+                        "state",
+                        new[] { "scr_vigilante_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_noiseboss_Step_0"),
+                        "state",
+                        new[] { "scr_noise_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_fakepepboss_Step_0"),
+                        "state",
+                        new[] { "scr_fakepepboss_", "scr_boss_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_pizzafaceboss_Step_0"),
+                        "state",
+                        new[] { "scr_pizzaface_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_pizzafaceboss_p2_Step_0"),
+                        "state",
+                        new[] { "scr_pizzaface_p2_", "scr_pizzaface_" }, data
+                    );
+                    FindStateNames(
+                        data.Code.ByName("gml_Object_obj_pizzafaceboss_p3_Step_0"),
+                        "state",
+                        new[] { "scr_pizzaface_p3_" }, data
+                    );
+                }
+                catch (Exception e)
+                {
+                    Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Extract Pizza Tower Enums");
                 }
             }
-            catch (Exception e)
+
+            // ONLY Add if the FindStateNames Function actually found states
+            if (JSON_PTStates.Count > 0)
             {
-                Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Extract Pizza Tower Enums");
+                // Variables that should == Enum
+                builtin_vars.TryAdd("state", "Enum.states");
+                builtin_vars.TryAdd("_state", "Enum.states");
+                builtin_vars.TryAdd("prevstate", "Enum.states");
+                builtin_vars.TryAdd("_prevstate", "Enum.states");
+                builtin_vars.TryAdd("substate", "Enum.states");
+                builtin_vars.TryAdd("arenastate", "Enum.states");
+                builtin_vars.TryAdd("player_state", "Enum.states");
+                builtin_vars.TryAdd("tauntstoredstate", "Enum.states");
+                builtin_vars.TryAdd("taunt_storedstate", "Enum.states");
+                builtin_vars.TryAdd("storedstate", "Enum.states");
+                builtin_vars.TryAdd("chosenstate", "Enum.states");
+                builtin_vars.TryAdd("superattackstate", "Enum.states");
+                builtin_vars.TryAdd("text_state", "Enum.states");
+                builtin_vars.TryAdd("ministate", "Enum.states");
+                builtin_vars.TryAdd("dropstate", "Enum.states");
+                builtin_vars.TryAdd("verticalstate", "Enum.states");
+                builtin_vars.TryAdd("walkstate", "Enum.states");
+                builtin_vars.TryAdd("hitstate", "Enum.states");
+                builtin_vars.TryAdd("toppin_state", "Enum.states");
+                builtin_vars.TryAdd("bossintrostate", "Enum.states");
+                builtin_vars.TryAdd("introstate", "Enum.states");
+                builtin_vars.TryAdd("fadeoutstate", "Enum.states");
+                builtin_vars.TryAdd("supergrabstate", "Enum.states");
+                builtin_vars.TryAdd("startstate", "Enum.states");
+                builtin_vars.TryAdd("atstate", "Enum.states");
+                // New ones
+                builtin_vars.TryAdd("attack_pool", "Array<Enum.states>");
+                builtin_vars.TryAdd("transformation", "Enum.states");
+
+                // Function Arguments
+                builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
+                builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
+
+                // Apply States to Arrays as well
+                generalarrays.TryAdd("Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" });
             }
 
             // Variable Definitions

@@ -3467,7 +3467,8 @@ result in loss of work.");
         private void PT_JSON_BUTTON_CLICK(object sender, RoutedEventArgs e)
         {
             // do the thing
-            PT_AssetResolver.InitializeTypes(Data);
+            CSTMPTENUM customptenumsfinder = new CSTMPTENUM();
+            customptenumsfinder.Show();
         }
         // Var Defition Form Window (Clean)
         private void OpenVarDefinitionForm_Click(object sender, RoutedEventArgs e)
