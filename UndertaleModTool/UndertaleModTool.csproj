@@ -20,6 +20,7 @@
         <!-- Suppress all missing XML comment warnings -->
         <NoWarn>1591</NoWarn>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AssemblyName>UnderAnalyzer-Decompiler</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="BuildDate.txt" />
