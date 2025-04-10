@@ -12,6 +12,10 @@ using UndertaleModLib.Models;
 // for ShowWarning
 using System.Windows;
 using System.Linq;
+using System.Text.RegularExpressions;
+using UndertaleModLib.Decompiler;
+// for PT Enums
+using Underanalyzer.Decompiler;
 
 namespace UndertaleModTool
 {
@@ -73,46 +77,52 @@ namespace UndertaleModTool
             generalarrays = new Dictionary<string, object> { };
 
             // Pizza Tower Enums
-            // how these work is that:
-            //                                      v--- Code Entry to search               v--- find state name from, ex: (scr_player_normal(); --> normal (it then adds states.))
-            // FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), new[] { "scr_player_", "state_player_", "scr_playerN_" });
             try
             {
                 // Check Pizza Tower States in these Scripts
-                FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"),
-                    new[] { "scr_player_", "state_player_", "scr_playerN_" }
+                FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), // Code Entry to search
+                    "state",                                            // Switch Var Name, ex: switch (state)
+                    new[] { "scr_player_", "state_player_", "scr_playerN_" }, data  // scripts of state name, ex: (scr_player_normal(); --> normal
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_cheeseslime_Step_0"),
-                    new[] { "scr_enemy_", "scr_pizzagoblin_" }
+                    "state",
+                    new[] { "scr_enemy_", "scr_pizzagoblin_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_pepperman_Step_0"),
-                    new[] { "scr_boss_", "scr_pepperman_", "scr_enemy_" }
+                    "state",
+                    new[] { "scr_boss_", "scr_pepperman_", "scr_enemy_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_vigilanteboss_Step_0"),
-                    new[] { "scr_vigilante_" }
+                    "state",
+                    new[] { "scr_vigilante_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_noiseboss_Step_0"),
-                    new[] { "scr_noise_" }
+                    "state",
+                    new[] { "scr_noise_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_fakepepboss_Step_0"),
-                    new[] { "scr_fakepepboss_", "scr_boss_" }
+                    "state",
+                    new[] { "scr_fakepepboss_", "scr_boss_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_pizzafaceboss_Step_0"),
-                    new[] { "scr_pizzaface_" }
+                    "state",
+                    new[] { "scr_pizzaface_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_pizzafaceboss_p2_Step_0"),
-                    new[] { "scr_pizzaface_p2_", "scr_pizzaface_" }
+                    "state",
+                    new[] { "scr_pizzaface_p2_", "scr_pizzaface_" }, data
                 );
                 FindStateNames(
                     data.Code.ByName("gml_Object_obj_pizzafaceboss_p3_Step_0"),
-                    new[] { "scr_pizzaface_p3_" }
+                    "state",
+                    new[] { "scr_pizzaface_p3_" }, data
                 );
 
                 // ONLY Add if the FindStateNames Function actually found states
@@ -828,6 +838,7 @@ namespace UndertaleModTool
             // Notify User that it is done
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
         }
+
         #region Other Enum Shit
         public static void FindOtherEnums(UndertaleData data) 
         {
@@ -1171,90 +1182,77 @@ namespace UndertaleModTool
         }
         #endregion
 
-        // Detects PT state names (thank you so much utmtce)
-        public static void FindStateNames(UndertaleCode code, string[] statePrefix)
+        // Detects PT state names (now without instuction bullshit)
+        public static void FindStateNames(UndertaleCode code, string switchstate, string[] statePrefix, UndertaleData data)
         {
-            /*
             if (code != null)
             {
-                for (var i = 0; i < code.Instructions.Count; i++)
+                // get code
+                GlobalDecompileContext globalDecompileContext = new(data);
+                IDecompileSettings decompilerSettings = new DecompileSettings()
                 {
-                    UndertaleInstruction instr = code.Instructions[i];
-                    if (
-                        UndertaleInstruction.GetInstructionType(instr.Kind)
-                        != UndertaleInstruction.InstructionType.PushInstruction
-                        || !((instr.Value is int) || (instr.Value is short) || (instr.Value is long))
-                    ) continue;
+                    CreateEnumDeclarations = false,
+                    AllowLeftoverDataOnStack = true
+                };
+                DecompileContext context = new DecompileContext(globalDecompileContext, code, decompilerSettings);
+                var decompiledcode = context.DecompileToString();
 
-                    int stateID = Convert.ToInt32(instr.Value);
-                    if (PTStates.ContainsKey(stateID)) continue;
+                // get lines of code
+                var lines = decompiledcode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-                    UndertaleInstruction next = code.Instructions[i + 1];
-                    if (next == null) continue;
-                    if (
-                        UndertaleInstruction.GetInstructionType(next.Kind)
-                        != UndertaleInstruction.InstructionType.ComparisonInstruction
-                        || next.ComparisonKind != UndertaleInstruction.ComparisonType.EQ
-                    ) continue;
-                    UndertaleInstruction next2 = code.Instructions[i + 2];
-                    if (next2 == null) continue;
-                    if (
-                        next2.Kind != UndertaleInstruction.Opcode.Bt
-                    ) continue;
+                // go through every line
+                for (int i = 0; i < lines.Length - 1; i++)
+                {
+                    string line = lines[i].Trim();
 
-                    UndertaleInstruction newInstr =
-                        code.GetInstructionFromAddress(next2.Address + (uint)next2.JumpOffset);
+                    // check only in the switch state
+                    if (line.StartsWith($"switch ({switchstate})"))
+                        continue;
 
-                    if (newInstr == null) continue;
-
-                    for (
-                        var j = code.Instructions.IndexOf(newInstr);
-                        j < code.Instructions.Count &&
-                        UndertaleInstruction.GetInstructionType(code.Instructions[j].Kind) !=
-                            UndertaleInstruction.InstructionType.GotoInstruction;
-                        j++
-                    )
+                    // start checking for states
+                    if (line.StartsWith("case "))
                     {
-                        UndertaleInstruction thisInstr = code.Instructions[j];
-                        if (UndertaleInstruction.GetInstructionType(thisInstr.Kind)
-                            != UndertaleInstruction.InstructionType.CallInstruction) continue;
-                        string funcName = thisInstr?.Function?.Target?.Name?.Content;
-                        if (funcName is null)
+                        int stateValue;
+                        var caseMatch = Regex.Match(line, @"case\s+(?:UnknownEnum\.Value_)?(\d+):");
+                        if (!caseMatch.Success)
                             continue;
-                        string stateName = null;
-                        foreach (string prefix in statePrefix)
+
+                        // get state value as integer
+                        stateValue = int.Parse(caseMatch.Groups[1].Value);
+
+                        // Look for the function call on the next line
+                        string nextLine = lines[i + 1].Trim();
+                        foreach (var prefix in statePrefix)
                         {
-                            if (funcName.StartsWith(prefix))
+                            if (nextLine.StartsWith(prefix))
                             {
-                                stateName = funcName[prefix.Length..];
-                                break;
-                            }
-                            else if (funcName.StartsWith("gml_Script_" + prefix))
-                            {
-                                stateName = funcName[("gml_Script_" + prefix).Length..];
+                                var suffixMatch = Regex.Match(nextLine, $@"{Regex.Escape(prefix)}(\w+)\s*\(");
+                                if (suffixMatch.Success)
+                                {
+                                    // STATE!!!
+                                    string suffix = suffixMatch.Groups[1].Value;
+
+                                    // fix throw and parry
+                                    switch (suffix)
+                                    {
+                                        case "throw":
+                                            suffix = "Throw";
+                                            break;
+                                        case "parry":
+                                            suffix = "Parry";
+                                            break;
+                                    }
+
+                                    // Add to both dictionaries
+                                    PTStates.TryAdd(stateValue, suffix);
+                                    JSON_PTStates.TryAdd(suffix, stateValue);
+                                }
                                 break;
                             }
                         }
-                        if (stateName == null) continue;
-                        // Hooray! We got the state!
-                        if (PTStates.ContainsKey(stateID)) break;
-
-                        string actualStateName = stateName;
-                        int dedupe = 1;
-                        while (PTStates.ContainsValue(actualStateName))
-                        {
-                            dedupe++;
-                            actualStateName = stateName + dedupe.ToString();
-                        }
-
-                        PTStates.TryAdd(stateID, actualStateName);
-                        // idk man, for Json
-                        JSON_PTStates.TryAdd(actualStateName, stateID);
-                        break;
                     }
                 }
             }
-            */
         }
     }
 }

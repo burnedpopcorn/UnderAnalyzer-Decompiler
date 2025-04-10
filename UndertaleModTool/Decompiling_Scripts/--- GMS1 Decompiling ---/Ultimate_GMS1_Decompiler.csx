@@ -1,40 +1,17 @@
 /*
- /$$$$$$$$                                          /$$      /$$$$$$   /$$$$$$  /$$      /$$  /$$$$$$   /$$   /$$$$$$$$/$$$$$$ /$$   /$$ /$$$$$$$$ /$$$$$$$ 
-| $$_____/                                         | $$     /$$__  $$ /$$__  $$| $$$    /$$$ /$$__  $$/$$$$  | $$_____/_  $$_/| $$  / $$| $$_____/| $$__  $$
-| $$      /$$   /$$  /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$  |__/  \ $$| $$  \__/| $$$$  /$$$$| $$  \__/_  $$  | $$       | $$  |  $$/ $$/| $$      | $$  \ $$
-| $$$$$  |  $$ /$$/ /$$__  $$ /$$__  $$ /$$__  $$|_  $$_/    /$$$$$$/| $$ /$$$$| $$ $$/$$ $$|  $$$$$$  | $$  | $$$$$    | $$   \  $$$$/ | $$$$$   | $$  | $$
-| $$__/   \  $$$$/ | $$  \ $$| $$  \ $$| $$  \__/  | $$     /$$____/ | $$|_  $$| $$  $$$| $$ \____  $$ | $$  | $$__/    | $$    >$$  $$ | $$__/   | $$  | $$
-| $$       >$$  $$ | $$  | $$| $$  | $$| $$        | $$ /$$| $$      | $$  \ $$| $$\  $ | $$ /$$  \ $$ | $$  | $$       | $$   /$$/\  $$| $$      | $$  | $$
-| $$$$$$$$/$$/\  $$| $$$$$$$/|  $$$$$$/| $$        |  $$$$/| $$$$$$$$|  $$$$$$/| $$ \/  | $$|  $$$$$$//$$$$$$| $$      /$$$$$$| $$  \ $$| $$$$$$$$| $$$$$$$/
-|________/__/  \__/| $$____/  \______/ |__/         \___/  |________/ \______/ |__/     |__/ \______/|______/|__/     |______/|__/  |__/|________/|_______/ 
-                   | $$                                                                                                                                     
-                   | $$                                                                                                                                     
-                   |__/       
+    Ultimate_GMS1_Decompiler.csx
+        (Previously Export2GMS1FIXED_UA)
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Improved
+        by burnedpopcorn180
 
-		Export2GMS1FIXED (UnderAnalyzer Version)
-
-		Improved
-		  by burnedpopcorn180
-
-		Original Script by cubeww
-		Original Fixed Version by CST1229
+    Original Script by cubeww
+    Original Fixed Version by CST1229
 		
-		Export2GMS1FIXED (UnderAnalyzer) Changes:
-          - (NEW) UI has been added, with the ability to select specific resource types to decompile
-		  - Script now uses UnderAnalyzer instead of UTMT
-		
-		Export2GMS1FIXED Changes:
-		  - Added support for decompiling Shaders
-		  - Fixed Script being unable to further Decompile the project if a single script/object failed to
-		  - Script now asks if User wants to delete old decompilation project and continue if a previous attempt to decompile was detected
-		  - Added ability to log scripts and objects that failed to decompile to a text file
-		  - Script now Forces User to load a data.win file first, instead of allowing none to be loaded
-
-		THIS VERSION DOES NOT HAVE UTMT SUPPORT
-		If you want to use UTMT, download the UTMT version of this script in my Github Repo
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
+    Ultimate_GMS1_Decompiler Changes:
+        - UI has been added, with the ability to select specific resource types to decompile
+        - Added support for decompiling Shaders
+        - Added ability to log scripts and objects that failed to decompile to a text file
 */
 
 using System;
@@ -59,7 +36,7 @@ using UndertaleModTool;
 // make sure a data.win is loaded
 EnsureDataLoaded();
 
-string GameName = Data.GeneralInfo.Name.ToString().Replace(@"""",""); //Name == "Project" -> Project
+string GameName = Data.GeneralInfo.Name.ToString().Replace(@"""", ""); //Name == "Project" -> Project
 int progress = 0;
 string projFolder = GetFolder(FilePath) + GameName + ".gmx" + Path.DirectorySeparatorChar;
 TextureWorker worker = new TextureWorker();
@@ -84,7 +61,7 @@ var tooltip = new ToolTip();
 Form FORM = new Form()
 {
     AutoSize = true,
-    Text = "Export2GMS1FIXED",
+    Text = "Ultimate_GMS1_Decompiler",
     MaximizeBox = false,
     MinimizeBox = false,
     StartPosition = FormStartPosition.CenterScreen,
@@ -92,7 +69,7 @@ Form FORM = new Form()
 };
 FORM.Controls.Add(new Label()
 {
-    Text = "Welcome to Export2GMS1FIXED!\n\nSelect the parts you want to be included in the project, or just press \"Start Export\" to do a full Export",
+    Text = "Welcome to Ultimate_GMS1_Decompiler!\n\nSelect the parts you want to be included in the project, or just press \"Start Export\" to do a full Export",
     AutoSize = true,
     Location = new System.Drawing.Point(8, 8),
 });
@@ -187,52 +164,52 @@ FORM.Controls.Add(_BGND);
 #endregion
 #region Check Resources
 // Blank out any Resource Types if there are none of that type in the data.win
-if (Data.Sprites.Count == 0) 
-{ 
-    _SPRT.Checked = false; 
-    _SPRT.Enabled = false; 
-}
-if (Data.Backgrounds.Count == 0) 
-{ 
-    _BGND.Checked = false; 
-    _BGND.Enabled = false; 
-}
-if (Data.GameObjects.Count == 0) 
+if (Data.Sprites.Count == 0)
 {
-    _OBJT.Checked = false; 
+    _SPRT.Checked = false;
+    _SPRT.Enabled = false;
+}
+if (Data.Backgrounds.Count == 0)
+{
+    _BGND.Checked = false;
+    _BGND.Enabled = false;
+}
+if (Data.GameObjects.Count == 0)
+{
+    _OBJT.Checked = false;
     _OBJT.Enabled = false;
 }
-if (Data.Rooms.Count == 0) 
+if (Data.Rooms.Count == 0)
 {
     _ROOM.Checked = false;
     _ROOM.Enabled = false;
 }
-if (Data.Sounds.Count == 0) 
+if (Data.Sounds.Count == 0)
 {
     _SOND.Checked = false;
     _SOND.Enabled = false;
 }
-if (Data.Scripts.Count == 0) 
+if (Data.Scripts.Count == 0)
 {
     _SCPT.Checked = false;
     _SCPT.Enabled = false;
 }
-if (Data.Fonts.Count == 0) 
+if (Data.Fonts.Count == 0)
 {
     _FONT.Checked = false;
     _FONT.Enabled = false;
 }
-if (Data.Paths.Count == 0) 
+if (Data.Paths.Count == 0)
 {
     _PATH.Checked = false;
     _PATH.Enabled = false;
 }
-if (Data.Timelines.Count == 0) 
+if (Data.Timelines.Count == 0)
 {
     _TMLN.Checked = false;
     _TMLN.Enabled = false;
 }
-if (Data.Shaders.Count == 0) 
+if (Data.Shaders.Count == 0)
 {
     _SHDR.Checked = false;
     _SHDR.Enabled = false;
@@ -364,11 +341,11 @@ HideProgressBar();
 
 if (errLog.Count > 0) // If Errors were Encountered during decompilation
 {
-	File.WriteAllLinesAsync(projFolder + "Error_Log.txt", errLog);
-	ScriptMessage($"Done with {errLog.Count} errors.\n" + projFolder + "\n\nError_Log.txt can be found in the Decompiled Project with a list of all the Scripts and Objects that failed to decompile");
+    File.WriteAllLinesAsync(projFolder + "Error_Log.txt", errLog);
+    ScriptMessage($"Done with {errLog.Count} errors.\n" + projFolder + "\n\nError_Log.txt can be found in the Decompiled Project with a list of all the Scripts and Objects that failed to decompile");
 }
 else // If there weren't any errors found
-	ScriptMessage("Done with No Errors Encountered!\nRemember that this only means that\nScripts and Objects had no problems decompiling");
+    ScriptMessage("Done with No Errors Encountered!\nRemember that this only means that\nScripts and Objects had no problems decompiling");
 #endregion
 
 // All Export Functions
@@ -463,7 +440,7 @@ void ExportBackground(UndertaleBackground background)
             ),
             new XElement("For3D", "0"),
             new XElement("width", background.Texture == null ? "0" : background.Texture.BoundingWidth.ToString()),
-            new XElement("height",background.Texture == null ? "0" :  background.Texture.BoundingHeight.ToString()),
+            new XElement("height", background.Texture == null ? "0" : background.Texture.BoundingHeight.ToString()),
             new XElement("data", "images\\" + background.Name.Content + ".png")
         )
     );
@@ -497,34 +474,34 @@ void ExportGameObject(UndertaleGameObject gameObject)
             new XElement("parentName", gameObject.ParentId is null ? "<undefined>" : gameObject.ParentId.Name.Content),
             new XElement("maskName", gameObject.TextureMaskId is null ? "<undefined>" : gameObject.TextureMaskId.Name.Content),
             new XElement("events"),
-			
-			//Physics
-			new XElement("PhysicsObject", BoolToString(gameObject.UsesPhysics)),
-			new XElement("PhysicsObjectSensor", BoolToString(gameObject.IsSensor)),
-			new XElement("PhysicsObjectShape", (uint)gameObject.CollisionShape),
-			new XElement("PhysicsObjectDensity", gameObject.Density),
-			new XElement("PhysicsObjectRestitution", gameObject.Restitution),
-			new XElement("PhysicsObjectGroup", gameObject.Group),
-			new XElement("PhysicsObjectLinearDamping", gameObject.LinearDamping),
-			new XElement("PhysicsObjectAngularDamping", gameObject.AngularDamping),
-			new XElement("PhysicsObjectFriction", gameObject.Friction),
-			new XElement("PhysicsObjectAwake", BoolToString(gameObject.Awake)),
-			new XElement("PhysicsObjectKinematic", BoolToString(gameObject.Kinematic)),
-			new XElement("PhysicsShapePoints")
+
+            //Physics
+            new XElement("PhysicsObject", BoolToString(gameObject.UsesPhysics)),
+            new XElement("PhysicsObjectSensor", BoolToString(gameObject.IsSensor)),
+            new XElement("PhysicsObjectShape", (uint)gameObject.CollisionShape),
+            new XElement("PhysicsObjectDensity", gameObject.Density),
+            new XElement("PhysicsObjectRestitution", gameObject.Restitution),
+            new XElement("PhysicsObjectGroup", gameObject.Group),
+            new XElement("PhysicsObjectLinearDamping", gameObject.LinearDamping),
+            new XElement("PhysicsObjectAngularDamping", gameObject.AngularDamping),
+            new XElement("PhysicsObjectFriction", gameObject.Friction),
+            new XElement("PhysicsObjectAwake", BoolToString(gameObject.Awake)),
+            new XElement("PhysicsObjectKinematic", BoolToString(gameObject.Kinematic)),
+            new XElement("PhysicsShapePoints")
         )
     );
 
 
-	
-	// Loop through PhysicsShapePoints List
-	for (int _point = 0; _point < gameObject.PhysicsVertices.Count; _point++)
-	{
-		var _x = gameObject.PhysicsVertices[_point].X;
-		var _y = gameObject.PhysicsVertices[_point].Y;
-		
-		var physicsPointsNode = gmx.Element("object").Element("PhysicsShapePoints");
-		physicsPointsNode.Add(new XElement("points",_x.ToString() + "," + _y.ToString()));
-	}
+
+    // Loop through PhysicsShapePoints List
+    for (int _point = 0; _point < gameObject.PhysicsVertices.Count; _point++)
+    {
+        var _x = gameObject.PhysicsVertices[_point].X;
+        var _y = gameObject.PhysicsVertices[_point].Y;
+
+        var physicsPointsNode = gmx.Element("object").Element("PhysicsShapePoints");
+        physicsPointsNode.Add(new XElement("points", _x.ToString() + "," + _y.ToString()));
+    }
 
     // Traversing the event type list
     for (int i = 0; i < gameObject.Events.Count; i++)
@@ -558,8 +535,6 @@ void ExportGameObject(UndertaleGameObject gameObject)
                 // Traversing the action list
                 foreach (var k in j.Actions)
                 {
-				  // try + catch to detect Decompilation Failure
-				  try {
                     actionNode.Add(
                         new XElement("libid", k.LibID.ToString()),
                         new XElement("id", k.ID.ToString()),
@@ -576,38 +551,10 @@ void ExportGameObject(UndertaleGameObject gameObject)
                         new XElement("arguments",
                             new XElement("argument",
                                 new XElement("kind", "1"),
-                                new XElement("string", decompileCode(k.CodeId))
+                                new XElement("string", (k.CodeId != null) ? decompileCode(k.CodeId) : "/*DECOMPILER FAILED!*/")
                             )
                         )
                     );
-					
-				  }
-				  
-				  catch (Exception e) {
-				  actionNode.Add(
-                        new XElement("libid", k.LibID.ToString()),
-                        new XElement("id", k.ID.ToString()),
-                        new XElement("kind", k.Kind.ToString()),
-                        new XElement("userelative", BoolToString(k.UseRelative)),
-                        new XElement("isquestion", BoolToString(k.IsQuestion)),
-                        new XElement("useapplyto", BoolToString(k.UseApplyTo)),
-                        new XElement("exetype", k.ExeType.ToString()),
-                        new XElement("functionname", k.ActionName.Content),
-                        new XElement("codestring", ""),
-                        new XElement("whoName", "self"),
-                        new XElement("relative", BoolToString(k.Relative)),
-                        new XElement("isnot", BoolToString(k.IsNot)),
-                        new XElement("arguments",
-                            new XElement("argument",
-                                new XElement("kind", "1"),
-                                new XElement("string", "/*DECOMPILER FAILED!*/")
-                            )
-                        )
-                    );
-					// To list Object that failed to decompile
-					errLog.Add($"OBJECT:   {gameObject.Name.Content}");
-				  }
-				  // End of Catch
                 }
                 eventNode.Add(actionNode);
                 eventsNode.Add(eventNode);
@@ -641,29 +588,29 @@ void ExportRoom(UndertaleRoom room)
             new XElement("isometric", "0"),
             new XElement("speed", room.Speed.ToString()),
             new XElement("persistent", BoolToString(room.Persistent)),
-			// remove alpha (background color doesn't have alpha)
+            // remove alpha (background color doesn't have alpha)
             new XElement("colour", (room.BackgroundColor ^ 0xFF000000).ToString()),
-			new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
+            new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
             new XElement("code", decompileCode(room.CreationCodeId)),
             new XElement("enableViews", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
             new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ShowColor))),
             //new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearDisplayBuffer))),
-			new XElement("makerSettings",
-				new XElement("isSet", 0),
-				new XElement("w", 1024),
-				new XElement("h", 600),
-				new XElement("showGrid", 0),
-				new XElement("showObjects", -1),
-				new XElement("showTiles", -1),
-				new XElement("showBackgrounds", -1),
-				new XElement("showForegrounds", -1),
-				new XElement("showViews", 0),
-				new XElement("deleteUnderlyingObj", 0),
-				new XElement("deleteUnderlyingTiles", -1),
-				new XElement("page", 1),
-				new XElement("xoffset", 0),
-				new XElement("yoffset", 0)
-			)
+            new XElement("makerSettings",
+                new XElement("isSet", 0),
+                new XElement("w", 1024),
+                new XElement("h", 600),
+                new XElement("showGrid", 0),
+                new XElement("showObjects", -1),
+                new XElement("showTiles", -1),
+                new XElement("showBackgrounds", -1),
+                new XElement("showForegrounds", -1),
+                new XElement("showViews", 0),
+                new XElement("deleteUnderlyingObj", 0),
+                new XElement("deleteUnderlyingTiles", -1),
+                new XElement("page", 1),
+                new XElement("xoffset", 0),
+                new XElement("yoffset", 0)
+            )
         )
     );
 
@@ -697,7 +644,7 @@ void ExportRoom(UndertaleRoom room)
             new XAttribute("xview", i.ViewX.ToString()),
             new XAttribute("yview", i.ViewY.ToString()),
             new XAttribute("wview", i.ViewWidth.ToString()),
-			new XAttribute("hview", i.ViewHeight.ToString()),
+            new XAttribute("hview", i.ViewHeight.ToString()),
             new XAttribute("xport", i.PortX.ToString()),
             new XAttribute("yport", i.PortY.ToString()),
             new XAttribute("wport", i.PortWidth.ToString()),
@@ -755,18 +702,18 @@ void ExportRoom(UndertaleRoom room)
     }
     gmx.Element("room").Add(tilesNode);
 
-	//Room Physics
-	
-	gmx.Element("room").Add(
-		new XElement("PhysicsWorld", BoolToString(room.World)),
-		new XElement("PhysicsWorldTop", room.Top),
-		new XElement("PhysicsWorldLeft", room.Left),
-		new XElement("PhysicsWorldRight", room.Right),
-		new XElement("PhysicsWorldBottom", room.Bottom),
-		new XElement("PhysicsWorldGravityX", room.GravityX),
-		new XElement("PhysicsWorldGravityY", room.GravityY),
-		new XElement("PhysicsWorldPixToMeters", room.MetersPerPixel)
-	);
+    //Room Physics
+
+    gmx.Element("room").Add(
+        new XElement("PhysicsWorld", BoolToString(room.World)),
+        new XElement("PhysicsWorldTop", room.Top),
+        new XElement("PhysicsWorldLeft", room.Left),
+        new XElement("PhysicsWorldRight", room.Right),
+        new XElement("PhysicsWorldBottom", room.Bottom),
+        new XElement("PhysicsWorldGravityX", room.GravityX),
+        new XElement("PhysicsWorldGravityY", room.GravityY),
+        new XElement("PhysicsWorldPixToMeters", room.MetersPerPixel)
+    );
 
     File.WriteAllText(projFolder + "/rooms/" + room.Name.Content + ".room.gmx", gmx.ToString() + eol);
 }
@@ -789,13 +736,13 @@ void ExportSound(UndertaleSound sound)
             new XElement("extension", Path.GetExtension(sound.File.Content)),
             new XElement("origname", "sound\\audio\\" + sound.File.Content),
             new XElement("effects", sound.Effects.ToString()),
-			new XElement("volume",
-				new XElement("volume", sound.Volume.ToString())
-			),
+            new XElement("volume",
+                new XElement("volume", sound.Volume.ToString())
+            ),
             new XElement("pan", "0"),
-			new XElement("bitRates",
-				new XElement("bitRate", "192")
-			),
+            new XElement("bitRates",
+                new XElement("bitRate", "192")
+            ),
             new XElement("sampleRates",
                 new XElement("sampleRate", "44100")
             ),
@@ -819,9 +766,9 @@ void ExportSound(UndertaleSound sound)
     // Save sound files
     if (sound.AudioFile != null)
         File.WriteAllBytes(projFolder + "/sound/audio/" + sound.File.Content, sound.AudioFile.Data);
-	// if sound file is external, add them
-	else if (File.Exists($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content))
-		File.Copy($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content, projFolder + "/sound/audio/" + sound.File.Content, true);
+    // if sound file is external, add them
+    else if (File.Exists($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content))
+        File.Copy($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content, projFolder + "/sound/audio/" + sound.File.Content, true);
 }
 #endregion
 #region --------------- Export Script ---------------
@@ -835,14 +782,16 @@ void ExportScript(UndertaleScript script)
     UpdateProgressBar(null, $"Exporting Script: {script.Name.Content}", progress++, resourceNum);
 
     // Save GML files, and detect decompilation failure
-	try {
-		File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", decompileCode(script.Code));
-	}
-	catch (Exception e) {
-		File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", "/*\nDECOMPILER FAILED!\n\n" + e.ToString() + "\n*/");
-		// To list what Script failed to decompile
-		errLog.Add($"SCRIPT:   {script.Name.Content}");
-	}
+    try
+    {
+        File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", decompileCode(script.Code));
+    }
+    catch (Exception e)
+    {
+        File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", "/*\nDECOMPILER FAILED!\n\n" + e.ToString() + "\n*/");
+        // To list what Script failed to decompile
+        errLog.Add($"SCRIPT:   {script.Name.Content}");
+    }
 }
 #endregion
 #region --------------- Export Font -----------------
@@ -993,22 +942,22 @@ async Task ExportShaders()
 }
 void ExportShader(UndertaleShader shader)
 {
-	// Vertex and Fragment shit
-	var vertex = shader.GLSL_ES_Vertex.Content;
-	var fragment = shader.GLSL_ES_Fragment.Content;
-	
-	// to avoid declaring useless shit
-	if (vertex != null && fragment != null)
-	{
-		string splitter = "#define _YY_GLSLES_ 1\n";
-		if (vertex.Contains(splitter))
-			vertex = vertex.Substring(vertex.IndexOf(splitter) + splitter.Length);
-		if (fragment.Contains(splitter))
-			fragment = fragment.Substring(fragment.IndexOf(splitter) + splitter.Length);
-	}
-	
+    // Vertex and Fragment shit
+    var vertex = shader.GLSL_ES_Vertex.Content;
+    var fragment = shader.GLSL_ES_Fragment.Content;
+
+    // to avoid declaring useless shit
+    if (vertex != null && fragment != null)
+    {
+        string splitter = "#define _YY_GLSLES_ 1\n";
+        if (vertex.Contains(splitter))
+            vertex = vertex.Substring(vertex.IndexOf(splitter) + splitter.Length);
+        if (fragment.Contains(splitter))
+            fragment = fragment.Substring(fragment.IndexOf(splitter) + splitter.Length);
+    }
+
     UpdateProgressBar(null, $"Exporting Script: {shader.Name.Content}", progress++, resourceNum);
-	File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", vertex + "\n//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n" + fragment);
+    File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", vertex + "\n//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n" + fragment);
 }
 #endregion
 
