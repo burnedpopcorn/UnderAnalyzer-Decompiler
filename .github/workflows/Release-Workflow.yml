@@ -37,7 +37,7 @@ jobs:
         cp ./LICENSE.txt ./windows-latest
     - name: Create zip for stable release Windows GUI
       run: |
-        7z a -tzip UnderAnalyzer_GUI-isSingleFile-v2.${{ github.run_number }}.zip ./windows-latest/* -mx0
+        7z a -tzip UnderAnalyzer_GUI-isSingleFile-v3.${{ github.run_number }}.zip ./windows-latest/* -mx0
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
