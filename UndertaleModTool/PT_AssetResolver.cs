@@ -21,16 +21,11 @@ namespace UndertaleModTool
 {
     public class PT_AssetResolver
     {
+        // also new stuffs that will merge with builtin_funcs
+        public static Dictionary<string, object> functionArguments = new(); // union functions
         public static Dictionary<string, string[]> builtin_funcs = new Dictionary<string, string[]> { }; // keys are function names
-
         public static Dictionary<string, string> builtin_vars = new Dictionary<string, string> { }; // keys are variable names
-
-        public static Dictionary<int, string> PTStates = new(); // only for internal shit
-
-        public static Dictionary<string, int> JSON_PTStates = new(); // for json/the only thing that is sent to the thing
-
         public static Dictionary<string, object> enums = new(); // Main enums
-
         public static Dictionary<string, object> generalarrays = new(); // General Arrays
 
         // All other enums
@@ -56,53 +51,10 @@ namespace UndertaleModTool
                 Macros = macros;
             }
         }
-        // also new stuffs that will merge with builtin_funcs
-        public static Dictionary<string, object> functionArguments = new();
 
         // Make the JSON Files
         public static void InitializeTypes(UndertaleData data)
         {
-            // ONLY Add if the FindStateNames Function actually found states
-            if (JSON_PTStates.Count > 0)
-            {
-                // Variables that should == Enum
-                builtin_vars.TryAdd("state", "Enum.states");
-                builtin_vars.TryAdd("_state", "Enum.states");
-                builtin_vars.TryAdd("prevstate", "Enum.states");
-                builtin_vars.TryAdd("_prevstate", "Enum.states");
-                builtin_vars.TryAdd("substate", "Enum.states");
-                builtin_vars.TryAdd("arenastate", "Enum.states");
-                builtin_vars.TryAdd("player_state", "Enum.states");
-                builtin_vars.TryAdd("tauntstoredstate", "Enum.states");
-                builtin_vars.TryAdd("taunt_storedstate", "Enum.states");
-                builtin_vars.TryAdd("storedstate", "Enum.states");
-                builtin_vars.TryAdd("chosenstate", "Enum.states");
-                builtin_vars.TryAdd("superattackstate", "Enum.states");
-                builtin_vars.TryAdd("text_state", "Enum.states");
-                builtin_vars.TryAdd("ministate", "Enum.states");
-                builtin_vars.TryAdd("dropstate", "Enum.states");
-                builtin_vars.TryAdd("verticalstate", "Enum.states");
-                builtin_vars.TryAdd("walkstate", "Enum.states");
-                builtin_vars.TryAdd("hitstate", "Enum.states");
-                builtin_vars.TryAdd("toppin_state", "Enum.states");
-                builtin_vars.TryAdd("bossintrostate", "Enum.states");
-                builtin_vars.TryAdd("introstate", "Enum.states");
-                builtin_vars.TryAdd("fadeoutstate", "Enum.states");
-                builtin_vars.TryAdd("supergrabstate", "Enum.states");
-                builtin_vars.TryAdd("startstate", "Enum.states");
-                builtin_vars.TryAdd("atstate", "Enum.states");
-                // New ones
-                builtin_vars.TryAdd("attack_pool", "Array<Enum.states>");
-                builtin_vars.TryAdd("transformation", "Enum.states");
-
-                // Function Arguments
-                builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
-                builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
-
-                // Apply States to Arrays as well
-                generalarrays.TryAdd("Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" });
-            }
-
             // Variable Definitions
 
             // Rooms
@@ -678,21 +630,6 @@ namespace UndertaleModTool
             builtin_funcs["gml_Script_lang_draw_sprite"] =
                 new[] { "Asset.Sprite", null, null, null };
 
-            // Time for the goofy ahh JSON shit
-
-            // add only if PT States were found
-            if (JSON_PTStates.Count > 0)
-            {
-                enums.TryAdd(
-                   "Enum.states",
-                    new
-                    {
-                        Name = "states",
-                        Values = JSON_PTStates
-                    }
-                );
-            }
-
             // Calls this function to search for other enums
             // Also used in the GMS2 Decomp Script
             FindOtherEnums(data);
@@ -704,6 +641,8 @@ namespace UndertaleModTool
             generalarrays.TryAdd("Array<Asset.Object>", new { MacroType = "ArrayInit", Macro = "Asset.Object" });
             // Wasn't in original, but some still reference it, so yeah
             generalarrays.TryAdd("Array<Asset.Sprite>", new { MacroType = "ArrayInit", Macro = "Asset.Sprite" });
+
+            // Time for the goofy ahh JSON shit
 
             // Merge functionArguments and builtin_funcs
             // Directly include the arrays from builtin_funcs as-is
@@ -780,12 +719,23 @@ namespace UndertaleModTool
             // Notify User that it is done
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
 
-            // Clear all if already filled
-            PTStates.Clear();
+            // Clean Up
+            functionArguments = new Dictionary<string, object> { };
             builtin_funcs = new Dictionary<string, string[]> { };
             builtin_vars = new Dictionary<string, string> { };
-            functionArguments = new Dictionary<string, object> { };
+            enums = new Dictionary<string, object> { };
             generalarrays = new Dictionary<string, object> { };
+
+            particle_enums = new Dictionary<string, int> { };
+            notification_enums = new Dictionary<string, int> { };
+            holiday_enums = new Dictionary<string, int> { };
+            tv_enums = new Dictionary<string, int> { };
+            text_enums = new Dictionary<string, int> { };
+            menuID_enums = new Dictionary<string, int> { };
+            editor_enums = new Dictionary<string, int> { };
+            afterimg_enums = new Dictionary<string, int> { };
+            tdp_input_enums = new Dictionary<string, int> { };
+            menuanchors_enums = new Dictionary<string, int> { };
         }
 
         #region Other Enum Shit
@@ -1149,6 +1099,9 @@ namespace UndertaleModTool
                 // get lines of code
                 var lines = decompiledcode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
+                // make dictionary for this enum
+                Dictionary<string, int> enumset_found = new Dictionary<string, int> { };
+
                 // go through every line
                 for (int i = 0; i < lines.Length - 1; i++)
                 {
@@ -1192,14 +1145,82 @@ namespace UndertaleModTool
                                             break;
                                     }
 
-                                    // Add to both dictionaries
-                                    PTStates.TryAdd(stateValue, suffix);
-                                    JSON_PTStates.TryAdd(suffix, stateValue);
+                                    // Add to dictionary
+                                    enumset_found.TryAdd(suffix, stateValue);
                                 }
                                 break;
                             }
                         }
                     }
+                }
+
+                // after everything, add to json file
+                if (enumset_found.Count > 0)
+                {
+                    // merge existing
+                    if (enums.TryGetValue($"Enum.{switchstate}s", out var existing))
+                    {
+                        dynamic existingEntry = existing;
+                        var existingValues = existingEntry.Values as Dictionary<string, int>;
+                        foreach (var kvp in enumset_found)
+                        {
+                            if (!existingValues.ContainsKey(kvp.Key))// stop overwrite
+                                existingValues[kvp.Key] = kvp.Value; // add
+                        }
+                    }
+                    // make new if it doesn't exist
+                    else
+                    {
+                        enums.TryAdd(
+                           $"Enum.{switchstate}s", // add s because i can
+                            new
+                            {
+                                Name = $"{switchstate}s", // plus it stops var from becoming enum in IDE
+                                Values = new Dictionary<string, int>(enumset_found)
+                            }
+                        );
+                    }
+                }
+
+                // ONLY Add if the FindStateNames Function actually found pt player states
+                if (enumset_found.Count > 0 && switchstate == "state")
+                {
+                    // Variables that should == Enum
+                    builtin_vars.TryAdd("state", "Enum.states");
+                    builtin_vars.TryAdd("_state", "Enum.states");
+                    builtin_vars.TryAdd("prevstate", "Enum.states");
+                    builtin_vars.TryAdd("_prevstate", "Enum.states");
+                    builtin_vars.TryAdd("substate", "Enum.states");
+                    builtin_vars.TryAdd("arenastate", "Enum.states");
+                    builtin_vars.TryAdd("player_state", "Enum.states");
+                    builtin_vars.TryAdd("tauntstoredstate", "Enum.states");
+                    builtin_vars.TryAdd("taunt_storedstate", "Enum.states");
+                    builtin_vars.TryAdd("storedstate", "Enum.states");
+                    builtin_vars.TryAdd("chosenstate", "Enum.states");
+                    builtin_vars.TryAdd("superattackstate", "Enum.states");
+                    builtin_vars.TryAdd("text_state", "Enum.states");
+                    builtin_vars.TryAdd("ministate", "Enum.states");
+                    builtin_vars.TryAdd("dropstate", "Enum.states");
+                    builtin_vars.TryAdd("verticalstate", "Enum.states");
+                    builtin_vars.TryAdd("walkstate", "Enum.states");
+                    builtin_vars.TryAdd("hitstate", "Enum.states");
+                    builtin_vars.TryAdd("toppin_state", "Enum.states");
+                    builtin_vars.TryAdd("bossintrostate", "Enum.states");
+                    builtin_vars.TryAdd("introstate", "Enum.states");
+                    builtin_vars.TryAdd("fadeoutstate", "Enum.states");
+                    builtin_vars.TryAdd("supergrabstate", "Enum.states");
+                    builtin_vars.TryAdd("startstate", "Enum.states");
+                    builtin_vars.TryAdd("atstate", "Enum.states");
+                    // New ones
+                    builtin_vars.TryAdd("attack_pool", "Array<Enum.states>");
+                    builtin_vars.TryAdd("transformation", "Enum.states");
+
+                    // Function Arguments
+                    builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
+                    builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
+
+                    // Apply States to Arrays as well
+                    generalarrays.TryAdd("Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" });
                 }
             }
         }
