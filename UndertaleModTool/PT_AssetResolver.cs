@@ -21,9 +21,9 @@ namespace UndertaleModTool
 {
     public class PT_AssetResolver
     {
-        public static Dictionary<string, string[]> builtin_funcs; // keys are function names
+        public static Dictionary<string, string[]> builtin_funcs = new Dictionary<string, string[]> { }; // keys are function names
 
-        public static Dictionary<string, string> builtin_vars; // keys are variable names
+        public static Dictionary<string, string> builtin_vars = new Dictionary<string, string> { }; // keys are variable names
 
         public static Dictionary<int, string> PTStates = new(); // only for internal shit
 
@@ -60,80 +60,8 @@ namespace UndertaleModTool
         public static Dictionary<string, object> functionArguments = new();
 
         // Make the JSON Files
-        public static void InitializeTypes(UndertaleData data, bool usedefaults = false)
+        public static void InitializeTypes(UndertaleData data)
         {
-            if (data == null)
-            {
-                // Failsafe just in case user is dumb
-                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
-                return;
-            }
-
-            // if using default settings
-            if (usedefaults)
-            {
-                // Clear all if already filled
-                PTStates.Clear();
-                builtin_funcs = new Dictionary<string, string[]> { };
-                builtin_vars = new Dictionary<string, string> { };
-                functionArguments = new Dictionary<string, object> { };
-                generalarrays = new Dictionary<string, object> { };
-
-                // Pizza Tower Enums
-                try
-                {
-                    // Check Pizza Tower States in these Scripts
-                    FindStateNames(data.Code.ByName("gml_Object_obj_player_Step_0"), // Code Entry to search
-                        "state",                                            // Switch Var Name, ex: switch (state)
-                        new[] { "scr_player_", "state_player_", "scr_playerN_" }, data  // scripts of state name, ex: (scr_player_normal(); --> normal
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_cheeseslime_Step_0"),
-                        "state",
-                        new[] { "scr_enemy_", "scr_pizzagoblin_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_pepperman_Step_0"),
-                        "state",
-                        new[] { "scr_boss_", "scr_pepperman_", "scr_enemy_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_vigilanteboss_Step_0"),
-                        "state",
-                        new[] { "scr_vigilante_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_noiseboss_Step_0"),
-                        "state",
-                        new[] { "scr_noise_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_fakepepboss_Step_0"),
-                        "state",
-                        new[] { "scr_fakepepboss_", "scr_boss_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_pizzafaceboss_Step_0"),
-                        "state",
-                        new[] { "scr_pizzaface_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_pizzafaceboss_p2_Step_0"),
-                        "state",
-                        new[] { "scr_pizzaface_p2_", "scr_pizzaface_" }, data
-                    );
-                    FindStateNames(
-                        data.Code.ByName("gml_Object_obj_pizzafaceboss_p3_Step_0"),
-                        "state",
-                        new[] { "scr_pizzaface_p3_" }, data
-                    );
-                }
-                catch (Exception e)
-                {
-                    Application.Current.MainWindow.ShowWarning("Failed to read data\nFailed to Extract Pizza Tower Enums");
-                }
-            }
-
             // ONLY Add if the FindStateNames Function actually found states
             if (JSON_PTStates.Count > 0)
             {
@@ -754,7 +682,7 @@ namespace UndertaleModTool
 
             // add only if PT States were found
             if (JSON_PTStates.Count > 0)
-            { 
+            {
                 enums.TryAdd(
                    "Enum.states",
                     new
@@ -784,6 +712,18 @@ namespace UndertaleModTool
                 pair => (object)pair.Value)) // Cast string[] to object so it can merge with the MacroEntry objects
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
+            // check if variables even exist in this data.win
+            // and if so, add to json
+            var allexistingvars = data.Variables;
+            Dictionary<string, string> existingvars = new Dictionary<string, string> { };
+            foreach (var vars in allexistingvars)
+            {
+                string stringvars = vars.ToString();
+                // Check if it hasn't already been added
+                if (builtin_vars.ContainsKey(stringvars))
+                    existingvars.TryAdd(stringvars, builtin_vars[stringvars]);
+            }
+
             // Main JSON thingy
             var PTJSON = new
             {
@@ -801,7 +741,7 @@ namespace UndertaleModTool
                 GlobalNames = new
                 {
                     // crackful
-                    Variables = builtin_vars,
+                    Variables = existingvars,
                     FunctionArguments = mergedFunctionArguments,
                     // Shit just for the Template
                     FunctionReturn = new { }
@@ -816,13 +756,11 @@ namespace UndertaleModTool
             jsonString = jsonString.Replace("\\u003C", "<").Replace("\\u003E", ">");
 
             // Write main JSON File
-            // this is so fucking dumb IT IS A STRING!!!!
-            //string dataname = data.GeneralInfo.Name + "";
-            string datanameclean = (data.GeneralInfo.Name + "").Replace("\"", "");
+            string datanameclean = $"{data.GeneralInfo.Name}".Replace("\"", "");
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
 
             // Loader JSON
-            string dispnameclean = (data.GeneralInfo.DisplayName + "").Replace("\"", "");
+            string dispnameclean = $"{data.GeneralInfo.DisplayName}".Replace("\"", "");
             var loader = new
             {
                 LoadOrder = 1,
@@ -841,10 +779,17 @@ namespace UndertaleModTool
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
             // Notify User that it is done
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
+
+            // Clear all if already filled
+            PTStates.Clear();
+            builtin_funcs = new Dictionary<string, string[]> { };
+            builtin_vars = new Dictionary<string, string> { };
+            functionArguments = new Dictionary<string, object> { };
+            generalarrays = new Dictionary<string, object> { };
         }
 
         #region Other Enum Shit
-        public static void FindOtherEnums(UndertaleData data) 
+        public static void FindOtherEnums(UndertaleData data)
         {
             // Particle Enums
             if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
@@ -1031,9 +976,9 @@ namespace UndertaleModTool
             // add new ones here
         }
 
-        public static void AddOtherEnums(UndertaleData data) 
+        public static void AddOtherEnums(UndertaleData data)
         {
-            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null) 
+            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
             {
                 builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
                 builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
@@ -1055,7 +1000,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_notification_push") != null) 
+            if (data.Code.ByName("gml_Script_notification_push") != null)
             {
                 builtin_funcs["gml_Script_notification_push"] = new[] { "Enum.Notification", null };
 
@@ -1068,7 +1013,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_is_holiday") != null) 
+            if (data.Code.ByName("gml_Script_is_holiday") != null)
             {
                 builtin_funcs["gml_Script_is_holiday"] = new[] { "Enum.Holiday" };
                 enums.TryAdd(
@@ -1080,7 +1025,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_tv_push_prompt") != null) 
+            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
             {
                 builtin_funcs["gml_Script_tv_push_prompt"] = new[] { null, "Enum.TVPromptTypes", null, null };
                 generalarrays.TryAdd("Array<Enum.TVPromptTypes>", new { MacroType = "ArrayInit", Macro = "Enum.TVPromptTypes" });
@@ -1093,7 +1038,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null) 
+            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
             {
                 builtin_funcs["gml_Script_scr_draw_text_arr"] = new[] { null, null, null, null, "Enum.TextEffect" };
                 enums.TryAdd(
@@ -1105,7 +1050,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_menu_goto") != null) 
+            if (data.Code.ByName("gml_Script_menu_goto") != null)
             {
                 builtin_funcs["gml_Script_menu_goto"] = new[] { "Enum.MenuIDs" };
                 enums.TryAdd(
@@ -1117,7 +1062,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_editor_set_state") != null) 
+            if (data.Code.ByName("gml_Script_editor_set_state") != null)
             {
                 builtin_funcs["gml_Script_editor_set_state"] = new[] { "Enum.EditorState" };
                 enums.TryAdd(
@@ -1130,7 +1075,7 @@ namespace UndertaleModTool
                 );
             }
             // AfterImages
-            if (data.Code.ByName("gml_Script_particle_set_scale") != null) 
+            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
             {
                 builtin_vars.TryAdd("identifier", "Enum.AfterimageType");
                 enums.TryAdd(
@@ -1142,7 +1087,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_tdp_get_icon") != null) 
+            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
             {
                 // WHAT THE FUCK IS THIS
                 functionArguments.TryAdd("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
@@ -1163,7 +1108,7 @@ namespace UndertaleModTool
                     }
                 );
             }
-            if (data.Code.ByName("gml_Script_create_menu_fixed") != null) 
+            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
             {
                 functionArguments.TryAdd("gml_Script_create_menu_fixed", new MacroEntry(
                     "Union",

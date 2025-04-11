@@ -27,6 +27,8 @@
                             <LineBreak/>
                             In the Second Textbox, input the function prefix that the states use
                             <LineBreak/>
+                            You can optionally add more than one function prefix to check for by seperating them with commas
+                            <LineBreak/>
                             In the Third Textbox, input the variable name that the switch statment uses
                             <LineBreak/>
                             <LineBreak/>
@@ -42,14 +44,14 @@
                             <LineBreak/>
                             case UnknownEnum.Value_1:
                             <LineBreak/>
-                            scr_player_idle();
+                            state_player_idle();
                             <LineBreak/>
                             break;
                             <LineBreak/>
                             }
                             <LineBreak/>
                             <LineBreak/>
-                            Example Usage: gml_Script_scr_states   |   scr_player    |   state
+                            Example Usage: gml_Script_scr_states   |   scr_player_, state_player_    |   state
                             <LineBreak/>
                             Outcome: states.normal  |   states.idle
                         </TextBlock>
@@ -70,23 +72,99 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="28,0,505,0" Text="Code to Search:" VerticalAlignment="Center" Grid.ColumnSpan="2">
+                        <TextBlock.ToolTip>
+                            <ToolTip>
+                                <TextBlock>
+                                    The name of the code entry of where you wish to search for enums.
+                                    <LineBreak/>
+                                    <LineBreak/>
+                                    Example: gml_Script_scr_states
+                                </TextBlock>
+                            </ToolTip>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
 
-                    <!-- Variable label -->
-                    <TextBlock Grid.Row="0" Grid.Column="0" Margin="10" Text="Variable:" ToolTip="Prefix used for named instance IDs when found by decompiler, and for compilation. Change this value if it conflicts with variable names." VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Margin="222,0,296,0" Text="State Function Prefix:" VerticalAlignment="Center" Grid.Row="1">
+                        <TextBlock.ToolTip>
+                            <ToolTip>
+                                <TextBlock>
+                                The function prefix that the states use
+                                <LineBreak/>
+                                You can optionally add many state functions to check for by seperating them with commas
+                                <LineBreak/>
+                                <LineBreak/>
+                                Example: scr_player_, state_player_
+                                <LineBreak/>
+                                Code Example:
+                                <LineBreak/>
+                                switch (state) {
+                                <LineBreak/>
+                                case 0:
+                                <LineBreak/>
+                                scr_player_normal();
+                                <LineBreak/>
+                                break;
+                                <LineBreak/>
+                                case UnknownEnum.Value_1:
+                                <LineBreak/>
+                                state_player_idle();
+                                <LineBreak/>
+                                break;
+                                <LineBreak/>
+                                }
+                                <LineBreak/>
+                                <LineBreak/>
+                                Outcome: states.normal  |   states.idle
+                                </TextBlock>
+                            </ToolTip>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
 
-                    <!-- Asset Type label -->
-                    <TextBlock Grid.Column="1" Margin="283,0,0,0" Text="Asset Types:" ToolTip="Asset Type of the Variable" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Column="1" Margin="421,0,0,0" Text="Switch Statement Var Name:" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="1">
+                        <TextBlock.ToolTip>
+                            <ToolTip>
+                                <TextBlock>
+                                    The variable name that the switch statment uses
+                                    <LineBreak/>
+                                    <LineBreak/>
+                                    Example: state
+                                    <LineBreak/>
+                                    Code Example:
+                                    <LineBreak/>
+                                    switch (state) {
+                                    <LineBreak/>
+                                    case 0:
+                                    <LineBreak/>
+                                    scr_player_normal();
+                                    <LineBreak/>
+                                    break;
+                                    <LineBreak/>
+                                    case UnknownEnum.Value_1:
+                                    <LineBreak/>
+                                    state_player_idle();
+                                    <LineBreak/>
+                                    break;
+                                    <LineBreak/>
+                                    }
+                                    <LineBreak/>
+                                    <LineBreak/>
+                                    Outcome: states.normal  |   states.idle
+                                </TextBlock>
+                            </ToolTip>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
                 </Grid>
 
             </StackPanel>
 
             <!-- Buttons for Add and Save -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0">
-                <Button Width="100" Margin="10" Click="AddENUMRowButton_Click" ToolTip="Add another code entry to check for enums">Add Code to Search</Button>
+                <Button Width="119" Margin="10" Click="AddENUMRowButton_Click" ToolTip="Add another code entry to check for enums">Add Code to Search</Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Width="340">
-                <Button Width="150" Margin="10" Click="SaveInputsButton" ToolTip="Make Pizza Tower JSON Files with custom settings by user">Save Inputs</Button>
-                <Button Width="150" Margin="10" Click="UseDefaultsButton" ToolTip="Make Pizza Tower JSON Files with default settings">Use Default</Button>
+                <Button Width="150" Margin="10" Click="CSTMSaveInputsButton" ToolTip="Make Pizza Tower JSON Files with custom settings by user">Save Inputs</Button>
+                <Button Width="150" Margin="10" Click="CSTMUseDefaultsButton" ToolTip="Make Pizza Tower JSON Files with default settings">Use Default</Button>
             </StackPanel>
 
         </StackPanel>

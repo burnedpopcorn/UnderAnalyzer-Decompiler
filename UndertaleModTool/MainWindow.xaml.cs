@@ -3467,8 +3467,13 @@ result in loss of work.");
         private void PT_JSON_BUTTON_CLICK(object sender, RoutedEventArgs e)
         {
             // do the thing
-            CSTMPTENUM customptenumsfinder = new CSTMPTENUM();
-            customptenumsfinder.Show();
+            if (Data != null)
+            {
+                CSTMPTENUM customptenumsfinder = new CSTMPTENUM();
+                customptenumsfinder.Show();
+            }
+            else
+                this.ShowWarning("No data.win was loaded\nLoad a data.win first");
         }
         // Var Defition Form Window (Clean)
         private void OpenVarDefinitionForm_Click(object sender, RoutedEventArgs e)
