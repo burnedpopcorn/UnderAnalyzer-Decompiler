@@ -2,6 +2,7 @@
 // with UI, because yeah
 
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using UndertaleModLib;
@@ -42,13 +43,13 @@ namespace UndertaleModTool
         }
 
         // Add Enum row
-        public void AddENUMRow(string functionName = "gml_Script_", string functionArguments = "scr_player", string optionalArgumentsString = "state")
+        public void AddENUMRow(string functionName = "gml_Script_", string functionArguments = "scr_", string optionalArgumentsString = "state")
         {
             Grid newRow = new Grid();
 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox (code name to check)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox (function prefix to check)
-            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Third TextBox (switch state var name)
+            newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Third TextBox (switch state var name)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });  // For Remove Button
 
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
@@ -74,7 +75,8 @@ namespace UndertaleModTool
             // Third TextBox for switch var name
             TextBox functionTextBox3 = new TextBox
             {
-                Text = optionalArgumentsString
+                Text = optionalArgumentsString,
+                Width = 75
             };
             newRow.Children.Add(functionTextBox3);
             Grid.SetRow(functionTextBox3, 0);
@@ -94,7 +96,7 @@ namespace UndertaleModTool
         }
         #endregion
         #region Save Inputs
-        public void SaveInputsButton()
+        public void CSTMSaveInputsButton(object sender, RoutedEventArgs e)
         {
             // Get data from data.win
             var data = mainWindow.Data;
@@ -140,17 +142,26 @@ namespace UndertaleModTool
                         string textBox2Text = textBox2.Text;
                         string textBox3Text = textBox3.Text;
 
+                        // split all functions
+                        string[] functionsin_tbox2 = textBox2Text.Split(',')
+                            .Select(arg => arg.Trim())  // remove spaces
+                            .ToArray();
+
                         // Search for Pizza Tower Enum
-                        try
+                        if (textBox1Text != "gml_Script_" && textBox2Text != "scr_")// skip the generic ones
                         {
-                            PT_AssetResolver.FindStateNames(data.Code.ByName(textBox1Text), // Code Entry to search
-                            textBox3Text,                                            // Switch Var Name, ex: switch (state)
-                            new[] { textBox2Text }, data  // scripts of state name, ex: (scr_player_normal(); --> normal
-                            );
-                        }
-                        catch (Exception e) 
-                        {
-                            mainWindow.ShowWarning($"Failed to Extract Pizza Tower Enums from Row {debugnum}");
+                            try
+                            {
+                                PT_AssetResolver.FindStateNames(data.Code.ByName(textBox1Text), // Code Entry to search
+                                textBox3Text,                                            // Switch Var Name, ex: switch (state)
+                                functionsin_tbox2,                                          // scripts of state name, ex: (scr_player_normal(); --> normal
+                                data // just here because
+                                );
+                            }
+                            catch (Exception ex)
+                            {
+                                mainWindow.ShowWarning($"Failed to Extract Pizza Tower Enums from Row {debugnum}");
+                            }
                         }
                     }
                 }
@@ -159,12 +170,17 @@ namespace UndertaleModTool
             PT_AssetResolver.InitializeTypes(data);
         }
 
-        public void UseDefaultsButton()
+        public void CSTMUseDefaultsButton(object sender, RoutedEventArgs e)
         {
-            // Get data from data.win
-            var data = mainWindow.Data;
-            // use defaults instead
-            PT_AssetResolver.InitializeTypes(data, true);
+            AddENUMRow("gml_Object_obj_player_Step_0", "scr_player_, state_player_, scr_playerN_");
+            AddENUMRow("gml_Object_obj_cheeseslime_Step_0", "scr_enemy_, scr_pizzagoblin_");
+            AddENUMRow("gml_Object_obj_pepperman_Step_0", "scr_boss_, scr_pepperman_, scr_enemy_");
+            AddENUMRow("gml_Object_obj_vigilanteboss_Step_0", "scr_vigilante_");
+            AddENUMRow("gml_Object_obj_noiseboss_Step_0", "scr_noise_");
+            AddENUMRow("gml_Object_obj_fakepepboss_Step_0", "scr_fakepepboss_, scr_boss_");
+            AddENUMRow("gml_Object_obj_pizzafaceboss_Step_0", "scr_pizzaface_");
+            AddENUMRow("gml_Object_obj_pizzafaceboss_p2_Step_0", "scr_pizzaface_p2_, scr_pizzaface_");
+            AddENUMRow("gml_Object_obj_pizzafaceboss_p3_Step_0", "scr_pizzaface_p3_");
         }
         #endregion
     }
