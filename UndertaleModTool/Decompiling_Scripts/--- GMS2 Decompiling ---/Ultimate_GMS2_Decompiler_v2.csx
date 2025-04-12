@@ -49,6 +49,13 @@ if (!Data.IsVersionAtLeast(2, 3))
     ScriptError("Project version below GMS2.3! Aborting...");
     return;
 }
+if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true)
+{
+	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\nContinue Anyways?"))
+    {
+		return;
+	}
+}
 
 #region options.ini Parser
 
@@ -1546,11 +1553,7 @@ public string macroDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\
 public string scriptDir = $"{rootDir}Exported_Project\\";
 // for the decompiler
 GlobalDecompileContext globalDecompileContext = new(Data);
-public IDecompileSettings decompilerSettings = new DecompileSettings()
-{
-    CreateEnumDeclarations = false,
-    AllowLeftoverDataOnStack = true
-};
+Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
 
 // progress bar
 public int r_num = 0;
@@ -1735,7 +1738,7 @@ Form FORM = new Form()
 };
 FORM.Controls.Add(new Label()
 {
-    Text = "Original Script by cystallizedsparkle\n          Improved by burnedpopcorn180",
+    Text = "Original Script by crystallizedsparkle\n          Improved by burnedpopcorn180",
     AutoSize = true,
     Location = new System.Drawing.Point(8, 8),
 });
@@ -5473,7 +5476,7 @@ Original GameMaker Version: {Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{D
 --------------------------------------------------------
 Project Decompilied by Ultimate_GMS2_Decompiler_v2.csx
 	Improved by burnedpopcorn180
-		Original Version by cystallizedsparkle
+		Original Version by crystallizedsparkle
 ";
 // create the readme
 CreateNote("README", "DecompilerGenerated", readMeMessage);
