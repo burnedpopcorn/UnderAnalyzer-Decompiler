@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 EnsureDataLoaded();
 
-if (Data.ToolInfo.ProfileMode)
-{
-    ScriptMessage("This script is incompatible with profile mode.");
-    return;
-}
-
 string codeFolder = GetFolder(FilePath) + "Export_Assembly2" + Path.DirectorySeparatorChar;
 
 if (Directory.Exists(codeFolder))
@@ -51,6 +45,12 @@ void DumpCode()
 {
     foreach (UndertaleCode code_orig in Data.Code)
     {
+        if (code_orig is null)
+        {
+            IncrementProgress();
+            continue;
+        }
+
         code_orig.Offset = 0;
         if (Data.CodeLocals is not null && Data.CodeLocals.ByName(code_orig.Name.Content) == null)
         {

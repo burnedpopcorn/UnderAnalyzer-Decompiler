@@ -53,6 +53,19 @@ namespace UndertaleModTool
             }
         }
 
+        public static bool ShowNullEntriesInResourceTree
+        {
+            get => Settings.Instance.ShowNullEntriesInResourceTree;
+            set
+            {
+                Settings.Instance.ShowNullEntriesInResourceTree = value;
+                Settings.Save();
+
+                // Refresh the tree for the change to take effect
+                mainWindow.UpdateTree();
+            }
+        }
+
         public static bool ProfileModeEnabled
         {
             get => Settings.Instance.ProfileModeEnabled;

@@ -56,6 +56,7 @@ namespace UndertaleModTool
         public static void InitializeTypes(UndertaleData data)
         {
             // Variable Definitions
+            // there's probably duplicates, but idc
 
             // Rooms
             builtin_vars.TryAdd("leveltorestart", "Asset.Room");
@@ -142,6 +143,7 @@ namespace UndertaleModTool
             builtin_vars.TryAdd("gameframe_blend", "Constant.Color");
             builtin_vars.TryAdd("c1", "Constant.Color");
             builtin_vars.TryAdd("c2", "Constant.Color");
+            builtin_vars.TryAdd("c_player", "Constant.Color");
 
             builtin_vars.TryAdd("gameframe_caption_icon", "Asset.Sprite");
 
@@ -376,7 +378,6 @@ namespace UndertaleModTool
 
             // Extra Shit i found
             builtin_vars.TryAdd("particlespr", "Asset.Sprite");
-            // Global Vars that sometimes are used in older builds
             builtin_vars.TryAdd("heatmeterspr", "Asset.Sprite");
             builtin_vars.TryAdd("heatmetersprfill", "Asset.Sprite");
             builtin_vars.TryAdd("heatmetersprpalette", "Asset.Sprite");
@@ -432,6 +433,103 @@ namespace UndertaleModTool
             builtin_vars.TryAdd("tv_exprhurt9", "Asset.Sprite");
             builtin_vars.TryAdd("tv_exprhurt10", "Asset.Sprite");
 
+            // EVEN MORE!!!
+            builtin_vars.TryAdd("vstitleplayer", "Asset.Sprite");
+            builtin_vars.TryAdd("texture", "Asset.Sprite");
+            builtin_vars.TryAdd("dragonactor", "Asset.Object");
+            builtin_vars.TryAdd("anarchist", "Asset.Object");
+            builtin_vars.TryAdd("_checker", "Asset.Object");
+            builtin_vars.TryAdd("baddieID", "Asset.Object");
+            builtin_vars.TryAdd("baddieid", "Asset.Object");
+            builtin_vars.TryAdd("player_hpsprite", "Asset.Sprite");
+            builtin_vars.TryAdd("chasespr", "Asset.Sprite");
+            builtin_vars.TryAdd("throwspr", "Asset.Sprite");
+            builtin_vars.TryAdd("transitionspr", "Asset.Sprite");
+            builtin_vars.TryAdd("angryspr", "Asset.Sprite");
+            builtin_vars.TryAdd("upspr", "Asset.Sprite");
+            builtin_vars.TryAdd("downspr", "Asset.Sprite");
+            builtin_vars.TryAdd("deadspr", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_pose", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_run", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_intro", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_idle_strongcold", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_run_strongcold", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_intro_strongcold", "Asset.Sprite");
+            builtin_vars.TryAdd("prevsprite", "Asset.Sprite");
+            builtin_vars.TryAdd("title_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("titlecard_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("playersprite", "Asset.Sprite");
+            builtin_vars.TryAdd("peppino_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("toppin_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("bell_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("portrait1_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("portrait2_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("pizzaface_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("johnface_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("bubblespr", "Asset.Sprite");
+            builtin_vars.TryAdd("noise_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("noisesprite", "Asset.Sprite");
+            builtin_vars.TryAdd("iconspr", "Asset.Sprite");
+            builtin_vars.TryAdd("hand_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("canon_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("captain_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("door_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("throw_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("gate_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("taunt_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("rank_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_happy", "Asset.Sprite");
+            builtin_vars.TryAdd("tauntspr", "Asset.Sprite");
+            builtin_vars.TryAdd("activatespr", "Asset.Sprite");
+            builtin_vars.TryAdd("dancespr", "Asset.Sprite");
+            builtin_vars.TryAdd("smilespr", "Asset.Sprite");
+            builtin_vars.TryAdd("item_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_arrow", "Asset.Sprite");
+            builtin_vars.TryAdd("bg_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("playerspr", "Asset.Sprite");
+            builtin_vars.TryAdd("particlespr", "Asset.Sprite");
+            builtin_vars.TryAdd("bomblit_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("defeatplayerspr", "Asset.Sprite");
+            builtin_vars.TryAdd("bumpspr", "Asset.Sprite");
+            builtin_vars.TryAdd("bubble_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("transspr", "Asset.Sprite");
+            builtin_vars.TryAdd("confirmspr", "Asset.Sprite");
+            builtin_vars.TryAdd("selectedspr", "Asset.Sprite");
+            builtin_vars.TryAdd("clipspr", "Asset.Sprite");
+            builtin_vars.TryAdd("signspr", "Asset.Sprite");
+            builtin_vars.TryAdd("bouncespr", "Asset.Sprite");
+            builtin_vars.TryAdd("parryspr", "Asset.Sprite");
+            builtin_vars.TryAdd("background_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("achievement_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("visible_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("treasurespr", "Asset.Sprite");
+            builtin_vars.TryAdd("shootspr", "Asset.Sprite");
+            builtin_vars.TryAdd("gerome_spr", "Asset.Sprite");
+            builtin_vars.TryAdd("timerspr", "Asset.Sprite");
+            builtin_vars.TryAdd("spitcheesespr", "Asset.Sprite");
+            builtin_vars.TryAdd("hitceillingspr", "Asset.Sprite");
+            builtin_vars.TryAdd("hitwallspr", "Asset.Sprite");
+            builtin_vars.TryAdd("stunfalltransspr", "Asset.Sprite");
+            builtin_vars.TryAdd("rollingspr", "Asset.Sprite");
+            builtin_vars.TryAdd("flyingspr", "Asset.Sprite");
+            builtin_vars.TryAdd("hitspr", "Asset.Sprite");
+            builtin_vars.TryAdd("stunlandspr", "Asset.Sprite");
+            builtin_vars.TryAdd("stompedspr", "Asset.Sprite");
+            builtin_vars.TryAdd("handsprite", "Asset.Sprite");
+            builtin_vars.TryAdd("player_sprite", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_sign", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_helicopter", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_name", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_air", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_animatronic", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_pal", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_hand", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_left", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_right", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_content_dead", "Asset.Sprite");
+            builtin_vars.TryAdd("spr_gamepadbuttons", "Asset.Sprite");
+
             builtin_funcs["gml_Script_randomize_animations"] = new[] { "Array<Asset.Sprite>" };
 
             // Function Arguments that potentially have many arguments
@@ -441,30 +539,6 @@ namespace UndertaleModTool
                 {
                     new List<object> { null, null, "Asset.Sprite" },
                     new List<object> { null, null, "Asset.Sprite", null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_create_debris", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sprite" },
-                    new List<object> { "Asset.Sprite", null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_tdp_action", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, "Constant.GamepadButton" },
-                    new List<object> { null, "Constant.GamepadButton", null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_tdp_input_action", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, "Constant.GamepadButton" },
-                    new List<object> { null, "Constant.GamepadButton", null }
                 })
             );
             functionArguments.TryAdd("gml_Script_palette_unlock", new MacroEntry(
@@ -512,12 +586,49 @@ namespace UndertaleModTool
                     new List<object> { null, null, "Asset.Sprite", null }
                 })
             );
+            functionArguments.TryAdd("gml_Script_add_music", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Room", null, null, null },
+                    new List<object> { "Asset.Room", null, null, null, null }
+                })
+            );
+            functionArguments.TryAdd("gml_Script_scr_pauseicon_add", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sprite" },
+                    new List<object> { "Asset.Sprite", null },
+                    new List<object> { "Asset.Sprite", null, null },
+                    new List<object> { "Asset.Sprite", null, null, null }
+                })
+            );
+            functionArguments.TryAdd("gml_Script_tv_do_expression", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { "Asset.Sprite" },
+                    new List<object> { "Asset.Sprite", "Bool" },
+                    new List<object> { "Asset.Sprite", "Bool", "Bool" },
+                })
+            );
+            functionArguments.TryAdd("gml_Script_create_collect", new MacroEntry(
+            "Union",
+            new List<List<object>>
+                {
+                    new List<object> { null, null, "Asset.Sprite" },
+                    new List<object> { null, null, "Asset.Sprite", null },
+                })
+            );
 
             // Function Arguments (From UTMTCE)
             builtin_funcs["gml_Script_instance_create_unique"] =
                     new[] { null, null, "Asset.Object" };
             builtin_funcs["gml_Script_instance_nearest_random"] =
                 new[] { "Asset.Object", null };
+            builtin_funcs["instance_place_list"] =
+                new[] { null, null, "Asset.Object", null, "Bool" };
 
             builtin_funcs["gml_Script_draw_enemy"] =
                 new[] { null, null, "Constant.Color" };
@@ -546,22 +657,9 @@ namespace UndertaleModTool
             builtin_funcs["gml_Script_pattern_set"] =
                 new[] { null, "Asset.Sprite", null, null, null, null };
 
-            builtin_funcs["gml_Script_declare_particle"] =
-                new[] { null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_collect"] =
-                new[] { null, null, "Asset.Sprite", null };
-
-            builtin_funcs["gml_Script_tv_do_expression"] =
-                new[] { "Asset.Sprite" };
-
-            builtin_funcs["gml_Script_scr_pauseicon_add"] =
-                new[] { "Asset.Sprite", null, null, null };
-
             builtin_funcs["gml_Script_scr_room_goto"] =
                 new[] { "Asset.Room" };
 
-            builtin_funcs["gml_Script_add_music"] =
-                new[] { "Asset.Room", null, null, null, null };
             builtin_funcs["gml_Script_hub_state"] =
                 new[] { "Asset.Room", null, null };
 
@@ -614,7 +712,7 @@ namespace UndertaleModTool
                 new[] { "Asset.Object", null };
 
             builtin_funcs["gml_Script_randomize_animations"] =
-                new[] { "Asset.Sprite", null };
+                new[] { "Array<Asset.Sprite>" };
 
             builtin_funcs["gml_Script_tdp_draw_text_color"] =
                 new[] {
@@ -622,13 +720,13 @@ namespace UndertaleModTool
                         "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color",
                         null
                 };
-            builtin_funcs["gml_Script_scr_draw_text_arr"] =
-                new[] {
-                        null, null, null,
-                        "Constant.Color", null
-                };
             builtin_funcs["gml_Script_lang_draw_sprite"] =
                 new[] { "Asset.Sprite", null, null, null };
+
+            builtin_funcs["layer_background_change"] =
+                new[] { null, "Asset.Sprite" };
+            builtin_funcs["layer_background_sprite"] =
+                new[] { null, "Asset.Sprite" };
 
             // Calls this function to search for other enums
             // Also used in the GMS2 Decomp Script
@@ -990,7 +1088,16 @@ namespace UndertaleModTool
             }
             if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
             {
-                builtin_funcs["gml_Script_scr_draw_text_arr"] = new[] { null, null, null, null, "Enum.TextEffect" };
+                functionArguments.TryAdd("gml_Script_scr_draw_text_arr", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { null, null, null, "Constant.Color" },
+                        new List<object> { null, null, null, "Constant.Color", null },
+                        new List<object> { null, null, null, "Constant.Color", null, "Enum.TextEffect" },
+                        new List<object> { null, null, null, "Constant.Color", null, "Enum.TextEffect", null }
+                    })
+                );
                 enums.TryAdd(
                    "Enum.TextEffect",
                     new
@@ -1046,6 +1153,30 @@ namespace UndertaleModTool
                     {
                     new List<object> { "Enum.TDPInputActionType", null },
                     new List<object> { "Enum.TDPInputActionType", null, null }
+                    })
+                );
+                functionArguments.TryAdd("gml_Script_tdp_input_action", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton" },
+                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton", null }
+                    })
+                );
+                functionArguments.TryAdd("gml_Script_tdp_action", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton" },
+                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton", null }
+                    })
+                );
+                functionArguments.TryAdd("has_value", new MacroEntry(
+                "Union",
+                new List<List<object>>
+                    {
+                        new List<object> { "Enum.TDPInputActionType", null, null },
+                        new List<object> { "Enum.TDPInputActionType", null, null, null }
                     })
                 );
 
