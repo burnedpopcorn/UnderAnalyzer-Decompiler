@@ -1,16 +1,43 @@
 ﻿/*
     Ultimate_GMS2_Decompiler_v2
-        Decompiles only GMS2 Games
+        The Ultimate GameMaker Studio 2 Decompiler
 
     New Features by burnedpopcorn180
     Original Decompiler made by crystallizedsparkle
 
     Originally used 0.0.1-prerelease as a base
-    added some shit from 0.0.4prerelease tho
+    added some shit from 0.0.4prerelease and the latest public release 
+    (commit hash 2240548beeeae69204cb391095cd5b26bb5446f7 is of time of writing)
+    https://github.com/crystallizedsparkle/Gamemaker-LTS-Decompiler/
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
     and Bleeding Edge UTMT 0.7.0.0
-*/
+
+    List of New Features I added
+        - Replaced YAML Config with Windows Form GUI
+        - Added ability to select individual assets to decompile
+        - Added ability to decompile as a GameMaker Importable Package (YYMPS) rather than a full GameMaker Project
+        - Added High Quality Icon Extraction ability for Project and Windows Build Icon
+        - Made Progress Bar display Asset Name currently being decompiled
+
+    All other code belongs to crystallizedsparkle
+    A LICENSE file has been included solely to comply with the Apache License that has been added to the newest version of the Script
+
+    As for me, i dont really give a shit, so do whatever the fuck you want with my code (although credit would be nice i guess)
+    To view all of my changes, just use the Compare Files feature in Visual Studio and compare with crystallizedsparkle's latest script, not that hard
+
+    Also to crystal
+        my guy you need to move on bruh
+        i uploaded the script as part of a commit on accident
+        i didn't mean any malice, and it was only in the repo (locally) because i needed to test if it worked with my decompiler (plus i got the file names mixed up)
+        (honestly should've been obvious, since why would I ask you for permission to release it if I intended to leak it?)
+        you gotta learn that humans make mistakes, and you also need to stop smearing my name the way you've been doing it
+        because it seems more like you're just trying to start drama for the sake of starting drama, which is just childish
+
+        I mean, to be fair to you, you're technically not actively smearing my name
+        but its obvious by the MANY passive-aggressive reminders of my stupid mistake on your github repo, that you want people to be mad at me because im a "fucking leaker"
+        so stop being childish and move on (should be real easy if you made the script for fun as you said, but who knows at this point)
+ */
 
 using System;
 using System.IO;
@@ -1003,10 +1030,6 @@ public class AssetTextKeyframe : AssetKeyframe
 
 public class GMSpriteFramesTrack : GMBaseTrack
 {
-    public GMSpriteFramesTrack()
-    {
-        name = "frames";
-    }
     public AssetReference spriteId { get; set; }
     public KeyframeStore<SpriteFrameKeyframe> keyframes { get; set; } = new KeyframeStore<SpriteFrameKeyframe>();
     public string name { get; set; } = "frames";
@@ -2465,8 +2488,8 @@ string GetRunnerFile(string fileDir)
     foreach (string file in files)
     {
         string lastLine = File.ReadAllLines(file).Last();
-        // this appears in the last line of the runner.
-        if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\""))
+        // these always appear in the last line of the actual gamemaker runner.
+        if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
             return file;
     }
     bool doSearch = ScriptQuestion("Runner not found! Would you like to point me to it please?");
@@ -2482,8 +2505,8 @@ string GetRunnerFile(string fileDir)
         if (fileDialog.ShowDialog() == DialogResult.OK)
         {
             string lastLine = File.ReadAllLines(fileDialog.FileName).Last();
-            // this appears in the last line of the runner.
-            if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\""))
+            // these always appear in the last line of the actual gamemaker runner.
+            if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
                 return fileDialog.FileName;
             else
                 doSearch = ScriptQuestion("Thats not the runner! Would you like to try again?");
@@ -2848,7 +2871,7 @@ string GetTexturePageSize()
     int[] sizes = new int[6];
     int[] types = [256, 512, 1024, 2048, 4096, 8192];
     Dictionary<string, int> appearances = new();
-    if (Data.EmbeddedTextures.Count < 0)
+    if (Data.EmbeddedTextures.Count == 0)
         return "2048x2048";
 
     foreach (UndertaleEmbeddedTexture page in Data.EmbeddedTextures)
@@ -2861,10 +2884,13 @@ string GetTexturePageSize()
                 if (appearances.ContainsKey(sizeStr))
                     appearances[sizeStr]++;
                 else
-                    appearances[sizeStr] = 0;
+                    appearances[sizeStr] = 1;
             }
         }
     }
+
+    if (appearances.Count == 0)
+        return "2048x2048";
 
     KeyValuePair<string, int> mostAppeared = appearances.Aggregate((l, r) => l.Value > r.Value ? l : r);
     return mostAppeared.Key;
@@ -3752,20 +3778,11 @@ void DumpSprite(UndertaleSprite s, int index)
         bbox_top = s.MarginTop,
         width = (int)s.Width,
         height = (int)s.Height,
-        sequence = new GMSequence(spriteName)
-        {
-            length = s.Textures.Count,
-            xorigin = s.OriginX,
-            yorigin = s.OriginY,
-            playbackSpeed = s.GMS2PlaybackSpeed,
-            playbackSpeedType = (int)s.GMS2PlaybackSpeedType,
-            spriteId = new AssetReference(spriteName, GMAssetType.Sprite)
-        },
         // taken from quantum (thanks)
         collisionKind = s.SepMasks switch
         {
             UndertaleSprite.SepMaskType.AxisAlignedRect => 1,
-            UndertaleSprite.SepMaskType.Precise => 4,
+            UndertaleSprite.SepMaskType.Precise => 0,
             UndertaleSprite.SepMaskType.RotatedRect => 5,
         },
         nineSlice = s.V3NineSlice is null ? null : new GMSprite.GMNineSliceData
@@ -3780,6 +3797,24 @@ void DumpSprite(UndertaleSprite s, int index)
         parent = GetParentFolder(GMAssetType.Sprite),
         tags = GetTags(s)
     };
+
+    if (s.V2Sequence is not null)
+        dumpedSprite.sequence = SequenceDumper(s.V2Sequence, s);
+    else
+    {
+        dumpedSprite.sequence = new GMSequence(spriteName)
+        {
+            length = s.Textures.Count,
+            xorigin = s.OriginX,
+            yorigin = s.OriginY,
+            playbackSpeed = s.GMS2PlaybackSpeed,
+            playbackSpeedType = (int)s.GMS2PlaybackSpeedType,
+            spriteId = new AssetReference(spriteName, GMAssetType.Sprite),
+        };
+    }
+    // precise per frame checking
+    if (dumpedSprite.collisionKind == 0 && s.CollisionMasks.Count > 1)
+        dumpedSprite.collisionKind = 4;
 
     // origin calculations
     int originX = s.OriginX;
@@ -3819,19 +3854,14 @@ void DumpSprite(UndertaleSprite s, int index)
         dumpedSprite.layers.Add(new GMSprite.GMImageLayer(layerId));
     }
     else
-    {
         exportFrames = false;
-    }
 
     AssetReference texGroup = GetTextureGroup(spriteName);
     // another check for For3D
     if (texGroup.name.StartsWith("__YY__")) dumpedSprite.For3D = true;
     else dumpedSprite.textureGroupId = texGroup;
 
-    GMSpriteFramesTrack framesTrack = new()
-    {
-        builtinName = 0
-    };
+    GMSpriteFramesTrack framesTrack = new();
 
     for (int i = 0; i < s.Textures.Count; i++)
     {
@@ -3885,7 +3915,19 @@ void DumpSprite(UndertaleSprite s, int index)
 
         framesTrack.keyframes.Keyframes.Add(currentKeyframe);
     }
-    dumpedSprite.sequence.tracks.Add(framesTrack);
+
+    if (s.V2Sequence is not null)
+    {
+        // fix sequence tracks
+        for (int i = 0; i < dumpedSprite.frames.Count; i++)
+        {
+            var frameName = dumpedSprite.frames[i].name;
+            // sprites should only have one track
+            dumpedSprite.sequence.tracks[0].keyframes.Keyframes[i].Channels["0"].Id.name = frameName;
+        }
+    }
+    else
+        dumpedSprite.sequence.tracks.Add(framesTrack);
 
     File.WriteAllText($"{assetDir}{spriteName}.yy", JsonSerializer.Serialize(dumpedSprite, jsonOptions));
     CreateProjectResource(GMAssetType.Sprite, spriteName, index);
@@ -4029,25 +4071,24 @@ async Task DumpFonts()
         return;
 }
 
-void DumpSequence(UndertaleSequence s, int index)
+GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 {
-    string sequenceName = s.Name.Content;
-    string assetDir = $"{scriptDir}sequences\\{sequenceName}\\";
+    GMSequence dumpedSequence = new(s.Name.Content);
+    dumpedSequence.playback = (int)s.Playback;
+    dumpedSequence.playbackSpeed = s.PlaybackSpeed;
+    dumpedSequence.playbackSpeedType = (int)s.PlaybackSpeedType;
+    dumpedSequence.length = s.Length;
+    dumpedSequence.xorigin = s.OriginX;
+    dumpedSequence.yorigin = s.OriginY;
+    dumpedSequence.volume = s.Volume;
 
-    Directory.CreateDirectory(assetDir);
-
-    GMSequence dumpedSequence = new(sequenceName)
+    if (spr is not null)
+        dumpedSequence.parent = GetParentFolder(GMAssetType.Sprite);
+    else
     {
-        playback = (int)s.Playback,
-        playbackSpeed = s.PlaybackSpeed,
-        playbackSpeedType = (int)s.PlaybackSpeedType,
-        length = s.Length,
-        xorigin = s.OriginX,
-        yorigin = s.OriginY,
-        volume = s.Volume,
-        parent = GetParentFolder(GMAssetType.Sequence),
-        tags = GetTags(s)
-    };
+        dumpedSequence.parent = GetParentFolder(GMAssetType.Sequence);
+        dumpedSequence.tags = GetTags(s);
+    }
 
     // broadcast messages!
     foreach (UndertaleSequence.Keyframe<UndertaleSequence.BroadcastMessage> broadcastMessage in s.BroadcastMessages)
@@ -4069,31 +4110,34 @@ void DumpSequence(UndertaleSequence s, int index)
 
     // moment!!
     string evstubscript = String.Empty;
-    foreach (UndertaleSequence.Keyframe<UndertaleSequence.Moment> moment in s.Moments)
+    if (s.Moments is not null)
     {
-        Keyframe<MomentsEventKeyframe> currentKeyframe = new()
+        foreach (UndertaleSequence.Keyframe<UndertaleSequence.Moment> moment in s.Moments)
         {
-            Key = moment.Key,
-            Length = moment.Length,
-            Stretch = moment.Stretch,
-            Disabled = moment.Disabled
-        };
-        foreach (KeyValuePair<int, UndertaleSequence.Moment> channel in moment.Channels)
-        {
-            MomentsEventKeyframe mom = new();
-            UndertaleString currentEvent = channel.Value.Event;
-            // if it exists
-            if (currentEvent is not null)
+            Keyframe<MomentsEventKeyframe> currentKeyframe = new()
             {
-                UndertaleScript scriptData = Data.Scripts.ByName(currentEvent.Content);
-                // if the script was found
-                if (scriptData is not null)
-                    evstubscript = Regex.Replace(scriptData.Code.ParentEntry.Name.Content, "gml_Script_|gml_GlobalScript_", "");
+                Key = moment.Key,
+                Length = moment.Length,
+                Stretch = moment.Stretch,
+                Disabled = moment.Disabled
+            };
+            foreach (var channel in moment.Channels)
+            {
+                MomentsEventKeyframe mom = new();
+                UndertaleString currentEvent = channel.Value.Event;
+                // if it exists
+                if (currentEvent is not null)
+                {
+                    UndertaleScript scriptData = Data.Scripts.ByName(currentEvent.Content);
+                    // if the script was found
+                    if (scriptData is not null)
+                        evstubscript = Regex.Replace(scriptData.Code.ParentEntry.Name.Content, "gml_Script_|gml_GlobalScript_", "");
 
-                mom.Events.Add(Regex.Replace(currentEvent.Content, "gml_Script_|gml_GlobalScript_", ""));
-                currentKeyframe.Channels.Add(channel.Key.ToString(), mom);
+                    mom.Events.Add(Regex.Replace(currentEvent.Content, "gml_Script_|gml_GlobalScript_", ""));
+                    currentKeyframe.Channels.Add(channel.Key.ToString(), mom);
+                }
+                dumpedSequence.moments.Keyframes.Add(currentKeyframe);
             }
-            dumpedSequence.moments.Keyframes.Add(currentKeyframe);
         }
     }
 
@@ -4167,6 +4211,33 @@ void DumpSequence(UndertaleSequence s, int index)
                                 })
                             });
 
+                        }
+
+                        break;
+                    }
+                case "GMSpriteFramesTrack":
+                    {
+                        if (spr is null)
+                            errorList.Add($"{s.Name.Content} | Track type '{track.ModelName.Content}' inside normal sequence?");
+
+                        currentTrack = new GMSpriteFramesTrack();
+                        var keyframes = ((UndertaleSequence.SpriteFramesKeyframes)track.Keyframes).List;
+
+                        for (int i = 0; i < keyframes.Count; i++)
+                        {
+                            var keyframe = keyframes[i];
+
+                            (currentTrack as GMSpriteFramesTrack).keyframes.Keyframes.Add(new Keyframe<SpriteFrameKeyframe>()
+                            {
+                                Key = keyframe.Key,
+                                Length = keyframe.Length,
+                                Stretch = keyframe.Stretch,
+                                Disabled = keyframe.Disabled,
+                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new SpriteFrameKeyframe()
+                                {
+                                    Id = new AssetReference(spr.Name.Content, GMAssetType.Sprite)
+                                })
+                            });
                         }
 
                         break;
@@ -4423,6 +4494,18 @@ void DumpSequence(UndertaleSequence s, int index)
 
     // start the recursion!
     dumpedSequence.tracks = DumpTracks(s.Tracks);
+
+    return dumpedSequence;
+}
+
+void DumpSequence(UndertaleSequence s, int index)
+{
+    string sequenceName = s.Name.Content;
+    string assetDir = $"{scriptDir}sequences\\{sequenceName}\\";
+
+    Directory.CreateDirectory(assetDir);
+
+    GMSequence dumpedSequence = SequenceDumper(s);
 
     File.WriteAllText($"{assetDir}{sequenceName}.yy", JsonSerializer.Serialize(dumpedSequence, jsonOptions));
 
