@@ -32,7 +32,7 @@ Features Include:
 - Smaller file and project size, since unused libraries have been removed
 
 ### Changes for Pizza Tower
-- Added Support for finding decompiling Pizza Tower's Enums, and can be adjusted to suit Mods
+- Added Support for finding and decompiling Pizza Tower's Enums (can also be adjusted to suit Mods if they change the location of the states)
 - The Variable Definition Maker can automatically define known variables for Pizza Tower and its Mods
 
 ## Included Scripts
