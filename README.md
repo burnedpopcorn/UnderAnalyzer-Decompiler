@@ -6,6 +6,10 @@ And I mean TRUE Decompiling (and NOT just patching a game)
 <br>
 As in you can literally make a GameMaker Studio 2 or 1 Project from a Compiled Game
 
+> [!NOTE]
+> This is also supposed to be somewhat of a continuation of UTMTCE
+> as this build has features specifically for Pizza Tower, but could also potentially be useful for other games as well
+
 ## Downloads
 
 Only the GUI versions will be Included
@@ -16,21 +20,20 @@ As only GUI builds can use these new Decompiling Scripts
 
 [Version Hash of UnderAnalyzer Used: fa8fd0da89c5a4fe1bb050fe62bc5106210b1c13](https://github.com/UnderminersTeam/Underanalyzer/tree/fa8fd0da89c5a4fe1bb050fe62bc5106210b1c13)
 
-## Main Features and Changes
+## Main Features
 
 Features Include:
-- A build that has Improved the UTMT UI, and with the benefits of the more accurate UnderAnalyzer Decompiler
+- Frequent Updates to the Latest UnderAnalyzer and UTMT Version
 - Included Decompiling Scripts, so you can turn any GMS1 or 2 Game back into a GameMaker Project File (YYP for GMS2 or GMX for GMS1), or a GameMaker Importable Package (YYMPS)
 - New Tab solely for Decompiling Scripts
-- "Create Enum Declarations" Settings is now DISABLED by default, as that WILL fuck up a Decompilation
-- Frequent Decompiler Updates to the Latest UnderAnalyzer Version
+- Improved both Dark and Light mode
+- Added Variable Definition Maker, so you can Define what variables use what asset types to avoid code using an asset's ID to call assets
+- The "Create Enum Declarations" Setting is now Disabled by default, and Dark Mode is Enabled by default
 - Smaller file and project size, since unused libraries have been removed
 
-- (NEW) Added Support for decompiling Pizza Tower's Player and Particle Enums (thanks partially to UTMTCE)
-- (NEW) Added Variable Definition Maker, so you can Define what variables use what asset types
-
-Changes:
-- Changed GUI to reflect the fact that this is a Decompiler, not a game patcher
+### Changes for Pizza Tower
+- Added Support for finding decompiling Pizza Tower's Enums, and can be adjusted to suit Mods
+- The Variable Definition Maker can automatically define known variables for Pizza Tower and its Mods
 
 ## Included Scripts
 
@@ -39,20 +42,34 @@ All Scripts from UTMT are also included, but the new Scripts are:
 - GameMaker Studio 2 Decompiler Script
 - GameMaker Studio 1 Decompiler Script
 
-## Thanks to
-* The UnderMiners Team, for UnderTaleModTool
-> And all contributors to UTMT
+Miscellanous Scripts:
+- BetterExportSpritesAsGIF.csx (Can Export Sprites to GIF in bulk, and can adjust the Speed of the GIF, without an external DLL)
+- ExportSpriteStrip.csx (Exports Sprites as a Sprite Strip, which places all frames of a Sprite within the same file)
 
-* colinatior27, for his work on UnderAnalyzer
-* loypoll, for most of the code for the GMS2 Decompiler Script
-* cubeww, for his original GMS1 Decompiler Script
-* CST1229, for Improving cubeww's Script a bit
-* Pizza Tower Variable Definitions by @avievie on Github
-* Pizza Tower Enums by CST1229 and all UTMTCE Contributors
-* 2024.11 Fixes by @Dobby233Liu on Github
+## Credit
 
-* burnedpopcorn (me), for Improving All new Scripts provided, and adding support for both UTMT and UnderAnalyzer to All new Scripts
-> and this UTMT/UA Build, obviously
+UnderTaleModTool Contributors
+- All previous and current UnderTaleModTool Contributors
+- colinatior27, for basically carrying the UTMT project
+- Dobby233Liu, for adding some 2024.11 Fixes
+- CST1229, for adding the new Room Editor from UTMTCE and other changes
 
+Decompiling Script Creators
+- crystallizedsparkle, for the original GMS2 Decompiler Script
+- cubeww, for the original GMS1 Decompiler Script
+- CST1229, for Improving cubeww's Script a bit
 
-*Also Special thanks to CatMateo, for the good advice and help
+Other Contributions
+- Pizza Tower Variable Definitions by avievie and CST1229
+- luizzeroxis, for the initial work on the Better Dark/Light mode
+- zivmaor, for the "Hide Child Code Entries" Setting
+- Pizza Tower Enum Resolver originally by CST1229 (completely rewritten by me in UTMT 0.7.0.0 update)
+
+My Contributions
+- Updated the Better Dark/Light Mode by luizzeroxis to also work with new windows introduced in UTMT 0.7.0.0 
+- Made the Variable Definition Maker Window and all of its functionality
+- Made the Pizza Tower Enum Finder Window and most of its functionality
+- Improved the Decompiling Scripts in various ways (see script headers to see list of changes)
+- Made BetterExportSpritesAsGIF.csx and ExportSpriteStrip.csx
+
+And more to come!
