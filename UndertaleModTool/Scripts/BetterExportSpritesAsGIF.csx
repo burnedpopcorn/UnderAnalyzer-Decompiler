@@ -290,9 +290,14 @@ private void ExtractSprite(UndertaleSprite sprite, string folder, TextureWorker 
     for (int i = 0; i < sprite.Textures.Count; i++)
     {
         // Create a new blank frame
-        MagickImage frame = new MagickImage(MagickColors.Transparent, 
-            (int)sprite.Textures[i].Texture.BoundingWidth, 
-            (int)sprite.Textures[i].Texture.BoundingHeight);
+		// fucking why 0.7.0.0
+		var settings = new MagickReadSettings
+        {
+            BackgroundColor = MagickColors.Transparent,
+            Width = (uint)sprite.Textures[i].Texture.BoundingWidth,
+            Height = (uint)sprite.Textures[i].Texture.BoundingHeight
+        };
+        MagickImage frame = new MagickImage("xc:none", settings);
         
         // Get texture for this frame
         IMagickImage<byte> image = worker.GetTextureFor(sprite.Textures[i].Texture, sprite.Name.Content, true);
@@ -302,10 +307,10 @@ private void ExtractSprite(UndertaleSprite sprite, string folder, TextureWorker 
         // Set the playback speed
         if (!custom_fpsENABLED)
             // If using In-Game Time
-            frame.AnimationDelay = (int)(100 / sprite.GMS2PlaybackSpeed);
+            frame.AnimationDelay = (uint)(100 / sprite.GMS2PlaybackSpeed);
         else
             // If using Custom Time
-            frame.AnimationDelay = 100 / custom_fps;
+            frame.AnimationDelay = (uint)(100 / custom_fps);
 
         // Add the frame to the list
         frames.Add(frame);
