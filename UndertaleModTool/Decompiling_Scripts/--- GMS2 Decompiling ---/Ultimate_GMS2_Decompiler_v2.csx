@@ -5557,7 +5557,7 @@ $@"A Decompilation of {Data.GeneralInfo.DisplayName.Content}
 Original GameMaker Version: {Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}
 
 --------------------------------------------------------
-Project Decompilied by Ultimate_GMS2_Decompiler_v2.csx
+Project Decompiled by Ultimate_GMS2_Decompiler_v2.csx
 	Improved by burnedpopcorn180
 		Original Version by crystallizedsparkle
 ";
