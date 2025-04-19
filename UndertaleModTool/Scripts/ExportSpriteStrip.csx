@@ -239,7 +239,14 @@ private void ExtractSprite(UndertaleSprite sprite, string folder, TextureWorker 
     int totalHeight = (int)sprite.Textures[0].Texture.BoundingHeight; // this doesn't/shouldn't change
     
 	// make image
-    MagickImage spriteStrip = new MagickImage(MagickColors.Transparent, totalWidth, totalHeight);
+	// fucking why 0.7.0.0
+	var settings = new MagickReadSettings
+	{
+        BackgroundColor = MagickColors.Transparent,
+        Width = (uint)totalWidth,
+        Height = (uint)totalHeight
+    };
+    MagickImage spriteStrip = new MagickImage("xc:none", settings);
     
     // add all frames
     for (int i = 0; i < sprite.Textures.Count; i++)
