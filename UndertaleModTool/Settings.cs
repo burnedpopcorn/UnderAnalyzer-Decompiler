@@ -18,6 +18,11 @@ namespace UndertaleModTool
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnderAnalyzer");
         public static string ProfilesFolder = Path.Combine(AppDataFolder, "Profiles");
 
+        /// <summary>
+        /// Whether file associations settings should be prompted for on startup.
+        /// </summary>
+        public static bool ShouldPromptForAssociations { get; set; } = false;
+
         public string Version { get; set; } = MainWindow.Version;
         public string GameMakerStudioPath { get; set; } = "%appdata%\\GameMaker-Studio";
         public string GameMakerStudio2RuntimesPath { get; set; } = "%ProgramData%\\GameMakerStudio2\\Cache\\runtimes";
@@ -91,6 +96,9 @@ namespace UndertaleModTool
                     // No settings JSON exists, so make a new one
                     _ = new Settings() { DecompilerSettings = existingDecompilerSettings ?? new() };
                     Save();
+
+                    // This is theoretically a first bootup, so prompt for file associations
+                    ShouldPromptForAssociations = true;
                     return;
                 }
 
