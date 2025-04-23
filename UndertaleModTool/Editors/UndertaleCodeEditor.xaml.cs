@@ -65,7 +65,7 @@ namespace UndertaleModTool
         public Dictionary<string, long> Values { get; set; } = new();
         public string Name { get; set; }
     }
-#endregion
+    #endregion
 
     public partial class UndertaleCodeEditor : DataUserControl
     {
@@ -1510,15 +1510,10 @@ namespace UndertaleModTool
                     // manually set UnknownEnums, because they're not in GameSpecificData, and they are always Enums
                     var ii = 0;
                     Enums["UnknownEnum"] = ii;
-                    if (offset >= 12)
-                    {
-                        if (doc.GetText(offset - 12, 12) == "UnknownEnum.")
-                        {
-                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                        }
-                    }
+                    if ((offset >= 12) && (doc.GetText(offset - 12, 12) == "UnknownEnum."))
+                        return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
+
                     // Find all Enums in GameSpecificData
-                    // mostly from zyle's thing, but repurposed
                     string[] defs = Directory.GetFiles($"{Program.GetExecutableDirectory()}\\GameSpecificData\\Definitions\\");
                     foreach (string def in defs)
                     {
@@ -1527,7 +1522,10 @@ namespace UndertaleModTool
                         foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
                         {
                             // check if json file is allowed to be applied to the current game loaded
-                            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(data.GeneralInfo.DisplayName.Content, condition.Value)) || condition.ConditionKind == "Always")
+                            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(
+                                // i love VirDesert
+                                (data?.GeneralInfo?.DisplayName?.Content != null ? data?.GeneralInfo?.DisplayName?.Content : "")
+                                , condition.Value)) || condition.ConditionKind == "Always")
                             {
                                 string macroPath = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\{currentDef.UnderanalyzerFilename}";
                                 if (File.Exists(macroPath))
@@ -1547,13 +1545,8 @@ namespace UndertaleModTool
                                         //               v
                                         // UnknownEnum.Value_1
                                         var stringCount = kvp.Value.Name.Length + 1;
-                                        if (offset >= stringCount)
-                                        {
-                                            if (doc.GetText(offset - stringCount, stringCount) == kvp.Value.Name + ".")
-                                            {
-                                                return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
-                                            }
-                                        }
+                                        if ((offset >= stringCount) && (doc.GetText(offset - stringCount, stringCount) == kvp.Value.Name + "."))
+                                            return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
                                     }
                                 }
                             }
