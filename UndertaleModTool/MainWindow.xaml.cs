@@ -340,31 +340,34 @@ namespace UndertaleModTool
             {
                 try
                 {
-                    string procFileName = Environment.ProcessPath;
-                    var HKCU_Classes = Registry.CurrentUser.OpenSubKey(@"Software\Classes", true);
-                    var UndertaleModTool_app = HKCU_Classes.CreateSubKey(@"UndertaleModTool");
-
-                    UndertaleModTool_app.SetValue("", "UndertaleModTool");
-                    UndertaleModTool_app.CreateSubKey(@"shell\open\command").SetValue("", "\"" + procFileName + "\" \"%1\"", RegistryValueKind.String);
-                    UndertaleModTool_app.CreateSubKey(@"shell\launch\command").SetValue("", "\"" + procFileName + "\" \"%1\" launch", RegistryValueKind.String);
-                    UndertaleModTool_app.CreateSubKey(@"shell\launch").SetValue("", "Run game normally", RegistryValueKind.String);
-                    UndertaleModTool_app.CreateSubKey(@"shell\special_launch\command").SetValue("", "\"" + procFileName + "\" \"%1\" special_launch", RegistryValueKind.String);
-                    UndertaleModTool_app.CreateSubKey(@"shell\special_launch").SetValue("", "Run extended options", RegistryValueKind.String);
-
+                    // Load settings to see if we should associate files
+                    if (Settings.Instance is null)
+                    {
+                        Settings.Load();
+                    }
+                    bool shouldAssociate = true;
                     if (File.Exists("dna.txt"))
                     {
-                        ScriptMessage("Opt out detected.");
-                        SettingsWindow.AutomaticFileAssociation = false;
+                        shouldAssociate = false;
+                    }
+                    if (shouldAssociate && Settings.ShouldPromptForAssociations)
+                    {
+                        if (this.ShowQuestion("First-time setup: Would you like to associate GameMaker data files (like .win) with UndertaleModTool?", MessageBoxImage.Question, "File associations") != MessageBoxResult.Yes)
+                        {
+                            shouldAssociate = false;
+                        }
+                    }
+                    if (!shouldAssociate)
+                    {
+                        // Shouldn't associate, so turn it off and save that setting
+                        Settings.Instance.AutomaticFileAssociation = false;
                         Settings.Save();
                     }
-                    if (SettingsWindow.AutomaticFileAssociation)
+
+                    // Associate file types if enabled
+                    if (Settings.Instance.AutomaticFileAssociation)
                     {
-                        foreach (var extStr in IFF_EXTENSIONS)
-                        {
-                            var ext = HKCU_Classes.CreateSubKey(extStr);
-                            ext.SetValue("", "UndertaleModTool", RegistryValueKind.String);
-                        }
-                        SHChangeNotify(SHCNE_ASSOCCHANGED, 0, IntPtr.Zero, IntPtr.Zero);
+                        FileAssociations.CreateAssociations();
                     }
                 }
                 catch (Exception ex)
@@ -480,6 +483,9 @@ namespace UndertaleModTool
             // Copy the known code corrections into the profile, if they don't already exist.
             ApplyCorrections();
             CrashCheck();
+
+            RunGMSDebuggerItem.Visibility = Settings.Instance.ShowDebuggerOption
+                                            ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public Dictionary<string, NamedPipeServerStream> childFiles = new Dictionary<string, NamedPipeServerStream>();
@@ -698,7 +704,7 @@ namespace UndertaleModTool
             OpenFileDialog dlg = new OpenFileDialog();
 
             dlg.DefaultExt = "win";
-            dlg.Filter = "Game Maker Studio data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
+            dlg.Filter = "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
 
             if (dlg.ShowDialog(this) == true)
             {
@@ -712,7 +718,7 @@ namespace UndertaleModTool
             SaveFileDialog dlg = new SaveFileDialog();
 
             dlg.DefaultExt = "win";
-            dlg.Filter = "Game Maker Studio data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
+            dlg.Filter = "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
             dlg.FileName = FilePath;
 
             if (dlg.ShowDialog(this) == true)
@@ -949,20 +955,17 @@ namespace UndertaleModTool
 
             Task t = Task.Run(() =>
             {
-                bool hadWarnings = false;
+                bool hadImportantWarnings = false;
                 UndertaleData data = null;
                 try
                 {
                     using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
                     {
-                        data = UndertaleIO.Read(stream, warning =>
+                        data = UndertaleIO.Read(stream, (string warning, bool isImportant) =>
                         {
                             this.ShowWarning(warning, "Loading warning");
-                            if (warning.Contains("unserializeCountError.txt")
-                                || warning.Contains("object pool size"))
-                                return;
-
-                            hadWarnings = true;
+                            if (isImportant)
+                                hadImportantWarnings = true;
                         }, message =>
                         {
                             FileMessageEvent?.Invoke(message);
@@ -999,7 +1002,7 @@ namespace UndertaleModTool
                             CanSave = false;
                             CanSafelySave = false;
                         }
-                        else if (hadWarnings)
+                        else if (hadImportantWarnings)
                         {
                             this.ShowWarning("Warnings occurred during loading. Data loss will likely occur when trying to save!", "Loading problems");
                             CanSave = true;
@@ -1749,7 +1752,7 @@ namespace UndertaleModTool
             Type t = list.GetType().GetGenericArguments()[0];
             Debug.Assert(typeof(UndertaleResource).IsAssignableFrom(t));
             UndertaleResource obj = Activator.CreateInstance(t) as UndertaleResource;
-            if (obj is UndertaleNamedResource)
+            if (obj is UndertaleNamedResource namedResource)
             {
                 bool doMakeString = obj is not (UndertaleTexturePageItem or UndertaleEmbeddedAudio or UndertaleEmbeddedTexture);
                 string notDataNewName = null;
@@ -1783,16 +1786,18 @@ namespace UndertaleModTool
                 if (doMakeString)
                 {
                     string newName = obj.GetType().Name.Replace("Undertale", "").Replace("GameObject", "Object").ToLower() + list.Count;
-                    (obj as UndertaleNamedResource).Name = Data.Strings.MakeString(newName);
-                    if (obj is UndertaleRoom)
+                    namedResource.Name = Data.Strings.MakeString(newName);
+                    if (obj is UndertaleRoom roomResource)
                     {
-                        (obj as UndertaleRoom).Caption = Data.Strings.MakeString("");
+                        roomResource.Caption = Data.Strings.MakeString("");
 
-                        if (IsGMS2 == Visibility.Visible)
-                            (obj as UndertaleRoom).Flags |= UndertaleRoom.RoomEntryFlags.IsGMS2;
+                        if (Data?.IsGameMaker2() == true)
+                        {
+                            roomResource.Flags |= Data.IsVersionAtLeast(2024, 13) ? UndertaleRoom.RoomEntryFlags.IsGM2024_13 : UndertaleRoom.RoomEntryFlags.IsGMS2;
+                        }
                     }
 
-                    if (obj is UndertaleScript)
+                    if (obj is UndertaleScript scriptResource)
                     {
                         UndertaleCode code = new UndertaleCode();
                         string prefix = Data.IsVersionAtLeast(2, 3) ? "gml_GlobalScript_" : "gml_Script_";
@@ -1809,23 +1814,23 @@ namespace UndertaleModTool
                             code.LocalsCount = 1;
                             Data.CodeLocals.Add(locals);
                         }
-                        (obj as UndertaleScript).Code = code;
+                        scriptResource.Code = code;
                     }
-                    if (obj is UndertaleCode && Data.CodeLocals is not null)
+                    if (obj is UndertaleCode codeResource && Data.CodeLocals is not null)
                     {
                         UndertaleCodeLocals locals = new UndertaleCodeLocals();
-                        locals.Name = (obj as UndertaleCode).Name;
+                        locals.Name = codeResource.Name;
                         UndertaleCodeLocals.LocalVar argsLocal = new UndertaleCodeLocals.LocalVar();
                         argsLocal.Name = Data.Strings.MakeString("arguments");
                         argsLocal.Index = 0;
                         locals.Locals.Add(argsLocal);
-                        (obj as UndertaleCode).LocalsCount = 1;
+                        codeResource.LocalsCount = 1;
                         Data.CodeLocals.Add(locals);
                     }
                 }
                 else
                 {
-                    (obj as UndertaleNamedResource).Name = new UndertaleString(notDataNewName); // not Data.MakeString!
+                    namedResource.Name = new UndertaleString(notDataNewName); // not Data.MakeString!
                 }
             }
             else if (obj is UndertaleString str)
@@ -2425,7 +2430,7 @@ namespace UndertaleModTool
         {
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.DefaultExt = defaultExt ?? "win";
-            dlg.Filter = filter ?? "Game Maker Studio data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
+            dlg.Filter = filter ?? "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
             return dlg.ShowDialog() == true ? dlg.FileName : null;
         }
 
@@ -2992,7 +2997,7 @@ result in loss of work.");
             OpenFileDialog dlg = new OpenFileDialog();
 
             dlg.DefaultExt = "win";
-            dlg.Filter = "Game Maker Studio data files (.win, .unx, .ios, .droid)|*.win;*.unx;*.ios;*.droid|All files|*";
+            dlg.Filter = "GameMaker data files (.win, .unx, .ios, .droid)|*.win;*.unx;*.ios;*.droid|All files|*";
 
             if (dlg.ShowDialog() == true)
             {
