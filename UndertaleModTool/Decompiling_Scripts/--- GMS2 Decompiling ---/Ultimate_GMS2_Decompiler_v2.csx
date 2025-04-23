@@ -2993,7 +2993,7 @@ async Task DumpScripts()
 
         foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
         {
-            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch(Data.GeneralInfo.DisplayName.Content, condition.Value)) || condition.ConditionKind == "Always")
+            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
             {
                 string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
                 if (File.Exists(macroPath))
@@ -5777,15 +5777,15 @@ if (SCPT && !ENUM)
     }
     catch (Exception e)
     {
-        // try again
-        HashSet<long> values = new HashSet<long>();
+        // try again lmao
+        values = new HashSet<long>();
         await DumpEnum();
         sorted = new List<long>(values);
         sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
     }
 
     // Adding Unknown Enums to the List
-    string code = "\nenum " + enumName + " \n{\n";
+    string code = "enum " + enumName + " \n{\n";
 
     long expectedValue = 0;
     foreach (long val in sorted)
