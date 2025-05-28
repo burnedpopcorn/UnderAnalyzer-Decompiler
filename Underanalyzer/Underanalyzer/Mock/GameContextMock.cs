@@ -52,6 +52,8 @@ public class GameContextMock : IGameContext
     /// <inheritdoc/>
     public bool UsingBetterTryBreakContinue { get; set; } = false;
     /// <inheritdoc/>
+    public bool UsingBuiltinDefaultArguments { get; set; } = false;
+    /// <inheritdoc/>
     public bool UsingExtraRepeatInstruction { get; set; } = false;
     /// <inheritdoc/>
     public bool UsingTypedBooleans { get; set; } = true;
@@ -59,6 +61,10 @@ public class GameContextMock : IGameContext
     public bool UsingAssetReferences { get; set; } = true;
     /// <inheritdoc/>
     public bool UsingRoomInstanceReferences { get; set; } = true;
+    /// <inheritdoc/>
+    public bool UsingFunctionScriptReferences { get; set; } = false;
+    /// <inheritdoc/>
+    public bool UsingNewFunctionResolution { get; set; } = false;
     /// <inheritdoc/>
     public IGlobalFunctions GlobalFunctions { get; } = new GlobalFunctions();
     /// <inheritdoc/>

@@ -940,6 +940,17 @@ public class RoundTrip
             a = a.b[0];
             global.a = 0;
             global.a[0] = 0;
+            self.a.b = 1;
+            a.b = 1;
+            a = 1;
+            other.a[0] = 1;
+            global.a[0] = 1;
+            a[0].b = 1;
+            a = a[0].b;
+            a = a[0];
+            a[0].b[0]("a");
+            a[0].b.c("a");
+            a[0].b("a");
             """,
             """
             a = 0;
@@ -952,16 +963,27 @@ public class RoundTrip
             a++;
             a.b = 0;
             a[0] = 1;
-            self.a[0] = 1;
+            a[0] = 1;
             a.b[0] = 1;
             a[0] += 1;
-            self.a[0] += 1;
+            a[0] += 1;
             a.b[0] += 1;
             a = a[0];
-            a = self.a[0];
+            a = a[0];
             a = a.b[0];
             global.a = 0;
             global.a[0] = 0;
+            a.b = 1;
+            a.b = 1;
+            a = 1;
+            other.a[0] = 1;
+            global.a[0] = 1;
+            a[0].b = 1;
+            a = a[0].b;
+            a = a[0];
+            a[0].b[0]("a");
+            a[0].b.c("a");
+            a[0].b("a");
             """
         );
     }
@@ -996,6 +1018,17 @@ public class RoundTrip
             a = a.b[0];
             global.a = 0;
             global.a[0] = 0;
+            self.a.b = 1;
+            a.b = 1;
+            a = 1;
+            other.a[0] = 1;
+            global.a[0] = 1;
+            a[0].b = 1;
+            a = a[0].b;
+            a = a[0];
+            a[0].b[0]("a");
+            a[0].b.c("a");
+            a[0].b("a");
             """,
             false,
             gameContext
@@ -1600,6 +1633,182 @@ public class RoundTrip
             a = b && c && d;
             e = f || g || h;
             i = j ^^ k ^^ l;
+            """
+        );
+    }
+
+    [Fact]
+    public void TestKeywordStructNames()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            a = 
+            {
+                case: 1,
+                default: 2,
+                throw: 3,
+                function: 4,
+                regular_variable: 5,
+                begin: 6
+            };
+            """
+        );
+    }
+
+    [Fact]
+    public void TestNonBuiltinDefaultArguments()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            function test_func(arg0 = 123, arg1 = 456, arg2)
+            {
+            }
+            """,
+            true,
+            new GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingConstructorSetStatic = false,
+                UsingBuiltinDefaultArguments = false
+            }
+        );
+    }
+
+    [Fact]
+    public void TestBuiltinDefaultArguments()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            function test_func(arg0 = 123, arg1 = 456, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16 = 789)
+            {
+            }
+            """,
+            true,
+            new GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingConstructorSetStatic = true,
+                UsingBuiltinDefaultArguments = true
+            }
+        );
+    }
+
+    [Fact]
+    public void TestOldFunctionResolution()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            function event_function()
+            {
+            }
+
+            function other_event_function()
+            {
+                event_function();
+            }
+
+            event_function();
+            """,
+            false,
+            new GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingFunctionScriptReferences = true,
+                UsingNewFunctionResolution = false
+            }
+        );
+    }
+
+    [Fact]
+    public void TestNewFunctionResolution()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            function event_function()
+            {
+            }
+
+            function other_event_function()
+            {
+                event_function();
+            }
+
+            event_function();
+            """,
+            false,
+            new GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingFunctionScriptReferences = true,
+                UsingNewFunctionResolution = true
+            }
+        );
+    }
+
+    [Fact]
+    public void TestTryWithFinally()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            a = 1;
+            try
+            {
+                with (b)
+                {
+                    c = 3;
+                }
+            }
+            finally
+            {
+                d = 4;
+            }
+            """
+        );
+    }
+
+    [Fact]
+    public void TestTryWhileFinally()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            a = 1;
+            try
+            {
+                while (b)
+                {
+                    c = 3;
+                }
+            }
+            finally
+            {
+                d = 4;
+            }
+            """
+        );
+    }
+
+    [Fact]
+    public void TestTryDoUntilFinally()
+    {
+        TestUtil.VerifyRoundTrip(
+            """
+            a = 1;
+            try
+            {
+                do
+                {
+                    c = 3;
+                }
+                until (b);
+            }
+            finally
+            {
+                d = 4;
+            }
             """
         );
     }

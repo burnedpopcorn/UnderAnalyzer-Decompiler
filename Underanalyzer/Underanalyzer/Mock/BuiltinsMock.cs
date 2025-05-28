@@ -36,6 +36,7 @@ public class BuiltinsMock : IBuiltins
         { "string", new("string", 1, 1) },
         { "real", new("real", 1, 1) },
         { "ord", new("ord", 1, 1) },
+        { "script_execute", new("script_execute", 1, int.MaxValue) },
         { "array_set", new("array_set", 3, 3) },
         { "array_create", new("array_create", 1, 2) },
         { VMConstants.SelfFunction, new(VMConstants.SelfFunction, 0, 0) },
@@ -61,6 +62,7 @@ public class BuiltinsMock : IBuiltins
     /// </summary>
     public Dictionary<string, BuiltinVariableMock> BuiltinVariables = new()
     {
+        { "undefined", new("undefined", false, true) },
         { "sprite_index", new("sprite_index") },
         { "id", new("id", false) },
         { "view_xview", new("view_xview", true, true, true) },

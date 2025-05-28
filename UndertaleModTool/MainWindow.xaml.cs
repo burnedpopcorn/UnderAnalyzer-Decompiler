@@ -226,7 +226,7 @@ namespace UndertaleModTool
             }
             OpenInTab(Highlighted);
 
-            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.7.0.0";
+            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.8.1.1";
 
             CanSave = false;
             CanSafelySave = false;
@@ -1736,6 +1736,29 @@ namespace UndertaleModTool
                 DeleteItem(obj);
         }
 
+        private static bool IsValidAssetIdentifier(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            char firstChar = name[0];
+            if (!char.IsAsciiLetter(firstChar) && firstChar != '_')
+            {
+                return false;
+            }
+            foreach (char c in name.Skip(1))
+            {
+                if (!char.IsAsciiLetterOrDigit(c) && c != '_')
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private void MenuItem_Add_Click(object sender, RoutedEventArgs e)
         {
             object source;
@@ -1760,11 +1783,6 @@ namespace UndertaleModTool
                 {
                     notDataNewName = "PageItem " + list.Count;
                 }
-                if ((obj is UndertaleExtension) && (IsExtProductIDEligible == Visibility.Visible))
-                {
-                    var newProductID = new byte[] { 0xBA, 0x5E, 0xBA, 0x11, 0xBA, 0xDD, 0x06, 0x60, 0xBE, 0xEF, 0xED, 0xBA, 0x0B, 0xAB, 0xBA, 0xBE };
-                    Data.FORM.EXTN.productIdData.Add(newProductID);
-                }
                 if (obj is UndertaleEmbeddedAudio)
                 {
                     notDataNewName = "EmbeddedSound " + list.Count;
@@ -1773,59 +1791,102 @@ namespace UndertaleModTool
                 {
                     notDataNewName = "Texture " + list.Count;
                 }
-                if (obj is UndertaleShader shader)
-                {
-                    shader.GLSL_ES_Vertex = Data.Strings.MakeString("", true);
-                    shader.GLSL_ES_Fragment = Data.Strings.MakeString("", true);
-                    shader.GLSL_Vertex = Data.Strings.MakeString("", true);
-                    shader.GLSL_Fragment = Data.Strings.MakeString("", true);
-                    shader.HLSL9_Vertex = Data.Strings.MakeString("", true);
-                    shader.HLSL9_Fragment = Data.Strings.MakeString("", true);
-                }
 
                 if (doMakeString)
                 {
-                    string newName = obj.GetType().Name.Replace("Undertale", "").Replace("GameObject", "Object").ToLower() + list.Count;
+                    string assetTypeName = obj.GetType().Name.Replace("Undertale", "").Replace("GameObject", "Object").ToLower();
+                    string newName = $"{assetTypeName}{list.Count}";
+                    string userNewName = ScriptInputDialog($"Choose new {assetTypeName} name", "Name of new asset:", newName, "Cancel", "Create", false, false);
+                    if (userNewName is null)
+                    {
+                        // Presume user canceled the action
+                        return;
+                    }
+                    if (IsValidAssetIdentifier(userNewName))
+                    {
+                        newName = userNewName;
+                    }
+                    else
+                    {
+                        if (this.ShowQuestionWithCancel($"Asset name \"{userNewName}\" is not a valid identifier. Add a new asset using an auto-generated name instead?",
+                            MessageBoxImage.Warning, "Invalid name") != MessageBoxResult.Yes)
+                        {
+                            return;
+                        }
+                    }
                     namedResource.Name = Data.Strings.MakeString(newName);
                     if (obj is UndertaleRoom roomResource)
                     {
-                        roomResource.Caption = Data.Strings.MakeString("");
-
-                        if (Data?.IsGameMaker2() == true)
+                        if (Data.IsGameMaker2())
                         {
-                            roomResource.Flags |= Data.IsVersionAtLeast(2024, 13) ? UndertaleRoom.RoomEntryFlags.IsGM2024_13 : UndertaleRoom.RoomEntryFlags.IsGMS2;
+                            roomResource.Caption = null;
+                            roomResource.Backgrounds.Clear();
+                            if (Data.IsVersionAtLeast(2024, 13))
+                            {
+                                roomResource.Flags |= Data.IsVersionAtLeast(2024, 13) ? UndertaleRoom.RoomEntryFlags.IsGM2024_13 : UndertaleRoom.RoomEntryFlags.IsGMS2;
+                            }
+                            else
+                            {
+                                roomResource.Flags |= UndertaleRoom.RoomEntryFlags.IsGMS2;
+                                if (Data.IsVersionAtLeast(2, 3))
+                                {
+                                    roomResource.Flags |= UndertaleRoom.RoomEntryFlags.IsGMS2_3;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            roomResource.Caption = Data.Strings.MakeString("");
+                        }
+
+                        if (this.ShowQuestion("Add the new room to the end of the room order list?", MessageBoxImage.Question, "Add to room order list") == MessageBoxResult.Yes)
+                        {
+                            Data.GeneralInfo.RoomOrder.Add(new(roomResource));
                         }
                     }
-
-                    if (obj is UndertaleScript scriptResource)
+                    else if (obj is UndertaleScript scriptResource)
                     {
-                        UndertaleCode code = new UndertaleCode();
-                        string prefix = Data.IsVersionAtLeast(2, 3) ? "gml_GlobalScript_" : "gml_Script_";
-                        code.Name = Data.Strings.MakeString(prefix + newName);
-                        Data.Code.Add(code);
+                        if (Data.IsVersionAtLeast(2, 3))
+                        {
+                            scriptResource.Code = UndertaleCode.CreateEmptyEntry(Data, $"gml_GlobalScript_{newName}");
+                            if (Data.GlobalInitScripts is IList<UndertaleGlobalInit> globalInitScripts)
+                            {
+                                globalInitScripts.Add(new UndertaleGlobalInit()
+                                {
+                                    Code = scriptResource.Code
+                                });
+                            }
+                        }
+                        else
+                        {
+                            scriptResource.Code = UndertaleCode.CreateEmptyEntry(Data, $"gml_Script_{newName}");
+                        }
+                    }
+                    else if (obj is UndertaleCode codeResource)
+                    {
                         if (Data.CodeLocals is not null)
                         {
-                            UndertaleCodeLocals locals = new UndertaleCodeLocals();
-                            locals.Name = code.Name;
-                            UndertaleCodeLocals.LocalVar argsLocal = new UndertaleCodeLocals.LocalVar();
-                            argsLocal.Name = Data.Strings.MakeString("arguments");
-                            argsLocal.Index = 0;
-                            locals.Locals.Add(argsLocal);
-                            code.LocalsCount = 1;
-                            Data.CodeLocals.Add(locals);
+                            codeResource.LocalsCount = 1;
+                            UndertaleCodeLocals.CreateEmptyEntry(Data, codeResource.Name);
                         }
-                        scriptResource.Code = code;
+                        else
+                        {
+                            codeResource.WeirdLocalFlag = true;
+                        }
                     }
-                    if (obj is UndertaleCode codeResource && Data.CodeLocals is not null)
+                    else if (obj is UndertaleExtension && IsExtProductIDEligible == Visibility.Visible)
                     {
-                        UndertaleCodeLocals locals = new UndertaleCodeLocals();
-                        locals.Name = codeResource.Name;
-                        UndertaleCodeLocals.LocalVar argsLocal = new UndertaleCodeLocals.LocalVar();
-                        argsLocal.Name = Data.Strings.MakeString("arguments");
-                        argsLocal.Index = 0;
-                        locals.Locals.Add(argsLocal);
-                        codeResource.LocalsCount = 1;
-                        Data.CodeLocals.Add(locals);
+                        var newProductID = new byte[] { 0xBA, 0x5E, 0xBA, 0x11, 0xBA, 0xDD, 0x06, 0x60, 0xBE, 0xEF, 0xED, 0xBA, 0x0B, 0xAB, 0xBA, 0xBE };
+                        Data.FORM.EXTN.productIdData.Add(newProductID);
+                    }
+                    else if (obj is UndertaleShader shader)
+                    {
+                        shader.GLSL_ES_Vertex = Data.Strings.MakeString("", true);
+                        shader.GLSL_ES_Fragment = Data.Strings.MakeString("", true);
+                        shader.GLSL_Vertex = Data.Strings.MakeString("", true);
+                        shader.GLSL_Fragment = Data.Strings.MakeString("", true);
+                        shader.HLSL9_Vertex = Data.Strings.MakeString("", true);
+                        shader.HLSL9_Fragment = Data.Strings.MakeString("", true);
                     }
                 }
                 else
@@ -2552,7 +2613,9 @@ namespace UndertaleModTool
 
         public string ScriptInputDialog(string title, string label, string defaultInput, string cancelText, string submitText, bool isMultiline, bool preventClose)
         {
-            TextInputDialog dlg = new TextInputDialog(title, label, defaultInput, cancelText, submitText, isMultiline, preventClose);
+            TextInputDialog dlg = new(title, label, defaultInput, cancelText, submitText, isMultiline, preventClose);
+            dlg.Owner = this;
+
             bool? dlgResult = dlg.ShowDialog();
 
             if (!dlgResult.HasValue || dlgResult == false)

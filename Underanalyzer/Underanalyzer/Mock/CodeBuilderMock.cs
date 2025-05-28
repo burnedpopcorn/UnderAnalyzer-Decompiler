@@ -239,7 +239,7 @@ public class CodeBuilderMock(GameContextMock gameContext) : ICodeBuilder
 
             if (gameContext.MockVariables.TryGetValue((variableName, variableInstanceType), out GMVariable? existingVariable))
             {
-                mockInstruction.Variable = existingVariable;
+                mockInstruction.ResolvedVariable = existingVariable;
             }
             else
             {
@@ -247,7 +247,7 @@ public class CodeBuilderMock(GameContextMock gameContext) : ICodeBuilder
                 {
                     InstanceType = variableInstanceType
                 };
-                mockInstruction.Variable = newVariable;
+                mockInstruction.ResolvedVariable = newVariable;
                 gameContext.MockVariables.Add((variableName, variableInstanceType), newVariable);
             }
 
@@ -261,17 +261,17 @@ public class CodeBuilderMock(GameContextMock gameContext) : ICodeBuilder
     {
         if (instruction is GMInstruction mockInstruction)
         {
-            if (scope.TryGetDeclaredFunction(functionName, out FunctionEntry? entry))
+            if (scope.TryGetDeclaredFunction(gameContext, functionName, out FunctionEntry? entry))
             {
-                mockInstruction.Function = entry.Function ?? throw new InvalidOperationException("Function not resolved for function entry");
+                mockInstruction.ResolvedFunction = entry.Function ?? throw new InvalidOperationException("Function not resolved for function entry");
             }    
             else if (gameContext.Builtins.LookupBuiltinFunction(functionName) is not null)
             {
-                mockInstruction.Function = new GMFunction(functionName);
+                mockInstruction.ResolvedFunction = new GMFunction(functionName);
             }
             else if (gameContext.GlobalFunctions.TryGetFunction(functionName, out IGMFunction? function))
             {
-                mockInstruction.Function = function;
+                mockInstruction.ResolvedFunction = function;
             }
             else
             {
@@ -285,25 +285,7 @@ public class CodeBuilderMock(GameContextMock gameContext) : ICodeBuilder
     {
         if (instruction is GMInstruction mockInstruction)
         {
-            if (mockInstruction is { Kind: Opcode.Extended, ExtKind: ExtendedOpcode.PushReference })
-            {
-                if (gameContext.GetScriptId(
-                    functionEntry.Function?.Name.Content ?? 
-                        throw new InvalidOperationException("Function not resolved for function entry"), 
-                    out int assetIndex))
-                {
-                    mockInstruction.AssetReferenceId = assetIndex & 0xFFFFFF;
-                    mockInstruction.AssetReferenceType = (AssetType)(assetIndex >> 24);
-                }
-                else
-                {
-                    throw new Exception($"Failed to look up script asset for function \"{functionEntry.Function?.Name.Content}\"");
-                }
-            }
-            else
-            {
-                mockInstruction.Function = functionEntry.Function ?? throw new InvalidOperationException("Function not resolved for function entry");
-            }
+            mockInstruction.ResolvedFunction = functionEntry.Function ?? throw new InvalidOperationException("Function not resolved for function entry");
         }
     }
 
