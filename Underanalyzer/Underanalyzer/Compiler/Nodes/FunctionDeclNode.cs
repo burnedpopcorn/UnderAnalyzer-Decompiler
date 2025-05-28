@@ -85,14 +85,17 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
     /// <summary>
     /// Generates a default argument value check and assignment.
     /// </summary>
-    private static IfNode GenerateDefaultCheckAndAssign(ParseContext context, string argumentName, IASTNode value)
+    private static IfNode GenerateDefaultCheckAndAssign(ParseContext context, int argumentIndex, IASTNode value)
     {
         // Create condition
         SimpleVariableNode undefined = SimpleVariableNode.CreateUndefined(context);
-        BinaryChainNode condition = new(value.NearbyToken, [new SimpleVariableNode(argumentName, null), undefined], [BinaryChainNode.BinaryOperation.CompareEqual]);
+        bool useBuiltinInstanceType = context.CompileContext.GameContext.UsingBuiltinDefaultArguments;
+        IAssignableASTNode argumentVar = SimpleVariableNode.CreateArgumentVariable(context, value.NearbyToken, argumentIndex, useBuiltinInstanceType);
+        BinaryChainNode condition = new(value.NearbyToken, [argumentVar, undefined], [BinaryChainNode.BinaryOperation.CompareEqual]);
 
         // Create assignment statement
-        AssignNode assign = new(AssignNode.AssignKind.Normal, new SimpleVariableNode(argumentName, null), value);
+        argumentVar = SimpleVariableNode.CreateArgumentVariable(context, value.NearbyToken, argumentIndex, useBuiltinInstanceType);
+        AssignNode assign = new(AssignNode.AssignKind.Normal, argumentVar, value);
 
         // Return final if statement check
         return new IfNode(value.NearbyToken, condition, assign, null);
@@ -119,7 +122,7 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
 
         // Enter a new function scope
         FunctionScope oldScope = context.CurrentScope;
-        FunctionScope newScope = new(true);
+        FunctionScope newScope = new(oldScope, true);
         context.CurrentScope = newScope;
 
         // Parse arguments and default values
@@ -136,7 +139,6 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
             argumentNames.Add(argumentName);
             context.Position++;
 
-
             // Check for default value
             if (context.IsCurrentToken(OperatorKind.Assign) || context.IsCurrentToken(OperatorKind.Assign2))
             {
@@ -147,7 +149,7 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
                 {
                     // Generate code for checking/assigning default value for this argument
                     defaultValueBlock ??= BlockNode.CreateEmpty(tokenKeyword, 16);
-                    defaultValueBlock.Children.Add(GenerateDefaultCheckAndAssign(context, tokenVariable.Text, defaultValueExpr));
+                    defaultValueBlock.Children.Add(GenerateDefaultCheckAndAssign(context, argumentNames.Count - 1, defaultValueExpr));
                 }
                 else
                 {
@@ -266,7 +268,7 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
     {
         // Enter a new function scope
         FunctionScope oldScope = context.CurrentScope;
-        FunctionScope newScope = new(true);
+        FunctionScope newScope = new(oldScope, true);
         context.CurrentScope = newScope;
 
         // Create new function declaration node
@@ -279,7 +281,7 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
         {
             if (context.Tokens[context.Position] is not TokenVariable variable)
             {
-                // Failed to find a variable here... check if a constant/asset reference or string
+                // Failed to find a variable here... check if a constant/asset reference, string, or keyword
                 if (context.Tokens[context.Position] is TokenAssetReference assetReference)
                 {
                     variable = new TokenVariable(assetReference);
@@ -291,6 +293,10 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
                 else if (context.Tokens[context.Position] is TokenString str)
                 {
                     variable = new TokenVariable(str);
+                }
+                else if (context.Tokens[context.Position] is TokenKeyword keyword)
+                {
+                    variable = new TokenVariable(keyword);
                 }
                 else
                 {
@@ -476,7 +482,7 @@ internal sealed class FunctionDeclNode : IMaybeStatementASTNode
         if (InheritanceCall is SimpleFunctionCallNode inheritCall)
         {
             // Generate actual call
-            if (oldScope.IsFunctionDeclared(inheritCall.FunctionName))
+            if (oldScope.IsFunctionDeclared(context.CompileContext.GameContext, inheritCall.FunctionName))
             {
                 // Override scope to be the outer scope for this call (but NOT its arguments), and generate a direct call
                 inheritCall.GenerateDirectCode(context, oldScope);

@@ -184,7 +184,7 @@ public class DecompileSettings : IDecompileSettings
     public bool CleanupDefaultArgumentValues { get; set; } = true;
     public bool CleanupBuiltinArrayVariables { get; set; } = true;
     public bool CleanupLocalVarDeclarations { get; set; } = true;
-    public bool CreateEnumDeclarations { get; set; } = true;
+    public bool CreateEnumDeclarations { get; set; } = false;
     public string UnknownEnumName { get; set; } = "UnknownEnum";
     public string UnknownEnumValuePattern { get; set; } = "Value_{0}";
     public string UnknownArgumentNamePattern { get; set; } = "arg{0}";

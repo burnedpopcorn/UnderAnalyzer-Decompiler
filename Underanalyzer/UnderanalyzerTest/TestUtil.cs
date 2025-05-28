@@ -257,9 +257,12 @@ internal static class TestUtil
         GMCode comparison = GetCode(assembly, gameContext);
 
         // Compare the instructions
-        Assert.Equal(comparison.InstructionCount, generated.Instructions.Count);
         for (int i = 0; i < comparison.InstructionCount; i++)
         {
+            if (i >= generated.InstructionCount)
+            {
+                Assert.Equal(comparison.InstructionCount, generated.Instructions.Count);
+            }
             GMInstruction comparisonInstr = (GMInstruction)comparison.GetInstruction(i);
             GMInstruction actualInstr = generated.Instructions[i];
             Assert.Equal(comparisonInstr.Address, actualInstr.Address);
@@ -290,31 +293,32 @@ internal static class TestUtil
             {
                 Assert.Null(actualInstr.ValueString);
             }
-            if (comparisonInstr.Variable is IGMVariable variable)
+            if (comparisonInstr.ResolvedVariable is IGMVariable variable)
             {
-                Assert.Equal(variable.Name.Content, actualInstr.Variable!.Name.Content);
+                Assert.Equal(variable.Name.Content, actualInstr.ResolvedVariable!.Name.Content);
 
                 // Self sometimes becomes builtin/stacktop for instructions, but not the actual variable itself
-                if (actualInstr.Variable!.InstanceType != IGMInstruction.InstanceType.Self ||
+                if (actualInstr.ResolvedVariable!.InstanceType != IGMInstruction.InstanceType.Self ||
                     variable.InstanceType is not (IGMInstruction.InstanceType.Builtin or 
                                                   IGMInstruction.InstanceType.StackTop))
                 {
-                    Assert.Equal(variable.InstanceType, actualInstr.Variable!.InstanceType);
+                    Assert.Equal(variable.InstanceType, actualInstr.ResolvedVariable!.InstanceType);
                 }
             }
             else
             {
-                Assert.Null(actualInstr.Variable);
+                Assert.Null(actualInstr.ResolvedVariable);
             }
-            if (comparisonInstr.Function is IGMFunction function)
+            if (comparisonInstr.ResolvedFunction is IGMFunction function)
             {
-                Assert.Equal(function.Name.Content, actualInstr.Function!.Name.Content);
+                Assert.Equal(function.Name.Content, actualInstr.ResolvedFunction!.Name.Content);
             }
             else
             {
-                Assert.Null(actualInstr.Function);
+                Assert.Null(actualInstr.ResolvedFunction);
             }
         }
+        Assert.Equal(comparison.InstructionCount, generated.Instructions.Count);
     }
 
     /// <summary>

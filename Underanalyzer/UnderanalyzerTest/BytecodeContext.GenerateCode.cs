@@ -1108,6 +1108,17 @@ public class BytecodeContext_GenerateCode
             a = a.b[0];
             global.a = 0;
             global.a[0] = 0;
+            self.a.b = 1;
+            a.b = 1;
+            a = 1;
+            other.a[0] = 1;
+            global.a[0] = 1;
+            a[0].b = 1;
+            a = a[0].b;
+            a = a[0];
+            a[0].b[0]("a");
+            a[0].b.c("a");
+            a[0].b("a");
             """,
             """
             pushi.e 0
@@ -1145,8 +1156,7 @@ public class BytecodeContext_GenerateCode
             pop.v.v [array]self.a
             pushi.e 1
             conv.i.v
-            call.i @@This@@ 0
-            pushi.e -9
+            pushi.e -1
             pushi.e 0
             pop.v.v [array]self.a
             pushi.e 1
@@ -1162,10 +1172,9 @@ public class BytecodeContext_GenerateCode
             pushi.e 1
             add.i.v
             pop.i.v [array]self.a
-            call.i @@This@@ 0
-            pushi.e -9
+            pushi.e -1
             pushi.e 0
-            dup.i 5
+            dup.i 1
             push.v [array]self.a
             pushi.e 1
             add.i.v
@@ -1182,8 +1191,7 @@ public class BytecodeContext_GenerateCode
             pushi.e 0
             push.v [array]self.a
             pop.v.v self.a
-            call.i @@This@@ 0
-            pushi.e -9
+            pushi.e -1
             pushi.e 0
             push.v [array]self.a
             pop.v.v self.a
@@ -1199,6 +1207,75 @@ public class BytecodeContext_GenerateCode
             pushi.e -5
             pushi.e 0
             pop.v.v [array]self.a
+            pushi.e 1
+            push.v self.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e 1
+            push.v self.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e 1
+            pop.v.i self.a
+            pushi.e 1
+            conv.i.v
+            pushi.e -2
+            pushi.e 0
+            pop.v.v [array]self.a
+            pushi.e 1
+            conv.i.v
+            pushi.e -5
+            pushi.e 0
+            pop.v.v [array]self.a
+            pushi.e 1
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            push.v [stacktop]self.b
+            pop.v.v self.a
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pop.v.v self.a
+            push.s "a"
+            conv.s.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            pushi.e 0
+            push.v [array]self.b
+            dup.v 0
+            callv.v 1
+            popz.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            push.v [stacktop]self.b
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.c
+            callv.v 1
+            popz.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.b
+            callv.v 1
+            popz.v
             """
         );
     }
@@ -1233,6 +1310,17 @@ public class BytecodeContext_GenerateCode
             a = a.b[0];
             global.a = 0;
             global.a[0] = 0;
+            self.a.b = 1;
+            a.b = 1;
+            a = 1;
+            other.a[0] = 1;
+            global.a[0] = 1;
+            a[0].b = 1;
+            a = a[0].b;
+            a = a[0];
+            a[0].b[0]("a");
+            a[0].b.c("a");
+            a[0].b("a");
             """,
             """
             pushi.e 0
@@ -1325,6 +1413,77 @@ public class BytecodeContext_GenerateCode
             pushi.e -9
             pushi.e 0
             pop.v.v [array]self.a
+            pushi.e 1
+            push.v self.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e 1
+            push.v builtin.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e 1
+            pop.v.i builtin.a
+            pushi.e 1
+            conv.i.v
+            call.i @@Other@@ 0
+            pushi.e -9
+            pushi.e 0
+            pop.v.v [array]self.a
+            pushi.e 1
+            conv.i.v
+            call.i @@Global@@ 0
+            pushi.e -9
+            pushi.e 0
+            pop.v.v [array]self.a
+            pushi.e 1
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            pop.v.i [stacktop]self.b
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            push.v [stacktop]self.b
+            pop.v.v builtin.a
+            pushi.e -6
+            pushi.e 0
+            push.v [array]self.a
+            pop.v.v builtin.a
+            push.s "a"
+            conv.s.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            pushi.e 0
+            push.v [array]self.b
+            dup.v 0
+            callv.v 1
+            popz.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            pushi.e -9
+            push.v [stacktop]self.b
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.c
+            callv.v 1
+            popz.v
+            pushi.e -1
+            pushi.e 0
+            push.v [array]self.a
+            push.s "a"
+            conv.s.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.b
+            callv.v 1
+            popz.v
             """,
             false,
             gameContext
@@ -1338,7 +1497,8 @@ public class BytecodeContext_GenerateCode
         {
             UsingAssetReferences = true,
             UsingSelfToBuiltin = true,
-            UsingNewFunctionVariables = true
+            UsingNewFunctionVariables = true,
+            UsingFunctionScriptReferences = true
         };
         gameContext.DefineMockAsset(AssetType.Script, 124, "AnotherFunction");
         gameContext.DefineMockAsset(AssetType.Script, 125, "global_func_AnotherFunction");
@@ -1364,13 +1524,13 @@ public class BytecodeContext_GenerateCode
             }
             """,
             """
-            push.i [function]ExampleFunction
-            pop.v.i builtin.test
+            pushref.i ExampleFunction
+            pop.v.v builtin.test
             push.i [function]script_execute
             pop.v.i builtin.test2
-            pushref.i 1 Script
+            pushref.i global_func_LocalFunction
             pop.v.v builtin.test3
-            pushref.i 125 Script
+            pushref.i global_func_AnotherFunction
             pop.v.v builtin.test4
             push.i [function]ExampleFunction
             conv.i.v
@@ -1429,7 +1589,8 @@ public class BytecodeContext_GenerateCode
             UsingAssetReferences = true,
             UsingSelfToBuiltin = true,
             UsingNewFunctionVariables = true,
-            UsingObjectFunctionForesight = true
+            UsingObjectFunctionForesight = true,
+            UsingFunctionScriptReferences = true
         };
         gameContext.DefineMockAsset(AssetType.Script, 124, "AnotherFunction");
         gameContext.DefineMockAsset(AssetType.Script, 125, "global_func_AnotherFunction");
@@ -1455,13 +1616,106 @@ public class BytecodeContext_GenerateCode
             }
             """,
             """
-            push.i [function]ExampleFunction
-            pop.v.i builtin.test
+            pushref.i ExampleFunction
+            pop.v.v builtin.test
             push.i [function]script_execute
             pop.v.i builtin.test2
             push.i [function]regular_func_LocalFunction
             pop.v.i builtin.test3
-            pushref.i 125 Script
+            pushref.i global_func_AnotherFunction
+            pop.v.v builtin.test4
+            push.i [function]ExampleFunction
+            conv.i.v
+            call.i static_get 1
+            pushi.e -9
+            dup.i 4
+            push.v [stacktop]self.a
+            pushi.e 1
+            add.i.v
+            pop.i.v [stacktop]self.a
+            push.i [function]regular_func_LocalFunction
+            conv.i.v
+            call.i static_get 1
+            pushi.e -9
+            dup.i 4
+            push.v [stacktop]self.a
+            pushi.e 1
+            add.i.v
+            pop.i.v [stacktop]self.a
+            push.i [function]global_func_AnotherFunction
+            conv.i.v
+            call.i static_get 1
+            pushi.e -9
+            dup.i 4
+            push.v [stacktop]self.a
+            pushi.e 1
+            add.i.v
+            pop.i.v [stacktop]self.a
+            b [2]
+
+            > regular_func_LocalFunction (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]regular_func_LocalFunction
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.LocalFunction
+            popz.v
+            """,
+            false,
+            gameContext
+        );
+    }
+
+    [Fact]
+    public void TestFunctionReferencesRegularExtraModern()
+    {
+        Underanalyzer.Mock.GameContextMock gameContext = new()
+        {
+            UsingAssetReferences = true,
+            UsingSelfToBuiltin = true,
+            UsingNewFunctionVariables = true,
+            UsingObjectFunctionForesight = true,
+            UsingFunctionScriptReferences = true,
+            UsingNewFunctionResolution = true
+        };
+        gameContext.DefineMockAsset(AssetType.Script, 124, "AnotherFunction");
+        gameContext.DefineMockAsset(AssetType.Script, 125, "global_func_AnotherFunction");
+        gameContext.DefineMockAsset(AssetType.Script, 123, "ExampleFunction");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContext.GlobalFunctions)
+            .DefineFunction("ExampleFunction", new Underanalyzer.Mock.GMFunction("ExampleFunction"));
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContext.GlobalFunctions)
+            .DefineFunction("AnotherFunction", new Underanalyzer.Mock.GMFunction("global_func_AnotherFunction"));
+        ((Underanalyzer.Mock.BuiltinsMock)gameContext.Builtins).BuiltinFunctions["script_execute"] =
+            new("script_execute", 0, int.MaxValue);
+        TestUtil.AssertBytecode(
+            """
+            test = ExampleFunction;
+            test2 = script_execute;
+            test3 = LocalFunction;
+            test4 = AnotherFunction;
+            ExampleFunction.a += 1;
+            LocalFunction.a += 1;
+            AnotherFunction.a += 1;
+            
+            function LocalFunction()
+            {
+            }
+            """,
+            """
+            pushref.i ExampleFunction
+            pop.v.v builtin.test
+            push.i [function]script_execute
+            pop.v.i builtin.test2
+            pushref.i regular_func_LocalFunction
+            pop.v.v builtin.test3
+            pushref.i global_func_AnotherFunction
             pop.v.v builtin.test4
             push.i [function]ExampleFunction
             conv.i.v
@@ -4131,6 +4385,1958 @@ public class BytecodeContext_GenerateCode
                 UsingSelfToBuiltin = true,
                 UsingNewFunctionVariables = true,
                 UsingConstructorSetStatic = true
+            }
+        );
+    }
+
+    [Fact]
+    public void TestNonBuiltinDefaultArguments()
+    {
+        TestUtil.AssertBytecode(
+            """
+            function test_func(arg0 = 123, arg1 = 456, arg2)
+            {
+            }
+            """,
+            """
+            b [6]
+
+            > global_func_test_func (locals=0, args=3)
+            :[1]
+            push.v arg.argument0
+            pushbltn.v builtin.undefined
+            cmp.v.v EQ
+            bf [3]
+
+            :[2]
+            pushi.e 123
+            pop.v.i arg.argument0
+
+            :[3]
+            push.v arg.argument1
+            pushbltn.v builtin.undefined
+            cmp.v.v EQ
+            bf [5]
+
+            :[4]
+            pushi.e 456
+            pop.v.i arg.argument1
+
+            :[5]
+            exit.i
+
+            :[6]
+            push.i [function]global_func_test_func
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.test_func
+            popz.v
+            """,
+            true,
+            new Underanalyzer.Mock.GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingConstructorSetStatic = false,
+                UsingBuiltinDefaultArguments = false
+            }
+        );
+    }
+
+    [Fact]
+    public void TestBuiltinDefaultArguments()
+    {
+        TestUtil.AssertBytecode(
+            """
+            function test_func(arg0 = 123, arg1 = 456, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16 = 789)
+            {
+            }
+            """,
+            """
+            b [8]
+
+            > global_func_test_func (locals=0, args=17)
+            :[1]
+            pushbltn.v builtin.argument0
+            pushbltn.v builtin.undefined
+            cmp.v.v EQ
+            bf [3]
+
+            :[2]
+            pushi.e 123
+            pop.v.i builtin.argument0
+
+            :[3]
+            pushbltn.v builtin.argument1
+            pushbltn.v builtin.undefined
+            cmp.v.v EQ
+            bf [5]
+
+            :[4]
+            pushi.e 456
+            pop.v.i builtin.argument1
+
+            :[5]
+            pushi.e -15
+            pushi.e 16
+            push.v [array]self.argument
+            pushbltn.v builtin.undefined
+            cmp.v.v EQ
+            bf [7]
+
+            :[6]
+            pushi.e 789
+            conv.i.v
+            pushi.e -15
+            pushi.e 16
+            pop.v.v [array]self.argument
+
+            :[7]
+            exit.i
+
+            :[8]
+            push.i [function]global_func_test_func
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.test_func
+            popz.v
+            """,
+            true,
+            new Underanalyzer.Mock.GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingConstructorSetStatic = true,
+                UsingBuiltinDefaultArguments = true
+            }
+        );
+    }
+
+    [Fact]
+    public void TestFunctionScriptReferencesGlobalScript()
+    {
+        Underanalyzer.Mock.GameContextMock gameContextMock = new()
+        {
+            UsingSelfToBuiltin = true,
+            UsingNewFunctionVariables = true,
+            UsingConstructorSetStatic = true,
+            UsingFunctionScriptReferences = true,
+            UsingObjectFunctionForesight = false
+        };
+        gameContextMock.DefineMockAsset(AssetType.Script, 123, "DifferentScript");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript", new Underanalyzer.Mock.GMFunction("DifferentScript"));
+        gameContextMock.DefineMockAsset(AssetType.Script, 124, "global_func_DifferentScript_SubFunction");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript_SubFunction", new Underanalyzer.Mock.GMFunction("global_func_DifferentScript_SubFunction"));
+        TestUtil.AssertBytecode(
+            """
+            a = SameScript;
+            b = new SameScript();
+            SameScript();
+
+            function SameScript()
+            {
+            }
+
+            a = SameScript;
+            b = new SameScript();
+            SameScript();
+            c(new SameScript());
+            c.d(new SameScript());
+            c.d([new SameScript()]);
+            c.d(script_execute(new SameScript()));
+            c.d(function()
+            {
+                e = new SameScript();
+            });
+            script_execute(new SameScript());
+            c(SameScript);
+            c.d(SameScript);
+            c.d([SameScript]);
+            c.d(script_execute(SameScript));
+            c.d(function()
+            {
+                e = SameScript;
+            });
+            script_execute(SameScript);
+            a = DifferentScript;
+            b = new DifferentScript();
+            DifferentScript();
+            c(new DifferentScript());
+            c.d(new DifferentScript());
+            c.d([new DifferentScript()]);
+            c.d(script_execute(new DifferentScript()));
+            c.d(function()
+            {
+                e = new DifferentScript();
+            });
+            script_execute(new DifferentScript());
+            c(DifferentScript);
+            c.d(DifferentScript);
+            c.d([DifferentScript]);
+            c.d(script_execute(DifferentScript));
+            c.d(function()
+            {
+                e = DifferentScript;
+            });
+            script_execute(DifferentScript);
+            a = DifferentScript_SubFunction;
+            b = new DifferentScript_SubFunction();
+            DifferentScript_SubFunction();
+            c(DifferentScript_SubFunction);
+            c.d(DifferentScript_SubFunction);
+            c.d([DifferentScript_SubFunction]);
+            c.d(script_execute(DifferentScript_SubFunction));
+            c.d(function()
+            {
+                e = DifferentScript_SubFunction;
+            });
+            script_execute(DifferentScript_SubFunction);
+            a = string;
+            """,
+            """
+            pushref.i global_func_SameScript
+            pop.v.v builtin.a
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_SameScript 0
+            popz.v
+            b [2]
+
+            > global_func_SameScript (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]global_func_SameScript
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.SameScript
+            popz.v
+            pushref.i global_func_SameScript
+            pop.v.v builtin.a
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_SameScript 0
+            popz.v
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [4]
+
+            > anon_func_1 (locals=0, args=0)
+            :[3]
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[4]
+            push.i [function]anon_func_1
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_SameScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [6]
+
+            > anon_func_2 (locals=0, args=0)
+            :[5]
+            pushref.i global_func_SameScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[6]
+            push.i [function]anon_func_2
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_SameScript
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            pop.v.v builtin.a
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i DifferentScript 0
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [8]
+
+            > anon_func_3 (locals=0, args=0)
+            :[7]
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[8]
+            push.i [function]anon_func_3
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [10]
+
+            > anon_func_4 (locals=0, args=0)
+            :[9]
+            pushref.i DifferentScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[10]
+            push.i [function]anon_func_4
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.a
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_DifferentScript_SubFunction 0
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [12]
+
+            > anon_func_5 (locals=0, args=0)
+            :[11]
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.e
+            exit.i
+
+            :[12]
+            push.i [function]anon_func_5
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            popz.v
+            push.i [function]string
+            pop.v.i builtin.a
+            """,
+            true,
+            gameContextMock
+        );
+    }
+
+    [Fact]
+    public void TestFunctionScriptReferencesObjectEvent()
+    {
+        Underanalyzer.Mock.GameContextMock gameContextMock = new()
+        {
+            UsingSelfToBuiltin = true,
+            UsingNewFunctionVariables = true,
+            UsingConstructorSetStatic = true,
+            UsingFunctionScriptReferences = true,
+            UsingObjectFunctionForesight = false
+        };
+        gameContextMock.DefineMockAsset(AssetType.Script, 123, "DifferentScript");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript", new Underanalyzer.Mock.GMFunction("DifferentScript"));
+        gameContextMock.DefineMockAsset(AssetType.Script, 124, "global_func_DifferentScript_SubFunction");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript_SubFunction", new Underanalyzer.Mock.GMFunction("global_func_DifferentScript_SubFunction"));
+        TestUtil.AssertBytecode(
+            """
+            a = SameEvent;
+            b = new SameEvent();
+            SameEvent();
+
+            function SameEvent()
+            {
+            }
+
+            a = SameEvent;
+            b = new SameEvent();
+            SameEvent();
+            c(new SameEvent());
+            c.d(new SameEvent());
+            c.d([new SameEvent()]);
+            c.d(script_execute(new SameEvent()));
+            c.d(function()
+            {
+                e = new SameEvent();
+            });
+            script_execute(new SameEvent());
+            c(SameEvent);
+            c.d(SameEvent);
+            c.d([SameEvent]);
+            c.d(script_execute(SameEvent));
+            c.d(function()
+            {
+                e = SameEvent;
+            });
+            script_execute(SameEvent);
+            a = DifferentScript;
+            b = new DifferentScript();
+            DifferentScript();
+            c(new DifferentScript());
+            c.d(new DifferentScript());
+            c.d([new DifferentScript()]);
+            c.d(script_execute(new DifferentScript()));
+            c.d(function()
+            {
+                e = new DifferentScript();
+            });
+            script_execute(new DifferentScript());
+            c(DifferentScript);
+            c.d(DifferentScript);
+            c.d([DifferentScript]);
+            c.d(script_execute(DifferentScript));
+            c.d(function()
+            {
+                e = DifferentScript;
+            });
+            script_execute(DifferentScript);
+            a = DifferentScript_SubFunction;
+            b = new DifferentScript_SubFunction();
+            DifferentScript_SubFunction();
+            c(DifferentScript_SubFunction);
+            c.d(DifferentScript_SubFunction);
+            c.d([DifferentScript_SubFunction]);
+            c.d(script_execute(DifferentScript_SubFunction));
+            c.d(function()
+            {
+                e = DifferentScript_SubFunction;
+            });
+            script_execute(DifferentScript_SubFunction);
+            a = string;
+            """,
+            """
+            push.v builtin.SameEvent
+            pop.v.v builtin.a
+            push.v builtin.SameEvent
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i @@This@@ 0
+            push.v builtin.SameEvent
+            callv.v 0
+            popz.v
+            b [2]
+
+            > regular_func_SameEvent (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.SameEvent
+            popz.v
+            push.i [function]regular_func_SameEvent
+            pop.v.i builtin.a
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i regular_func_SameEvent 0
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [4]
+
+            > anon_func_1 (locals=0, args=0)
+            :[3]
+            push.v builtin.SameEvent
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[4]
+            push.i [function]anon_func_1
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [6]
+
+            > anon_func_2 (locals=0, args=0)
+            :[5]
+            push.v builtin.SameEvent
+            pop.v.v builtin.e
+            exit.i
+
+            :[6]
+            push.i [function]anon_func_2
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            pop.v.v builtin.a
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i DifferentScript 0
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [8]
+
+            > anon_func_3 (locals=0, args=0)
+            :[7]
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[8]
+            push.i [function]anon_func_3
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [10]
+
+            > anon_func_4 (locals=0, args=0)
+            :[9]
+            pushref.i DifferentScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[10]
+            push.i [function]anon_func_4
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.a
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_DifferentScript_SubFunction 0
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [12]
+
+            > anon_func_5 (locals=0, args=0)
+            :[11]
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.e
+            exit.i
+
+            :[12]
+            push.i [function]anon_func_5
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            popz.v
+            push.i [function]string
+            pop.v.i builtin.a
+            """,
+            false,
+            gameContextMock
+        );
+    }
+
+    [Fact]
+    public void TestFunctionScriptReferencesNewGlobalScript()
+    {
+        Underanalyzer.Mock.GameContextMock gameContextMock = new()
+        {
+            UsingSelfToBuiltin = true,
+            UsingNewFunctionVariables = true,
+            UsingConstructorSetStatic = true,
+            UsingFunctionScriptReferences = true,
+            UsingObjectFunctionForesight = true,
+            UsingNewFunctionResolution = true
+        };
+        gameContextMock.DefineMockAsset(AssetType.Script, 123, "DifferentScript");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript", new Underanalyzer.Mock.GMFunction("DifferentScript"));
+        gameContextMock.DefineMockAsset(AssetType.Script, 124, "global_func_DifferentScript_SubFunction");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript_SubFunction", new Underanalyzer.Mock.GMFunction("global_func_DifferentScript_SubFunction"));
+        TestUtil.AssertBytecode(
+            """
+            a = SameScript;
+            b = new SameScript();
+            SameScript();
+
+            function SameScript()
+            {
+            }
+
+            a = SameScript;
+            b = new SameScript();
+            SameScript();
+            c(new SameScript());
+            c.d(new SameScript());
+            c.d([new SameScript()]);
+            c.d(script_execute(new SameScript()));
+            c.d(function()
+            {
+                e = new SameScript();
+            });
+            script_execute(new SameScript());
+            c(SameScript);
+            c.d(SameScript);
+            c.d([SameScript]);
+            c.d(script_execute(SameScript));
+            c.d(function()
+            {
+                e = SameScript;
+            });
+            script_execute(SameScript);
+            a = DifferentScript;
+            b = new DifferentScript();
+            DifferentScript();
+            c(new DifferentScript());
+            c.d(new DifferentScript());
+            c.d([new DifferentScript()]);
+            c.d(script_execute(new DifferentScript()));
+            c.d(function()
+            {
+                e = new DifferentScript();
+            });
+            script_execute(new DifferentScript());
+            c(DifferentScript);
+            c.d(DifferentScript);
+            c.d([DifferentScript]);
+            c.d(script_execute(DifferentScript));
+            c.d(function()
+            {
+                e = DifferentScript;
+            });
+            script_execute(DifferentScript);
+            a = DifferentScript_SubFunction;
+            b = new DifferentScript_SubFunction();
+            DifferentScript_SubFunction();
+            c(DifferentScript_SubFunction);
+            c.d(DifferentScript_SubFunction);
+            c.d([DifferentScript_SubFunction]);
+            c.d(script_execute(DifferentScript_SubFunction));
+            c.d(function()
+            {
+                e = DifferentScript_SubFunction;
+            });
+            script_execute(DifferentScript_SubFunction);
+            a = string;
+            """,
+            """
+            pushref.i global_func_SameScript
+            pop.v.v builtin.a
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_SameScript 0
+            popz.v
+            b [2]
+
+            > global_func_SameScript (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]global_func_SameScript
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.SameScript
+            popz.v
+            pushref.i global_func_SameScript
+            pop.v.v builtin.a
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_SameScript 0
+            popz.v
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [4]
+
+            > anon_func_1 (locals=0, args=0)
+            :[3]
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[4]
+            push.i [function]anon_func_1
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_SameScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]global_func_SameScript
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [6]
+
+            > anon_func_2 (locals=0, args=0)
+            :[5]
+            pushref.i global_func_SameScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[6]
+            push.i [function]anon_func_2
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_SameScript
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            pop.v.v builtin.a
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i DifferentScript 0
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [8]
+
+            > anon_func_3 (locals=0, args=0)
+            :[7]
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[8]
+            push.i [function]anon_func_3
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [10]
+
+            > anon_func_4 (locals=0, args=0)
+            :[9]
+            pushref.i DifferentScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[10]
+            push.i [function]anon_func_4
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.a
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_DifferentScript_SubFunction 0
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [12]
+
+            > anon_func_5 (locals=0, args=0)
+            :[11]
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.e
+            exit.i
+
+            :[12]
+            push.i [function]anon_func_5
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            popz.v
+            push.i [function]string
+            pop.v.i builtin.a
+            """,
+            true,
+            gameContextMock
+        );
+    }
+
+    [Fact]
+    public void TestFunctionScriptReferencesNewObjectEvent()
+    {
+        Underanalyzer.Mock.GameContextMock gameContextMock = new()
+        {
+            UsingSelfToBuiltin = true,
+            UsingNewFunctionVariables = true,
+            UsingConstructorSetStatic = true,
+            UsingFunctionScriptReferences = true,
+            UsingObjectFunctionForesight = true,
+            UsingNewFunctionResolution = true
+        };
+        gameContextMock.DefineMockAsset(AssetType.Script, 123, "DifferentScript");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript", new Underanalyzer.Mock.GMFunction("DifferentScript"));
+        gameContextMock.DefineMockAsset(AssetType.Script, 124, "global_func_DifferentScript_SubFunction");
+        ((Underanalyzer.Decompiler.GlobalFunctions)gameContextMock.GlobalFunctions).
+            DefineFunction("DifferentScript_SubFunction", new Underanalyzer.Mock.GMFunction("global_func_DifferentScript_SubFunction"));
+        TestUtil.AssertBytecode(
+            """
+            a = SameEvent;
+            b = new SameEvent();
+            SameEvent();
+            
+            function SameEvent()
+            {
+            }
+            
+            a = SameEvent;
+            b = new SameEvent();
+            SameEvent();
+            c(new SameEvent());
+            c.d(new SameEvent());
+            c.d([new SameEvent()]);
+            c.d(script_execute(new SameEvent()));
+            c.d(function()
+            {
+                e = new SameEvent();
+            });
+            script_execute(new SameEvent());
+            c(SameEvent);
+            c.d(SameEvent);
+            c.d([SameEvent]);
+            c.d(script_execute(SameEvent));
+            c.d(function()
+            {
+                e = SameEvent;
+            });
+            script_execute(SameEvent);
+            a = DifferentScript;
+            b = new DifferentScript();
+            DifferentScript();
+            c(new DifferentScript());
+            c.d(new DifferentScript());
+            c.d([new DifferentScript()]);
+            c.d(script_execute(new DifferentScript()));
+            c.d(function()
+            {
+                e = new DifferentScript();
+            });
+            script_execute(new DifferentScript());
+            c(DifferentScript);
+            c.d(DifferentScript);
+            c.d([DifferentScript]);
+            c.d(script_execute(DifferentScript));
+            c.d(function()
+            {
+                e = DifferentScript;
+            });
+            script_execute(DifferentScript);
+            a = DifferentScript_SubFunction;
+            b = new DifferentScript_SubFunction();
+            DifferentScript_SubFunction();
+            c(DifferentScript_SubFunction);
+            c.d(DifferentScript_SubFunction);
+            c.d([DifferentScript_SubFunction]);
+            c.d(script_execute(DifferentScript_SubFunction));
+            c.d(function()
+            {
+                e = DifferentScript_SubFunction;
+            });
+            script_execute(DifferentScript_SubFunction);
+            a = string;
+            """,
+            """
+            pushref.i regular_func_SameEvent
+            pop.v.v builtin.a
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i regular_func_SameEvent 0
+            popz.v
+            b [2]
+
+            > regular_func_SameEvent (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.SameEvent
+            popz.v
+            pushref.i regular_func_SameEvent
+            pop.v.v builtin.a
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i regular_func_SameEvent 0
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [4]
+
+            > anon_func_1 (locals=0, args=0)
+            :[3]
+            pushref.i regular_func_SameEvent
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[4]
+            push.i [function]anon_func_1
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i regular_func_SameEvent
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]regular_func_SameEvent
+            conv.i.v
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [6]
+
+            > anon_func_2 (locals=0, args=0)
+            :[5]
+            pushref.i regular_func_SameEvent
+            pop.v.v builtin.e
+            exit.i
+
+            :[6]
+            push.i [function]anon_func_2
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i regular_func_SameEvent
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            pop.v.v builtin.a
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i DifferentScript 0
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            push.i [function]DifferentScript
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [8]
+
+            > anon_func_3 (locals=0, args=0)
+            :[7]
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.e
+            exit.i
+
+            :[8]
+            push.i [function]anon_func_3
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@NewGMLObject@@ 1
+            call.i script_execute 1
+            popz.v
+            pushref.i DifferentScript
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i DifferentScript
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [10]
+
+            > anon_func_4 (locals=0, args=0)
+            :[9]
+            pushref.i DifferentScript
+            pop.v.v builtin.e
+            exit.i
+
+            :[10]
+            push.i [function]anon_func_4
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i DifferentScript
+            call.i script_execute 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.a
+            push.i [function]global_func_DifferentScript_SubFunction
+            conv.i.v
+            call.i @@NewGMLObject@@ 1
+            pop.v.v builtin.b
+            call.i global_func_DifferentScript_SubFunction 0
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@This@@ 0
+            push.v builtin.c
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i @@NewGMLArray@@ 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            push.v builtin.c
+            b [12]
+
+            > anon_func_5 (locals=0, args=0)
+            :[11]
+            pushref.i global_func_DifferentScript_SubFunction
+            pop.v.v builtin.e
+            exit.i
+
+            :[12]
+            push.i [function]anon_func_5
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 1 1
+            dup.v 0
+            push.v stacktop.d
+            callv.v 1
+            popz.v
+            pushref.i global_func_DifferentScript_SubFunction
+            call.i script_execute 1
+            popz.v
+            push.i [function]string
+            pop.v.i builtin.a
+            """,
+            false,
+            gameContextMock
+        );
+    }
+
+    [Fact]
+    public void TestOldFunctionResolution()
+    {
+        TestUtil.AssertBytecode(
+            """
+            function event_function()
+            {
+            }
+
+            function other_event_function()
+            {
+                event_function();
+            }
+
+            event_function();
+            """,
+            """
+            b [2]
+
+            > regular_func_event_function (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]regular_func_event_function
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.event_function
+            popz.v
+            b [4]
+
+            > regular_func_other_event_function (locals=0, args=0)
+            :[3]
+            call.i @@This@@ 0
+            push.v builtin.event_function
+            callv.v 0
+            popz.v
+            exit.i
+
+            :[4]
+            push.i [function]regular_func_other_event_function
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.other_event_function
+            popz.v
+            call.i regular_func_event_function 0
+            popz.v
+            """,
+            false,
+            new Underanalyzer.Mock.GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingFunctionScriptReferences = true,
+                UsingNewFunctionResolution = false
+            }
+        );
+    }
+
+    [Fact]
+    public void TestNewFunctionResolution()
+    {
+        TestUtil.AssertBytecode(
+            """
+            function event_function()
+            {
+            }
+
+            function other_event_function()
+            {
+                event_function();
+            }
+
+            event_function();
+            """,
+            """
+            b [2]
+
+            > regular_func_event_function (locals=0, args=0)
+            :[1]
+            exit.i
+
+            :[2]
+            push.i [function]regular_func_event_function
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.event_function
+            popz.v
+            b [4]
+
+            > regular_func_other_event_function (locals=0, args=0)
+            :[3]
+            call.i @@This@@ 0
+            pushref.i regular_func_event_function
+            callv.v 0
+            popz.v
+            exit.i
+
+            :[4]
+            push.i [function]regular_func_other_event_function
+            conv.i.v
+            pushi.e -1
+            conv.i.v
+            call.i method 2
+            dup.v 0
+            pushi.e -1
+            pop.v.v [stacktop]self.other_event_function
+            popz.v
+            call.i regular_func_event_function 0
+            popz.v
+            """,
+            false,
+            new Underanalyzer.Mock.GameContextMock()
+            {
+                UsingSelfToBuiltin = true,
+                UsingNewFunctionVariables = true,
+                UsingFunctionScriptReferences = true,
+                UsingNewFunctionResolution = true
             }
         );
     }

@@ -353,7 +353,7 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
                     case (int)InstanceType.Self:
                     case (int)InstanceType.Builtin:
                         if (ForceSelf || 
-                            (value == (int)InstanceType.Self && printer.Context.GameContext.UsingSelfToBuiltin) ||
+                            (value == (int)InstanceType.Self && ArrayIndices is null && printer.Context.GameContext.UsingSelfToBuiltin) ||
                             leftInstType is { FromBuiltinFunction: true } ||
                             printer.LocalVariableNames.Contains(Variable.Name.Content) ||
                             printer.TopFragmentContext!.NamedArguments.Contains(Variable.Name.Content))
@@ -507,15 +507,18 @@ public class VariableNode(IGMVariable variable, VariableType referenceType, IExp
     /// Returns the argument index this variable represents, or -1 if this is not an argument variable.
     /// </summary>
     /// <remarks>
-    /// Meant for named arguments, so this returns -1 for cases such as a direct argument0 or argument[0].
+    /// If <paramref name="onlyNamedArguments"/> is <see langword="true"/>, this returns -1 for cases such as a direct argument0 or argument[0].
     /// </remarks>
-    public int GetArgumentIndex(int maxArgumentArrayIndex)
+    public int GetArgumentIndex(int maxArgumentArrayIndex, bool onlyNamedArguments = true)
     {
-        // Check for argument instance type
-        if (Left is not (InstanceTypeNode { InstanceType: InstanceType.Argument } or 
-                         Int16Node { Value: (short)InstanceType.Argument } ))
+        // Check for argument instance type, if we only accept named arguments
+        if (onlyNamedArguments)
         {
-            return -1;
+            if (Left is not (InstanceTypeNode { InstanceType: InstanceType.Argument } or
+                             Int16Node { Value: (short)InstanceType.Argument }))
+            {
+                return -1;
+            }
         }
 
         // Check variable name and array accessor

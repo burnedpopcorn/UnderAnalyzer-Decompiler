@@ -79,6 +79,17 @@ public interface IGameContext
     public bool UsingRoomInstanceReferences { get; }
 
     /// <summary>
+    /// <see langword="true"/> if the game is using the <see cref="IGMInstruction.ExtendedOpcode.PushReference"/> instruction to reference global functions in most situations,
+    /// rather than a regular push.i instruction; <see langword="false"/> otherwise. This should be <see langword="true"/> for GameMaker 2024.2 and above.
+    /// </summary>
+    public bool UsingFunctionScriptReferences { get; }
+
+    /// <summary>
+    /// <see langword="true"/> if the game uses the new method of function resolution introduced in GammeMaker 2024.13; <see langword="false"/> otherwise.
+    /// </summary>
+    public bool UsingNewFunctionResolution { get; }
+
+    /// <summary>
     /// <see langword="true"/> if the game uses bytecode 14 or lower; <see langword="true"/> otherwise.
     /// </summary>
     public bool Bytecode14OrLower { get; }
@@ -174,6 +185,14 @@ public interface IGameContext
     /// Before GameMaker 2024.11, this is observed to be <see langword="false"/>. Afterwards, it is <see langword="true"/>.
     /// </remarks>
     public bool UsingBetterTryBreakContinue { get; }
+
+    /// <summary>
+    /// <see langword="true"/> if the compiler generates default argument assignments using "builtin" rather than "argument"; <see langword="false"/> otherwise.
+    /// </summary>
+    /// <remarks>
+    /// Before GameMaker 2024.11, this is observed to be <see langword="false"/>. Afterwards, it is <see langword="true"/>.
+    /// </remarks>
+    public bool UsingBuiltinDefaultArguments { get; }
 
     /// <summary>
     /// Interface for getting global functions.
