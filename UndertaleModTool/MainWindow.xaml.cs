@@ -226,7 +226,7 @@ namespace UndertaleModTool
             }
             OpenInTab(Highlighted);
 
-            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.8.1.1";
+            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.8.2.0";
 
             CanSave = false;
             CanSafelySave = false;
