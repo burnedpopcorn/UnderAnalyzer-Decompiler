@@ -3536,10 +3536,7 @@ result in loss of work.");
         {
             // do the thing
             if (Data != null)
-            {
-                CSTMPTENUM customptenumsfinder = new CSTMPTENUM();
-                customptenumsfinder.Show();
-            }
+                new CSTMPTENUM().Show();
             else
                 this.ShowWarning("No data.win was loaded\nLoad a data.win first");
         }
@@ -3547,46 +3544,30 @@ result in loss of work.");
         private void OpenVarDefinitionForm_Click(object sender, RoutedEventArgs e)
         {
             // Create a new instance of the VarDefinitionForm window
-            VarDefinitionForm varDefinitionWindow = new VarDefinitionForm();
-
-            // Show the new window
-            varDefinitionWindow.Show();
+            new VarDefinitionForm().Show();
         }
         // Open Var Defition Form Window, but in "Editing Mode"
         private void EditVarDefinitionForm_Click(object sender, RoutedEventArgs e)
         {
-            // Create a new instance of the VarDefinitionForm window
-            int editing = 1;                 //       Setting this to 1 enables "Editing Mode"
-            VarDefinitionForm varDefinitionWindow = new VarDefinitionForm(editing);
-
-            // Show the new window
-            varDefinitionWindow.Show();
+            // Setting this to 1 enables "Editing Mode"
+            new VarDefinitionForm(1).Show();
         }
         // Var Defition Form Window (FILLED)
         private void FilledVarDefinitionForm_Click(object sender, RoutedEventArgs e)
         {
+            // Failsafe just in case user is dumb
             if (Data == null)
-            {
-                // Failsafe just in case user is dumb
                 this.ShowWarning("No data.win was loaded\nLoad a data.win first");
-            }
-            else {
-
+            else
+            {
                 MessageBoxResult result = this.ShowQuestion("This will search for Every Varible and Function in the data.win\nIn order to allow you to add Variable Definitions to them\n\nTHIS WILL TAKE A WHILE\n\nProceed?");
 
                 if (result == MessageBoxResult.No)
-                {
                     return;
-                }
-                else if (result == MessageBoxResult.Yes)
-                {
-                    // Create a new instance of the VarDefinitionForm window
-                    int fill = 2;                 //       Setting this to 2 enables "Fill Mode"
-                    VarDefinitionForm varDefinitionWindow = new VarDefinitionForm(fill);
 
-                    // Show the new window
-                    varDefinitionWindow.Show();
-                }
+                // Setting this to 2 enables "Fill Mode"
+                else if (result == MessageBoxResult.Yes)
+                    new VarDefinitionForm(2).Show();
             }
         }
 
