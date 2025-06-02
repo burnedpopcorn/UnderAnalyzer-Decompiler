@@ -1735,6 +1735,7 @@ public bool CSTM_Enable = false;
 public List<string> CSTM = new List<string>();
 public int cpu_usage = 70;
 
+#region Main Window stuffs
 public class MainWindow : Window
 {
     public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
@@ -1767,9 +1768,9 @@ public class MainWindow : Window
 		
 		var mainPanel = new StackPanel { Margin = new Thickness(8) };
 		var tooltip = new ToolTip();
-		
-		// New Titlebar
-		var titleBar = new DockPanel
+
+        #region New Titlebar
+        var titleBar = new DockPanel
 		{
 			Height = 30,
 			Background = isDark ? darkgrey : lightgrey,
@@ -1798,8 +1799,8 @@ public class MainWindow : Window
 
 		closeButton.Click += (s, e) => this.Close();
 
-		// Enable window dragging via title bar
-		titleBar.MouseLeftButtonDown += (s, e) =>
+        // Enable window dragging via title bar
+        titleBar.MouseLeftButtonDown += (s, e) =>
 		{
 			if (e.ButtonState == MouseButtonState.Pressed)
 				DragMove();
@@ -1809,9 +1810,10 @@ public class MainWindow : Window
 		DockPanel.SetDock(closeButton, Dock.Right);
 		titleBar.Children.Add(closeButton);
 		mainPanel.Children.Insert(0, titleBar);
+        #endregion
 
-		// Back to sanity kinda
-		mainPanel.Children.Add(new TextBlock
+        // Back to sanity kinda
+        mainPanel.Children.Add(new TextBlock
 		{
 			Text = "Original Script by crystallizedsparkle\n          Improved by burnedpopcorn180",
 			Margin = new Thickness(0, 20, 0, 8)
@@ -1873,7 +1875,7 @@ public class MainWindow : Window
 
 		mainPanel.Children.Add(resourceGrid);
 		
-		// AssetPicker Shit
+		#region AssetPicker Shit
 		var centerContainer = new Grid
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -1989,9 +1991,10 @@ public class MainWindow : Window
 			CSTMLabel.Text = "";
 			CSTM.Clear();
 		};
+        #endregion
 
-		// Settings section
-		mainPanel.Children.Add(new TextBlock
+        // Settings section
+        mainPanel.Children.Add(new TextBlock
 		{
 			Text = "Decompiler Settings",
 			FontWeight = FontWeights.Bold,
@@ -2031,8 +2034,8 @@ public class MainWindow : Window
 
 		mainPanel.Children.Add(settingsGrid);
 
-		// CPU Controls
-		var cpuLabel = new Label
+        #region CPU Controls
+        var cpuLabel = new Label
 		{
 			Content = $"CPU Usage: {cpu_usage}%",
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -2066,9 +2069,10 @@ public class MainWindow : Window
 		cpuPanel.Children.Add(cpuLabel);
 		cpuPanel.Children.Add(cpuSlider);
 		mainPanel.Children.Add(cpuPanel);
+        #endregion
 
-		// OK Button
-		var OKBT = new Button
+        // OK Button
+        var OKBT = new Button
 		{
 			Content = Directory.Exists($"{scriptDir}") ? "Overwrite Dump" : "Start Dump",
 			Height = 48,
@@ -2133,7 +2137,8 @@ public class MainWindow : Window
 		};
 	}
 }
-
+#endregion
+#region Asset Picker stuffs
 public class AssetPickerWindow : Window
 {
     private TreeView treeView;
@@ -2160,6 +2165,7 @@ public class AssetPickerWindow : Window
         Background = isDark ? BGgrey : BasicWhite;
         Foreground = isDark ? BasicWhite : BasicBlack;
 
+        #region title bar
         var titleBar = new DockPanel
         {
             Height = 30,
@@ -2195,6 +2201,7 @@ public class AssetPickerWindow : Window
 
         var layout = new StackPanel();
         layout.Children.Add(titleBar);
+        #endregion
 
         var grid = new Grid
         {
@@ -2228,7 +2235,7 @@ public class AssetPickerWindow : Window
         Grid.SetColumn(treeView, 0);
         grid.Children.Add(treeView);
 
-        // Buttons -> and <-
+        #region Arrow Buttons
         var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
 
         var addButton = new Button 
@@ -2276,6 +2283,7 @@ public class AssetPickerWindow : Window
         Grid.SetRow(buttonPanel, 1);
         Grid.SetColumn(buttonPanel, 1);
         grid.Children.Add(buttonPanel);
+        #endregion
 
         // Search box for list
         searchListBox = new TextBox { Width = 200, Margin = new Thickness(0, 0, 0, 4) };
@@ -2396,15 +2404,19 @@ public class AssetPickerWindow : Window
         }
     }
 }
+#endregion
 
-// check dark mode lmao
+#region check dark mode lmao
 // hacky way because I don't know how else to determine it
 // and i want this to be somewhat compatible with base utmt
 bool isDarkEnabled = false;
 string UA_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UnderAnalyzer\\settings.json";
 string UTMT_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UndertaleModTool\\settings.json";
 
-if (File.Exists(UA_Settings))
+bool isUA_Decompiler = Path.GetDirectoryName(Environment.ProcessPath).Contains("UnderAnalyzer");//should detect UnderAnalyzer-Decompiler.exe
+bool isVanillaUTMT = Path.GetDirectoryName(Environment.ProcessPath).Contains("UndertaleModTool");//and UndertaleModTool.exe
+
+if (isUA_Decompiler && File.Exists(UA_Settings))
 {
 	string json = File.ReadAllText(UA_Settings);
     using JsonDocument doc = JsonDocument.Parse(json);
@@ -2412,7 +2424,7 @@ if (File.Exists(UA_Settings))
     if (doc.RootElement.TryGetProperty("EnableDarkMode", out JsonElement darkModeElement))
         isDarkEnabled = darkModeElement.GetBoolean();
 }
-else if (File.Exists(UTMT_Settings))
+else if (isVanillaUTMT && File.Exists(UTMT_Settings))
 {
 	string json = File.ReadAllText(UTMT_Settings);
     using JsonDocument doc = JsonDocument.Parse(json);
@@ -2422,12 +2434,13 @@ else if (File.Exists(UTMT_Settings))
 }
 else
 	isDarkEnabled = false;
+#endregion
 
 // open main window
 var window = new MainWindow(Data, scriptDir, isDarkEnabled);
 window.ShowDialog();
 
-// save values
+#region save values
 DUMP = window.DUMP;
 
 OBJT = window.OBJT;
@@ -2456,6 +2469,7 @@ cpu_usage = window.cpu_usage;
 
 CSTM_Enable = window.CSTM_Enable;
 CSTM = window.CSTM;
+#endregion
 
 // if exit
 if (!DUMP)
