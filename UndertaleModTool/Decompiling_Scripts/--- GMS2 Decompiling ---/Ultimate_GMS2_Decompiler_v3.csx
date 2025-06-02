@@ -1,5 +1,5 @@
 ﻿/*
-    Ultimate_GMS2_Decompiler_v2
+    Ultimate_GMS2_Decompiler_v3
         The Ultimate GameMaker Studio 2 Decompiler
 
     New Features by burnedpopcorn180
@@ -14,10 +14,10 @@
     and Bleeding Edge UTMT 0.7.0.0+
 
     List of New Features I added
-        - Replaced YAML Config with Windows Form GUI
+        - Replaced YAML Config with an Advanced GUI
         - Added ability to select individual assets to decompile
         - Added ability to decompile as a GameMaker Importable Package (YYMPS) rather than a full GameMaker Project
-        - Added High Quality Icon Extraction ability for Project and Windows Build Icon
+        - Added High Quality Icon Extraction for Project and Windows Build Icon
         - Made Progress Bar display Asset Name currently being decompiled
  */
 
@@ -38,7 +38,6 @@ using System.Drawing.Imaging;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 using NAudio.Vorbis;
@@ -49,6 +48,14 @@ using Underanalyzer.Decompiler.AST;
 using Underanalyzer.Decompiler.GameSpecific;
 using Underanalyzer.Decompiler.ControlFlow;
 using ImageMagick;
+
+// new ui
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using System.Windows.Shell;
+using System.Windows.Input;
 
 EnsureDataLoaded();
 
@@ -1721,651 +1728,736 @@ catch (Exception e)
 }
 #endregion
 
-#region UI (Runs before Program)
+#region UI (im so fucking sorry in advance)
 
-bool DUMP;
-bool OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND;
-// custom pick
-bool CSTM_Enable = false;
-List<string> CSTM = new List<string>();
-// New stuff
-bool LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
+public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
+public bool CSTM_Enable = false;
+public List<string> CSTM = new List<string>();
+public int cpu_usage = 70;
 
-var tooltip = new ToolTip();
-Form FORM = new Form()
+public class MainWindow : Window
 {
-    AutoSize = true,
-    Text = "Ultimate_GMS2_Decompiler_v2",
-    MaximizeBox = false,
-    MinimizeBox = false,
-    StartPosition = FormStartPosition.CenterScreen,
-    FormBorderStyle = FormBorderStyle.FixedDialog,
-};
-FORM.Controls.Add(new Label()
-{
-    Text = "Original Script by crystallizedsparkle\n          Improved by burnedpopcorn180",
-    AutoSize = true,
-    Location = new System.Drawing.Point(8, 8),
-});
+    public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
+	public int cpu_usage = 70;
+	public bool CSTM_Enable = false;
+	public List<string> CSTM = new List<string>();
+	
+	private AssetPickerWindow pickerWindow;
 
-#region Main Resource Checkboxes
-FORM.Controls.Add(new Label()
-{
-    Text = "Select Resources to Dump:",
-    AutoSize = true,
-    Location = new System.Drawing.Point(8, 72),
-    Font = new Font(Label.DefaultFont, FontStyle.Bold)
-});
+	public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
+	{
+		Title = "Ultimate_GMS2_Decompiler_v3";
+		// remove OS title bar
+		WindowStyle = WindowStyle.None;
+		AllowsTransparency = false;
+		ResizeMode = ResizeMode.NoResize;
+		SizeToContent = SizeToContent.WidthAndHeight;
+		WindowStartupLocation = WindowStartupLocation.CenterScreen;
+		
+		// Theme
+		var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+		var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
+		
+		var BasicWhite = System.Windows.Media.Brushes.White;
+		var BasicBlack = System.Windows.Media.Brushes.Black;
+		
+		Background = isDark ? BGgrey : BasicWhite;
+		Foreground = isDark ? BasicWhite : BasicBlack;
+		
+		var mainPanel = new StackPanel { Margin = new Thickness(8) };
+		var tooltip = new ToolTip();
+		
+		// New Titlebar
+		var titleBar = new DockPanel
+		{
+			Height = 30,
+			Background = isDark ? darkgrey : lightgrey,
+		};
 
-var _PRJT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 0), 100 + (32 * 0)),
-    Text = "Project File",
-    Checked = true,
-    Enabled = false
-};
-FORM.Controls.Add(_PRJT);
+		var titleText = new TextBlock
+		{
+			Text = Title,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(10, 0, 0, 0),
+			Foreground = Foreground,
+		};
 
-var _OBJT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 1), 100 + (32 * 0)),
-    Text = "Objects",
-    Checked = true
-};
-FORM.Controls.Add(_OBJT);
+		var closeButton = new Button
+		{
+			Content = "X",
+			Width = 40,
+			Height = 30,
+			Background = System.Windows.Media.Brushes.Transparent,
+			Foreground = Foreground,
+			BorderBrush = System.Windows.Media.Brushes.Transparent,
+			HorizontalAlignment = HorizontalAlignment.Right,
+			Padding = new Thickness(0),
+			FontWeight = FontWeights.Bold,
+		};
 
-var _ROOM = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 2), 100 + (32 * 0)),
-    Text = "Rooms",
-    Checked = true
-};
-FORM.Controls.Add(_ROOM);
+		closeButton.Click += (s, e) => this.Close();
 
-var _EXTN = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 3), 100 + (32 * 0)),
-    Text = "Extensions",
-    Checked = true
-};
-FORM.Controls.Add(_EXTN);
+		// Enable window dragging via title bar
+		titleBar.MouseLeftButtonDown += (s, e) =>
+		{
+			if (e.ButtonState == MouseButtonState.Pressed)
+				DragMove();
+		};
 
-var _SCPT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 4), 100 + (32 * 0)),
-    Text = "Scripts",
-    Checked = true
-};
-FORM.Controls.Add(_SCPT);
+		titleBar.Children.Add(titleText);
+		DockPanel.SetDock(closeButton, Dock.Right);
+		titleBar.Children.Add(closeButton);
+		mainPanel.Children.Insert(0, titleBar);
 
-var _TMLN = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 5), 100 + (32 * 0)),
-    Text = "Timelines",
-    Checked = true
-};
-FORM.Controls.Add(_TMLN);
+		// Back to sanity kinda
+		mainPanel.Children.Add(new TextBlock
+		{
+			Text = "Original Script by crystallizedsparkle\n          Improved by burnedpopcorn180",
+			Margin = new Thickness(0, 20, 0, 8)
+		});
 
-var _SOND = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 0), 100 + (32 * 1)),
-    Text = "Sounds",
-    Checked = true
-};
-FORM.Controls.Add(_SOND);
+		// Resources section
+		mainPanel.Children.Add(new TextBlock
+		{
+			Text = "Select Resources to Dump:",
+			FontWeight = FontWeights.Bold,
+			Margin = new Thickness(0, 8, 0, 4)
+		});
 
-var _SHDR = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 1), 100 + (32 * 1)),
-    Text = "Shaders",
-    Checked = true
-};
-FORM.Controls.Add(_SHDR);
+		var resourceGrid = new UniformGrid { Columns = 6 };
+		var _PRJT = CreateCheckBox(isDark, "Project File", true, false);
+		var _OBJT = CreateCheckBox(isDark, "Objects", true);
+		var _ROOM = CreateCheckBox(isDark, "Rooms", true);
+		var _EXTN = CreateCheckBox(isDark, "Extensions", true);
+		var _SCPT = CreateCheckBox(isDark, "Scripts", true);
+		var _TMLN = CreateCheckBox(isDark, "Timelines", true);
+		var _SOND = CreateCheckBox(isDark, "Sounds", true);
+		var _SHDR = CreateCheckBox(isDark, "Shaders", true);
+		var _PATH = CreateCheckBox(isDark, "Paths", true);
 
-var _PATH = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 2), 100 + (32 * 1)),
-    Text = "Paths",
-    Checked = true
-};
-FORM.Controls.Add(_PATH);
+		var _ACRV = CreateCheckBox(isDark, "Anim. Curves", true);
+		if (_data.AnimationCurves == null)
+		{
+			_ACRV.IsEnabled = false;
+			_ACRV.IsChecked = false;
+			_ACRV.Content = "ACRV (2.3+)";
+		}
 
-var _ACRV = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 3), 100 + (32 * 1)),
-    Text = "Anim. Curves",
-    Checked = true,
-};
-if (Data.AnimationCurves == null)
-{
-    _ACRV.Enabled = false;
-    _ACRV.Checked = false;
-    _ACRV.Text = "ACRV (2.3+)";
+		var _SEQN = CreateCheckBox(isDark, "Sequences", true);
+		if (_data.Sequences == null)
+		{
+			_SEQN.IsEnabled = false;
+			_SEQN.IsChecked = false;
+			_SEQN.Content = "SEQN (2.3+)";
+		}
+
+		var _FONT = CreateCheckBox(isDark, "Fonts", true);
+		var _SPRT = CreateCheckBox(isDark, "Sprites", true);
+		var _BGND = CreateCheckBox(isDark, "Tilesets", true);
+
+		resourceGrid.Children.Add(_PRJT);
+		resourceGrid.Children.Add(_OBJT);
+		resourceGrid.Children.Add(_ROOM);
+		resourceGrid.Children.Add(_EXTN);
+		resourceGrid.Children.Add(_SCPT);
+		resourceGrid.Children.Add(_TMLN);
+		resourceGrid.Children.Add(_SOND);
+		resourceGrid.Children.Add(_SHDR);
+		resourceGrid.Children.Add(_PATH);
+		resourceGrid.Children.Add(_ACRV);
+		resourceGrid.Children.Add(_SEQN);
+		resourceGrid.Children.Add(_FONT);
+		resourceGrid.Children.Add(_SPRT);
+		resourceGrid.Children.Add(_BGND);
+
+		mainPanel.Children.Add(resourceGrid);
+		
+		// AssetPicker Shit
+		var centerContainer = new Grid
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(0, 10, 0, 10)
+		};
+		centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+		centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+		// CheckBox + Label
+		var leftStack = new StackPanel
+		{
+			Orientation = Orientation.Vertical,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			Margin = new Thickness(0, 0, 16, 0) // space between left and right
+		};
+
+		var _CSTM = new CheckBox
+		{
+			Content = "Pick Assets",
+			IsChecked = false,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Margin = new Thickness(0, 0, 0, 4),
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack
+		};
+
+		var CSTMLabel = new TextBlock
+		{
+			Text = "",
+			Foreground = Foreground,
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+
+		leftStack.Children.Add(_CSTM);
+		leftStack.Children.Add(CSTMLabel);
+		Grid.SetColumn(leftStack, 0);
+		centerContainer.Children.Add(leftStack);
+
+		// Right side: Button
+		var pickAssetsButton = new Button
+		{
+			Content = "Pick Individual Assets...",
+			Width = 180,
+			Height = 30,
+			Margin = new Thickness(0),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			IsEnabled = false,
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack,
+			BorderBrush = isDark ? BGgrey : lightgrey
+		};
+
+		pickAssetsButton.Click += (s, e) =>
+		{
+			pickerWindow = new AssetPickerWindow(_data, isDark);
+			pickerWindow.Owner = this;
+			pickerWindow.ShowDialog();
+
+			// Save
+			CSTM = pickerWindow.CSTM.ToList();
+			CSTMLabel.Text = $"Assets Selected: {CSTM.Count}";
+		};
+
+		Grid.SetColumn(pickAssetsButton, 1);
+		centerContainer.Children.Add(pickAssetsButton);
+
+		// Add to main layout
+		mainPanel.Children.Add(centerContainer);
+
+		// bulk
+		var resourceCheckboxes = new List<CheckBox>
+		{
+			_OBJT, _ROOM, _EXTN, _SCPT, _TMLN, _SOND, _SHDR, _PATH,
+			_ACRV, _SEQN, _FONT, _SPRT, _BGND
+		};
+		// For Pick Assets CHECKBOX
+		_CSTM.Checked += (s, e) =>
+		{
+			// disable all resource checkboxes
+			resourceCheckboxes.ForEach(cb => { cb.IsChecked = false; cb.IsEnabled = false; });
+
+			// Enable Pick Assets button
+			pickAssetsButton.IsEnabled = true;
+			
+			// because why not
+			CSTMLabel.Text = $"Assets Selected: 0";
+		};
+
+		_CSTM.Unchecked += (s, e) =>
+		{
+			// enable all resource checkboxes
+			resourceCheckboxes.ForEach(cb => cb.IsEnabled = true);
+
+			// Disable the Pick Assets button
+			pickAssetsButton.IsEnabled = false;
+
+			// Handle specific checkboxes based on data availability
+			_SEQN.IsEnabled = _data.Sequences != null;
+			_SEQN.IsChecked = _data.Sequences != null;
+
+			_ACRV.IsEnabled = _data.AnimationCurves != null;
+			_ACRV.IsChecked = _data.AnimationCurves != null;
+
+			// Check all the enabled checkboxes
+			resourceCheckboxes.Where(cb => cb.IsEnabled).ToList().ForEach(cb => cb.IsChecked = true);
+			
+			// WIPE
+			CSTMLabel.Text = "";
+			CSTM.Clear();
+		};
+
+		// Settings section
+		mainPanel.Children.Add(new TextBlock
+		{
+			Text = "Decompiler Settings",
+			FontWeight = FontWeights.Bold,
+			Margin = new Thickness(0, 12, 0, 4)
+		});
+
+		var settingsGrid = new UniformGrid { Columns = 4 };
+
+		var _LOG = CreateCheckBox(isDark, "Log Assets");
+		_LOG.ToolTip = "Logs every Asset that gets decompiled\nMostly for Debugging, will clog up the logs if enabled.";
+
+		var _YYMPS = CreateCheckBox(isDark, "Export as YYMPS");
+		_YYMPS.ToolTip = "Exports decompiled resources\nas a GameMaker Importable Package.";
+
+		var _ENUM = CreateCheckBox(isDark, "Bitwise Enums");
+		_ENUM.ToolTip = "Turns Unknown Enums into Bitwise Operations.\n\nExample:\nUnknownEnum.Value_1 -> (1 << 0)";
+
+		var _ADDFILES = CreateCheckBox(isDark, "Add Datafiles", true);
+		_ADDFILES.ToolTip = "Attempts to automatically add included datafiles\nMight be inaccurate and might miss some files";
+
+		var _FIXA = CreateCheckBox(isDark, "Fix Audio");
+		_FIXA.ToolTip = "If a .wav file is labelled a .mp3, this setting will label it back to .wav.";
+
+		var _FIXT = CreateCheckBox(isDark, "Fix Tilesets");
+		_FIXT.ToolTip = "Fixes Tileset Separation, slower due to image processing.";
+
+		var _GENROOM = CreateCheckBox(isDark, "Generate Room Name");
+		_GENROOM.ToolTip = "Simulates GameMaker asset naming behavior.";
+
+		settingsGrid.Children.Add(_LOG);
+		settingsGrid.Children.Add(_YYMPS);
+		settingsGrid.Children.Add(_ENUM);
+		settingsGrid.Children.Add(_ADDFILES);
+		settingsGrid.Children.Add(_FIXA);
+		settingsGrid.Children.Add(_FIXT);
+		settingsGrid.Children.Add(_GENROOM);
+
+		mainPanel.Children.Add(settingsGrid);
+
+		// CPU Controls
+		var cpuLabel = new Label
+		{
+			Content = $"CPU Usage: {cpu_usage}%",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Margin = new Thickness(0, 10, 0, 0)
+		};
+
+		var cpuSlider = new Slider
+		{
+			Minimum = 1,
+			Maximum = 100,
+			Value = cpu_usage,
+			Width = 200,
+			Margin = new Thickness(0, 0, 0, 0),
+			HorizontalAlignment = HorizontalAlignment.Center,
+			
+			Foreground = isDark ? BasicWhite : BasicBlack
+		};
+
+		cpuSlider.ValueChanged += (s, e) =>
+		{
+			cpu_usage = (int)cpuSlider.Value;
+			cpuLabel.Content = $"CPU Usage: {cpu_usage}%";
+		};
+
+		var cpuPanel = new StackPanel
+		{
+			Orientation = Orientation.Vertical,
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+
+		cpuPanel.Children.Add(cpuLabel);
+		cpuPanel.Children.Add(cpuSlider);
+		mainPanel.Children.Add(cpuPanel);
+
+		// OK Button
+		var OKBT = new Button
+		{
+			Content = Directory.Exists($"{scriptDir}") ? "Overwrite Dump" : "Start Dump",
+			Height = 48,
+			Margin = new Thickness(0, 10, 0, 0),
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack,
+			BorderBrush = isDark ? BGgrey : lightgrey
+		};
+		OKBT.Click += (o, s) =>
+		{
+			DUMP = true;
+
+			OBJT = _OBJT.IsChecked == true;
+			ROOM = _ROOM.IsChecked == true;
+			EXTN = _EXTN.IsChecked == true;
+			SCPT = _SCPT.IsChecked == true;
+			TMLN = _TMLN.IsChecked == true;
+			SOND = _SOND.IsChecked == true;
+			SHDR = _SHDR.IsChecked == true;
+			PATH = _PATH.IsChecked == true;
+			ACRV = _ACRV.IsChecked == true;
+			SEQN = _SEQN.IsChecked == true;
+			FONT = _FONT.IsChecked == true;
+			SPRT = _SPRT.IsChecked == true;
+			BGND = _BGND.IsChecked == true;
+
+			LOG = _LOG.IsChecked == true;
+			YYMPS = _YYMPS.IsChecked == true;
+			ENUM = _ENUM.IsChecked == true;
+			ADDFILES = _ADDFILES.IsChecked == true;
+			FIXAUDIO = _FIXA.IsChecked == true;
+			FIXTILE = _FIXT.IsChecked == true;
+			GENROOM = _GENROOM.IsChecked == true;
+			
+			CSTM_Enable = _CSTM.IsChecked == true;
+
+			Close();
+		};
+
+		mainPanel.Children.Add(OKBT);
+
+		//no scroll bar
+		Content = mainPanel;
+	}
+
+	private CheckBox CreateCheckBox(bool isDark, string content, bool isChecked = false, bool? enabled = true)
+	{
+		var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+		var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+		var BasicWhite = System.Windows.Media.Brushes.White;
+		var BasicBlack = System.Windows.Media.Brushes.Black;
+		
+		return new CheckBox
+		{
+			Content = content,
+			IsChecked = isChecked,
+			IsEnabled = enabled ?? true,
+			Margin = new Thickness(4),
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack
+		};
+	}
 }
-FORM.Controls.Add(_ACRV);
 
-var _SEQN = new CheckBox()
+public class AssetPickerWindow : Window
 {
-    Location = new System.Drawing.Point(16 + (120 * 4), 100 + (32 * 1)),
-    Text = "Sequences",
-    Checked = true,
-};
-if (Data.Sequences == null)
-{
-    _SEQN.Enabled = false;
-    _SEQN.Checked = false;
-    _SEQN.Text = "SEQN (2.3+)";
-}
-FORM.Controls.Add(_SEQN);
+    private TreeView treeView;
+    private ListBox listBox;
+    private TextBox searchTreeBox, searchListBox;
+	public List<string> CSTM = new List<string>();
 
-var _FONT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 5), 100 + (32 * 1)),
-    Text = "Fonts",
-    Checked = true
-};
-FORM.Controls.Add(_FONT);
-
-var _SPRT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 0), 100 + (32 * 2)),
-    Text = "Sprites",
-    Checked = true
-};
-FORM.Controls.Add(_SPRT);
-
-var _BGND = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 1), 100 + (32 * 2)),
-    Text = "Tilesets",
-    Checked = true
-};
-FORM.Controls.Add(_BGND);
-#endregion
-#region Pick Assets Shit
-
-// custom
-
-var CSTMLabel = new Label()
-{
-    Text = "",// change when enabled
-    AutoSize = true,
-    Location = new System.Drawing.Point(16 + (120 * 3) + 160, 228 + (24 * 1)),
-};
-FORM.Controls.Add(CSTMLabel);
-
-var _CSTM = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 3), 228 + (24 * 0)),
-    Text = "Pick Assets",
-    Checked = false,
-    AutoSize = true
-};
-
-_CSTM.CheckedChanged += (o, e) =>
-{
-    if (_CSTM.Checked)
+    public AssetPickerWindow(UndertaleData Data, bool isDark)
     {
-        _OBJT.Checked = _ROOM.Checked = _EXTN.Checked = _SCPT.Checked = _TMLN.Checked = _SOND.Checked = _SHDR.Checked = _PATH.Checked = _ACRV.Checked = _SEQN.Checked = _FONT.Checked = _SPRT.Checked = _BGND.Checked = false;
-        _CMBT.Enabled = true;
+        Title = "Asset Picker";
+        WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.NoResize;
+        SizeToContent = SizeToContent.WidthAndHeight;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-        CSTMLabel.Text = $"Individual Assets Selected: {CSTM.Count()}";
-    }
-    else
-    {
-        _OBJT.Checked = _ROOM.Checked = _EXTN.Checked = _SCPT.Checked = _TMLN.Checked = _SOND.Checked = _SHDR.Checked = _PATH.Checked = _ACRV.Checked = _SEQN.Checked = _FONT.Checked = _SPRT.Checked = _BGND.Checked = true;
-        _CMBT.Enabled = false;
+		// Themes
+        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
+		
+		var BasicWhite = System.Windows.Media.Brushes.White;
+		var BasicBlack = System.Windows.Media.Brushes.Black;
 
-        if (Data.Sequences == null)
-            _SEQN.Enabled = false;
-        if (Data.AnimationCurves == null)
-            _ACRV.Enabled = false;
+        Background = isDark ? BGgrey : BasicWhite;
+        Foreground = isDark ? BasicWhite : BasicBlack;
 
-        CSTMLabel.Text = "";
-    }
-};
-FORM.Controls.Add(_CSTM);
-tooltip.SetToolTip(_CSTM, "Individually pick one by one\nwhich resources you want to dump.");
-
-// customize button
-var _CMBT = new Button()
-{
-    Location = new System.Drawing.Point(16 + (120 * 3) + 180, 222 + (24 * 0)),
-    Text = "Pick Individual Assets...",
-    AutoSize = true,
-    Enabled = true // Just to default to unlocked
-};
-
-// disable on start
-_CMBT.Enabled = false;
-
-_CMBT.Click += (o, e) =>
-{
-    // make custom form
-    FORM.Enabled = false;
-
-    var form2 = new Form()
-    {
-        AutoSize = true,
-        Text = "Asset Picker",
-        MaximizeBox = false,
-        MinimizeBox = false,
-        StartPosition = FormStartPosition.CenterScreen,
-        FormBorderStyle = FormBorderStyle.FixedDialog,
-        //ControlBox = false
-    };
-
-    // tree view
-    var treeView = new TreeView()
-    {
-        Location = new System.Drawing.Point(4, 24 + 4 + 4),
-        Height = 400,
-        Width = 200,
-    };
-
-    treeView.BeginUpdate();
-    treeView.Nodes.Add("Data").Expand();
-    treeView.Nodes[0].Nodes.Add("Sounds");
-    treeView.Nodes[0].Nodes.Add("Sprites");
-    treeView.Nodes[0].Nodes.Add("Tilesets");
-    treeView.Nodes[0].Nodes.Add("Paths");
-    treeView.Nodes[0].Nodes.Add("Scripts");
-    treeView.Nodes[0].Nodes.Add("Shaders");
-    treeView.Nodes[0].Nodes.Add("Fonts");
-    treeView.Nodes[0].Nodes.Add("Timelines");
-    treeView.Nodes[0].Nodes.Add("Game objects");
-    treeView.Nodes[0].Nodes.Add("Rooms");
-    treeView.Nodes[0].Nodes.Add("Extensions");
-
-    if (Data.Sequences != null)
-        treeView.Nodes[0].Nodes.Add("Sequences");
-    if (Data.AnimationCurves != null)
-        treeView.Nodes[0].Nodes.Add("Curves");
-
-    UpdateTree(treeView, Data, "");
-    treeView.EndUpdate();
-
-    // search bar
-    var searchbar = new TextBox()
-    {
-        Location = new System.Drawing.Point(4, 4),
-        Width = 200,
-    };
-    searchbar.TextChanged += (o, s) =>
-    {
-        treeView.BeginUpdate();
-        UpdateTree(treeView, Data, searchbar.Text);
-        treeView.EndUpdate();
-    };
-
-    // list box
-    var listbox = new ListBox()
-    {
-        Location = new System.Drawing.Point(300, 24 + 4 + 4),
-        Height = 400,
-        Width = 200,
-        HorizontalScrollbar = true
-    };
-    UpdateList(listbox, "");
-
-    // search bar 2
-    var searchbar2 = new TextBox()
-    {
-        Location = new System.Drawing.Point(300, 4),
-        Width = 200,
-    };
-    searchbar2.TextChanged += (o, s) =>
-    {
-        listbox.BeginUpdate();
-        UpdateList(listbox, searchbar2.Text);
-        listbox.EndUpdate();
-    };
-
-    // double click left side
-    treeView.NodeMouseDoubleClick += (s, e) =>
-    {
-        if (!CSTM.Contains(e.Node.Text) && e.Node.Level == 2)
-            CSTM.Add(e.Node.Text);
-        UpdateList(listbox, searchbar2.Text);
-    };
-    listbox.DoubleClick += (s, e) =>
-    {
-        CSTM.RemoveAll(r => r == listbox.SelectedItem);
-        UpdateList(listbox, searchbar2.Text);
-    };
-
-    // ok
-    var OKBT = new Button()
-    {
-        Location = new System.Drawing.Point(215, 180),
-        Text = "OK",
-        Height = 32
-    };
-    OKBT.Click += (o, s) =>
-    {
-        form2.Close();
-        CSTMLabel.Text = $"Individual Assets Selected: {CSTM.Count()}";
-    };
-    form2.Controls.Add(OKBT);
-
-    // retard proof mechanism
-    form2.FormClosed += (s, e) =>
-    {
-        FORM.Enabled = true;
-        CSTMLabel.Text = $"Individual Assets Selected: {CSTM.Count()}";
-    };
-
-    // >
-    var ADBT = new Button()
-    {
-        Location = new System.Drawing.Point(215, 140),
-        Text = "->",
-        Height = 32
-    };
-    ADBT.Click += (o, s) =>
-    {
-        if (!CSTM.Contains(treeView.SelectedNode.Text))
-            CSTM.Add(treeView.SelectedNode.Text);
-        UpdateList(listbox, searchbar2.Text);
-    };
-    form2.Controls.Add(ADBT);
-
-    // <
-    var RMBT = new Button()
-    {
-        Location = new System.Drawing.Point(215, 220),
-        Text = "<-",
-        Height = 32
-    };
-    RMBT.Click += (o, s) =>
-    {
-        CSTM.RemoveAll(r => r == listbox.SelectedItem);
-        UpdateList(listbox, searchbar2.Text);
-    };
-    form2.Controls.Add(RMBT);
-
-    // add them
-    form2.Controls.Add(treeView);
-    form2.Controls.Add(searchbar);
-    form2.Controls.Add(listbox);
-    form2.Controls.Add(searchbar2);
-
-    void UpdateList(ListBox list, string search)
-    {
-        list.Items.Clear();
-        foreach (var i in CSTM)
+        var titleBar = new DockPanel
         {
-            if (i.Contains(search))
-                list.Items.Add(i);
-        }
-    }
-    void UpdateTree(TreeView tree, UndertaleData data, string search)
-    {
-        foreach (TreeNode i in tree.Nodes[0].Nodes)
-            i.Nodes.Clear();
+            Height = 30,
+			LastChildFill = true,
+            Background = isDark ? darkgrey : lightgrey
+        };
 
-        // sounds
-        foreach (var i in data.Sounds)
+        var titleText = new TextBlock
         {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[0].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+            Text = Title,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 0, 0),
+            Foreground = Foreground,
+        };
 
-        // sprites
-        foreach (var i in data.Sprites)
+        var closeButton = new Button
         {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[1].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+            Content = "X",
+            Width = 40,
+            Height = 30,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = Foreground,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            FontWeight = FontWeights.Bold,
+			HorizontalAlignment = HorizontalAlignment.Right
+        };
+        closeButton.Click += (s, e) => Close();
+        titleBar.MouseLeftButtonDown += (s, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
 
-        // backgrounds
-        foreach (var i in data.Backgrounds)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[2].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+        titleBar.Children.Add(titleText);
+        DockPanel.SetDock(closeButton, Dock.Right);
+        titleBar.Children.Add(closeButton);
 
-        // paths
-        foreach (var i in data.Paths)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[3].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+        var layout = new StackPanel();
+        layout.Children.Add(titleBar);
 
-        // scripts
-        foreach (var i in data.Scripts)
+        var grid = new Grid
         {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[4].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+            Margin = new Thickness(10)
+        };
 
-        // shaders
-        foreach (var i in data.Shaders)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[5].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+        for (int i = 0; i < 3; i++)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        for (int i = 0; i < 3; i++)
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        // fonts
-        foreach (var i in data.Fonts)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[6].Nodes.Add(new TreeNode(i.Name.Content));
-        }
+        // Search box for tree
+        searchTreeBox = new TextBox { Width = 200, Margin = new Thickness(0, 0, 8, 4) };
+        searchTreeBox.TextChanged += (s, e) => UpdateTree(searchTreeBox.Text, Data);
+        Grid.SetRow(searchTreeBox, 0);
+        Grid.SetColumn(searchTreeBox, 0);
+        grid.Children.Add(searchTreeBox);
 
-        // timelines
-        foreach (var i in data.Timelines)
+        // TreeView
+        treeView = new TreeView { Height = 400, Width = 200 };
+        treeView.MouseDoubleClick += (s, e) =>
         {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[7].Nodes.Add(new TreeNode(i.Name.Content));
-        }
-
-        // objects
-        foreach (var i in data.GameObjects)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[8].Nodes.Add(new TreeNode(i.Name.Content));
-        }
-
-        // rooms
-        foreach (var i in data.Rooms)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[9].Nodes.Add(new TreeNode(i.Name.Content));
-        }
-
-        // extensions
-        foreach (var i in data.Extensions)
-        {
-            if (i.Name.Content.Contains(search))
-                tree.Nodes[0].Nodes[10].Nodes.Add(new TreeNode(i.Name.Content));
-        }
-
-        // sequences
-        if (data.Sequences != null)
-        {
-            foreach (var i in data.Sequences)
+            if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
             {
-                if (i.Name.Content.Contains(search))
-                    tree.Nodes[0].Nodes[11].Nodes.Add(new TreeNode(i.Name.Content));
+                if (!CSTM.Contains(item.Header.ToString()))
+                    CSTM.Add(item.Header.ToString());
+                UpdateList(searchListBox.Text);
+            }
+        };
+        Grid.SetRow(treeView, 1);
+        Grid.SetColumn(treeView, 0);
+        grid.Children.Add(treeView);
+
+        // Buttons -> and <-
+        var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
+
+        var addButton = new Button 
+		{ 
+			Content = "->", 
+			Width = 40, 
+			Height = 32, 
+			Margin = new Thickness(0, 4, 0, 4),
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack,
+			BorderBrush = isDark ? BGgrey : lightgrey
+		};
+        addButton.Click += (s, e) =>
+        {
+            if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
+            {
+                if (!CSTM.Contains(item.Header.ToString()))
+                    CSTM.Add(item.Header.ToString());
+                UpdateList(searchListBox.Text);
+            }
+        };
+        buttonPanel.Children.Add(addButton);
+
+        var removeButton = new Button 
+		{ 
+			Content = "<-", 
+			Width = 40, 
+			Height = 32,
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack,
+			BorderBrush = isDark ? BGgrey : lightgrey
+		};
+        removeButton.Click += (s, e) =>
+        {
+            if (listBox.SelectedItem != null)
+            {
+                CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
+                UpdateList(searchListBox.Text);
+            }
+        };
+        buttonPanel.Children.Add(removeButton);
+
+        Grid.SetRow(buttonPanel, 1);
+        Grid.SetColumn(buttonPanel, 1);
+        grid.Children.Add(buttonPanel);
+
+        // Search box for list
+        searchListBox = new TextBox { Width = 200, Margin = new Thickness(0, 0, 0, 4) };
+        searchListBox.TextChanged += (s, e) => UpdateList(searchListBox.Text);
+        Grid.SetRow(searchListBox, 0);
+        Grid.SetColumn(searchListBox, 2);
+        grid.Children.Add(searchListBox);
+
+        // ListBox
+        listBox = new ListBox 
+		{ 
+			Width = 200, 
+			Height = 400,
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack
+		};
+        listBox.MouseDoubleClick += (s, e) =>
+        {
+            if (listBox.SelectedItem != null)
+            {
+                CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
+                UpdateList(searchListBox.Text);
+            }
+        };
+        Grid.SetRow(listBox, 1);
+        Grid.SetColumn(listBox, 2);
+        grid.Children.Add(listBox);
+
+        // OK Button
+        var okButton = new Button
+        {
+            Content = "OK",
+            Width = 100,
+            Height = 32,
+            Margin = new Thickness(0, 8, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Center,
+			
+			Background = isDark ? darkgrey : lightgrey,
+			Foreground = isDark ? BasicWhite : BasicBlack,
+			BorderBrush = isDark ? BGgrey : lightgrey
+        };
+        okButton.Click += (s, e) => Close();
+		
+        Grid.SetRow(okButton, 2);
+        Grid.SetColumnSpan(okButton, 3);
+        grid.Children.Add(okButton);
+
+        layout.Children.Add(grid);
+        Content = layout;
+
+        BuildInitialTree(Data);
+        UpdateList("");
+    }
+
+    private void BuildInitialTree(UndertaleData Data)
+    {
+        treeView.Items.Clear();
+        var root = new TreeViewItem { Header = "Data", IsExpanded = true };
+
+        var categories = new[]
+        {
+            "Sounds", "Sprites", "Tilesets", "Paths", "Scripts", "Shaders", "Fonts",
+            "Timelines", "Game objects", "Rooms", "Extensions"
+        };
+        foreach (var c in categories)
+            root.Items.Add(new TreeViewItem { Header = c });
+
+        if (Data.Sequences != null)
+            root.Items.Add(new TreeViewItem { Header = "Sequences" });
+        if (Data.AnimationCurves != null)
+            root.Items.Add(new TreeViewItem { Header = "Curves" });
+
+        treeView.Items.Add(root);
+        UpdateTree("", Data);
+    }
+
+    private void UpdateTree(string search, UndertaleData Data)
+    {
+        foreach (TreeViewItem cat in ((TreeViewItem)treeView.Items[0]).Items)
+        {
+            cat.Items.Clear();
+            var name = cat.Header.ToString();
+
+            IEnumerable<string> items = name switch
+            {
+                "Sounds" => Data.Sounds.Select(s => s.Name.Content),
+                "Sprites" => Data.Sprites.Select(s => s.Name.Content),
+                "Tilesets" => Data.Backgrounds.Select(s => s.Name.Content),
+                "Paths" => Data.Paths.Select(s => s.Name.Content),
+                "Scripts" => Data.Scripts.Select(s => s.Name.Content),
+                "Shaders" => Data.Shaders.Select(s => s.Name.Content),
+                "Fonts" => Data.Fonts.Select(s => s.Name.Content),
+                "Timelines" => Data.Timelines.Select(s => s.Name.Content),
+                "Game objects" => Data.GameObjects.Select(s => s.Name.Content),
+                "Rooms" => Data.Rooms.Select(s => s.Name.Content),
+                "Extensions" => Data.Extensions.Select(s => s.Name.Content),
+                "Sequences" => Data.Sequences?.Select(s => s.Name.Content) ?? Enumerable.Empty<string>(),
+                "Curves" => Data.AnimationCurves?.Select(s => s.Name.Content) ?? Enumerable.Empty<string>(),
+                _ => Enumerable.Empty<string>()
+            };
+
+            foreach (var item in items)
+            {
+                if (item.Contains(search, StringComparison.OrdinalIgnoreCase))
+                    cat.Items.Add(new TreeViewItem { Header = item });
             }
         }
+    }
 
-        // animation curves
-        if (data.AnimationCurves != null)
+    private void UpdateList(string search)
+    {
+        listBox.Items.Clear();
+        foreach (var item in CSTM)
         {
-            foreach (var i in data.AnimationCurves)
-            {
-                if (i.Name.Content.Contains(search))
-                    tree.Nodes[0].Nodes[12].Nodes.Add(new TreeNode(i.Name.Content));
-            }
+            if (item.Contains(search, StringComparison.OrdinalIgnoreCase))
+                listBox.Items.Add(item);
         }
     }
-    form2.ShowDialog();
-};
-FORM.Controls.Add(_CMBT);
-
-#endregion
-#region Decompiler Settings Checkboxes
-// settings
-FORM.Controls.Add(new Label()
-{
-    Text = "Decompiler Settings",
-    AutoSize = true,
-    Location = new System.Drawing.Point(8, 200),
-    Font = new Font(Label.DefaultFont, FontStyle.Bold)
-});
-
-var _LOG = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 0), 228 + (24 * 0)),
-    Text = "Log Assets",
-    Checked = false
-};
-FORM.Controls.Add(_LOG);
-tooltip.SetToolTip(_LOG, "Logs every Asset that gets decompiled\nMostly for Debugging, will clog up the logs if enabled.");
-
-var _YYMPS = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 0), 228 + (24 * 1)),
-    Text = "Export as YYMPS",
-    Checked = false,
-    AutoSize = true
-};
-
-FORM.Controls.Add(_YYMPS);
-tooltip.SetToolTip(_YYMPS, "Exports decompiled resources\nas a GameMaker Importable Package.");
-
-var _ENUM = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 1), 228 + (24 * 0)),
-    Text = "Bitwise Enums",
-    Checked = false,
-    AutoSize = true
-};
-FORM.Controls.Add(_ENUM);
-tooltip.SetToolTip(_ENUM, "Turns Unknown Enums into Bitwise Operations.\n\nExample: \nUnknownEnum.Value_1 -> (1 << 0)");
-
-var _ADDFILES = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 1), 228 + (24 * 1)),
-    Text = "Add Datafiles",
-    Checked = true,
-    AutoSize = true
-};
-FORM.Controls.Add(_ADDFILES);
-tooltip.SetToolTip(_ADDFILES, "Attempts to automatically add included datafiles\nMight be inaccurate and might miss some files");
-
-var _FIXA = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 2), 228 + (24 * 0)),
-    Text = "Fix Audio",
-    Checked = false,
-    AutoSize = true
-};
-FORM.Controls.Add(_FIXA);
-tooltip.SetToolTip(_FIXA, "If a .wav file is labelled a .mp3, then this setting will label it back to .wav.");
-
-var _FIXT = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 2), 228 + (24 * 1)),
-    Text = "Fix Tilesets",
-    Checked = false,
-    AutoSize = true
-};
-FORM.Controls.Add(_FIXT);
-tooltip.SetToolTip(_FIXT, "Fixes Tileset Seperation, slower due to image processing.");
-
-// under pick assets checkbox
-var _GENROOM = new CheckBox()
-{
-    Location = new System.Drawing.Point(16 + (120 * 3), 228 + (24 * 1)),
-    Text = "Generate Room Name",
-    Checked = false,
-    AutoSize = true
-};
-FORM.Controls.Add(_GENROOM);
-tooltip.SetToolTip(_GENROOM, "When compiled, GameMaker normally turns the asset names into numbers\nThis makes it similar to how GameMaker does it.");
-#endregion
-
-// CPU Stuff
-int cpu_usage = 70;// init value
-var CPULabel = new Label()
-{
-    Text = $"CPU Usage: {cpu_usage}%",
-    Location = new System.Drawing.Point(300, 300),
-    Width = 120,
-};
-
-var CPUTrackBar = new TrackBar()
-{
-    Minimum = 1, // Minimum
-    Maximum = 100, // Maximum
-    TickFrequency = 1,
-    Value = cpu_usage, // Set initial value
-    Location = new System.Drawing.Point(250, 320),
-    Width = 200,
-};
-CPUTrackBar.Scroll += TrackBar_Scroll;
-
-void TrackBar_Scroll(object o, EventArgs e)
-{
-    cpu_usage = CPUTrackBar.Value;
-    CPULabel.Text = $"CPU Usage: {cpu_usage}%";
 }
-FORM.Controls.Add(CPUTrackBar);
-FORM.Controls.Add(CPULabel);
 
-// ok button
-var OKBT = new Button()
+// check dark mode lmao
+// hacky way because I don't know how else to determine it
+// and i want this to be somewhat compatible with base utmt
+bool isDarkEnabled = false;
+string UA_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UnderAnalyzer\\settings.json";
+string UTMT_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UndertaleModTool\\settings.json";
+
+if (File.Exists(UA_Settings))
 {
-    Text = (Directory.Exists($"{scriptDir}") ? "Overwrite Dump" : "Start Dump"),
-    Dock = DockStyle.Bottom,
-    Height = 48,
-};
-// start everything
-OKBT.Click += (o, s) =>
+	string json = File.ReadAllText(UA_Settings);
+    using JsonDocument doc = JsonDocument.Parse(json);
+
+    if (doc.RootElement.TryGetProperty("EnableDarkMode", out JsonElement darkModeElement))
+        isDarkEnabled = darkModeElement.GetBoolean();
+}
+else if (File.Exists(UTMT_Settings))
 {
-    FORM.Enabled = false;
-    FORM.Close();
+	string json = File.ReadAllText(UTMT_Settings);
+    using JsonDocument doc = JsonDocument.Parse(json);
 
-    // clear custom assets if unchecked
-    if (!_CSTM.Checked)
-        CSTM.Clear();
+    if (doc.RootElement.TryGetProperty("EnableDarkMode", out JsonElement darkModeElement))
+        isDarkEnabled = darkModeElement.GetBoolean();
+}
+else
+	isDarkEnabled = false;
 
-    DUMP = true;
+// open main window
+var window = new MainWindow(Data, scriptDir, isDarkEnabled);
+window.ShowDialog();
 
-    OBJT = _OBJT.Checked;
-    ROOM = _ROOM.Checked;
-    EXTN = _EXTN.Checked;
-    SCPT = _SCPT.Checked;
-    TMLN = _TMLN.Checked;
-    SOND = _SOND.Checked;
-    SHDR = _SHDR.Checked;
-    PATH = _PATH.Checked;
-    ACRV = _ACRV.Checked;
-    SEQN = _SEQN.Checked;
-    FONT = _FONT.Checked;
-    SPRT = _SPRT.Checked;
-    BGND = _BGND.Checked;
+// save values
+DUMP = window.DUMP;
 
-    LOG = _LOG.Checked;
-    YYMPS = _YYMPS.Checked;
-    ENUM = _ENUM.Checked;
-    FIXAUDIO = _FIXA.Checked;
-    FIXTILE = _FIXT.Checked;
-    ADDFILES = _ADDFILES.Checked;
-    GENROOM = _GENROOM.Checked;
+OBJT = window.OBJT;
+ROOM = window.ROOM;
+EXTN = window.EXTN;
+SCPT = window.SCPT;
+TMLN = window.TMLN;
+SOND = window.SOND;
+SHDR = window.SHDR;
+PATH = window.PATH;
+ACRV = window.ACRV;
+SEQN = window.SEQN;
+FONT = window.FONT;
+SPRT = window.SPRT;
+BGND = window.BGND;
 
-    CSTM_Enable = _CSTM.Checked;
-};
-FORM.Controls.Add(OKBT);
+LOG = window.LOG;
+YYMPS = window.YYMPS;
+ENUM = window.ENUM;
+ADDFILES = window.ADDFILES;
+FIXAUDIO = window.FIXAUDIO;
+FIXTILE = window.FIXTILE;
+GENROOM = window.GENROOM;
 
-FORM.Height += 64;
-FORM.AcceptButton = OKBT;
-Application.EnableVisualStyles();
-FORM.ShowDialog();
+cpu_usage = window.cpu_usage;
 
+CSTM_Enable = window.CSTM_Enable;
+CSTM = window.CSTM;
+
+// if exit
 if (!DUMP)
     return;
 
@@ -2478,13 +2570,14 @@ string GetRunnerFile(string fileDir)
 
     while (doSearch)
     {
-        OpenFileDialog fileDialog = new()
+		// damn, new ui made me do it
+        System.Windows.Forms.OpenFileDialog fileDialog = new()
         {
             Title = "Take me to your runner.......",
             InitialDirectory = rootDir,
             Filter = "Executable Files (*.exe)|*.exe",
         };
-        if (fileDialog.ShowDialog() == DialogResult.OK)
+        if (fileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
             string lastLine = File.ReadAllLines(fileDialog.FileName).Last();
             // these always appear in the last line of the actual gamemaker runner.
@@ -5320,7 +5413,10 @@ async Task DumpTextures()
         await Task.Run(() => Parallel.ForEach(imagesToDump, parallelOptions, imageData =>
         {
             imageData.Dump(tw);
-            IncrementProgressParallel();
+			
+			// too bad most of the time its unreadable
+			var imgfilepath = Path.GetFileName(imageData.filePath.TrimEnd(Path.DirectorySeparatorChar));
+			SetProgressBar(null, $"Dumping Texture: {imgfilepath}", imgsdumped++, imagesToDump.Count);
         }));
     }
     watch.Stop();
@@ -5522,9 +5618,10 @@ await Task.WhenAll(
 await StopProgressBarUpdater();
 HideProgressBar();
 
+public int imgsdumped = 0;
 if (imagesToDump.Count > 0)
 {
-    SetProgressBar(null, "Dumping Textures...", 0, imagesToDump.Count);
+    SetProgressBar(null, "Dumping Textures...", imgsdumped, imagesToDump.Count);
     StartProgressBarUpdater();
 
     await DumpTextures();
