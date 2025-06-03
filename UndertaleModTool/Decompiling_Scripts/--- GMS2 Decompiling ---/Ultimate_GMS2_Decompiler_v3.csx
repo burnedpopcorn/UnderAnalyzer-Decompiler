@@ -1,4 +1,4 @@
-﻿/*
+/*
     Ultimate_GMS2_Decompiler_v3
         The Ultimate GameMaker Studio 2 Decompiler
 
@@ -2729,14 +2729,13 @@ public static string TrimShader(this string input)
 /// <param name="eventList"></param>
 public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<UndertaleGameObject.Event> eventList)
 {
-    // regex bullshit
+    //Still regex BULLSHIT
     Regex assignmentRegex = new Regex(
-    @"^(\w+) = (.+)$",
-    RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.ECMAScript
+        @"^(?:self\.)?(\w+)\s*=\s*(.+?);?$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.ECMAScript
     );
 
     List<GMObjectProperty> propList = new();
-    // if theres none just return the empty list
     if (eventList is null)
         return propList;
 
@@ -2745,25 +2744,84 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
         foreach (UndertaleGameObject.EventAction action in e.Actions)
         {
             UndertaleCode code = action.CodeId;
+            if (code is null)
+                continue;
 
-            string dumpedCode = String.Empty;
+            string dumpedCode = DumpCode(code, new DecompileSettings
+            {
+                UseSemicolon = false,
+                AllowLeftoverDataOnStack = true
+            });
 
-            // dump the properties
-            dumpedCode = DumpCode(code, new DecompileSettings { UseSemicolon = false, AllowLeftoverDataOnStack = true });
-
-            // add them
             foreach (Match match in assignmentRegex.Matches(dumpedCode))
             {
-                propList.Add(new GMObjectProperty(match.Groups[1].Captures[0].Value)
+                string name = match.Groups[1].Value;
+                string rawValue = match.Groups[2].Value.Trim();
+
+                GMObjectProperty prop = new(name)
                 {
-                    value = match.Groups[2].Captures[0].Value,
-                    varType = 4,
-                });
+                    name = name,
+                    value = rawValue
+                };
+
+                // String
+                if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
+                {
+                    prop.varType = 2;
+                }
+                // Boolean
+                else if (rawValue == "true" || rawValue == "false")
+                {
+                    prop.varType = 3;
+                }
+                // Decimal
+                else if (Regex.IsMatch(rawValue, @"^\d+\.\d+$"))
+                {
+                    prop.varType = 0;
+                }
+                // Integer or Color
+                else if (Regex.IsMatch(rawValue, @"^\d+$"))
+                {
+                    if (UInt32.TryParse(rawValue, out uint colorVal) && colorVal >= 0xFF000000 && colorVal <= 0xFFFFFFFF)
+                    {
+                        prop.varType = 7; // Color
+                        prop.value = $"${colorVal:X8}";
+                    }
+                    else
+                    {
+                        prop.varType = 1; // Integer
+                    }
+                }
+                // Expression
+                else if (Regex.IsMatch(rawValue, @"[=!<>+\-*/%&|()]"))
+                {
+                    prop.varType = 4;
+                }
+                /*
+                // Asset (Todo due it's really sucks)
+                else if (!rawValue.Contains("\"") && !Regex.IsMatch(rawValue, @"\W") && !char.IsDigit(rawValue[0]))
+                {
+                    prop.varType = 5;
+                    prop.resource = new()
+                    {
+                        name = rawValue,
+                        path = $"scripts/{rawValue}/{rawValue}.yy"
+                    };
+                }
+                */
+                else
+                {
+                    prop.varType = 4; // Fallback to Expression
+                }
+
+                propList.Add(prop);
             }
         }
     }
+
     return propList;
 }
+
 
 /// <summary>
 /// returns a folder directory for an asset inside of an <c>AssetReference</c>. e.g: $"folders/{foldername}.yy"
@@ -3179,6 +3237,7 @@ void DumpObject(UndertaleGameObject o, int index)
                 }
                 else // Object has a parent
                 {
+
                     bool isOverridden = false;
                     UndertaleGameObject parObject = o;
 
@@ -3210,6 +3269,8 @@ void DumpObject(UndertaleGameObject o, int index)
                         }
                     }
 
+
+
                     // If the property is not overridden, add it to the final properties
                     if (!isOverridden)
                     {
@@ -3217,6 +3278,7 @@ void DumpObject(UndertaleGameObject o, int index)
                     }
                 }
             }
+
 
             // Assign the final properties and overridden properties to the dumped object
             dumpedObject.properties = finalprops;
@@ -3274,10 +3336,13 @@ async Task DumpObjects()
         var watch = Stopwatch.StartNew();
         await Task.Run(() => Parallel.ForEach(Data.GameObjects, parallelOptions, (obj, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
+            //Same as Shader, null detected after SetProgressBar and make it boom boom
 
             if (obj is null)
                 return;
+
+            SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
+
             if (OBJT || (CSTM_Enable && CSTM.Contains(obj.Name.Content)))
             {
                 var assetWatch = Stopwatch.StartNew();
@@ -3608,15 +3673,17 @@ void DumpRoom(UndertaleRoom r, int index)
                             {
                                 // get a match
                                 ObjectProperty matchingProperty = propData.FirstOrDefault(op => op.Prop.Key == kvp.Key);
+
                                 if (matchingProperty is null)
                                     continue;
+
                                 // add property
                                 newProperties.Add(new GMOverriddenProperty()
                                 {
                                     value = kvp.Value,
                                     propertyId = new AssetReference(matchingProperty.ObjName, GMAssetType.Object)
                                     {
-                                        name = kvp.Key
+                                        name = kvp.Key.Replace("self.","")
                                     },
                                     objectId = new AssetReference(matchingProperty.ObjName, GMAssetType.Object),
                                 });
@@ -4680,10 +4747,12 @@ async Task DumpShaders()
 
         await Task.Run(() => Parallel.ForEach(Data.Shaders, parallelOptions, (shd, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
-
+            //IDK why this append,but I think shd is null must before set ProgessBar,due if it's null then you got boom boom nullexception.
             if (shd is null)
                 return;
+
+            SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
+
             if (SHDR || (CSTM_Enable && CSTM.Contains(shd.Name.Content)))
             {
                 var assetWatch = Stopwatch.StartNew();
@@ -5414,7 +5483,7 @@ async Task DumpTexGroups()
 async Task DumpAudioGroups()
 {
     var watch = Stopwatch.StartNew();
-    finalExport.AudioGroups = Data.AudioGroups.Select(ag => new GMProject.GMAudioGroup(ag.Name.Content)).ToArray();
+    finalExport.AudioGroups = Data.AudioGroups.Select(ag => new GMProject.GMAudioGroup(ag?.Name?.Content)).ToArray();
     watch.Stop();
     PushToLog($"Audio Groups complete! Took {watch.ElapsedMilliseconds} ms");
 }
@@ -5546,6 +5615,8 @@ GMProject finalExport = new GMProject(Data.GeneralInfo.Name.Content)
 {
     isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode))
 };
+
+finalExport.MetaData.IDEVersion = "" + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + "";
 
 // parse the options.ini file, some extension options export to it.
 var iniData = IniParser.ParseToDictionary(rootDir + "options.ini");
@@ -5689,9 +5760,14 @@ if (Data.Sprites.Count > 0)
     var resourcecount = 0;
     foreach (var sprite in Data.Sprites)
     {
+        if (sprite is null)
+            continue;            
+
         asset_text += ("\n" + resourcecount + " - " + sprite.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Sprites could be Found");
 }
 else if (Data.Sprites.Count == 0)
     asset_text += ("\nNo Sprites could be Found");
@@ -5702,9 +5778,15 @@ if (Data.GameObjects.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleGameObject gameObject in Data.GameObjects)
     {
+        //but, why?
+        if (gameObject is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + gameObject.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Objects could be Found");
 }
 else if (Data.GameObjects.Count == 0)
     asset_text += ("\nNo Objects could be Found");
@@ -5715,9 +5797,14 @@ if (Data.Rooms.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleRoom room in Data.Rooms)
     {
+        if (room is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + room.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Rooms could be Found");
 }
 else if (Data.Rooms.Count == 0)
     asset_text += ("\nNo Rooms could be Found");
@@ -5728,9 +5815,13 @@ if (Data.Sounds.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleSound sound in Data.Sounds)
     {
+        if (sound is null)
+            continue;
         asset_text += ("\n" + resourcecount + " - " + sound.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Sounds could be Found");
 }
 else if (Data.Sounds.Count == 0)
     asset_text += ("\nNo Sounds could be Found");
@@ -5741,9 +5832,14 @@ if (Data.Backgrounds.Count > 0)
     var resourcecount = 0;
     foreach (var background in Data.Backgrounds)
     {
+        if (background is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + background.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Backgrounds could be Found");
 }
 else if (Data.Backgrounds.Count == 0)
     asset_text += ("\nNo Backgrounds could be Found");
@@ -5754,9 +5850,14 @@ if (Data.Shaders.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleShader shader in Data.Shaders)
     {
+        if (shader is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + shader.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Shaders could be Found");
 }
 else if (Data.Shaders.Count == 0)
     asset_text += ("\nNo Shaders could be Found");
@@ -5767,9 +5868,14 @@ if (Data.Fonts.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleFont font in Data.Fonts)
     {
+        if (font is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + font.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Fonts could be Found");
 }
 else if (Data.Fonts.Count == 0)
     asset_text += ("\nNo Fonts could be Found");
@@ -5780,9 +5886,14 @@ if (Data.Paths.Count > 0)
     var resourcecount = 0;
     foreach (UndertalePath path in Data.Paths)
     {
+        if (path is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + path.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Paths could be Found");
 }
 else if (Data.Paths.Count == 0)
     asset_text += ("\nNo Paths could be Found");
@@ -5793,9 +5904,14 @@ if (Data.Timelines.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleTimeline timeline in Data.Timelines)
     {
+        if (timeline is null)
+            continue;
+
         asset_text += ("\n" + resourcecount + " - " + timeline.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Timelines could be Found");
 }
 else if (Data.Timelines.Count == 0)
     asset_text += ("\nNo Timelines could be Found");
@@ -5806,9 +5922,13 @@ if (Data.Scripts.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleScript script in Data.Scripts)
     {
+        if (script is null)
+            continue;
         asset_text += ("\n" + resourcecount + " - " + script.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Scripts could be Found");
 }
 else if (Data.Scripts.Count == 0)
     asset_text += ("\nNo Scripts could be Found");
@@ -5819,9 +5939,13 @@ if (Data.Extensions.Count > 0)
     var resourcecount = 0;
     foreach (UndertaleExtension extension in Data.Extensions)
     {
+        if (extension is null)
+            continue;
         asset_text += ("\n" + resourcecount + " - " + extension.Name.Content);
         ++resourcecount;
     }
+    if (resourcecount == 0)
+        asset_text += ("\nNo Extensions could be Found");
 }
 else if (Data.Extensions.Count == 0)
     asset_text += ("\nNo Extensions could be Found");
@@ -5952,14 +6076,15 @@ if (YYMPS)
 {
     #region metadata.json
     // i dont give a shit
-    string metadatastring = @"{
-  ""package_id"": ""Package"",
-  ""display_name"": ""Package"",
-  ""version"": ""1.0.0"",
-  ""package_type"": ""asset"",
-  ""ide_version"": ""2022.0.3.85""
-}
-";
+    // but i do, i must do this
+    string metadatastring = $@"
+    {{
+    ""package_id"": ""Package"",
+    ""display_name"": ""Package"",
+     ""version"": ""1.0.0"",
+     ""package_type"": ""asset"",
+     ""ide_version"": ""{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}""
+}}";
     File.WriteAllText($"{scriptDir}metadata.json", metadatastring);
     #endregion
     #region YYP Metadata adding
