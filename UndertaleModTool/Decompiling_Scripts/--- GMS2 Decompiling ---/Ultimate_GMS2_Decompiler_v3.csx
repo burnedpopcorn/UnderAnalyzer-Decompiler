@@ -1728,7 +1728,7 @@ catch (Exception e)
 }
 #endregion
 
-#region UI (im so fucking sorry in advance)
+#region Main UI (kinda shit, less now)
 
 public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
 public bool CSTM_Enable = false;
@@ -1759,12 +1759,13 @@ public class MainWindow : Window
 		var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
 		var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
 		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-		
-		var BasicWhite = System.Windows.Media.Brushes.White;
+        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+
+        var BasicWhite = System.Windows.Media.Brushes.White;
 		var BasicBlack = System.Windows.Media.Brushes.Black;
 		
-		Background = isDark ? BGgrey : BasicWhite;
-		Foreground = isDark ? BasicWhite : BasicBlack;
+		Background = isDark ? BGgrey : BGwhite;
+		Foreground = isDark ? BasicWhite : BasicBlack;//text
 		
 		var mainPanel = new StackPanel { Margin = new Thickness(8) };
 		var tooltip = new ToolTip();
@@ -1815,7 +1816,7 @@ public class MainWindow : Window
         // Back to sanity kinda
         mainPanel.Children.Add(new TextBlock
 		{
-			Text = "Original Script by crystallizedsparkle\n          Improved by burnedpopcorn180",
+			Text = "Original Script by crystallizedsparkle\n\tImproved by burnedpopcorn180",
 			Margin = new Thickness(0, 20, 0, 8)
 		});
 
@@ -2158,11 +2159,12 @@ public class AssetPickerWindow : Window
         var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
         var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
 		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-		
-		var BasicWhite = System.Windows.Media.Brushes.White;
+        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+
+        var BasicWhite = System.Windows.Media.Brushes.White;
 		var BasicBlack = System.Windows.Media.Brushes.Black;
 
-        Background = isDark ? BGgrey : BasicWhite;
+        Background = isDark ? BGgrey : BGwhite;
         Foreground = isDark ? BasicWhite : BasicBlack;
 
         #region title bar
@@ -2406,35 +2408,9 @@ public class AssetPickerWindow : Window
 }
 #endregion
 
-#region check dark mode lmao
-// hacky way because I don't know how else to determine it
-// and i want this to be somewhat compatible with base utmt
-bool isDarkEnabled = false;
-string UA_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UnderAnalyzer\\settings.json";
-string UTMT_Settings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\UndertaleModTool\\settings.json";
-
-bool isUA_Decompiler = Path.GetDirectoryName(Environment.ProcessPath).Contains("UnderAnalyzer");//should detect UnderAnalyzer-Decompiler.exe
-bool isVanillaUTMT = Path.GetDirectoryName(Environment.ProcessPath).Contains("UndertaleModTool");//and UndertaleModTool.exe
-
-if (isUA_Decompiler && File.Exists(UA_Settings))
-{
-	string json = File.ReadAllText(UA_Settings);
-    using JsonDocument doc = JsonDocument.Parse(json);
-
-    if (doc.RootElement.TryGetProperty("EnableDarkMode", out JsonElement darkModeElement))
-        isDarkEnabled = darkModeElement.GetBoolean();
-}
-else if (isVanillaUTMT && File.Exists(UTMT_Settings))
-{
-	string json = File.ReadAllText(UTMT_Settings);
-    using JsonDocument doc = JsonDocument.Parse(json);
-
-    if (doc.RootElement.TryGetProperty("EnableDarkMode", out JsonElement darkModeElement))
-        isDarkEnabled = darkModeElement.GetBoolean();
-}
-else
-	isDarkEnabled = false;
-#endregion
+// thank god this works
+// the other solution was such a hack
+bool isDarkEnabled = SettingsWindow.EnableDarkMode;
 
 // open main window
 var window = new MainWindow(Data, scriptDir, isDarkEnabled);
