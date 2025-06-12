@@ -3054,88 +3054,6 @@ async Task DumpScripts()
         }));
     }
 
-    // globalinit
-    if (SCPT 
-        // add anyways if any rooms, objects, or scripts were decompiled using asset picker
-        // kinda hacky, but not really, and idc
-        || Directory.Exists(scriptDir + "scripts") 
-        || Directory.Exists(scriptDir + "rooms") 
-        || Directory.Exists(scriptDir + "objects")
-    )
-    {
-        GMScript globalInitScript = new("_GLOBAL_INIT")
-        {
-            parent = GetFolderReference("DecompilerGenerated")
-        };
-        string assetDir = $"{scriptDir}scripts\\{globalInitScript.name}\\";
-        string globalInitCode = $"// gml_pragma declarations\n";
-
-        foreach (UndertaleGlobalInit g in Data.GlobalInitScripts)
-        {
-
-            if (scriptsToDump.Any(s => s.Code == g.Code))
-                continue;
-
-            string dumpedCode = DumpCode(g.Code, new DecompileSettings
-            {
-                MacroDeclarationsAtTop = false,
-                CreateEnumDeclarations = false,
-                UseSemicolon = false,
-                AllowLeftoverDataOnStack = true
-            });
-            dumpedCode = (dumpedCode is null ? "" : dumpedCode);
-            // from quantum
-            dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
-            globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
-        }
-        IncrementProgressParallel();
-        Directory.CreateDirectory(assetDir);
-
-        globalInitCode += "\n\n// enums taken from GameSpecificData\n\n";
-
-        // Manually Rip Enums from Variable Definitions JSON
-        // should make UTMT and my Decompiler compatible now
-        string[] defs = Directory.GetFiles(definitionDir);
-
-        foreach (string def in defs)
-        {
-            GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
-
-            foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
-            {
-                if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
-                {
-                    string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
-                    if (File.Exists(macroPath))
-                    {
-                        MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
-                        foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
-                        {
-                            // builtin enums
-                            if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
-                                continue;
-                            // add the enum line
-                            globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
-                            foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
-                            {
-                                globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
-                            }
-                            globalInitCode += $"}}\n\n";
-                        }
-                    }
-                }
-
-            }
-        }
-
-        File.WriteAllText($"{assetDir}{globalInitScript.name}.yy", JsonSerializer.Serialize(globalInitScript, jsonOptions));
-        File.WriteAllText($"{assetDir}{globalInitScript.name}.gml", globalInitCode);
-
-        CreateProjectResource(GMAssetType.Script, "_GLOBAL_INIT", Data.Scripts.Count + 1);
-
-        PushToLog("Dumped globalinit script.");
-    }
-
     watch.Stop();
     PushToLog($"Scripts complete! Took {watch.ElapsedMilliseconds} ms");
 }
@@ -5962,110 +5880,20 @@ if (!YYMPS)
     CreateNote("Asset_Order", "DecompilerGenerated", asset_text);
 
 #endregion
-#region Extract UnknownEnums
-// Enum Declarations Script gml File and File Path
-string codePath = scriptDir + "scripts/_GLOBAL_INIT/_GLOBAL_INIT.gml";
+#region Create GlobalInit Script
 
-// Setup UA Settings
+#region UnknownEnum Extraction Stuff
+
 DecompileSettings dSettings = new DecompileSettings();
 dSettings.MacroDeclarationsAtTop = true;
 dSettings.CreateEnumDeclarations = true;
-
-// Unknown Enum stuff
 string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
 dSettings.UnknownEnumName = enumName;
 dSettings.UnknownEnumValuePattern = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
-
-// For the Decompiler
 HashSet<long> values = new HashSet<long>();
 List<UndertaleCode> enumtoDump = new();
 
-if (
-    // run func if all scripts are to be decompiled
-    (SCPT 
-    // or if any rooms, objects, or scripts were picked in asset picker to be decomped
-    || Directory.Exists(scriptDir + "scripts")
-    || Directory.Exists(scriptDir + "rooms")
-    || Directory.Exists(scriptDir + "objects")
-    ) 
-    // if bitwise enums are to be used, don't do it at all
-    && !ENUM
-)
-{
-    foreach (UndertaleCode _code in Data.Code)
-    {
-        if (_code.ParentEntry is null)
-            enumtoDump.Add(_code);
-    }
-
-    // Call Dump Unknown Enum Declaration Function
-    await DumpEnum();
-
-    List<long> sorted = new List<long>();
-    try
-    {
-        // https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
-        sorted = new List<long>(values);
-        sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
-    }
-    // this sometimes fails, idk why, so ask user to retry
-    // because this usually fixes itself after one try
-    catch
-    {
-        int attempts = 0;
-        bool tryagain = ScriptQuestion("UnknownEnum Extraction failed!\nTry again?");
-
-        while (tryagain)
-        {
-            try
-            {
-                // clean and try again
-                values = new HashSet<long>();
-                await DumpEnum();
-                sorted = new List<long>(values);
-                sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
-
-                // if successful, leave while loop and proceed
-                tryagain = false;
-            }
-            // if not, ask again
-            catch
-            {
-                attempts++;
-                tryagain = ScriptQuestion($"UnknownEnum Extraction failed!\nTry again?\n\nAttempt {attempts}");
-            }
-        }
-    }
-
-    // Adding Unknown Enums to the List
-    string code = "enum " + enumName + " \n{\n";
-
-    long expectedValue = 0;
-    foreach (long val in sorted)
-    {
-        string name = string.Format(dSettings.UnknownEnumValuePattern, val.ToString().Replace("-", "m"));
-        if (val == expectedValue)
-        {
-            code += "\t" + name + ",\n";
-            if (expectedValue != long.MaxValue)
-                expectedValue++;
-        }
-        else
-        {
-            code += "\t" + name + " = " + val.ToString() + ",\n";
-            if (expectedValue != long.MaxValue)
-                expectedValue = val + 1;
-            else
-                expectedValue = val;
-        }
-    }
-    code += "}";
-
-    // Write Unknown Enums to output file
-    File.AppendAllText(codePath, code);
-}
-
-// For Progress Bar, and to allow Decompiler to do its job and find Unknown Enums
+// search for all UnknownEnum values
 async Task DumpEnum()
 {
     if (Data.GlobalFunctions is null)
@@ -6091,9 +5919,170 @@ void DumpEnums(UndertaleCode code)
                             values.Add(val.Value);
             }
         }
-        catch (Exception e)
+        catch
         { }
     }
+}
+#endregion
+
+if (SCPT
+    // add anyways if any rooms, objects, or scripts were decompiled using asset picker
+    // kinda hacky, but not really, and idc
+    || Directory.Exists(scriptDir + "scripts")
+    || Directory.Exists(scriptDir + "rooms")
+    || Directory.Exists(scriptDir + "objects")
+)
+{
+    GMScript globalInitScript = new("_GLOBAL_INIT")
+    {
+        parent = GetFolderReference("DecompilerGenerated")
+    };
+    string assetDir = $"{scriptDir}scripts\\{globalInitScript.name}\\";
+    string globalInitCode = $"// Generated by Ultimate_GMS2_Decompiler_v3.csx\n";
+
+    #region gml_pragma shit
+    foreach (UndertaleGlobalInit g in Data.GlobalInitScripts)
+    {
+        if (scriptsToDump.Any(s => s.Code == g.Code))
+            continue;
+
+        string dumpedCode = DumpCode(g.Code, new DecompileSettings
+        {
+            MacroDeclarationsAtTop = false,
+            CreateEnumDeclarations = false,
+            UseSemicolon = false,
+            AllowLeftoverDataOnStack = true
+        });
+        dumpedCode = (dumpedCode is null ? "" : dumpedCode);
+        // from quantum
+        dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
+        globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
+    }
+    Directory.CreateDirectory(assetDir);
+    #endregion
+    #region Extract Enums from JSON files
+    globalInitCode += "\n// GameSpecificData Enums\n";
+    string[] defs = Directory.GetFiles(definitionDir);
+
+    foreach (string def in defs)
+    {
+        GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
+
+        foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
+        {
+            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
+            {
+                string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
+                if (File.Exists(macroPath))
+                {
+                    MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
+                    foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
+                    {
+                        // builtin enums
+                        if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
+                            continue;
+                        // add the enum line
+                        globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
+                        foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
+                        {
+                            globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
+                        }
+                        globalInitCode += $"}}\n\n";
+                    }
+                }
+            }
+
+        }
+    }
+    #endregion
+    #region Extract UnknownEnums
+    // if bitwise enums are to be used, don't do it at all
+    if (!ENUM)
+    {
+        globalInitCode += "// Generic Enum Declaration\n";
+
+        foreach (UndertaleCode _code in Data.Code)
+        {
+            if (_code.ParentEntry is null)
+                enumtoDump.Add(_code);
+        }
+
+        // search for UnknownEnum Values
+        await DumpEnum();
+
+        #region Proper Ordering
+        List<long> sorted = new List<long>();
+        try
+        {
+            // https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
+            sorted = new List<long>(values);
+            sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
+        }
+        // this sometimes fails, idk why, so ask user to retry
+        // because this usually fixes itself after one try
+        catch
+        {
+            int attempts = 0;
+            bool tryagain = ScriptQuestion("UnknownEnum Extraction failed!\nTry again?");
+
+            while (tryagain)
+            {
+                try
+                {
+                    // clean and try again
+                    values = new HashSet<long>();
+                    await DumpEnum();
+                    sorted = new List<long>(values);
+                    sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
+
+                    // if successful, leave while loop and proceed
+                    tryagain = false;
+                }
+                // if not, ask again
+                catch
+                {
+                    attempts++;
+                    tryagain = ScriptQuestion($"UnknownEnum Extraction failed!\nTry again?\n\nAttempt {attempts}");
+                }
+            }
+        }
+        #endregion
+
+        // Adding Unknown Enums to the script
+        globalInitCode += "enum " + enumName + " \n{\n";
+
+        long expectedValue = 0;
+        foreach (long val in sorted)
+        {
+            string name = string.Format(dSettings.UnknownEnumValuePattern, val.ToString().Replace("-", "m"));
+            // if in order, ex: 1, 2, 3
+            if (val == expectedValue)
+            {
+                globalInitCode += "\t" + name + ",\n";
+                if (expectedValue != long.MaxValue)
+                    expectedValue++;
+            }
+            // else if not in order, like: 1, 2, 5
+            // then make it = 5 to account for it
+            else
+            {
+                globalInitCode += "\t" + name + " = " + val.ToString() + ",\n";
+                if (expectedValue != long.MaxValue)
+                    expectedValue = val + 1;
+                else
+                    expectedValue = val;
+            }
+        }
+        globalInitCode += "}";
+    }
+    #endregion
+
+    File.WriteAllText($"{assetDir}{globalInitScript.name}.yy", JsonSerializer.Serialize(globalInitScript, jsonOptions));
+    File.WriteAllText($"{assetDir}{globalInitScript.name}.gml", globalInitCode);
+
+    CreateProjectResource(GMAssetType.Script, "_GLOBAL_INIT", Data.Scripts.Count + 1);
+
+    PushToLog("Created GlobalInit Script.");
 }
 
 #endregion
@@ -6112,7 +6101,7 @@ PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
 // and with some additional metadata in the .yyp and an extra metadata.json
 // to tell gamemaker that its a package rather than a full project
 // so yeah
-#region YYMPS maker
+#region YYMPS Maker
 if (YYMPS)
 {
     #region metadata.json
