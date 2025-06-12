@@ -1701,30 +1701,33 @@ internal static class ExtractIcon
 
 // get icon
 public IMagickImage mainoptionimg, winoptionimg;
-try
+if (!YYMPS)
 {
-    Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(GetRunnerFile(rootDir));
+    try
+    {
+        Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(GetRunnerFile(rootDir));
 
-    // for main option
-    mainoptionimg = ToMagickImage(ExeIcon.ToBitmap());
-    // resize image
-    var mainsize = new MagickGeometry(172, 172);
-    mainsize.IgnoreAspectRatio = false; // maintain the aspect ratio
-    mainoptionimg.FilterType = FilterType.Point; // stop interpolation
-    mainoptionimg.Resize(mainsize);
+        // for main option
+        mainoptionimg = ToMagickImage(ExeIcon.ToBitmap());
+        // resize image
+        var mainsize = new MagickGeometry(172, 172);
+        mainsize.IgnoreAspectRatio = false; // maintain the aspect ratio
+        mainoptionimg.FilterType = FilterType.Point; // stop interpolation
+        mainoptionimg.Resize(mainsize);
 
-    // for windows icon
-    winoptionimg = ToMagickImage(ExeIcon.ToBitmap());
-    // resize image
-    var winsize = new MagickGeometry(256, 256);
-    winsize.IgnoreAspectRatio = false; // maintain the aspect ratio
-    winoptionimg.FilterType = FilterType.Point; // stop interpolation
-    winoptionimg.Resize(winsize);
-}
-catch (Exception e)
-{
-    mainoptionimg = null;
-    winoptionimg = null;
+        // for windows icon
+        winoptionimg = ToMagickImage(ExeIcon.ToBitmap());
+        // resize image
+        var winsize = new MagickGeometry(256, 256);
+        winsize.IgnoreAspectRatio = false; // maintain the aspect ratio
+        winoptionimg.FilterType = FilterType.Point; // stop interpolation
+        winoptionimg.Resize(winsize);
+    }
+    catch (Exception e)
+    {
+        mainoptionimg = null;
+        winoptionimg = null;
+    }
 }
 #endregion
 
@@ -2376,7 +2379,12 @@ public class AssetPickerWindow : Window
                 "Sprites" => Data.Sprites.Select(s => s.Name.Content),
                 "Tilesets" => Data.Backgrounds.Select(s => s.Name.Content),
                 "Paths" => Data.Paths.Select(s => s.Name.Content),
-                "Scripts" => Data.Scripts.Select(s => s.Name.Content),
+                /*"Scripts" => Data.Scripts.Select(s => s.Name.Content),*/
+                // filters out non-scripts
+                "Scripts" => Data.Code.Select(s => s.Name.Content)
+                .Where(n => n.StartsWith("gml_GlobalScript_"))
+                .Select(n => n.Substring("gml_GlobalScript_".Length)),
+
                 "Shaders" => Data.Shaders.Select(s => s.Name.Content),
                 "Fonts" => Data.Fonts.Select(s => s.Name.Content),
                 "Timelines" => Data.Timelines.Select(s => s.Name.Content),
@@ -2622,48 +2630,6 @@ public static string CreateFilePath(string assetName, GMAssetType type)
             break;
     }
     return $"{asset}s/{assetName}/{assetName}.yy";
-}
-/// <summary>
-/// creates the GMS2 file system folders.
-/// </summary>
-public void CreateGMS2FileSystem()
-{
-    // delete existing dump
-    if (Directory.Exists(scriptDir))
-        Directory.Delete(scriptDir, true);
-
-    Directory.CreateDirectory(scriptDir);
-    // always there
-    Directory.CreateDirectory(scriptDir + "datafiles");
-    Directory.CreateDirectory(scriptDir + "notes");
-    Directory.CreateDirectory(scriptDir + "options");
-
-    // check if we even need to
-    if ((Data.Rooms.Count > 0 && ROOM) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "rooms");
-    if ((Data.Sprites.Count > 0 && SPRT) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "sprites");
-    if ((Data.Scripts.Count > 0 && SCPT) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "scripts");
-    if ((Data.GameObjects.Count > 0 && OBJT) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "objects");
-    if ((Data.Fonts.Count > 0 && FONT) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "fonts");
-    if ((Data.Shaders.Count > 0 && SHDR) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "shaders");
-    if ((Data.Sounds.Count > 0 && SOND) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "sounds");
-    if ((Data.Backgrounds.Count > 0 && BGND) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "tilesets");
-    if ((Data.AnimationCurves.Count > 0 && ACRV) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "animcurves");
-    if ((Data.Sequences.Count > 0 && SEQN) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "sequences");
-    if ((Data.Extensions.Count > 0 && EXTN) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "extensions");
-    if ((Data.Timelines.Count > 0 && TMLN) || CSTM_Enable)
-        Directory.CreateDirectory(scriptDir + "timelines");
-
 }
 /// <summary>
 /// Creates a new GMNote in the project.
@@ -2926,7 +2892,12 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
             // enum replacement.
             if (ENUM)
             {
-                dumpedCode = Regex.Replace(dumpedCode, @"UnknownEnum\.Value_(m?)(\d+)", match =>
+                // crystal didn't account for this, so i'll do it i guess
+                var unknownName = SettingsWindow.DecompilerSettings.UnknownEnumName;
+                var unknownVal = SettingsWindow.DecompilerSettings.UnknownEnumValuePattern;
+
+                //@"UnknownEnum\.Value_(m?)(\d+)"
+                dumpedCode = Regex.Replace(dumpedCode, $@"{unknownName}\.{unknownVal.Replace("{0}", "")}(m?)(\d+)", match =>
                 {
                     string sign = match.Groups[1].Value == "m" ? "-" : "";
                     string number = match.Groups[2].Value;
@@ -3060,12 +3031,15 @@ async Task DumpScripts()
     {
         await Task.Run(() => Parallel.ForEach(scriptsToDump, parallelOptions, (scr, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Script: {scr.Name.Content}", r_num++, toDump);
-
             if (scr is null)
+            {
+                r_num++;
                 return;
+            }
             if (SCPT || (CSTM_Enable && CSTM.Contains(scr.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Script: {scr.Name.Content}", r_num++, toDump);
+
                 DumpScript(scr, (int)index);
 
                 if (LOG)
@@ -3074,79 +3048,81 @@ async Task DumpScripts()
         }));
     }
 
-
     // globalinit
-    GMScript globalInitScript = new("_GLOBAL_INIT")
+    if (SCPT)
     {
-        parent = GetFolderReference("DecompilerGenerated")
-    };
-    string assetDir = $"{scriptDir}scripts\\{globalInitScript.name}\\";
-    string globalInitCode = $"// gml_pragma declarations\n";
-
-    foreach (UndertaleGlobalInit g in Data.GlobalInitScripts)
-    {
-
-        if (scriptsToDump.Any(s => s.Code == g.Code))
-            continue;
-
-        string dumpedCode = DumpCode(g.Code, new DecompileSettings
+        GMScript globalInitScript = new("_GLOBAL_INIT")
         {
-            MacroDeclarationsAtTop = false,
-            CreateEnumDeclarations = false,
-            UseSemicolon = false,
-            AllowLeftoverDataOnStack = true
-        });
-        dumpedCode = (dumpedCode is null ? "" : dumpedCode);
-        // from quantum
-        dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
-        globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
-    }
-    IncrementProgressParallel();
-    Directory.CreateDirectory(assetDir);
+            parent = GetFolderReference("DecompilerGenerated")
+        };
+        string assetDir = $"{scriptDir}scripts\\{globalInitScript.name}\\";
+        string globalInitCode = $"// gml_pragma declarations\n";
 
-    globalInitCode += "\n\n// enums taken from GameSpecificData\n\n";
-
-    // Manually Rip Enums from Variable Definitions JSON
-    // should make UTMT and my Decompiler compatible now
-    string[] defs = Directory.GetFiles(definitionDir);
-
-    foreach (string def in defs)
-    {
-        GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
-
-        foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
+        foreach (UndertaleGlobalInit g in Data.GlobalInitScripts)
         {
-            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
+
+            if (scriptsToDump.Any(s => s.Code == g.Code))
+                continue;
+
+            string dumpedCode = DumpCode(g.Code, new DecompileSettings
             {
-                string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
-                if (File.Exists(macroPath))
+                MacroDeclarationsAtTop = false,
+                CreateEnumDeclarations = false,
+                UseSemicolon = false,
+                AllowLeftoverDataOnStack = true
+            });
+            dumpedCode = (dumpedCode is null ? "" : dumpedCode);
+            // from quantum
+            dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
+            globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
+        }
+        IncrementProgressParallel();
+        Directory.CreateDirectory(assetDir);
+
+        globalInitCode += "\n\n// enums taken from GameSpecificData\n\n";
+
+        // Manually Rip Enums from Variable Definitions JSON
+        // should make UTMT and my Decompiler compatible now
+        string[] defs = Directory.GetFiles(definitionDir);
+
+        foreach (string def in defs)
+        {
+            GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
+
+            foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
+            {
+                if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
                 {
-                    MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
-                    foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
+                    string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
+                    if (File.Exists(macroPath))
                     {
-                        // builtin enums
-                        if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
-                            continue;
-                        // add the enum line
-                        globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
-                        foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
+                        MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
+                        foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
                         {
-                            globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
+                            // builtin enums
+                            if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
+                                continue;
+                            // add the enum line
+                            globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
+                            foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
+                            {
+                                globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
+                            }
+                            globalInitCode += $"}}\n\n";
                         }
-                        globalInitCode += $"}}\n\n";
                     }
                 }
+
             }
-
         }
+
+        File.WriteAllText($"{assetDir}{globalInitScript.name}.yy", JsonSerializer.Serialize(globalInitScript, jsonOptions));
+        File.WriteAllText($"{assetDir}{globalInitScript.name}.gml", globalInitCode);
+
+        CreateProjectResource(GMAssetType.Script, "_GLOBAL_INIT", Data.Scripts.Count + 1);
+
+        PushToLog("Dumped globalinit script.");
     }
-
-    File.WriteAllText($"{assetDir}{globalInitScript.name}.yy", JsonSerializer.Serialize(globalInitScript, jsonOptions));
-    File.WriteAllText($"{assetDir}{globalInitScript.name}.gml", globalInitCode);
-
-    CreateProjectResource(GMAssetType.Script, "_GLOBAL_INIT", Data.Scripts.Count + 1);
-
-    PushToLog("Dumped globalinit script.");
 
     watch.Stop();
     PushToLog($"Scripts complete! Took {watch.ElapsedMilliseconds} ms");
@@ -3312,15 +3288,16 @@ async Task DumpObjects()
         var watch = Stopwatch.StartNew();
         await Task.Run(() => Parallel.ForEach(Data.GameObjects, parallelOptions, (obj, state, index) =>
         {
-            //Same as Shader, null detected after SetProgressBar and make it boom boom
-
             if (obj is null)
+            {
+                r_num++;
                 return;
-
-            SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
+            }
 
             if (OBJT || (CSTM_Enable && CSTM.Contains(obj.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpObject(obj, (int)index);
                 assetWatch.Stop();
@@ -3501,12 +3478,15 @@ async Task DumpSounds()
 
         await Task.Run(() => Parallel.ForEach(Data.Sounds, parallelOptions, (snd, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Sound: {snd.Name.Content}", r_num++, toDump);
-
             if (snd is null)
+            {
+                r_num++;
                 return;
+            }
             if (SOND || (CSTM_Enable && CSTM.Contains(snd.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Sound: {snd.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpSound(snd, (int)index);
                 assetWatch.Stop();
@@ -3862,12 +3842,15 @@ async Task DumpRooms()
 
         await Task.Run(() => Parallel.ForEach(Data.Rooms, parallelOptions, (rm, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Room: {rm.Name.Content}", r_num++, toDump);
-
             if (rm is null)
+            {
+                r_num++;
                 return;
+            }
             if (ROOM || (CSTM_Enable && CSTM.Contains(rm.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Room: {rm.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpRoom(rm, (int)index);
                 assetWatch.Stop();
@@ -4075,12 +4058,15 @@ async Task DumpSprites()
 
         await Task.Run(() => Parallel.ForEach(Data.Sprites, parallelOptions, (spr, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Sprite: {spr.Name.Content}", r_num++, toDump);
-
             if (spr is null)
+            {
+                r_num++;
                 return;
+            }
             if (SPRT || (CSTM_Enable && CSTM.Contains(spr.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Sprite: {spr.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpSprite(spr, (int)index);
                 assetWatch.Stop();
@@ -4183,12 +4169,15 @@ async Task DumpFonts()
 
         await Task.Run(() => Parallel.ForEach(Data.Fonts, parallelOptions, (fnt, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Font: {fnt.Name.Content}", r_num++, toDump);
-
             if (fnt is null)
+            {
+                r_num++;
                 return;
+            }
             if (FONT || (CSTM_Enable && CSTM.Contains(fnt.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Font: {fnt.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpFont(fnt, (int)index);
                 assetWatch.Stop();
@@ -4654,12 +4643,15 @@ async Task DumpSequences()
 
         await Task.Run(() => Parallel.ForEach(Data.Sequences, (seq, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Sequence: {seq.Name.Content}", r_num++, toDump);
-
             if (seq is null)
+            {
+                r_num++;
                 return;
+            }
             if (SEQN || (CSTM_Enable && CSTM.Contains(seq.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Sequence: {seq.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpSequence(seq, (int)index);
                 assetWatch.Stop();
@@ -4723,14 +4715,16 @@ async Task DumpShaders()
 
         await Task.Run(() => Parallel.ForEach(Data.Shaders, parallelOptions, (shd, state, index) =>
         {
-            //IDK why this append,but I think shd is null must before set ProgessBar,due if it's null then you got boom boom nullexception.
             if (shd is null)
+            {
+                r_num++;
                 return;
-
-            SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
+            }
 
             if (SHDR || (CSTM_Enable && CSTM.Contains(shd.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpShader(shd, (int)index);
                 assetWatch.Stop();
@@ -4873,12 +4867,15 @@ async Task DumpExtensions()
 
         await Task.Run(() => Parallel.ForEach(Data.Extensions, parallelOptions, (ext, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Extension: {ext.Name.Content}", r_num++, toDump);
-
             if (ext is null)
+            {
+                r_num++;
                 return;
+            }
             if (EXTN || (CSTM_Enable && CSTM.Contains(ext.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Extension: {ext.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpExtension(ext, (int)index);
                 if (LOG)
@@ -4990,12 +4987,15 @@ async Task DumpPaths()
 
         await Task.Run(() => Parallel.ForEach(Data.Paths, parallelOptions, (pth, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Path: {pth.Name.Content}", r_num++, toDump);
-
             if (pth is null)
+            {
+                r_num++;
                 return;
+            }
             if (PATH || (CSTM_Enable && CSTM.Contains(pth.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Path: {pth.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpPath(pth, (int)index);
                 assetWatch.Stop();
@@ -5053,12 +5053,15 @@ async Task DumpAnimCurves()
 
         await Task.Run(() => Parallel.ForEach(Data.AnimationCurves, parallelOptions, (cur, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Animation Curve: {cur.Name.Content}", r_num++, toDump);
-
             if (cur is null)
+            {
+                r_num++;
                 return;
+            }
             if (ACRV || (CSTM_Enable && CSTM.Contains(cur.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Animation Curve: {cur.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpAnimCurve(cur, (int)index);
                 assetWatch.Stop();
@@ -5307,12 +5310,15 @@ async Task DumpTileSets()
 
         await Task.Run(() => Parallel.ForEach(Data.Backgrounds, parallelOptions, (ts, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Tileset: {ts.Name.Content}", r_num++, toDump);
-
             if (ts is null)
+            {
+                r_num++;
                 return;
+            }
             if (BGND || (CSTM_Enable && CSTM.Contains(ts.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Tileset: {ts.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpTileSet(ts, (int)index);
                 assetWatch.Stop();
@@ -5376,12 +5382,15 @@ async Task DumpTimelines()
 
         await Task.Run(() => Parallel.ForEach(Data.Timelines, parallelOptions, (tl, state, index) =>
         {
-            SetProgressBar(null, $"Exporting Timeline: {tl.Name.Content}", r_num++, toDump);
-
             if (tl is null)
+            {
+                r_num++;
                 return;
+            }
             if (TMLN || (CSTM_Enable && CSTM.Contains(tl.Name.Content)))
             {
+                SetProgressBar(null, $"Exporting Timeline: {tl.Name.Content}", r_num++, toDump);
+
                 var assetWatch = Stopwatch.StartNew();
                 DumpTimeline(tl, (int)index);
                 assetWatch.Stop();
@@ -5541,14 +5550,17 @@ void DumpOptions()
     }
 
     // icon handling
-    string iconsDir = windowsOptionsDirectory + "icons\\";
-    Directory.CreateDirectory(iconsDir);
+    if (!YYMPS)
+    {
+        string iconsDir = windowsOptionsDirectory + "icons\\";
+        Directory.CreateDirectory(iconsDir);
 
-    // Icons
-    if (mainoptionimg != null)
-        mainoptionimg.Write(mainOptionsDirectory + "template_icon.png"); // 172x172 Icon for GM UI
-    if (winoptionimg != null)
-        winoptionimg.Write(iconsDir + "icon.ico"); // 256x256 Windows Icon
+        // Icons
+        if (mainoptionimg != null)
+            mainoptionimg.Write(mainOptionsDirectory + "template_icon.png"); // 172x172 Icon for GM UI
+        if (winoptionimg != null)
+            winoptionimg.Write(iconsDir + "icon.ico"); // 256x256 Windows Icon
+    }
 
     // splash screen handling
     string splashScreenPath = $"{rootDir}splash.png";
@@ -5575,6 +5587,9 @@ void DumpOptions()
 if (Directory.Exists(scriptDir))
     Directory.Delete(scriptDir, true);
 
+// create Exported_Project folder
+Directory.CreateDirectory(scriptDir);
+
 // scuffed CPU usage limiter
 double usageLimit = Math.Clamp((float)cpu_usage, 0f, 100f);
 int processorCount = Environment.ProcessorCount;
@@ -5592,15 +5607,16 @@ GMProject finalExport = new GMProject(Data.GeneralInfo.Name.Content)
     isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode))
 };
 
-finalExport.MetaData.IDEVersion = "" + Data.GeneralInfo.Major + "." + Data.GeneralInfo.Minor + "." + Data.GeneralInfo.Release + "." + Data.GeneralInfo.Build + "";
+finalExport.MetaData.IDEVersion = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}";
 
 // parse the options.ini file, some extension options export to it.
 var iniData = IniParser.ParseToDictionary(rootDir + "options.ini");
 
-// create all of the folders
-CreateGMS2FileSystem();
-
+// get amount of assets to dump
 public int toDump =
+  // account for custom pick
+  ((CSTM.Count > 0 && CSTM_Enable) ? CSTM.Count :
+  // else if normal
   (OBJT ? Data.GameObjects.Count : 0) +
    (SOND ? Data.Sounds.Count : 0) +
     (ROOM ? Data.Rooms.Count : 0) +
@@ -5612,7 +5628,7 @@ public int toDump =
           (ACRV ? Data.AnimationCurves.Count : 0) +
            (BGND ? (Data.Backgrounds.Count * 2) : 0) +
             (SEQN ? (Data.Sequences.Count) : 0) +
-             (TMLN ? (Data.Timelines.Count) : 0);
+             (TMLN ? (Data.Timelines.Count) : 0));
 
 SetUMTConsoleText("Initializing...");
 
@@ -5621,7 +5637,8 @@ await DumpTexGroups();
 // might aswell do this as well
 await DumpAudioGroups();
 // just because I dont consider it a real asset.
-DumpOptions();
+if (!YYMPS)
+    DumpOptions();
 
 // for DumpScripts & the progress bar
 public List<UndertaleScript> scriptsToDump = new();
@@ -5651,7 +5668,7 @@ foreach (UndertaleScript scr in Data.Scripts)
     }
     scriptsToDump.Add(scr);
 }
-toDump += (SCPT) ? scriptsToDump.Count : 1; // the 1 is for globalinit
+toDump += (SCPT ? scriptsToDump.Count : 0);
 
 SetProgressBar(null, "Exporting Assets...", 0, toDump);
 StartProgressBarUpdater();
@@ -5661,6 +5678,7 @@ var totalTime = Stopwatch.StartNew();
 
 await Task.WhenAll(
     CopyDataFiles(),
+
     DumpScripts(),
     DumpObjects(),
     DumpSounds(),
@@ -5697,12 +5715,13 @@ $@"A Decompilation of {Data.GeneralInfo.DisplayName.Content}
 Original GameMaker Version: {Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}
 
 --------------------------------------------------------
-Project Decompiled by Ultimate_GMS2_Decompiler_v2.csx
+Project Decompiled by Ultimate_GMS2_Decompiler_v3.csx
 	Improved by burnedpopcorn180
 		Original Version by crystallizedsparkle
 ";
 // create the readme
-CreateNote("README", "DecompilerGenerated", readMeMessage);
+if (!YYMPS)
+    CreateNote("README", "DecompilerGenerated", readMeMessage);
 
 // Custom Stuff
 #region Extract Asset Order Note
@@ -5927,7 +5946,8 @@ else if (Data.Extensions.Count == 0)
     asset_text += ("\nNo Extensions could be Found");
 
 // make it
-CreateNote("Asset_Order", "DecompilerGenerated", asset_text);
+if (!YYMPS)
+    CreateNote("Asset_Order", "DecompilerGenerated", asset_text);
 
 #endregion
 #region Extract UnknownEnums
