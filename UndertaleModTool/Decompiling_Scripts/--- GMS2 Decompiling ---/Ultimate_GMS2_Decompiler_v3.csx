@@ -6,7 +6,7 @@
     Original Decompiler made by crystallizedsparkle
 
     Originally used 0.0.1-prerelease as a base
-    added some shit from 0.0.4prerelease and the latest public release 
+    and added some shit from 0.0.4prerelease and the latest public release 
     (commit hash 2240548beeeae69204cb391095cd5b26bb5446f7 is of time of writing)
     https://github.com/crystallizedsparkle/Gamemaker-LTS-Decompiler/
 
@@ -17,8 +17,14 @@
         - Replaced YAML Config with an Advanced GUI
         - Added ability to select individual assets to decompile
         - Added ability to decompile as a GameMaker Importable Package (YYMPS) rather than a full GameMaker Project
+        - Added ability to include UnknownEnum Declaration into GlobalInit Script
+        - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added High Quality Icon Extraction for Project and Windows Build Icon
         - Made Progress Bar display Asset Name currently being decompiled
+
+    Included LICENSE file applies ONLY to crystallizedsparkle's code
+    Any of my own changes are not under this LICENSE file, and can be freely used by anyone
+    (although credit would be nice)
  */
 
 using System;
@@ -3049,7 +3055,13 @@ async Task DumpScripts()
     }
 
     // globalinit
-    if (SCPT)
+    if (SCPT 
+        // add anyways if any rooms, objects, or scripts were decompiled using asset picker
+        // kinda hacky, but not really, and idc
+        || Directory.Exists(scriptDir + "scripts") 
+        || Directory.Exists(scriptDir + "rooms") 
+        || Directory.Exists(scriptDir + "objects")
+    )
     {
         GMScript globalInitScript = new("_GLOBAL_INIT")
         {
@@ -5968,8 +5980,17 @@ dSettings.UnknownEnumValuePattern = Data.ToolInfo.DecompilerSettings.UnknownEnum
 HashSet<long> values = new HashSet<long>();
 List<UndertaleCode> enumtoDump = new();
 
-// run function if Scripts are being Decompiled, and if Bitwise Enums are disabled
-if (SCPT && !ENUM)
+if (
+    // run func if all scripts are to be decompiled
+    (SCPT 
+    // or if any rooms, objects, or scripts were picked in asset picker to be decomped
+    || Directory.Exists(scriptDir + "scripts")
+    || Directory.Exists(scriptDir + "rooms")
+    || Directory.Exists(scriptDir + "objects")
+    ) 
+    // if bitwise enums are to be used, don't do it at all
+    && !ENUM
+)
 {
     foreach (UndertaleCode _code in Data.Code)
     {
@@ -5980,7 +6001,6 @@ if (SCPT && !ENUM)
     // Call Dump Unknown Enum Declaration Function
     await DumpEnum();
 
-    // might work idk
     List<long> sorted = new List<long>();
     try
     {
@@ -5988,13 +6008,33 @@ if (SCPT && !ENUM)
         sorted = new List<long>(values);
         sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
     }
-    catch (Exception e)
+    // this sometimes fails, idk why, so ask user to retry
+    // because this usually fixes itself after one try
+    catch
     {
-        // try again lmao
-        values = new HashSet<long>();
-        await DumpEnum();
-        sorted = new List<long>(values);
-        sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
+        int attempts = 0;
+        bool tryagain = ScriptQuestion("UnknownEnum Extraction failed!\nTry again?");
+
+        while (tryagain)
+        {
+            try
+            {
+                // clean and try again
+                values = new HashSet<long>();
+                await DumpEnum();
+                sorted = new List<long>(values);
+                sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
+
+                // if successful, leave while loop and proceed
+                tryagain = false;
+            }
+            // if not, ask again
+            catch
+            {
+                attempts++;
+                tryagain = ScriptQuestion($"UnknownEnum Extraction failed!\nTry again?\n\nAttempt {attempts}");
+            }
+        }
     }
 
     // Adding Unknown Enums to the List
@@ -6067,7 +6107,12 @@ File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
 totalTime.Stop();
 PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
 
-#region unholy YYMPS maker
+// YYMPS Packages are literally just normal GameMaker Projects
+// that are compressed as a ZIP file with the .yymps file extension
+// and with some additional metadata in the .yyp and an extra metadata.json
+// to tell gamemaker that its a package rather than a full project
+// so yeah
+#region YYMPS maker
 if (YYMPS)
 {
     #region metadata.json
@@ -6113,32 +6158,23 @@ if (YYMPS)
     if (File.Exists(yymps))
         File.Delete(yymps);
 
-
-    async Task createyymps()
+    // the main event i guess
+    async Task CreateYYMPS()
     {
-        // Compress to YYMPS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // Compress to YYMPS
         ZipFile.CreateFromDirectory(scriptDir, yymps);
 
         // delete the directory
         Directory.Delete(scriptDir, true);
-        // Loop to stop Script from ending before deletion finishes
-        while (Directory.Exists(scriptDir))
-        {
-            try
-            {
-                // if deleted, leave loop
-                if (!Directory.Exists(scriptDir))
-                    break;
-            }
-            catch { }
 
-            // Wait 1000ms before retrying
-            Thread.Sleep(1000);
-        }
+        // Wait until the directory is fully deleted
+        // because bad stuffs happen if the script finished and its not completely deleted
+        while (Directory.Exists(scriptDir))
+            { await Task.Delay(1000); } // wait 1000 ms before next check
     }
 
     // to wait for yymps creation to fully finish
-    await createyymps();
+    await CreateYYMPS();
 }
 #endregion
 else
