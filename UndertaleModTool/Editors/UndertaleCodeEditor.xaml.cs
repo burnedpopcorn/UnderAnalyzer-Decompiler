@@ -1509,12 +1509,14 @@ namespace UndertaleModTool
                         }
                     }
 
-                    // wayyyy better than my hardcoded solution from old versions
                     #region Color Enums
                     // manually set UnknownEnums, because they're not in GameSpecificData, and they are always Enums
                     var ii = 0;
-                    Enums["UnknownEnum"] = ii;
-                    if ((offset >= 12) && (doc.GetText(offset - 12, 12) == "UnknownEnum."))
+                    // "UnknownEnum" (or whatever it was changed to
+                    string unknownenumName = SettingsWindow.DecompilerSettings.UnknownEnumName;
+                    Enums[unknownenumName] = ii;
+                    var unknownnameLength = unknownenumName.Length + 1;
+                    if ((offset >= unknownnameLength) && (doc.GetText(offset - unknownnameLength, unknownnameLength) == unknownenumName + "."))
                         return new ColorVisualLineText(nameText, CurrentContext.VisualLine, nameLength, EnumBrush);
 
                     // Find all Enums in GameSpecificData
