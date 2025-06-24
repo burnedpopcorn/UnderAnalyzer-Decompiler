@@ -291,6 +291,7 @@ string decompileCode(UndertaleCode codeId)
 {
     string code = codeId != null ? new Underanalyzer.Decompiler.DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "";
     // return code as string to be copied over to .gml file or .gmx asset
+    
     return code;
 }
 #endregion
@@ -537,7 +538,7 @@ void ExportGameObject(UndertaleGameObject gameObject)
                 {
                     actionNode.Add(
                         new XElement("libid", k.LibID.ToString()),
-                        new XElement("id", k.ID.ToString()),
+                        new XElement("id", "603"),
                         new XElement("kind", k.Kind.ToString()),
                         new XElement("userelative", BoolToString(k.UseRelative)),
                         new XElement("isquestion", BoolToString(k.IsQuestion)),
@@ -908,7 +909,7 @@ void ExportTimeline(UndertaleTimeline timeline)
             entryNode.Element("event").Add(
                 new XElement("action",
                     new XElement("libid", j.LibID.ToString()),
-                    new XElement("id", j.ID.ToString()),
+                    new XElement("id", "603"),
                     new XElement("kind", j.Kind.ToString()),
                     new XElement("userelative", BoolToString(j.UseRelative)),
                     new XElement("isquestion", BoolToString(j.IsQuestion)),
