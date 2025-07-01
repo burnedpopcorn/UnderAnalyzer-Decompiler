@@ -910,10 +910,29 @@ namespace UndertaleModTool
 
         private void Command_SearchInCode(object sender, ExecutedRoutedEventArgs e)
         {
-            SearchInCodeWindow searchInCodeWindow = new();
+            string selectedCode = null;
+            bool isDisassembly = false;
+
+            var codeEditor = FindVisualChild<UndertaleCodeEditor>(DataEditor);
+            if (codeEditor is not null)
+            {
+                isDisassembly = codeEditor.DisassemblyTab?.IsSelected ?? false;
+                if (isDisassembly)
+                {
+                    selectedCode = codeEditor.DisassemblyEditor?.SelectedText;
+                    if (String.IsNullOrEmpty(selectedCode))
+                        isDisassembly = false; // Don't check "In assembly" if there is nothing selected in there.
+                }
+                else
+                {
+                    selectedCode = codeEditor.DecompiledEditor?.SelectedText;
+                }
+            }
+
+            SearchInCodeWindow searchInCodeWindow = new(selectedCode, isDisassembly);
             searchInCodeWindow.Show();
         }
-		
+
         private void DisposeGameData()
         {
             if (Data is not null)
@@ -2490,6 +2509,14 @@ namespace UndertaleModTool
         public string PromptLoadFile(string defaultExt, string filter)
         {
             OpenFileDialog dlg = new OpenFileDialog();
+            dlg.DefaultExt = defaultExt ?? "win";
+            dlg.Filter = filter ?? "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
+            return dlg.ShowDialog() == true ? dlg.FileName : null;
+        }
+
+        public string PromptSaveFile(string defaultExt, string filter)
+        {
+            SaveFileDialog dlg = new SaveFileDialog();
             dlg.DefaultExt = defaultExt ?? "win";
             dlg.Filter = filter ?? "GameMaker data files (.win, .unx, .ios, .droid, audiogroup*.dat)|*.win;*.unx;*.ios;*.droid;audiogroup*.dat|All files|*";
             return dlg.ShowDialog() == true ? dlg.FileName : null;
