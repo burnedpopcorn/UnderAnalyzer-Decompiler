@@ -27,7 +27,6 @@ using System.Windows.Forms;
 // Basic UTMT stuff
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
-// Added for UnderAnalyzer Support
 using Underanalyzer.Decompiler;
 using Underanalyzer;
 using UndertaleModTool;
@@ -941,16 +940,17 @@ async Task ExportShaders()
     Directory.CreateDirectory(projFolder + "/shaders");
     await Task.Run(() => Parallel.ForEach(Data.Shaders, ExportShader));
 }
+
 void ExportShader(UndertaleShader shader)
 {
     // Vertex and Fragment shit
-    var vertex = shader.GLSL_ES_Vertex.Content;
-    var fragment = shader.GLSL_ES_Fragment.Content;
+    string vertex = shader.GLSL_ES_Vertex.Content;
+    string fragment = shader.GLSL_ES_Fragment.Content;
 
     // to avoid declaring useless shit
     if (vertex != null && fragment != null)
     {
-        string splitter = "#define _YY_GLSLES_ 1\n";
+        string splitter = "#define _YY_GLSL";
         if (vertex.Contains(splitter))
             vertex = vertex.Substring(vertex.IndexOf(splitter) + splitter.Length);
         if (fragment.Contains(splitter))
