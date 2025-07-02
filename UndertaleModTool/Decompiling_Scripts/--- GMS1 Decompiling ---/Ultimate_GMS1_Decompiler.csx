@@ -2,8 +2,7 @@
     Ultimate_GMS1_Decompiler.csx
         (Previously Export2GMS1FIXED_UA)
 
-    Improved
-        by burnedpopcorn180
+    Improved by burnedpopcorn180
 
     Original Script by cubeww
     Original Fixed Version by CST1229
@@ -11,7 +10,7 @@
     Ultimate_GMS1_Decompiler Changes:
         - UI has been added, with the ability to select specific resource types to decompile
         - Added support for decompiling Shaders
-        - Added ability to log scripts and objects that failed to decompile to a text file
+        - Added ability to log all code entries that failed to decompile to a text file
 */
 
 using System;
@@ -46,7 +45,7 @@ string eol = "\n"; // Linux: "\n", Windows: "\r\n";
 // for error log
 List<string> errLog = new List<string>();
 
-// UnderAnalyzer Variable Definitions
+// UnderAnalyzer shit
 GlobalDecompileContext decompileContext = new(Data);
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
 
@@ -294,6 +293,13 @@ string decompileCode(UndertaleCode codeId)
     
     return code;
 }
+
+// If a code entry is null
+string AddtoLog(string assettype, string assetname)
+{
+    errLog.Add($"{assettype}:   {assetname}");
+    return "/*\nDECOMPILER FAILED!\n\n";
+}
 #endregion
 
 #region --------------- Start Exporting -------------
@@ -343,10 +349,10 @@ HideProgressBar();
 if (errLog.Count > 0) // If Errors were Encountered during decompilation
 {
     File.WriteAllLinesAsync(projFolder + "Error_Log.txt", errLog);
-    ScriptMessage($"Done with {errLog.Count} errors.\n" + projFolder + "\n\nError_Log.txt can be found in the Decompiled Project with a list of all the Scripts and Objects that failed to decompile");
+    ScriptMessage($"Done with {errLog.Count} error{(errLog.Count == 1 ? "" : "s")}.\n" + projFolder + "\n\nError_Log.txt can be found in the Decompiled Project with a list of all code entries that failed to decompile");
 }
 else // If there weren't any errors found
-    ScriptMessage("Done with No Errors Encountered!\nRemember that this only means that\nScripts and Objects had no problems decompiling");
+    ScriptMessage("Done with No Errors Encountered!");
 #endregion
 
 // All Export Functions
@@ -538,7 +544,7 @@ void ExportGameObject(UndertaleGameObject gameObject)
                 {
                     actionNode.Add(
                         new XElement("libid", k.LibID.ToString()),
-                        new XElement("id", "603"),
+                        new XElement("id", "603"),// set to 603 so its always code, because that's all we get
                         new XElement("kind", k.Kind.ToString()),
                         new XElement("userelative", BoolToString(k.UseRelative)),
                         new XElement("isquestion", BoolToString(k.IsQuestion)),
@@ -552,7 +558,7 @@ void ExportGameObject(UndertaleGameObject gameObject)
                         new XElement("arguments",
                             new XElement("argument",
                                 new XElement("kind", "1"),
-                                new XElement("string", (k.CodeId != null) ? decompileCode(k.CodeId) : "/*DECOMPILER FAILED!*/")
+                                new XElement("string", (k.CodeId != null) ? decompileCode(k.CodeId) : AddtoLog("OBJECT", gameObject.Name.Content))
                             )
                         )
                     );
@@ -592,7 +598,7 @@ void ExportRoom(UndertaleRoom room)
             // remove alpha (background color doesn't have alpha)
             new XElement("colour", (room.BackgroundColor ^ 0xFF000000).ToString()),
             new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
-            new XElement("code", decompileCode(room.CreationCodeId)),
+            new XElement("code", (room.CreationCodeId != null) ? decompileCode(room.CreationCodeId) : ""),
             new XElement("enableViews", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
             new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ShowColor))),
             //new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearDisplayBuffer))),
@@ -669,7 +675,7 @@ void ExportRoom(UndertaleRoom room)
             new XAttribute("y", i.Y.ToString()),
             new XAttribute("name", "inst_" + i.InstanceID.ToString("X")),
             new XAttribute("locked", "0"),
-            new XAttribute("code", decompileCode(i.CreationCode)),
+            new XAttribute("code", (i.CreationCode != null) ? decompileCode(i.CreationCode) : ""),
             new XAttribute("scaleX", i.ScaleX.ToString()),
             new XAttribute("scaleY", i.ScaleY.ToString()),
             new XAttribute("colour", i.Color.ToString()),
@@ -782,17 +788,11 @@ void ExportScript(UndertaleScript script)
 {
     UpdateProgressBar(null, $"Exporting Script: {script.Name.Content}", progress++, resourceNum);
 
-    // Save GML files, and detect decompilation failure
-    try
-    {
-        File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", decompileCode(script.Code));
-    }
-    catch (Exception e)
-    {
-        File.WriteAllText(projFolder + "/scripts/" + script.Name.Content + ".gml", "/*\nDECOMPILER FAILED!\n\n" + e.ToString() + "\n*/");
-        // To list what Script failed to decompile
-        errLog.Add($"SCRIPT:   {script.Name.Content}");
-    }
+    var scriptpath = projFolder + "/scripts/" + script.Name.Content + ".gml";
+    var scriptcode = ((script.Code != null) ? decompileCode(script.Code) : AddtoLog("SCRIPT", script.Name.Content));
+
+    // Save code to GML file
+    File.WriteAllText(scriptpath, scriptcode);
 }
 #endregion
 #region --------------- Export Font -----------------
@@ -909,7 +909,7 @@ void ExportTimeline(UndertaleTimeline timeline)
             entryNode.Element("event").Add(
                 new XElement("action",
                     new XElement("libid", j.LibID.ToString()),
-                    new XElement("id", "603"),
+                    new XElement("id", "603"),// set to always use code
                     new XElement("kind", j.Kind.ToString()),
                     new XElement("userelative", BoolToString(j.UseRelative)),
                     new XElement("isquestion", BoolToString(j.IsQuestion)),
@@ -923,7 +923,7 @@ void ExportTimeline(UndertaleTimeline timeline)
                     new XElement("arguments",
                         new XElement("argument",
                             new XElement("kind", "1"),
-                            new XElement("string", decompileCode(j.CodeId))
+                            new XElement("string", (j.CodeId != null) ? decompileCode(j.CodeId) : AddtoLog("TIMELINE", timeline.Name.Content))
                         )
                     )
                 )
@@ -957,7 +957,7 @@ void ExportShader(UndertaleShader shader)
             fragment = fragment.Substring(fragment.IndexOf(splitter) + splitter.Length);
     }
 
-    UpdateProgressBar(null, $"Exporting Script: {shader.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
     File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", vertex + "\n//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n" + fragment);
 }
 #endregion
