@@ -1569,6 +1569,13 @@ public string definitionDir = $"{Program.GetExecutableDirectory()}\\GameSpecific
 public string macroDir = $"{Program.GetExecutableDirectory()}\\GameSpecificData\\Underanalyzer\\";
 // the folder the project is exported to
 public string scriptDir = $"{rootDir}Exported_Project\\";
+// delete old decompiling attempt
+if (Directory.Exists(scriptDir))
+    Directory.Delete(scriptDir, true);
+
+// create Exported_Project folder
+Directory.CreateDirectory(scriptDir);
+public StreamWriter logFile = File.AppendText(scriptDir + "script.log");
 // for the decompiler
 GlobalDecompileContext globalDecompileContext = new(Data);
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
@@ -2593,13 +2600,18 @@ string GetRunnerFile(string fileDir)
     }
     return String.Empty;
 }
+
+public Mutex mut = new Mutex();
 /// <summary>
 /// adds a string to the log file.
 /// </summary>
 /// <param name="message"></param>
 public void PushToLog(string message)
 {
-    logList.Add($"{DateTime.UtcNow.ToLocalTime()} | " + message);
+    mut.WaitOne();
+    logFile.Flush();
+    logFile.WriteLine($"{message}");
+    mut.ReleaseMutex();
 }
 /// <summary>
 /// creates a new <c>GMProject.Resource</c> inside of the exported project
@@ -3035,6 +3047,7 @@ async Task DumpScripts()
     var watch = Stopwatch.StartNew();
     if (SCPT || CSTM_Enable)
     {
+        PushToLog("Dumping Scripts...");
         await Task.Run(() => Parallel.ForEach(scriptsToDump, parallelOptions, (scr, state, index) =>
         {
             if (scr is null)
@@ -3046,10 +3059,11 @@ async Task DumpScripts()
             {
                 SetProgressBar(null, $"Exporting Script: {scr.Name.Content}", r_num++, toDump);
 
-                DumpScript(scr, (int)index);
-
                 if (LOG)
-                    PushToLog($"'{scr.Name.Content}' successfully dumped.");
+                    PushToLog($"Dumping script '{scr.Name.Content}'...");
+                DumpScript(scr, (int)index);
+                if (LOG)
+                    PushToLog($"Script '{scr.Name.Content}' successfully dumped.");
             }
         }));
     }
@@ -3216,6 +3230,7 @@ async Task DumpObjects()
     if (OBJT || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
+        PushToLog("Dumping Objects...");
         await Task.Run(() => Parallel.ForEach(Data.GameObjects, parallelOptions, (obj, state, index) =>
         {
             if (obj is null)
@@ -3229,10 +3244,12 @@ async Task DumpObjects()
                 SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping object '{obj.Name.Content}'...");
                 DumpObject(obj, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{obj.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Object '{obj.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -3405,7 +3422,7 @@ async Task DumpSounds()
     if (SOND || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Sounds...");
         await Task.Run(() => Parallel.ForEach(Data.Sounds, parallelOptions, (snd, state, index) =>
         {
             if (snd is null)
@@ -3418,10 +3435,12 @@ async Task DumpSounds()
                 SetProgressBar(null, $"Exporting Sound: {snd.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping sound '{snd.Name.Content}'...");
                 DumpSound(snd, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{snd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Sound '{snd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -3493,7 +3512,7 @@ void DumpRoom(UndertaleRoom r, int index)
                         stretch = layer.BackgroundData.Stretch,
                         animationFPS = layer.BackgroundData.AnimationSpeed,
                         animationSpeedType = (int)layer.BackgroundData.AnimationSpeedType,
-                        userdefinedAnimFPS = false
+                        userdefinedAnimFPS = true
                     };
                     break;
                 }
@@ -3769,7 +3788,7 @@ async Task DumpRooms()
     if (ROOM || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Rooms...");
         await Task.Run(() => Parallel.ForEach(Data.Rooms, parallelOptions, (rm, state, index) =>
         {
             if (rm is null)
@@ -3782,10 +3801,12 @@ async Task DumpRooms()
                 SetProgressBar(null, $"Exporting Room: {rm.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping room '{rm.Name.Content}'...");
                 DumpRoom(rm, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{rm.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Room '{rm.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         // room order nodes
@@ -3985,7 +4006,7 @@ async Task DumpSprites()
     if (SPRT || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Sprites...");
         await Task.Run(() => Parallel.ForEach(Data.Sprites, parallelOptions, (spr, state, index) =>
         {
             if (spr is null)
@@ -3998,10 +4019,12 @@ async Task DumpSprites()
                 SetProgressBar(null, $"Exporting Sprite: {spr.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping sprite '{spr.Name.Content}'...");
                 DumpSprite(spr, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{spr.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Sprite '{spr.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -4096,7 +4119,7 @@ async Task DumpFonts()
     if (FONT || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Fonts...");
         await Task.Run(() => Parallel.ForEach(Data.Fonts, parallelOptions, (fnt, state, index) =>
         {
             if (fnt is null)
@@ -4109,10 +4132,12 @@ async Task DumpFonts()
                 SetProgressBar(null, $"Exporting Font: {fnt.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping font '{fnt.Name.Content}'...");
                 DumpFont(fnt, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{fnt.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Font '{fnt.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -4153,7 +4178,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
         };
         foreach (var channel in broadcastMessage.Channels)
         {
-            currentKeyframe.Channels.Add(channel.Key.ToString(), new MessageEventKeyframe() { Events = channel.Value.Messages.Select(message => message.Content).ToArray() });
+            currentKeyframe.Channels.Add(channel.Channel.ToString(), new MessageEventKeyframe() { Events = channel.Value.Messages.Select(message => message.Content).ToArray() });
         }
         dumpedSequence.events.Keyframes.Add(currentKeyframe);
     }
@@ -4174,8 +4199,12 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
             };
             foreach (var channel in moment.Channels)
             {
+                UndertaleString? currentEvent = null;
                 MomentsEventKeyframe mom = new();
-                UndertaleString currentEvent = channel.Value.Event;
+                if (channel.Value.Events.Count > 1)
+                    PushToLog("more than one moment in a single keyframe! report this!");
+                else if (channel.Value.Events.Count < 1)
+                    currentEvent = channel.Value.Events[0];
                 // if it exists
                 if (currentEvent is not null)
                 {
@@ -4185,7 +4214,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                         evstubscript = Regex.Replace(scriptData.Code.ParentEntry.Name.Content, "gml_Script_|gml_GlobalScript_", "");
 
                     mom.Events.Add(Regex.Replace(currentEvent.Content, "gml_Script_|gml_GlobalScript_", ""));
-                    currentKeyframe.Channels.Add(channel.Key.ToString(), mom);
+                    currentKeyframe.Channels.Add(channel.Channel.ToString(), mom);
                 }
                 dumpedSequence.moments.Keyframes.Add(currentKeyframe);
             }
@@ -4197,7 +4226,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
         dumpedSequence.eventStubScript = new AssetReference(evstubscript, GMAssetType.Script);
 
     // eventToFunction stuff
-    dumpedSequence.eventToFunction = s.FunctionIDs.ToDictionary(e => e.Key.ToString(), f => Regex.Replace(f.Value.Content, "gml_Script_|gml_GlobalScript_", ""));
+    dumpedSequence.eventToFunction = s.FunctionIDs.ToDictionary(e => e.ID.ToString(), f => Regex.Replace(f.FunctionName.Content, "gml_Script_|gml_GlobalScript_", ""));
 
     // need to make this a function because tracks can appear recursively!
     // for some reason the recursed tracks are in a normal list instead of an UndertaleSimpleList??
@@ -4230,7 +4259,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new AudioKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AudioKeyframe()
                                 {
                                     Mode = k.Value.Mode,
                                     Id = new AssetReference(k.Value.Resource.Resource.Name.Content, GMAssetType.Sound)
@@ -4256,7 +4285,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new AssetInstanceKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AssetInstanceKeyframe()
                                 {
                                     Id = new AssetReference(k.Value.Resource.Resource.Name.Content, GMAssetType.Object)
                                 })
@@ -4284,7 +4313,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new SpriteFrameKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new SpriteFrameKeyframe()
                                 {
                                     Id = new AssetReference(spr.Name.Content, GMAssetType.Sprite)
                                 })
@@ -4308,7 +4337,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new AssetSpriteKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AssetSpriteKeyframe()
                                 {
                                     Id = new AssetReference(k.Value.Resource.Resource.Name.Content, GMAssetType.Sprite)
                                 })
@@ -4332,7 +4361,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new AssetSequenceKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AssetSequenceKeyframe()
                                 {
                                     Id = new AssetReference(k.Value.Resource.Resource.Name.Content, GMAssetType.Sequence)
                                 })
@@ -4399,7 +4428,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 }
 
 
-                                currentKeyframe.Channels.Add(channel.Key.ToString(), value);
+                                currentKeyframe.Channels.Add(channel.Channel.ToString(), value);
                             }
                             ((GMRealTrack)currentTrack).keyframes.Keyframes.Add(currentKeyframe);
                         }
@@ -4409,7 +4438,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                 case "GMColourTrack":
                     {
                         currentTrack = new GMColourTrack();
-                        var keyframes = ((UndertaleSequence.RealKeyframes)track.Keyframes).List;
+                        var keyframes = ((UndertaleSequence.IntKeyframes)track.Keyframes).List;
 
                         foreach (var keyframe in keyframes)
                         {
@@ -4426,7 +4455,8 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 // set the value lol
                                 ColourKeyframe value = new()
                                 {
-                                    Colour = (uint)eColour.HALFALPHA_White,//Convert.ToUInt32(channel.Value.Value),
+                                    // cast into uint
+                                    Colour = unchecked((uint)channel.Value.Value),
                                     AnimCurveId = (channel.Value.AssetAnimCurve is not null && channel.Value.AssetAnimCurve.Resource is not null ? new AssetReference(channel.Value.AssetAnimCurve.Resource.Name.Content, GMAssetType.AnimationCurve) : null)
                                 };
 
@@ -4463,7 +4493,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                     value.EmbeddedAnimCurve = dumpedCurve;
                                 }
 
-                                currentKeyframe.Channels.Add(channel.Key.ToString(), value);
+                                currentKeyframe.Channels.Add(channel.Channel.ToString(), value);
                             }
                             ((GMColourTrack)currentTrack).keyframes.Keyframes.Add(currentKeyframe);
                         }
@@ -4483,7 +4513,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Length = keyframe.Length,
                                 Stretch = keyframe.Stretch,
                                 Disabled = keyframe.Disabled,
-                                Channels = keyframe.Channels.ToDictionary(k => k.Key.ToString(), k => new AssetTextKeyframe()
+                                Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AssetTextKeyframe()
                                 {
                                     Text = k.Value.Text.Content,
                                     Wrap = k.Value.Wrap,
@@ -4570,7 +4600,7 @@ async Task DumpSequences()
     if (SEQN || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Sequences...");
         await Task.Run(() => Parallel.ForEach(Data.Sequences, (seq, state, index) =>
         {
             if (seq is null)
@@ -4583,10 +4613,12 @@ async Task DumpSequences()
                 SetProgressBar(null, $"Exporting Sequence: {seq.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping '{seq.Name.Content}'...");
                 DumpSequence(seq, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{seq.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Sequence '{seq.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -4642,7 +4674,7 @@ async Task DumpShaders()
     if (SHDR || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Shaders...");
         await Task.Run(() => Parallel.ForEach(Data.Shaders, parallelOptions, (shd, state, index) =>
         {
             if (shd is null)
@@ -4656,10 +4688,12 @@ async Task DumpShaders()
                 SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping shader '{shd.Name.Content}'...");
                 DumpShader(shd, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{shd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Shader '{shd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -4794,7 +4828,7 @@ async Task DumpExtensions()
     if (EXTN || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Extensions...");
         await Task.Run(() => Parallel.ForEach(Data.Extensions, parallelOptions, (ext, state, index) =>
         {
             if (ext is null)
@@ -4807,9 +4841,11 @@ async Task DumpExtensions()
                 SetProgressBar(null, $"Exporting Extension: {ext.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping extension '{ext.Name.Content}'...");
                 DumpExtension(ext, (int)index);
                 if (LOG)
-                    PushToLog($"'{ext.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Extension '{ext.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
 
@@ -4914,7 +4950,7 @@ async Task DumpPaths()
     if (PATH || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Paths...");
         await Task.Run(() => Parallel.ForEach(Data.Paths, parallelOptions, (pth, state, index) =>
         {
             if (pth is null)
@@ -4927,10 +4963,12 @@ async Task DumpPaths()
                 SetProgressBar(null, $"Exporting Path: {pth.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping path '{pth.Name.Content}'...");
                 DumpPath(pth, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{pth.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Path '{pth.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -4980,7 +5018,7 @@ async Task DumpAnimCurves()
     if (ACRV || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog($"Dumping Animation Curves...");
         await Task.Run(() => Parallel.ForEach(Data.AnimationCurves, parallelOptions, (cur, state, index) =>
         {
             if (cur is null)
@@ -4993,10 +5031,12 @@ async Task DumpAnimCurves()
                 SetProgressBar(null, $"Exporting Animation Curve: {cur.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping animation curve '{cur.Name.Content}'...");
                 DumpAnimCurve(cur, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{cur.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Animation curve '{cur.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -5237,7 +5277,7 @@ async Task DumpTileSets()
     if (BGND || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog($"Dumping Tilesets...");
         await Task.Run(() => Parallel.ForEach(Data.Backgrounds, parallelOptions, (ts, state, index) =>
         {
             if (ts is null)
@@ -5250,14 +5290,16 @@ async Task DumpTileSets()
                 SetProgressBar(null, $"Exporting Tileset: {ts.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping tileset '{ts.Name.Content}'...");
                 DumpTileSet(ts, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{ts.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Tileset '{ts.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
-        PushToLog($"TileSets complete! Took {watch.ElapsedMilliseconds} ms");
+        PushToLog($"Tilesets complete! Took {watch.ElapsedMilliseconds} ms");
     }
     else
         return;
@@ -5309,7 +5351,7 @@ async Task DumpTimelines()
     if (TMLN || CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
-
+        PushToLog("Dumping Timelines...");
         await Task.Run(() => Parallel.ForEach(Data.Timelines, parallelOptions, (tl, state, index) =>
         {
             if (tl is null)
@@ -5322,10 +5364,12 @@ async Task DumpTimelines()
                 SetProgressBar(null, $"Exporting Timeline: {tl.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
+                if (LOG) 
+                    PushToLog($"Dumping timeline '{tl.Name.Content}'...");
                 DumpTimeline(tl, (int)index);
                 assetWatch.Stop();
                 if (LOG)
-                    PushToLog($"'{tl.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+                    PushToLog($"Timelines '{tl.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
         watch.Stop();
@@ -5513,13 +5557,6 @@ void DumpOptions()
 #endregion
 
 #region Program
-// delete old decompiling attempt
-if (Directory.Exists(scriptDir))
-    Directory.Delete(scriptDir, true);
-
-// create Exported_Project folder
-Directory.CreateDirectory(scriptDir);
-
 // scuffed CPU usage limiter
 double usageLimit = Math.Clamp((float)cpu_usage, 0f, 100f);
 int processorCount = Environment.ProcessorCount;
@@ -5557,8 +5594,8 @@ public int toDump =
          (PATH ? Data.Paths.Count : 0) +
           (ACRV ? Data.AnimationCurves.Count : 0) +
            (BGND ? (Data.Backgrounds.Count * 2) : 0) +
-            (SEQN ? (Data.Sequences.Count) : 0) +
-             (TMLN ? (Data.Timelines.Count) : 0));
+            (SEQN ? Data.Sequences.Count : 0) +
+             (TMLN ? Data.Timelines.Count : 0));
 
 SetUMTConsoleText("Initializing...");
 
@@ -5966,7 +6003,7 @@ if (SCPT
 
     foreach (string def in defs)
     {
-        GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def));
+        GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def), new JsonSerializerOptions() { AllowTrailingCommas = true });
 
         foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
         {
@@ -5975,7 +6012,7 @@ if (SCPT
                 string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
                 if (File.Exists(macroPath))
                 {
-                    MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath));
+                    MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath), new JsonSerializerOptions() { AllowTrailingCommas = true });
                     foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
                     {
                         // builtin enums
@@ -6171,8 +6208,6 @@ else
     // add logs if not a yymps
     if (errorList.Count > 0)
         File.WriteAllLines(scriptDir + "errors.log", errorList);
-
-    File.WriteAllLines(scriptDir + "script.log", logList);
 }
 
 ScriptMessage($"Script done with {errorList.Count} error{(errorList.Count == 1 ? "" : "s")}!" + (!YYMPS ? "\n\nDouble Check that all necessary files/folders are in the 'datafiles' directory!" : ""));
