@@ -97,6 +97,8 @@ namespace UndertaleModLib.Util
                 croppedImage.Dispose();
             }
 
+            returnImage.Strip();
+
             return returnImage;
         }
 
@@ -226,6 +228,8 @@ namespace UndertaleModLib.Util
                     pixels.SetPixel(x, y, pixelBit ? white : black);
                 }
             }
+
+            image.Strip();
 
             return image;
         }
