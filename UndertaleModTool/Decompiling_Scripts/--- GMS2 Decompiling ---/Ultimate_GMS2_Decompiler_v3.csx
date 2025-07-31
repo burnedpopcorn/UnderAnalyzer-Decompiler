@@ -63,20 +63,17 @@ using System.Windows.Media;
 using System.Windows.Shell;
 using System.Windows.Input;
 
+// checks
 EnsureDataLoaded();
-
-// this script only works with GMS2.3+ due to the major changes before that.
 if (!Data.IsVersionAtLeast(2, 3))
 {
-    ScriptError("Project version below GMS2.3! Aborting...");
-    return;
+    if (!ScriptQuestion("This Script is not intended for games made with GameMaker versions below GMS2.3\n(Consider using the GMS1 Decompiler instead)\n\n Continue Anyways?"))
+        return;
 }
 if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true)
 {
-	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\nContinue Anyways?"))
-    {
+	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\n\nContinue Anyways?"))
 		return;
-	}
 }
 
 #region options.ini Parser
@@ -1573,6 +1570,8 @@ public string scriptDir = $"{rootDir}Exported_Project\\";
 if (Directory.Exists(scriptDir))
     Directory.Delete(scriptDir, true);
 
+public string runnerFile = GetRunnerFile(rootDir);
+
 // create Exported_Project folder
 Directory.CreateDirectory(scriptDir);
 public StreamWriter logFile = File.AppendText(scriptDir + "script.log");
@@ -1718,7 +1717,7 @@ if (!YYMPS)
 {
     try
     {
-        Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(GetRunnerFile(rootDir));
+        Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(runnerFile);
 
         // for main option
         mainoptionimg = ToMagickImage(ExeIcon.ToBitmap());
@@ -5456,9 +5455,16 @@ async Task DumpTextures()
         {
             imageData.Dump(tw);
 			
-			// too bad most of the time its unreadable
-			var imgfilepath = Path.GetFileName(imageData.filePath.TrimEnd(Path.DirectorySeparatorChar));
-			SetProgressBar(null, $"Dumping Texture: {imgfilepath}", imgsdumped++, imagesToDump.Count);
+			// get filename
+			var imgfilepath = Path.GetFileNameWithoutExtension(imageData.filePath.TrimEnd(Path.DirectorySeparatorChar));
+            // check if its garbage text (technically a GUID, but whatever)
+            var isGUID = Guid.TryParse(imgfilepath, out _);
+
+            // only update progress bar text if its an actual readable name
+            if (!isGUID)
+                SetProgressBar(null, $"Dumping Texture: {imgfilepath}", imgsdumped++, imagesToDump.Count);
+            else
+                imgsdumped++;
         }));
     }
     watch.Stop();
@@ -5567,7 +5573,7 @@ ParallelOptions parallelOptions = new()
 };
 
 // obtain info from the runner
-RunnerData rData = new(GetRunnerFile(rootDir));
+RunnerData rData = new(runnerFile);
 
 GMProject finalExport = new GMProject(Data.GeneralInfo.Name.Content)
 {
