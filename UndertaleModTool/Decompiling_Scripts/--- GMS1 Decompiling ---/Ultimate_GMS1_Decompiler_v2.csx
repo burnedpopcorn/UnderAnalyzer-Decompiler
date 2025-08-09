@@ -354,30 +354,31 @@ void ExportSprite(UndertaleSprite sprite)
 
     // Save the sprite GMX
     var gmx = new XDocument(
-        new XComment(gmxDeclaration),
-        new XElement("sprite",
-            new XElement("type", "0"),
-            new XElement("xorig", sprite.OriginX.ToString()),
-            new XElement("yorigin", sprite.OriginY.ToString()),
-            new XElement("colkind", sprite.BBoxMode.ToString()),
-            new XElement("coltolerance", "0"),
-            new XElement("sepmasks", sprite.SepMasks.ToString("D")),
-            new XElement("bboxmode", sprite.BBoxMode.ToString()),
-            new XElement("bbox_left", sprite.MarginLeft.ToString()),
-            new XElement("bbox_right", sprite.MarginRight.ToString()),
-            new XElement("bbox_top", sprite.MarginTop.ToString()),
-            new XElement("bbox_bottom", sprite.MarginBottom.ToString()),
-            new XElement("HTile", "0"),
-            new XElement("VTile", "0"),
-            new XElement("TextureGroups",
-                new XElement("TextureGroup0", "0")
-            ),
-            new XElement("For3D", "0"),
-            new XElement("width", sprite.Width.ToString()),
-            new XElement("height", sprite.Height.ToString()),
-            new XElement("frames")
-        )
-    );
+    new XComment(gmxDeclaration),
+    new XElement("sprite",
+        new XElement("type", "0"),
+        new XElement("xorig", sprite.OriginX.ToString()),
+        new XElement("yorigin", sprite.OriginY.ToString()),
+        // If SepMasks == precise, set to 0 to avoid shape issues
+        new XElement("colkind", sprite.SepMasks == UndertaleSprite.SepMaskType.Precise ? "0" : sprite.BBoxMode.ToString()),
+        new XElement("coltolerance", "0"),
+        new XElement("sepmasks", sprite.SepMasks.ToString("D")),
+        new XElement("bboxmode", sprite.BBoxMode.ToString()),
+        new XElement("bbox_left", sprite.MarginLeft.ToString()),
+        new XElement("bbox_right", sprite.MarginRight.ToString()),
+        new XElement("bbox_top", sprite.MarginTop.ToString()),
+        new XElement("bbox_bottom", sprite.MarginBottom.ToString()),
+        new XElement("HTile", "0"),
+        new XElement("VTile", "0"),
+        new XElement("TextureGroups",
+            new XElement("TextureGroup0", "0")
+        ),
+        new XElement("For3D", "0"),
+        new XElement("width", sprite.Width.ToString()),
+        new XElement("height", sprite.Height.ToString()),
+        new XElement("frames")
+    )
+);
 
     for (int i = 0; i < sprite.Textures.Count; i++)
     {
