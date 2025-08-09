@@ -1,5 +1,5 @@
 # Just publish_gui_release.yml from the latest UnderAnalyzer
-name: Single File Workflow
+name: Publish Single File
 
 on:
   workflow_dispatch:
@@ -37,17 +37,17 @@ jobs:
         cp ./LICENSE.txt ./windows-latest
     - name: Create zip for stable release Windows GUI
       run: |
-        7z a -tzip UnderAnalyzer_GUI-isSingleFile-v3.${{ github.run_number }}.zip ./windows-latest/* -mx0
+        7z a -tzip UnderAnalyzer_GUI-isSingleFile-v4.${{ github.run_number }}.zip ./windows-latest/* -mx0
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v3.${{ github.run_number }}
-        release_name: Release v3.${{ github.run_number }}
+        tag_name: v4.${{ github.run_number }}
+        release_name: Release v4.${{ github.run_number }}
         body: |
-          This is release v3.${{ github.run_number }} of the UnderAnalyzer GUI Build
+          This is release v4.${{ github.run_number }} of the UnderAnalyzer GUI Build
         draft: false
         prerelease: false
 
@@ -58,7 +58,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./UnderAnalyzer_GUI-isSingleFile-v3.${{ github.run_number }}.zip
-        asset_name: UnderAnalyzer_GUI-isSingleFile-v3.${{ github.run_number }}.zip
+        asset_path: ./UnderAnalyzer_GUI-isSingleFile-v4.${{ github.run_number }}.zip
+        asset_name: UnderAnalyzer_GUI-isSingleFile-v4.${{ github.run_number }}.zip
         asset_content_type: application/zip
 
