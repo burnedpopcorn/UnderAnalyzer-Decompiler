@@ -16,7 +16,7 @@ Only the GUI versions will be Included
 <br>
 As only GUI builds can use these new Decompiling Scripts
 
-[Version Hash of UndertaleModTool Used: 1c05c26935d46899e7fac705664b5fb623294caa](https://github.com/UnderminersTeam/UndertaleModTool/commit/1c05c26935d46899e7fac705664b5fb623294caa)
+[Version Hash of UndertaleModTool Used: 4319e329a2d8452033bccb0b08d15d620798eebf](https://github.com/UnderminersTeam/UndertaleModTool/commit/4319e329a2d8452033bccb0b08d15d620798eebf)
 
 [Version Hash of UnderAnalyzer Used: 3aee7d8bec0c576e9ac190c3196db09bd36d8896](https://github.com/UnderminersTeam/Underanalyzer/commit/3aee7d8bec0c576e9ac190c3196db09bd36d8896)
 
