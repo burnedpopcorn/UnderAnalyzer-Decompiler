@@ -2576,14 +2576,14 @@ string GetRunnerFile(string fileDir)
         if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
             return file;
     }
-    bool doSearch = ScriptQuestion("Runner not found! Would you like to point me to it please?");
+    bool doSearch = ScriptQuestion("The runner was not found! Would you like to point me to it please?");
 
     while (doSearch)
     {
 		// damn, new ui made me do it
         System.Windows.Forms.OpenFileDialog fileDialog = new()
         {
-            Title = "Take me to your runner.......",
+            Title = "Take me to your game executable.......",
             InitialDirectory = rootDir,
             Filter = "Executable Files (*.exe)|*.exe",
         };
@@ -2594,7 +2594,7 @@ string GetRunnerFile(string fileDir)
             if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
                 return fileDialog.FileName;
             else
-                doSearch = ScriptQuestion("Thats not the runner! Would you like to try again?");
+                doSearch = ScriptQuestion("Thats not the runner! The runner is the game executable that loads the data.win file! Would you like to try again?");
         }
     }
     return String.Empty;
