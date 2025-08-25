@@ -167,7 +167,8 @@ namespace UndertaleModTool
                 "Asset.ParticleSystem",
                 "Asset.RoomInstance",
                 "Constant.Color",
-                "Constant.VirtualKey"
+                "Constant.VirtualKey",
+                "Constant.GamepadButton"
             };
         }
         #endregion
@@ -264,29 +265,30 @@ namespace UndertaleModTool
                             else
                             {
                                 // shit hit the fan guys
-                                MessageBox.Show($"Unexpected data format for {functionName}");
+                                //MessageBox.Show($"Unexpected data format for {functionName}");
+                                mainWindow.ScriptMessage($"Unexpected data format for {functionName}");
                             }
                         }
 
                         // SUCCESS!!!
-                        MessageBox.Show("JSON File Loaded Successfully");
+                        mainWindow.ScriptMessage("JSON File Loaded Successfully");
                     }
                     // Else FAILURE??????
                     // FUCKKKKKKKK
                     else
                     {
-                        MessageBox.Show("No 'GlobalNames' property found in the JSON file.");
+                        mainWindow.ScriptMessage("No 'GlobalNames' property found in the JSON file.");
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Error deserializing the JSON file.");
+                    mainWindow.ScriptMessage("Error deserializing the JSON file.");
                 }
             }
             // Extra Bad
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading JSON: {ex.Message}");
+                mainWindow.ScriptMessage($"Error loading JSON: {ex.Message}");
             }
         }
         #endregion
@@ -560,11 +562,11 @@ namespace UndertaleModTool
                 string jsonString = JsonSerializer.Serialize(JSON, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/CUSTOM_DEFINITIONS.json", jsonString);
 
-                MessageBox.Show("JSON File has been Saved\n\nRemember to Restart the Program for it to Apply");
+                mainWindow.ScriptMessage("JSON File has been Saved\n\nRemember to Restart the Program for it to Apply");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving JSON:\n\n {ex.Message}");
+                mainWindow.ScriptMessage($"Error saving JSON:\n\n {ex.Message}");
             }
         }
         #endregion
