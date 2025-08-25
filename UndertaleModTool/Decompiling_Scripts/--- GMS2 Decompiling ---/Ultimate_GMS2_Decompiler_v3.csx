@@ -3262,15 +3262,28 @@ public void DumpSound(UndertaleSound s, int index)
 {
     string soundName = s.Name.Content;
     string assetDir = $"{scriptDir}sounds\\{soundName}\\";
-    // get the last '/' in the file path.
-    int slashIndex = s.File.Content.LastIndexOf('/');
-    // dumb shit for external sound paths
-    string dumpedSoundPath = assetDir + (slashIndex != -1 ? s.File.Content.Substring(slashIndex, s.File.Content.Length - slashIndex) : s.File.Content);
-    string soundPath = rootDir + s.File.Content.Replace('/', '\\');
+    
+    // Get the sound file name and path with null checks
+    string soundFileName = "sound" + index.ToString() + ".unknown";
+    string soundFilePath = "";
+
+    if (s.File != null && !string.IsNullOrEmpty(s.File.Content))
+    {
+        int slashIndex = s.File.Content.LastIndexOf('/');
+        soundFileName = (slashIndex != -1 ? s.File.Content.Substring(slashIndex + 1) : s.File.Content);
+        soundFilePath = s.File.Content;
+    }
+    else
+    {
+        errorList.Add($"{soundName} | Sound file path is null or empty");
+    }
+
+    string dumpedSoundPath = assetDir + soundFileName;
+    string soundPath = rootDir + soundFilePath.Replace('/', '\\');
 
     Directory.CreateDirectory(assetDir);
 
-    bool isExternal = File.Exists(rootDir + s.File.Content);
+    bool isExternal = !string.IsNullOrEmpty(soundFilePath) && File.Exists(rootDir + soundFilePath);
 
     GMSound dumpedSound = new GMSound(soundName)
     {
@@ -3303,35 +3316,46 @@ public void DumpSound(UndertaleSound s, int index)
     byte[] wmaSignature = new byte[] { (byte)0x30, (byte)0x26, (byte)0xB2 };
     // TODO: WMA support?
 
-    byte[] fileData;
-    // if not using audiogroup_default and is an external audiogroup
-    if (s.GroupID != 0 && File.Exists(audioGroupPath))
+    byte[] fileData = null;
+    
+    // Only proceed if we have a valid file path
+    if (!string.IsNullOrEmpty(soundFilePath))
     {
-        // referenced from ExportAllSounds.csx
-        try
+        // if not using audiogroup_default and is an external audiogroup
+        if (s.GroupID != 0 && File.Exists(audioGroupPath))
         {
-            UndertaleData data = null;
-            // read the audio group
-            using (var stream = new FileStream(audioGroupPath, FileMode.Open, FileAccess.Read))
-                data = UndertaleIO.Read(stream);
+            // referenced from ExportAllSounds.csx
+            try
+            {
+                UndertaleData data = null;
+                // read the audio group
+                using (var stream = new FileStream(audioGroupPath, FileMode.Open, FileAccess.Read))
+                    data = UndertaleIO.Read(stream);
 
-            fileData = data.EmbeddedAudio[s.AudioID].Data;
-            File.WriteAllBytes(dumpedSoundPath, data.EmbeddedAudio[s.AudioID].Data);
+                fileData = data.EmbeddedAudio[s.AudioID].Data;
+                File.WriteAllBytes(dumpedSoundPath, data.EmbeddedAudio[s.AudioID].Data);
+            }
+            catch (Exception e)
+            {
+                errorList.Add($"{soundName} | An error occured while trying to load {Data.AudioGroups[s.GroupID]?.Name?.Content ?? "unknown"}, {e}");
+                IncrementProgressParallel();
+                return;
+            }
         }
-        catch (Exception e)
+        else if (s.AudioFile is not null)
         {
-            errorList.Add($"{soundName} | An error occured while trying to load {Data.AudioGroups[s.GroupID].Name.Content}, {e}");
-            IncrementProgressParallel();
-            return;
+            File.WriteAllBytes(dumpedSoundPath, s.AudioFile.Data);
+        }
+        else if (isExternal)
+        {
+            File.Copy(soundPath, dumpedSoundPath, true);
         }
     }
-    else if (s.AudioFile is not null)
-        File.WriteAllBytes(dumpedSoundPath, s.AudioFile.Data);
-    else if (isExternal)
-        File.Copy(soundPath, dumpedSoundPath);
 
     if (File.Exists(dumpedSoundPath))
+    {
         fileData = File.ReadAllBytes(dumpedSoundPath);
+    }
     else
     {
         errorList.Add($"{soundName} | File: \"{dumpedSoundPath}\" does not exist.");
@@ -3359,12 +3383,13 @@ public void DumpSound(UndertaleSound s, int index)
         errorList.Add($"{soundName} | Unable to fetch format.");
         return;
     }
+    
     if (FIXAUDIO)
     {
         // rename files without extension
-        if (dumpedSoundPath.IndexOf(fileExt, 0, StringComparison.OrdinalIgnoreCase) == -1 && dumpedSoundPath.EndsWith($".{fileExt}"))
+        if (!dumpedSoundPath.EndsWith($".{fileExt}", StringComparison.OrdinalIgnoreCase))
         {
-            string newPath = Path.GetFileNameWithoutExtension(dumpedSoundPath) + $".{fileExt}";
+            string newPath = Path.ChangeExtension(dumpedSoundPath, fileExt);
             File.Move(dumpedSoundPath, newPath);
             dumpedSoundPath = newPath; // update it
         }
@@ -3387,10 +3412,10 @@ public void DumpSound(UndertaleSound s, int index)
         case "wma":
             errorList.Add($"{soundName} | WMA format not supported.");
             return;
-
     }
+    
     // set the sound file name in the yy file
-    dumpedSound.soundFile = (s.File is not null) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
+    dumpedSound.soundFile = File.Exists(dumpedSoundPath) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
 
     if (ws is not null)
     {
@@ -3407,6 +3432,8 @@ public void DumpSound(UndertaleSound s, int index)
 
         // 3d sounds dont seem to decompile correctly with this method, find a more consistent way later.
         dumpedSound.type = ws.WaveFormat.Channels - 1;
+        
+        ws.Dispose();
     }
 
     File.WriteAllText($"{assetDir}{soundName}.yy", JsonSerializer.Serialize(dumpedSound, jsonOptions));
@@ -3820,184 +3847,207 @@ async Task DumpRooms()
 
 void DumpSprite(UndertaleSprite s, int index)
 {
-    bool exportFrames = true;
-    string spriteName = s.Name.Content;
-    string assetDir = $"{scriptDir}sprites\\{spriteName}\\";
-    string layersPath = assetDir + "layers\\";
-    string layerId = Guid.NewGuid().ToString();
-
-    // kill gamemakers internal sprites
-    if (spriteName.StartsWith("_filter_") || spriteName.StartsWith("_effect_")) return;
-
-    Directory.CreateDirectory(assetDir);
-    Directory.CreateDirectory(layersPath);
-
-    GMSprite dumpedSprite = new(spriteName)
+    try
     {
-        bboxMode = (int)s.BBoxMode,
-        preMultiplyAlpha = s.Transparent,
-        edgeFiltering = s.Smooth,
-        bbox_left = s.MarginLeft,
-        bbox_right = s.MarginRight,
-        bbox_bottom = s.MarginBottom,
-        bbox_top = s.MarginTop,
-        width = (int)s.Width,
-        height = (int)s.Height,
-        // taken from quantum (thanks)
-        collisionKind = s.SepMasks switch
+        bool exportFrames = true;
+        string spriteName = s.Name?.Content ?? "unknown_sprite";
+        string assetDir = $"{scriptDir}sprites\\{spriteName}\\";
+        string layersPath = assetDir + "layers\\";
+        string layerId = Guid.NewGuid().ToString();
+
+        // kill gamemakers internal sprites
+        if (spriteName.StartsWith("_filter_") || spriteName.StartsWith("_effect_")) return;
+
+        Directory.CreateDirectory(assetDir);
+        Directory.CreateDirectory(layersPath);
+
+        GMSprite dumpedSprite = new(spriteName)
         {
-            UndertaleSprite.SepMaskType.AxisAlignedRect => 1,
-            UndertaleSprite.SepMaskType.Precise => 0,
-            UndertaleSprite.SepMaskType.RotatedRect => 5,
-        },
-        nineSlice = s.V3NineSlice is null ? null : new GMSprite.GMNineSliceData
-        {
-            enabled = s.V3NineSlice.Enabled,
-            left = s.V3NineSlice.Left,
-            right = s.V3NineSlice.Right,
-            top = s.V3NineSlice.Top,
-            bottom = s.V3NineSlice.Bottom,
-            tileMode = s.V3NineSlice.TileModes.Select(e => (int)e).ToArray()
-        },
-        parent = GetParentFolder(GMAssetType.Sprite),
-        tags = GetTags(s)
-    };
-
-    if (s.V2Sequence is not null)
-        dumpedSprite.sequence = SequenceDumper(s.V2Sequence, s);
-    else
-    {
-        dumpedSprite.sequence = new GMSequence(spriteName)
-        {
-            length = s.Textures.Count,
-            xorigin = s.OriginX,
-            yorigin = s.OriginY,
-            playbackSpeed = s.GMS2PlaybackSpeed,
-            playbackSpeedType = (int)s.GMS2PlaybackSpeedType,
-            spriteId = new AssetReference(spriteName, GMAssetType.Sprite),
-        };
-    }
-    // precise per frame checking
-    if (dumpedSprite.collisionKind == 0 && s.CollisionMasks.Count > 1)
-        dumpedSprite.collisionKind = 4;
-
-    // origin calculations
-    int originX = s.OriginX;
-    int originY = s.OriginY;
-    int width = (int)s.Width;
-    int height = (int)s.Height;
-    eOrigin o = eOrigin.Custom;
-
-    if (originX == 0 && originY == 0)
-        o = eOrigin.TopLeft;
-    else if (originX == width / 2 && originY == 0)
-        o = eOrigin.TopCentre;
-    else if (originX == width && originY == 0)
-        o = eOrigin.TopRight;
-    else if (originX == 0 && originY == width / 2)
-        o = eOrigin.MiddleLeft;
-    else if (originX == width / 2 && originY == height / 2)
-        o = eOrigin.MiddleCentre;
-    else if (originX == width && originY == height / 2)
-        o = eOrigin.MiddleRight;
-    else if (originX == 0 && originY == height)
-        o = eOrigin.BottomLeft;
-    else if (originX == width / 2 && originY == height)
-        o = eOrigin.BottomCentre;
-    else if (originX == width && originY == height)
-        o = eOrigin.BottomRight;
-
-    dumpedSprite.origin = o;
-
-    // if there is at least 1 frame
-    if (s.Textures.Count > 0 && s.Textures[0] is not null)
-    {
-        // thank you for the idea melia!!
-        if (s.Textures[0].Texture?.TexturePage.TextureData.Width == s.Width && s.Textures[0].Texture?.TexturePage.TextureData.Height == s.Height)
-            dumpedSprite.For3D = true;
-        // create the layer
-        dumpedSprite.layers.Add(new GMSprite.GMImageLayer(layerId));
-    }
-    else
-        exportFrames = false;
-
-    AssetReference texGroup = GetTextureGroup(spriteName);
-    // another check for For3D
-    if (texGroup.name.StartsWith("__YY__")) dumpedSprite.For3D = true;
-    else dumpedSprite.textureGroupId = texGroup;
-
-    GMSpriteFramesTrack framesTrack = new();
-
-    for (int i = 0; i < s.Textures.Count; i++)
-    {
-        UndertaleSprite.TextureEntry tex = s.Textures[i];
-
-        string frameGUID = Guid.NewGuid().ToString();
-
-        // create the directory for the frame
-        Directory.CreateDirectory(layersPath + frameGUID);
-
-        if (exportFrames)
-        {
-            using (TextureWorker tw = new TextureWorker())
+            bboxMode = (int)s.BBoxMode,
+            preMultiplyAlpha = s.Transparent,
+            edgeFiltering = s.Smooth,
+            bbox_left = s.MarginLeft,
+            bbox_right = s.MarginRight,
+            bbox_bottom = s.MarginBottom,
+            bbox_top = s.MarginTop,
+            width = (int)s.Width,
+            height = (int)s.Height,
+            // taken from quantum (thanks)
+            collisionKind = s.SepMasks switch
             {
-                switch ((int)s.SSpriteType)
+                UndertaleSprite.SepMaskType.AxisAlignedRect => 1,
+                UndertaleSprite.SepMaskType.Precise => 0,
+                UndertaleSprite.SepMaskType.RotatedRect => 5,
+                _ => 0
+            },
+            nineSlice = s.V3NineSlice is null ? null : new GMSprite.GMNineSliceData
+            {
+                enabled = s.V3NineSlice.Enabled,
+                left = s.V3NineSlice.Left,
+                right = s.V3NineSlice.Right,
+                top = s.V3NineSlice.Top,
+                bottom = s.V3NineSlice.Bottom,
+                tileMode = s.V3NineSlice.TileModes?.Select(e => (int)e).ToArray() ?? Array.Empty<int>()
+            },
+            parent = GetParentFolder(GMAssetType.Sprite),
+            tags = GetTags(s)
+        };
+
+        if (s.V2Sequence is not null)
+            dumpedSprite.sequence = SequenceDumper(s.V2Sequence, s);
+        else
+        {
+            dumpedSprite.sequence = new GMSequence(spriteName)
+            {
+                length = s.Textures.Count,
+                xorigin = s.OriginX,
+                yorigin = s.OriginY,
+                playbackSpeed = s.GMS2PlaybackSpeed,
+                playbackSpeedType = (int)s.GMS2PlaybackSpeedType,
+                spriteId = new AssetReference(spriteName, GMAssetType.Sprite),
+            };
+        }
+        // precise per frame checking
+        if (dumpedSprite.collisionKind == 0 && s.CollisionMasks?.Count > 1)
+            dumpedSprite.collisionKind = 4;
+
+        // origin calculations
+        int originX = s.OriginX;
+        int originY = s.OriginY;
+        int width = (int)s.Width;
+        int height = (int)s.Height;
+        eOrigin o = eOrigin.Custom;
+
+        if (originX == 0 && originY == 0)
+            o = eOrigin.TopLeft;
+        else if (originX == width / 2 && originY == 0)
+            o = eOrigin.TopCentre;
+        else if (originX == width && originY == 0)
+            o = eOrigin.TopRight;
+        else if (originX == 0 && originY == width / 2)
+            o = eOrigin.MiddleLeft;
+        else if (originX == width / 2 && originY == height / 2)
+            o = eOrigin.MiddleCentre;
+        else if (originX == width && originY == height / 2)
+            o = eOrigin.MiddleRight;
+        else if (originX == 0 && originY == height)
+            o = eOrigin.BottomLeft;
+        else if (originX == width / 2 && originY == height)
+            o = eOrigin.BottomCentre;
+        else if (originX == width && originY == height)
+            o = eOrigin.BottomRight;
+
+        dumpedSprite.origin = o;
+
+        // if there is at least 1 frame
+        if (s.Textures?.Count > 0 && s.Textures[0] is not null)
+        {
+            // thank you for the idea melia!!
+            if (s.Textures[0].Texture?.TexturePage?.TextureData?.Width == s.Width && 
+                s.Textures[0].Texture?.TexturePage?.TextureData?.Height == s.Height)
+                dumpedSprite.For3D = true;
+            // create the layer
+            dumpedSprite.layers.Add(new GMSprite.GMImageLayer(layerId));
+        }
+        else
+            exportFrames = false;
+
+        AssetReference texGroup = GetTextureGroup(spriteName);
+        // another check for For3D
+        if (texGroup?.name?.StartsWith("__YY__") == true) dumpedSprite.For3D = true;
+        else dumpedSprite.textureGroupId = texGroup;
+
+        GMSpriteFramesTrack framesTrack = new();
+
+        for (int i = 0; i < s.Textures?.Count; i++)
+        {
+            UndertaleSprite.TextureEntry tex = s.Textures[i];
+
+            string frameGUID = Guid.NewGuid().ToString();
+
+            // create the directory for the frame
+            Directory.CreateDirectory(layersPath + frameGUID);
+
+            if (exportFrames)
+            {
+                using (TextureWorker tw = new TextureWorker())
                 {
-                    case 0: // raster
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
-                    case 1: // vector
-                        errorList.Add($"{dumpedSprite.name} | SWF sprites are not implemented, set to blank image.");
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
-                    case 2: // SPINE
-                        errorList.Add($"{dumpedSprite.name} | SPINE sprites are not implemented, set to blank image.");
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
+                    switch ((int)s.SSpriteType)
+                    {
+                        case 0: // raster
+                            dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+                            break;
+                        case 1: // vector
+                            errorList.Add($"{dumpedSprite.name} | SWF sprites are not implemented, set to blank image.");
+                            dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+                            break;
+                        case 2: // SPINE
+                            errorList.Add($"{dumpedSprite.name} | SPINE sprites are not implemented, set to blank image.");
+                            dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+                            break;
+                    }
                 }
+
+                imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png"));
+                imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png"));
             }
 
-            imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png"));
-            imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png"));
-
-        }
-
-
-        Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
-        {
-            Length = 1f,
-            Key = (float)i,
-        };
-
-        currentKeyframe.Channels.Add("0", new SpriteFrameKeyframe
-        {
-            Id = new AssetReference(spriteName, GMAssetType.Sprite)
+            Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
             {
-                name = frameGUID
-            },
-            name = String.Empty
-        });
+                Length = 1f,
+                Key = (float)i,
+            };
 
-        framesTrack.keyframes.Keyframes.Add(currentKeyframe);
-    }
+            currentKeyframe.Channels.Add("0", new SpriteFrameKeyframe
+            {
+                Id = new AssetReference(spriteName, GMAssetType.Sprite)
+                {
+                    name = frameGUID
+                },
+                name = String.Empty
+            });
 
-    if (s.V2Sequence is not null)
-    {
-        // fix sequence tracks
-        for (int i = 0; i < dumpedSprite.frames.Count; i++)
-        {
-            var frameName = dumpedSprite.frames[i].name;
-            // sprites should only have one track
-            dumpedSprite.sequence.tracks[0].keyframes.Keyframes[i].Channels["0"].Id.name = frameName;
+            framesTrack.keyframes.Keyframes.Add(currentKeyframe);
         }
+
+        if (s.V2Sequence is not null)
+        {
+            // fix sequence tracks - 添加边界检查
+            if (dumpedSprite.sequence?.tracks?.Count > 0 && 
+                dumpedSprite.frames?.Count > 0)
+            {
+                var track = dumpedSprite.sequence.tracks[0];
+                if (track?.keyframes?.Keyframes != null)
+                {
+                    for (int i = 0; i < Math.Min(dumpedSprite.frames.Count, track.keyframes.Keyframes.Count); i++)
+                    {
+                        var frameName = dumpedSprite.frames[i].name;
+                        var keyframe = track.keyframes.Keyframes[i];
+                        
+                        if (keyframe?.Channels != null && keyframe.Channels.ContainsKey("0"))
+                        {
+                            keyframe.Channels["0"].Id.name = frameName;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            dumpedSprite.sequence?.tracks?.Add(framesTrack);
+        }
+
+        File.WriteAllText($"{assetDir}{spriteName}.yy", JsonSerializer.Serialize(dumpedSprite, jsonOptions));
+        CreateProjectResource(GMAssetType.Sprite, spriteName, index);
     }
-    else
-        dumpedSprite.sequence.tracks.Add(framesTrack);
-
-    File.WriteAllText($"{assetDir}{spriteName}.yy", JsonSerializer.Serialize(dumpedSprite, jsonOptions));
-    CreateProjectResource(GMAssetType.Sprite, spriteName, index);
-
-    IncrementProgressParallel();
+    catch (Exception ex)
+    {
+        errorList.Add($"处理精灵 {s.Name?.Content ?? "unknown"} 时出错: {ex.Message}");
+    }
+    finally
+    {
+        IncrementProgressParallel();
+    }
 }
 
 async Task DumpSprites()
