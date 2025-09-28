@@ -1546,6 +1546,7 @@ public class GMTimeline : GMResource
 }
 
 #endregion
+
 #endregion
 
 #region Main Variables
@@ -3821,7 +3822,8 @@ async Task DumpRooms()
 void DumpSprite(UndertaleSprite s, int index)
 {
     bool exportFrames = true;
-    string spriteName = s.Name.Content;
+    // Make sure the sprite name isn't empty
+    string spriteName = ((s.Name.Content != "") ? s.Name.Content : $"Unknown_Sprite_{index}");
     string assetDir = $"{scriptDir}sprites\\{spriteName}\\";
     string layersPath = assetDir + "layers\\";
     string layerId = Guid.NewGuid().ToString();
