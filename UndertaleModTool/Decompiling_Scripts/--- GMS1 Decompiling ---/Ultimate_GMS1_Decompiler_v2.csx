@@ -4,7 +4,7 @@
     Improved by burnedpopcorn180
 
     Original Script by cubeww
-    Original Fixed Version by CST1229
+    Fixed Version by CST1229
 
     Ultimate_GMS1_Decompiler_v2 Changes:
         - Rewrote UI to look better and use Dark Mode
@@ -491,8 +491,6 @@ void ExportGameObject(UndertaleGameObject gameObject)
         )
     );
 
-
-
     // Loop through PhysicsShapePoints List
     for (int _point = 0; _point < gameObject.PhysicsVertices.Count; _point++)
     {
@@ -706,7 +704,6 @@ void ExportRoom(UndertaleRoom room)
     gmx.Element("room").Add(tilesNode);
 
     //Room Physics
-
     gmx.Element("room").Add(
         new XElement("PhysicsWorld", BoolToString(room.World)),
         new XElement("PhysicsWorldTop", room.Top),

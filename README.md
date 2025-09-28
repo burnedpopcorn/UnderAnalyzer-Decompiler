@@ -16,9 +16,9 @@ Only the GUI versions will be Included
 <br>
 As only GUI builds can use these new Decompiling Scripts
 
-[Version Hash of UndertaleModTool Used: cc8d2a8a69f57c9a99f1d9d757fa895aa7290ebc](https://github.com/UnderminersTeam/UndertaleModTool/commit/cc8d2a8a69f57c9a99f1d9d757fa895aa7290ebc)
+[Version Hash of UndertaleModTool Used: a22a404aa51bbdc5345f83a655f50ef252b2be74](https://github.com/UnderminersTeam/UndertaleModTool/commit/a22a404aa51bbdc5345f83a655f50ef252b2be74)
 
-[Version Hash of UnderAnalyzer Used: 7b70d383d627b18b9b7f14618a48846e8936e0e6](https://github.com/UnderminersTeam/Underanalyzer/commit/7b70d383d627b18b9b7f14618a48846e8936e0e6)
+[Version Hash of UnderAnalyzer Used: 94cc220ee9f738d6a79d1a46563ab1caa54ad243](https://github.com/UnderminersTeam/Underanalyzer/commit/94cc220ee9f738d6a79d1a46563ab1caa54ad243)
 
 ## Main Features
 
@@ -46,7 +46,7 @@ Miscellanous Scripts:
 - BetterExportSpritesAsGIF.csx (Can Export Sprites to GIF in bulk, and can adjust the Speed of the GIF, without an external DLL)
 - ExportSpriteStrip.csx (Exports Sprites as a Sprite Strip, which places all frames of a Sprite within the same file)
 
-## Credit
+## Credits
 
 UnderTaleModTool Contributors
 - All previous and current UnderTaleModTool Contributors
@@ -69,7 +69,6 @@ My Contributions
 - Updated the Better Dark/Light Mode by luizzeroxis to also work with new windows introduced in UTMT 0.7.0.0 
 - Made the Variable Definition Maker Window and all of its functionality
 - Made the Pizza Tower Enum Finder Window and most of its functionality
-- Improved the Decompiling Scripts in various ways (see script headers to see list of changes)
+- Improved the Decompiling Scripts in various ways (see script code comments to see list of changes)
 - Made BetterExportSpritesAsGIF.csx and ExportSpriteStrip.csx
-
-And more to come!
+- And more to come!
