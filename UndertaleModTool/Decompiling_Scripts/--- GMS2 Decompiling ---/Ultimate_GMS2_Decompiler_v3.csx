@@ -3480,6 +3480,17 @@ void DumpRoom(UndertaleRoom r, int index)
         tags = GetTags(r)
     };
 
+	// add every gameobject instance (from all layers) in room to instanceCreationOrder (layer order independent)
+	foreach (UndertaleRoom.GameObject inst_obj in r.GameObjects)
+	{
+		string instanceName = $"inst_{IdToHex(inst_obj.InstanceID)}";
+		// add an entry to instanceCreationOrder
+		dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room)
+		{
+			name = instanceName
+		});
+	}
+
     #region layer handling
     // layers are the hardest part of the room decompiler.
 
@@ -3617,11 +3628,11 @@ void DumpRoom(UndertaleRoom r, int index)
                             properties = newProperties
                         });
 
-                        // add an entry to instanceCreationOrder
-                        dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room)
-                        {
-                            name = instanceName
-                        });
+                        // moved code to before layer handling as instanceCreationOrder should be independent from layer order.
+                        // dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room)
+                        // {
+                        //     name = instanceName
+                        // });
                     }
                     // push to end result
                     dumpedLayer = newLayer;
