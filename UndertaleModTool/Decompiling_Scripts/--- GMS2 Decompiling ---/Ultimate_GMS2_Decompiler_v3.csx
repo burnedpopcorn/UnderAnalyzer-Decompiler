@@ -2753,29 +2753,58 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 else
                     prop.varType = 1; // Integer
             }
+
+            // Asset
+            else if (
+                !rawValue.Contains("\"") // Stop Strings
+                && !Regex.IsMatch(rawValue, @"\W") 
+                && (!char.IsDigit(rawValue[0]) || rawValue.Length > 1) // Stop Ints
+                && IsGameAsset(rawValue) // Checks if value is a Game Asset
+            ) prop.varType = 5;
+
             // Expression
             else if (Regex.IsMatch(rawValue, @"[=!<>+\-*/%&|()]"))
                 prop.varType = 4;
-            /*
-            // Asset (TODO)
-            else if (!rawValue.Contains("\"") && !Regex.IsMatch(rawValue, @"\W") && !char.IsDigit(rawValue[0]))
-            {
-                prop.varType = 5;
-                prop.resource = new()
-                {
-                    name = rawValue,
-                    path = $"scripts/{rawValue}/{rawValue}.yy"
-                };
-            }
-            */
+            // Default (Expression)
             else
-                prop.varType = 4; // Fallback to Expression
+                prop.varType = 4;
 
             propList.Add(prop);
         }
     }
 
     return propList;
+}
+
+// TODO - Get Proper Script Names (Functions only)
+public bool IsGameAsset(string assetname)
+{
+    if (CheckAssetChunks(Data?.Sprites)) return true;
+    if (CheckAssetChunks(Data?.GameObjects)) return true;
+    if (CheckAssetChunks(Data?.Rooms)) return true;
+    if (CheckAssetChunks(Data?.Sounds)) return true;
+    if (CheckAssetChunks(Data?.Backgrounds)) return true;
+    if (CheckAssetChunks(Data?.Shaders)) return true;
+    if (CheckAssetChunks(Data?.Fonts)) return true;
+    if (CheckAssetChunks(Data?.Paths)) return true;
+    if (CheckAssetChunks(Data?.Timelines)) return true;
+    if (CheckAssetChunks(Data?.Scripts)) return true;
+    if (CheckAssetChunks(Data?.Extensions)) return true;
+
+    return false;
+
+    bool CheckAssetChunks(dynamic? Chunk)
+    {
+        if (Chunk is null || Chunk.Count <= 0)
+            return false;
+
+        foreach (var asset in Chunk)
+        {
+            if (asset is null) continue;
+            if (asset.Name.Content == assetname) return true;
+        }
+        return false;
+    }
 }
 
 /// <summary>
