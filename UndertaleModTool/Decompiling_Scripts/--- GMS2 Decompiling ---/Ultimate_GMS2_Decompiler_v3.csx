@@ -359,6 +359,13 @@ public class GMProject : GMResource
     public class ProjectMetaData
     {
         public string IDEVersion { get; set; } = "2022.0.3.85"; // the IDE version this script was made for
+
+        // YYMPS metadata (don't add if not yymps)
+        public string? PackageType { get; set; } = null;
+        public string? PackageName { get; set; } = null;
+        public string? PackageID { get; set; } = null;
+        public string? PackagePublisher { get; set; } = null;
+        public string? PackageVersion { get; set; } = null;
     }
 
     public class Resource
@@ -1550,13 +1557,17 @@ public class GMTimeline : GMResource
 #endregion
 
 #region Main Variables
-public var jsonOptions = new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true };
+public var jsonOptions = new JsonSerializerOptions 
+{
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // for when not using YYMPS
+    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, 
+    WriteIndented = true 
+};
 
 // assetName | groupName
 public Dictionary<string, string> texGroupStuff = new();
 
 public List<string> errorList = new();
-public List<string> logList = new();
 
 public ConcurrentBag<ImageAssetData> imagesToDump = new();
 public Dictionary<string, List<string>> extensionGML = new();
@@ -1571,13 +1582,16 @@ public string scriptDir = $"{rootDir}Exported_Project\\";
 if (Directory.Exists(scriptDir))
     Directory.Delete(scriptDir, true);
 
+// Get Game Executable
 public string runnerFile = GetRunnerFile(rootDir);
 
 // create Exported_Project folder
 Directory.CreateDirectory(scriptDir);
-public StreamWriter logFile = File.AppendText(scriptDir + "script.log");
+
 // for the decompiler
-GlobalDecompileContext globalDecompileContext = new(Data);
+GlobalDecompileContext globalDecompileContext = null;
+try { globalDecompileContext = new(Data); } catch { } // YYC games sometimes cause this to fail (TODO - make this cleaner) 
+
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
 
 // progress bar
@@ -1586,22 +1600,6 @@ public int r_num = 0;
 #endregion
 
 #region Icon shit
-public IMagickImage ToMagickImage(Bitmap bitmap)
-{
-    using (var memoryStream = new MemoryStream())
-    {
-        // save Bitmap to MemoryStream
-        bitmap.Save(memoryStream, ImageFormat.Png);
-
-        // reset memory stream position
-        memoryStream.Seek(0, SeekOrigin.Begin);
-
-        // create a MagickImage from MemoryStream
-        IMagickImage magickImage = new MagickImage(memoryStream);
-
-        return magickImage;
-    }
-}
 
 // thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
 #region Extract Icon Functions
@@ -1712,35 +1710,58 @@ internal static class ExtractIcon
 }
 #endregion
 
+public IMagickImage? Convert_Icon(Bitmap _icon, uint _width, uint _height)
+{
+	try
+	{
+		// create new IMagick image
+		IMagickImage img = null;
+		
+		// Convert bitmap to IMagickImage
+		using (var memoryStream = new MemoryStream())
+		{
+			// save Bitmap to MemoryStream
+			_icon.Save(memoryStream, ImageFormat.Png);
+
+			// reset memory stream position
+			memoryStream.Seek(0, SeekOrigin.Begin);
+
+			// create a MagickImage from MemoryStream
+			img = new MagickImage(memoryStream);
+		}
+		
+		// stop interpolation
+		img.FilterType = FilterType.Point;
+		
+		// set size
+		var size = new MagickGeometry(_width, _height);
+		// maintain the aspect ratio
+		size.IgnoreAspectRatio = false;
+		// resize image
+		img.Resize(size);
+		
+		return img;
+	}
+	catch (Exception)
+	{
+		// if it fails, just return null
+		return null;
+	}
+}
+
 // get icon
 public IMagickImage mainoptionimg, winoptionimg;
+
 if (!YYMPS)
 {
-    try
-    {
-        Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(runnerFile);
+	Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(runnerFile);
+	var iconbp = ExeIcon.ToBitmap();
 
-        // for main option
-        mainoptionimg = ToMagickImage(ExeIcon.ToBitmap());
-        // resize image
-        var mainsize = new MagickGeometry(172, 172);
-        mainsize.IgnoreAspectRatio = false; // maintain the aspect ratio
-        mainoptionimg.FilterType = FilterType.Point; // stop interpolation
-        mainoptionimg.Resize(mainsize);
+	// for main option (172x172)
+	mainoptionimg = Convert_Icon(iconbp, 172, 172);
 
-        // for windows icon
-        winoptionimg = ToMagickImage(ExeIcon.ToBitmap());
-        // resize image
-        var winsize = new MagickGeometry(256, 256);
-        winsize.IgnoreAspectRatio = false; // maintain the aspect ratio
-        winoptionimg.FilterType = FilterType.Point; // stop interpolation
-        winoptionimg.Resize(winsize);
-    }
-    catch (Exception e)
-    {
-        mainoptionimg = null;
-        winoptionimg = null;
-    }
+	// for windows icon (256x256)
+	winoptionimg = Convert_Icon(iconbp, 256, 256);
 }
 #endregion
 
@@ -2091,7 +2112,7 @@ public class MainWindow : Window
         // OK Button
         var OKBT = new Button
 		{
-			Content = Directory.Exists($"{scriptDir}") ? "Overwrite Dump" : "Start Dump",
+			Content = "Start Dump",
 			Height = 48,
 			Margin = new Thickness(0, 10, 0, 0),
 			
@@ -2365,15 +2386,10 @@ public class AssetPickerWindow : Window
         var categories = new[]
         {
             "Sounds", "Sprites", "Tilesets", "Paths", "Scripts", "Shaders", "Fonts",
-            "Timelines", "Game objects", "Rooms", "Extensions"
+            "Timelines", "Game objects", "Rooms", "Extensions", "Sequences", "Animation Curves"
         };
         foreach (var c in categories)
             root.Items.Add(new TreeViewItem { Header = c });
-
-        if (Data.Sequences != null)
-            root.Items.Add(new TreeViewItem { Header = "Sequences" });
-        if (Data.AnimationCurves != null)
-            root.Items.Add(new TreeViewItem { Header = "Curves" });
 
         treeView.Items.Add(root);
         UpdateTree("", Data);
@@ -2388,30 +2404,30 @@ public class AssetPickerWindow : Window
 
             IEnumerable<string> items = name switch
             {
-                "Sounds" => Data.Sounds.Select(s => s.Name.Content),
-                "Sprites" => Data.Sprites.Select(s => s.Name.Content),
-                "Tilesets" => Data.Backgrounds.Select(s => s.Name.Content),
-                "Paths" => Data.Paths.Select(s => s.Name.Content),
-                /*"Scripts" => Data.Scripts.Select(s => s.Name.Content),*/
-                // filters out non-scripts
-                "Scripts" => Data.Code.Select(s => s.Name.Content)
-                .Where(n => n.StartsWith("gml_GlobalScript_"))
-                .Select(n => n.Substring("gml_GlobalScript_".Length)),
+                "Sounds" => Data?.Sounds?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Sprites" => Data?.Sprites?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Tilesets" => Data?.Backgrounds?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Paths" => Data?.Paths?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
 
-                "Shaders" => Data.Shaders.Select(s => s.Name.Content),
-                "Fonts" => Data.Fonts.Select(s => s.Name.Content),
-                "Timelines" => Data.Timelines.Select(s => s.Name.Content),
-                "Game objects" => Data.GameObjects.Select(s => s.Name.Content),
-                "Rooms" => Data.Rooms.Select(s => s.Name.Content),
-                "Extensions" => Data.Extensions.Select(s => s.Name.Content),
-                "Sequences" => Data.Sequences?.Select(s => s.Name.Content) ?? Enumerable.Empty<string>(),
-                "Curves" => Data.AnimationCurves?.Select(s => s.Name.Content) ?? Enumerable.Empty<string>(),
+                // Ensures only Code entries are here
+                "Scripts" => Data?.Code?.Select(s => s?.Name?.Content)
+                .Where(n => n.StartsWith("gml_GlobalScript_"))
+                .Select(n => n.Substring("gml_GlobalScript_".Length)) ?? Enumerable.Empty<string>(),
+
+                "Shaders" => Data?.Shaders?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Fonts" => Data?.Fonts?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Timelines" => Data?.Timelines?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Game objects" => Data?.GameObjects?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Rooms" => Data?.Rooms?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Extensions" => Data?.Extensions?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Sequences" => Data?.Sequences?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Curves" => Data?.AnimationCurves?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 _ => Enumerable.Empty<string>()
             };
 
             foreach (var item in items)
             {
-                if (item.Contains(search, StringComparison.OrdinalIgnoreCase))
+                if (item != null && item.Contains(search, StringComparison.OrdinalIgnoreCase))
                     cat.Items.Add(new TreeViewItem { Header = item });
             }
         }
@@ -2422,7 +2438,7 @@ public class AssetPickerWindow : Window
         listBox.Items.Clear();
         foreach (var item in CSTM)
         {
-            if (item.Contains(search, StringComparison.OrdinalIgnoreCase))
+            if (item != null && item.Contains(search, StringComparison.OrdinalIgnoreCase))
                 listBox.Items.Add(item);
         }
     }
@@ -2573,26 +2589,26 @@ string GetRunnerFile(string fileDir)
     foreach (string file in files)
     {
         string lastLine = File.ReadAllLines(file).Last();
-        // these always appear in the last line of the actual gamemaker runner.
+        // these usually appear in the last line of the actual gamemaker runner.
         if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
             return file;
     }
-    bool doSearch = ScriptQuestion("The runner was not found! Would you like to point me to it please?");
 
+    // If runner couldn't be found, ask user
+    bool doSearch = ScriptQuestion("The runner was not found! Would you like to point me to it please?");
     while (doSearch)
     {
-		// damn, new ui made me do it
         System.Windows.Forms.OpenFileDialog fileDialog = new()
         {
-            Title = "Take me to your game executable.......",
+            Title = "Select the Game Executable",
             InitialDirectory = rootDir,
             Filter = "Executable Files (*.exe)|*.exe",
         };
         if (fileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
         {
-            string lastLine = File.ReadAllLines(fileDialog.FileName).Last();
-            // these always appear in the last line of the actual gamemaker runner.
-            if (lastLine.Contains($"name=\"YoYoGames.GameMaker.Runner\"") || lastLine.Contains("GameMaker C++ Core Runner."))
+            // If runner is an executable
+            // don't force other check, since some executables don't have those last strings for some reason
+            if (Path.GetExtension(fileDialog.FileName) == ".exe")
                 return fileDialog.FileName;
             else
                 doSearch = ScriptQuestion("Thats not the runner! The runner is the game executable that loads the data.win file! Would you like to try again?");
@@ -2601,17 +2617,14 @@ string GetRunnerFile(string fileDir)
     return String.Empty;
 }
 
-public Mutex mut = new Mutex();
 /// <summary>
 /// adds a string to the log file.
 /// </summary>
 /// <param name="message"></param>
 public void PushToLog(string message)
 {
-    mut.WaitOne();
-    logFile.Flush();
-    logFile.WriteLine($"{message}");
-    mut.ReleaseMutex();
+    if (!YYMPS)
+        File.AppendAllText(scriptDir + "script.log", $"{message}\n");
 }
 /// <summary>
 /// creates a new <c>GMProject.Resource</c> inside of the exported project
@@ -2781,7 +2794,6 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
 
     return propList;
 }
-
 
 /// <summary>
 /// returns a folder directory for an asset inside of an <c>AssetReference</c>. e.g: $"folders/{foldername}.yy"
@@ -3014,7 +3026,7 @@ string GetTexturePageSize()
 
 void DumpScript(UndertaleScript s, int index)
 {
-    string scriptName = s.Name.Content;
+    string scriptName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Script_{index}");
     string assetDir = $"{scriptDir}scripts\\{scriptName}\\";
 
     // that one script
@@ -3074,7 +3086,7 @@ async Task DumpScripts()
 
 void DumpObject(UndertaleGameObject o, int index)
 {
-    string objectName = o.Name.Content;
+    string objectName = ((o?.Name?.Content != null || o.Name.Content != "") ? o.Name.Content : $"Unknown_Object_{index}");
     string assetDir = $"{scriptDir}objects\\{objectName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -3212,8 +3224,8 @@ void DumpObject(UndertaleGameObject o, int index)
 
                 string fileName = $"{((EventType)i).ToString()}_{subTypeString}";
                 string dumpedCode = DumpCode(code);
-                if (dumpedCode is not null)
-                    File.WriteAllText($"{scriptDir}objects\\{objectName}\\{fileName}.gml", dumpedCode);
+				// Write Code
+                File.WriteAllText($"{scriptDir}objects\\{objectName}\\{fileName}.gml", dumpedCode is not null ? dumpedCode : "");
             }
         }
     }
@@ -3261,7 +3273,7 @@ async Task DumpObjects()
 
 public void DumpSound(UndertaleSound s, int index)
 {
-    string soundName = s.Name.Content;
+    string soundName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sound_{index}");
     string assetDir = $"{scriptDir}sounds\\{soundName}\\";
     // get the last '/' in the file path.
     int slashIndex = s.File.Content.LastIndexOf('/');
@@ -3386,8 +3398,11 @@ public void DumpSound(UndertaleSound s, int index)
             break;
 
         case "wma":
-            errorList.Add($"{soundName} | WMA format not supported.");
-            return;
+			// TODO - Test if this works (i think antonball deluxe has wma files)
+			ws = new MediaFoundationReader(dumpedSoundPath);
+			break;
+            //errorList.Add($"{soundName} | WMA format not supported.");
+            //return;
 
     }
     // set the sound file name in the yy file
@@ -3452,7 +3467,7 @@ async Task DumpSounds()
 
 void DumpRoom(UndertaleRoom r, int index)
 {
-    string roomName = r.Name.Content;
+    string roomName = ((r?.Name?.Content != null || r.Name.Content != "") ? r.Name.Content : $"Unknown_Room_{index}");
     string assetDir = $"{scriptDir}rooms\\{roomName}\\";
     // create the dumpedRoom folder
     Directory.CreateDirectory(assetDir);
@@ -3833,8 +3848,7 @@ async Task DumpRooms()
 void DumpSprite(UndertaleSprite s, int index)
 {
     bool exportFrames = true;
-    // Make sure the sprite name isn't empty
-    string spriteName = ((s.Name.Content != "") ? s.Name.Content : $"Unknown_Sprite_{index}");
+    string spriteName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sprite_{index}");
     string assetDir = $"{scriptDir}sprites\\{spriteName}\\";
     string layersPath = assetDir + "layers\\";
     string layerId = Guid.NewGuid().ToString();
@@ -4048,7 +4062,7 @@ async Task DumpSprites()
 
 void DumpFont(UndertaleFont f, int index)
 {
-    string fontName = f.Name.Content;
+    string fontName = ((f?.Name?.Content != null || f.Name.Content != "") ? f.Name.Content : $"Unknown_Font_{index}");
     string assetDir = $"{scriptDir}fonts\\{fontName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -4161,7 +4175,8 @@ async Task DumpFonts()
 
 GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 {
-    GMSequence dumpedSequence = new(s.Name.Content);
+    var seqName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sequence");
+    GMSequence dumpedSequence = new(seqName);
     dumpedSequence.playback = (int)s.Playback;
     dumpedSequence.playbackSpeed = s.PlaybackSpeed;
     dumpedSequence.playbackSpeedType = (int)s.PlaybackSpeedType;
@@ -4593,7 +4608,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 
 void DumpSequence(UndertaleSequence s, int index)
 {
-    string sequenceName = s.Name.Content;
+    string sequenceName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sequence_{index}");
     string assetDir = $"{scriptDir}sequences\\{sequenceName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -4642,7 +4657,7 @@ async Task DumpSequences()
 
 void DumpShader(UndertaleShader s, int index)
 {
-    string shaderName = s.Name.Content;
+    string shaderName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Shader_{index}");
     string assetDir = $"{scriptDir}shaders\\{shaderName}\\";
 
     // kill gamemaker internal shaders
@@ -4717,7 +4732,7 @@ async Task DumpShaders()
 
 void DumpExtension(UndertaleExtension e, int index)
 {
-    string extensionName = e.Name.Content;
+    string extensionName = ((e?.Name?.Content != null || e.Name.Content != "") ? e.Name.Content : $"Unknown_Extension_{index}");
     string assetDir = $"{scriptDir}extensions\\{extensionName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -4818,7 +4833,7 @@ void DumpExtension(UndertaleExtension e, int index)
             displayName = optionName,
             optType = (int)opt.Kind,
         };
-        if (iniData.ContainsKey(extensionName) && iniData[extensionName].ContainsKey(optionName))
+        if (iniData?.ContainsKey(extensionName) == true && iniData[extensionName]?.ContainsKey(optionName) == true)
         {
             dynamic iniValue = iniData[extensionName][optionName];
             dumpedOption.exportToINI = true;
@@ -4934,7 +4949,7 @@ async Task DumpExtensions()
 
 void DumpPath(UndertalePath p, int index)
 {
-    string pathName = p.Name.Content;
+    string pathName = ((p?.Name?.Content != null || p.Name.Content != "") ? p.Name.Content : $"Unknown_Path_{index}");
     string assetDir = $"{scriptDir}paths\\{pathName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -4992,7 +5007,7 @@ async Task DumpPaths()
 
 void DumpAnimCurve(UndertaleAnimationCurve c, int index)
 {
-    string curveName = c.Name.Content;
+    string curveName = ((c?.Name?.Content != null || c.Name.Content != "") ? c.Name.Content : $"Unknown_AnimCurve_{index}");
     string assetDir = $"{scriptDir}animcurves\\{curveName}\\";
 
     Directory.CreateDirectory(assetDir);
@@ -5060,7 +5075,7 @@ async Task DumpAnimCurves()
 
 void DumpTileSet(UndertaleBackground t, int index)
 {
-    string tilesetName = t.Name.Content;
+    string tilesetName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Tileset_{index}");
     string spriteName = "_decompiled_" + tilesetName;
     string assetDir = $"{scriptDir}tilesets\\{tilesetName}\\";
     string spriteassetDir = $"{scriptDir}sprites\\{spriteName}\\";
@@ -5137,8 +5152,6 @@ void DumpTileSet(UndertaleBackground t, int index)
         }
     }
 
-
-
     if (t.Texture is not null)
     {
         MagickImage finalResult = null;
@@ -5196,8 +5209,6 @@ void DumpTileSet(UndertaleBackground t, int index)
             image.Dispose();
             exportedImage.Dispose();
         }
-
-
 
         GMSprite dumpedSprite = new(spriteName)
         {
@@ -5276,7 +5287,6 @@ void DumpTileSet(UndertaleBackground t, int index)
 
     }
 
-
     File.WriteAllText($"{assetDir}\\{tilesetName}.yy", JsonSerializer.Serialize(dumpedTileset, jsonOptions));
 
     CreateProjectResource(GMAssetType.TileSet, tilesetName, index);
@@ -5319,7 +5329,7 @@ async Task DumpTileSets()
 
 void DumpTimeline(UndertaleTimeline t, int index)
 {
-    string timelineName = t.Name.Content;
+    string timelineName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Timeline_{index}");
     string assetDir = $"{scriptDir}timelines\\{timelineName}\\";
     string finalCode = String.Empty;
 
@@ -5489,8 +5499,11 @@ async Task DumpTextures()
 
 void DumpOptions()
 {
-    // we're only doing main and windows, cant really test all others.
+    // don't do this shit if YYMPS
+    if (YYMPS)
+        return;
 
+    // we're only doing main and windows, cant really test all others.
     string mainOptionsDirectory = $"{scriptDir}options\\main\\";
     string windowsOptionsDirectory = $"{scriptDir}options\\windows\\";
     var info = Data.GeneralInfo;
@@ -5522,7 +5535,7 @@ void DumpOptions()
         option_windows_copyright_info = rData.copyright,
         option_windows_description_info = rData.description,
         option_windows_display_cursor = optionInfo.Info.HasFlag(UndertaleOptions.OptionsFlags.ShowCursor),
-        option_windows_save_location = Convert.ToInt32(info.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.LocalDataEnabled)),
+        option_windows_save_location = Convert.ToInt32(info.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.UseAppDataSaveLocation)),
         option_windows_start_fullscreen = optionInfo.Info.HasFlag(UndertaleOptions.OptionsFlags.FullScreen),
         option_windows_allow_fullscreen_switching = optionInfo.Info.HasFlag(UndertaleOptions.OptionsFlags.ScreenKey),
         option_windows_interpolate_pixels = optionInfo.Info.HasFlag(UndertaleOptions.OptionsFlags.InterpolatePixels),
@@ -6056,7 +6069,7 @@ if (SCPT
     #endregion
     #region Extract UnknownEnums
     // if bitwise enums are to be used, don't do it at all
-    if (!ENUM)
+    if (!ENUM && Data?.Code is not null)// also YYC check
     {
         globalInitCode += "// Generic Enum Declaration\n";
 
@@ -6146,15 +6159,6 @@ if (SCPT
 
 #endregion
 
-// order all of the resources correctly
-finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
-string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
-
-File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
-
-totalTime.Stop();
-PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
-
 // YYMPS Packages are literally just normal GameMaker Projects
 // that are compressed as a ZIP file with the .yymps file extension
 // and with some additional metadata in the .yyp and an extra metadata.json
@@ -6163,37 +6167,29 @@ PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
 #region YYMPS Maker
 if (YYMPS)
 {
-    #region metadata.json
-    // i dont give a shit
-    // but i do, i must do this
-    string metadatastring = $@"
-    {{
-    ""package_id"": ""Package"",
-    ""display_name"": ""Package"",
-     ""version"": ""1.0.0"",
-     ""package_type"": ""asset"",
-     ""ide_version"": ""{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}""
-}}";
-    File.WriteAllText($"{scriptDir}metadata.json", metadatastring);
-    #endregion
-    #region YYP Metadata adding
-    // Read yyp
-    string jsonContent = File.ReadAllText($"{scriptDir}{finalExport.name}.yyp");
+    // metadata.json
+    var metadata = new
+    {
+        package_id = "Package",
+        display_name = "Package",
+        version = "1.0.0",
+        package_type = "asset",
+        ide_version = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}"
+    };
+    string metadataString = JsonSerializer.Serialize(metadata, jsonOptions);
+    File.WriteAllText($"{scriptDir}metadata.json", metadataString);
 
-    // parse it
-    JObject jsonObject = JObject.Parse(jsonContent);
-    JObject metaData = (JObject)jsonObject["MetaData"];
+    // Add MetaData to YYP
+    finalExport.MetaData.PackageType = "Asset";
+    finalExport.MetaData.PackageName = "Package";
+    finalExport.MetaData.PackageID = "Package";
+    finalExport.MetaData.PackagePublisher = "Package";
+    finalExport.MetaData.PackageVersion = "1.0.0";
 
-    // Add new properties or modify existing ones
-    metaData["PackageType"] = "Asset";
-    metaData["PackageName"] = "Package";
-    metaData["PackageID"] = "Package";
-    metaData["PackagePublisher"] = "Package";
-    metaData["PackageVersion"] = "1.0.0";
-
-    string modifiedJson = jsonObject.ToString(Newtonsoft.Json.Formatting.Indented);
-    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", modifiedJson);
-    #endregion
+    // Make YYP
+    finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
+    string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
+    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
 
     // Make final YYMPS directory
     string yympsfolder = $"{rootDir}/Export_YYMPS/";
@@ -6227,10 +6223,18 @@ if (YYMPS)
 #endregion
 else
 {
-    // add logs if not a yymps
+    // order all of the resources correctly and Make YYP
+    finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
+    string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
+    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
+
+    // add error log if not a yymps
     if (errorList.Count > 0)
         File.WriteAllLines(scriptDir + "errors.log", errorList);
 }
+
+totalTime.Stop();
+PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
 
 ScriptMessage($"Script done with {errorList.Count} error{(errorList.Count == 1 ? "" : "s")}!" + (!YYMPS ? "\n\nDouble Check that all necessary files/folders are in the 'datafiles' directory!" : ""));
 
