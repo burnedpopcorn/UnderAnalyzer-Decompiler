@@ -7,11 +7,11 @@
 
     Originally used 0.0.1-prerelease as a base
     and added some shit from 0.0.4prerelease and the latest public release 
-    (commit hash 2240548beeeae69204cb391095cd5b26bb5446f7 is of time of writing)
+    (commit hash 508b4aecc79ebd730bbd198ffed64f3340d23cbc as of time of writing)
     https://github.com/crystallizedsparkle/Gamemaker-LTS-Decompiler/
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
-    and Bleeding Edge UTMT 0.7.0.0+
+    and Bleeding Edge UTMT 0.8.3.0+
 
     List of New Features I added
         - Replaced YAML Config with an Advanced GUI
@@ -27,6 +27,7 @@
     (although credit would be nice)
  */
 
+#region Usings
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -62,8 +63,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shell;
 using System.Windows.Input;
+#endregion
 
-// checks
+#region Checks
 EnsureDataLoaded();
 if (!Data.IsVersionAtLeast(2, 3))
 {
@@ -75,6 +77,7 @@ if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true)
 	if (!ScriptQuestion("The 'Create Enum Declarations' Setting is ENABLED\nDecompiling with this Enabled will almost certainly break your decompilation\n\nContinue Anyways?"))
 		return;
 }
+#endregion
 
 #region options.ini Parser
 
@@ -1764,7 +1767,7 @@ if (!YYMPS)
 }
 #endregion
 
-#region Main UI (kinda shit, less now)
+#region Main UI
 
 public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
 public bool CSTM_Enable = false;
@@ -2711,83 +2714,64 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
     if (eventList is null)
         return propList;
 
-    foreach (UndertaleGameObject.Event e in eventList)
+    if (eventList.Count >= 1 && eventList[0].Actions.Count >= 1)
     {
-        foreach (UndertaleGameObject.EventAction action in e.Actions)
+        string dumpedCode = DumpCode(eventList[0].Actions[0].CodeId, new DecompileSettings
         {
-            UndertaleCode code = action.CodeId;
-            if (code is null)
-                continue;
+            UseSemicolon = false,
+            AllowLeftoverDataOnStack = true
+        });
 
-            string dumpedCode = DumpCode(code, new DecompileSettings
+        foreach (Match match in assignmentRegex.Matches(dumpedCode))
+        {
+            string name = match.Groups[1].Value;
+            string rawValue = match.Groups[2].Value.Trim();
+
+            GMObjectProperty prop = new(name)
             {
-                UseSemicolon = false,
-                AllowLeftoverDataOnStack = true
-            });
+                name = name,
+                value = rawValue
+            };
 
-            foreach (Match match in assignmentRegex.Matches(dumpedCode))
+            // String
+            if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
+                prop.varType = 2;
+            // Boolean
+            else if (rawValue == "true" || rawValue == "false")
+                prop.varType = 3;
+            // Decimal
+            else if (Regex.IsMatch(rawValue, @"^\d+\.\d+$"))
+                prop.varType = 0;
+            // Integer or Color
+            else if (Regex.IsMatch(rawValue, @"^\d+$"))
             {
-                string name = match.Groups[1].Value;
-                string rawValue = match.Groups[2].Value.Trim();
-
-                GMObjectProperty prop = new(name)
+                if (UInt32.TryParse(rawValue, out uint colorVal) && colorVal >= 0xFF000000 && colorVal <= 0xFFFFFFFF)
                 {
-                    name = name,
-                    value = rawValue
-                };
-
-                // String
-                if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
-                {
-                    prop.varType = 2;
+                    prop.varType = 7; // Color
+                    prop.value = $"${colorVal:X8}";
                 }
-                // Boolean
-                else if (rawValue == "true" || rawValue == "false")
-                {
-                    prop.varType = 3;
-                }
-                // Decimal
-                else if (Regex.IsMatch(rawValue, @"^\d+\.\d+$"))
-                {
-                    prop.varType = 0;
-                }
-                // Integer or Color
-                else if (Regex.IsMatch(rawValue, @"^\d+$"))
-                {
-                    if (UInt32.TryParse(rawValue, out uint colorVal) && colorVal >= 0xFF000000 && colorVal <= 0xFFFFFFFF)
-                    {
-                        prop.varType = 7; // Color
-                        prop.value = $"${colorVal:X8}";
-                    }
-                    else
-                    {
-                        prop.varType = 1; // Integer
-                    }
-                }
-                // Expression
-                else if (Regex.IsMatch(rawValue, @"[=!<>+\-*/%&|()]"))
-                {
-                    prop.varType = 4;
-                }
-                /*
-                // Asset (Todo due it's really sucks)
-                else if (!rawValue.Contains("\"") && !Regex.IsMatch(rawValue, @"\W") && !char.IsDigit(rawValue[0]))
-                {
-                    prop.varType = 5;
-                    prop.resource = new()
-                    {
-                        name = rawValue,
-                        path = $"scripts/{rawValue}/{rawValue}.yy"
-                    };
-                }
-                */
                 else
-                {
-                    prop.varType = 4; // Fallback to Expression
-                }
-
-                propList.Add(prop);
+                    prop.varType = 1; // Integer
             }
+            // Expression
+            else if (Regex.IsMatch(rawValue, @"[=!<>+\-*/%&|()]"))
+                prop.varType = 4;
+            /*
+            // Asset (TODO)
+            else if (!rawValue.Contains("\"") && !Regex.IsMatch(rawValue, @"\W") && !char.IsDigit(rawValue[0]))
+            {
+                prop.varType = 5;
+                prop.resource = new()
+                {
+                    name = rawValue,
+                    path = $"scripts/{rawValue}/{rawValue}.yy"
+                };
+            }
+            */
+            else
+                prop.varType = 4; // Fallback to Expression
+
+            propList.Add(prop);
         }
     }
 
