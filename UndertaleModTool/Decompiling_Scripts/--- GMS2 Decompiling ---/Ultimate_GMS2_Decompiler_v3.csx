@@ -2493,39 +2493,39 @@ if (!DUMP)
 #region Datafile Copier
 async Task CopyDataFiles()
 {
-    if (ADDFILES)
+    if (!ADDFILES)
+        return;
+
+    // just in case
+    Directory.CreateDirectory(scriptDir + "datafiles\\");
+
+    // Get all files and subdirectories
+    foreach (var file in Directory.GetFiles(rootDir, "*", SearchOption.AllDirectories))
     {
-        // just in case
-        Directory.CreateDirectory(scriptDir + "datafiles\\");
+        // Skip these files                                                        //also get rid of sounds because yeah
+        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
+            continue;
 
-        // Get all files and subdirectories
-        foreach (var file in Directory.GetFiles(rootDir, "*", SearchOption.AllDirectories))
+        string relativePath = Path.GetRelativePath(rootDir, file);
+        string destinationFile = Path.Combine(scriptDir + "datafiles\\", relativePath);
+
+        // Skip "Exported_Project" or "Export_YYMPS" directories and files within them
+        string dirName = Path.GetDirectoryName(file);
+        if (!dirName.Contains("Exported_Project") && !dirName.Contains("Export_YYMPS"))
         {
-            // Skip these files                                                        //also get rid of sounds because yeah
-            if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
-                continue;
+            // Ensure it exists
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
 
-            string relativePath = Path.GetRelativePath(rootDir, file);
-            string destinationFile = Path.Combine(scriptDir + "datafiles\\", relativePath);
+            // Copy the file
+            File.Copy(file, destinationFile, true);
 
-            // Skip "Exported_Project" or "Export_YYMPS" directories and files within them
-            string dirName = Path.GetDirectoryName(file);
-            if (!dirName.Contains("Exported_Project") && !dirName.Contains("Export_YYMPS"))
+            // add to yyp
+            int folderpos = destinationFile.IndexOf("datafiles");
+            string trimmedfolder = destinationFile.Substring(folderpos);
+            finalExport.IncludedFiles.Add(new GMProject.GMIncludedFile(Path.GetFileName(destinationFile))
             {
-                // Ensure it exists
-                Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
-
-                // Copy the file
-                File.Copy(file, destinationFile, true);
-
-                // add to yyp
-                int folderpos = destinationFile.IndexOf("datafiles");
-                string trimmedfolder = destinationFile.Substring(folderpos);
-                finalExport.IncludedFiles.Add(new GMProject.GMIncludedFile(Path.GetFileName(destinationFile))
-                {
-                    filePath = Path.GetDirectoryName(trimmedfolder).Replace("\\", "/")
-                });
-            }
+                filePath = Path.GetDirectoryName(trimmedfolder).Replace("\\", "/")
+            });
         }
     }
 }
@@ -5975,18 +5975,13 @@ void DumpEnums(UndertaleCode code)
     {
         try
         {
-            if (code != null)
-            {
-                var context = new DecompileContext(globalDecompileContext, code, dSettings);
-                BlockNode rootBlock = (BlockNode)context.DecompileToAST();
-                foreach (IStatementNode stmt in rootBlock.Children)
-                    if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName)
-                        foreach (GMEnumValue val in decl.Enum.Values)
-                            values.Add(val.Value);
-            }
-        }
-        catch
-        { }
+            var context = new DecompileContext(globalDecompileContext, code, dSettings);
+            BlockNode rootBlock = (BlockNode)context.DecompileToAST();
+            foreach (IStatementNode stmt in rootBlock.Children)
+                if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName)
+                    foreach (GMEnumValue val in decl.Enum.Values)
+                        values.Add(val.Value);
+        } catch { }
     }
 }
 #endregion
@@ -6078,38 +6073,31 @@ if (SCPT
 
         #region Proper Ordering
         List<long> sorted = new List<long>();
-        try
-        {
-            // https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
-            sorted = new List<long>(values);
-            sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
-        }
-        // this sometimes fails, idk why, so ask user to retry
-        // because this usually fixes itself after one try
-        catch
-        {
-            int attempts = 0;
-            bool tryagain = ScriptQuestion("UnknownEnum Extraction failed!\nTry again?");
 
-            while (tryagain)
+        // this sometimes fails, idk why
+        // this usually fixes itself after a single try tho, so....
+        int attempts = 0;
+        bool tryagain = true;
+        while (tryagain)
+        {
+            try
             {
-                try
-                {
-                    // clean and try again
-                    values = new HashSet<long>();
-                    await DumpEnum();
-                    sorted = new List<long>(values);
-                    sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
+                // clean and try again
+                values = new HashSet<long>();
+                await DumpEnum();
+                // https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
+                sorted = new List<long>(values);
+                sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
 
-                    // if successful, leave while loop and proceed
-                    tryagain = false;
-                }
-                // if not, ask again
-                catch
-                {
-                    attempts++;
+                // if successful, leave while loop and proceed
+                tryagain = false;
+            }
+            // if not, try again, or ask user in order to prevent endless loop
+            catch
+            {
+                attempts++;
+                if (attempts > 10)
                     tryagain = ScriptQuestion($"UnknownEnum Extraction failed!\nTry again?\n\nAttempt {attempts}");
-                }
             }
         }
         #endregion
