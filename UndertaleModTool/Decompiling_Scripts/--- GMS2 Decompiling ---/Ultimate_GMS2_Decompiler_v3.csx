@@ -1559,7 +1559,6 @@ public class GMTimeline : GMResource
 #region Main Variables
 public var jsonOptions = new JsonSerializerOptions 
 {
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, // for when not using YYMPS
     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, 
     WriteIndented = true 
 };
@@ -6205,6 +6204,14 @@ if (YYMPS)
 #endregion
 else
 {
+    // Add Null Ignore Condition specifically just for YYP
+    jsonOptions = new JsonSerializerOptions
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true
+    };
+
     // order all of the resources correctly and Make YYP
     finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
     string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
