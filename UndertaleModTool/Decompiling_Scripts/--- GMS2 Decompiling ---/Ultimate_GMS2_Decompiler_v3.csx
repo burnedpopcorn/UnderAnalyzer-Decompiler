@@ -3642,12 +3642,6 @@ void DumpRoom(UndertaleRoom r, int index)
                             y = inst.Y,
                             properties = newProperties
                         });
-
-                        // moved code to before layer handling as instanceCreationOrder should be independent from layer order.
-                        // dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room)
-                        // {
-                        //     name = instanceName
-                        // });
                     }
                     // push to end result
                     dumpedLayer = newLayer;
