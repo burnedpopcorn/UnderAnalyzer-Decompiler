@@ -1589,7 +1589,7 @@ Directory.CreateDirectory(scriptDir);
 
 // for the decompiler
 GlobalDecompileContext globalDecompileContext = null;
-try { globalDecompileContext = new(Data); } catch { } // YYC games sometimes cause this to fail (TODO - make this cleaner) 
+try { globalDecompileContext = new(Data); } catch { } // YYC games sometimes cause this to fail, so account for that 
 
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
 
@@ -3313,7 +3313,6 @@ public void DumpSound(UndertaleSound s, int index)
     byte[] oggSignature = new byte[] { (byte)'O', (byte)'g', (byte)'g' };
     byte[] mp3Signature = new byte[] { (byte)'I', (byte)'D', (byte)'3' };
     byte[] wmaSignature = new byte[] { (byte)0x30, (byte)0x26, (byte)0xB2 };
-    // TODO: WMA support?
 
     byte[] fileData;
     // if not using audiogroup_default and is an external audiogroup
@@ -3371,6 +3370,7 @@ public void DumpSound(UndertaleSound s, int index)
         errorList.Add($"{soundName} | Unable to fetch format.");
         return;
     }
+
     if (FIXAUDIO)
     {
         // rename files without extension
@@ -3397,12 +3397,8 @@ public void DumpSound(UndertaleSound s, int index)
             break;
 
         case "wma":
-			// TODO - Test if this works (i think antonball deluxe has wma files)
 			ws = new MediaFoundationReader(dumpedSoundPath);
 			break;
-            //errorList.Add($"{soundName} | WMA format not supported.");
-            //return;
-
     }
     // set the sound file name in the yy file
     dumpedSound.soundFile = (s.File is not null) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
