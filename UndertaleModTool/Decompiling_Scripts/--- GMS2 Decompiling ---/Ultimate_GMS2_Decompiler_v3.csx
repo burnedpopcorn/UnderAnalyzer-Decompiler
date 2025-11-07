@@ -1587,9 +1587,6 @@ if (Directory.Exists(scriptDir))
 // Get Game Executable
 public string runnerFile = GetRunnerFile(rootDir);
 
-// create Exported_Project folder
-Directory.CreateDirectory(scriptDir);
-
 // for the decompiler
 GlobalDecompileContext globalDecompileContext = null;
 try { globalDecompileContext = new(Data); } catch { } // YYC games sometimes cause this to fail, so account for that 
@@ -2386,7 +2383,7 @@ public class AssetPickerWindow : Window
         var categories = new[]
         {
             "Sounds", "Sprites", "Tilesets", "Paths", "Scripts", "Shaders", "Fonts",
-            "Timelines", "Game objects", "Rooms", "Extensions", "Sequences", "Animation Curves"
+            "Timelines", "Objects", "Rooms", "Extensions", "Sequences", "Animation Curves"
         };
         foreach (var c in categories)
             root.Items.Add(new TreeViewItem { Header = c });
@@ -2411,13 +2408,18 @@ public class AssetPickerWindow : Window
 
                 // Ensures only Code entries are here
                 "Scripts" => Data?.Code?.Select(s => s?.Name?.Content)
-                .Where(n => n.StartsWith("gml_GlobalScript_"))
-                .Select(n => n.Substring("gml_GlobalScript_".Length)) ?? Enumerable.Empty<string>(),
+                    .Where(n => n.StartsWith("gml_GlobalScript_"))
+                    .Select(n => n.Substring("gml_GlobalScript_".Length)) 
+                    ?? Enumerable.Empty<string>(),
 
-                "Shaders" => Data?.Shaders?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                // Exclude GameMaker Internal Shaders
+                "Shaders" => Data?.Shaders?.Select(s => s?.Name?.Content)
+                    .Where(n => !n.StartsWith("__yy_") && !n.StartsWith("_filter_")) 
+                    ?? Enumerable.Empty<string>(),
+
                 "Fonts" => Data?.Fonts?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Timelines" => Data?.Timelines?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
-                "Game objects" => Data?.GameObjects?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Objects" => Data?.GameObjects?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Rooms" => Data?.Rooms?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Extensions" => Data?.Extensions?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Sequences" => Data?.Sequences?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
@@ -4612,7 +4614,7 @@ void DumpShader(UndertaleShader s, int index)
     string assetDir = $"{scriptDir}shaders\\{shaderName}\\";
 
     // kill gamemaker internal shaders
-    if (shaderName.StartsWith("__yy") || shaderName.StartsWith("_filter_"))
+    if (shaderName.StartsWith("__yy_") || shaderName.StartsWith("_filter_"))
         return;
 
     Directory.CreateDirectory(assetDir);
@@ -5543,6 +5545,9 @@ void DumpOptions()
 #endregion
 
 #region Program
+// create Exported_Project folder
+Directory.CreateDirectory(scriptDir);
+
 // scuffed CPU usage limiter
 double usageLimit = Math.Clamp((float)UISettings.CPU_Usage, 0f, 100f);
 int processorCount = Environment.ProcessorCount;
