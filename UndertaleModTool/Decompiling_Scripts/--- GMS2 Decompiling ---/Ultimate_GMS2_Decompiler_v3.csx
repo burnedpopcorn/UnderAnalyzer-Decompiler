@@ -1754,7 +1754,7 @@ public IMagickImage? Convert_Icon(Bitmap _icon, uint _width, uint _height)
 // get icon
 public IMagickImage mainoptionimg, winoptionimg;
 
-if (!YYMPS)
+if (!UISettings.YYMPS)
 {
 	Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(runnerFile);
 	var iconbp = ExeIcon.ToBitmap();
@@ -1769,20 +1769,21 @@ if (!YYMPS)
 
 #region Main UI
 
-public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
-public bool CSTM_Enable = false;
-public List<string> CSTM = new List<string>();
-public int cpu_usage = 70;
+public static class UISettings
+{
+    public static bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, 
+        LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
+
+    public static List<string> CSTM = new List<string>();
+    public static bool CSTM_Enable = false;
+
+    public static int CPU_Usage = 70;
+}
 
 #region Main Window stuffs
 public class MainWindow : Window
-{
-    public bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
-	public int cpu_usage = 70;
-	public bool CSTM_Enable = false;
-	public List<string> CSTM = new List<string>();
-	
-	private AssetPickerWindow pickerWindow;
+{	
+	private AssetPickerWindow PickerWindow;
 
 	public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
 	{
@@ -1809,7 +1810,7 @@ public class MainWindow : Window
 		var mainPanel = new StackPanel { Margin = new Thickness(8) };
 		var tooltip = new ToolTip();
 
-        #region New Titlebar
+        #region Title Bar
         var titleBar = new DockPanel
 		{
 			Height = 30,
@@ -1867,7 +1868,8 @@ public class MainWindow : Window
 			Margin = new Thickness(0, 8, 0, 4)
 		});
 
-		var resourceGrid = new UniformGrid { Columns = 6 };
+        #region Main Resource Checkboxes
+        var resourceGrid = new UniformGrid { Columns = 6 };
 		var _PRJT = CreateCheckBox(isDark, "Project File", true, false);
 		var _OBJT = CreateCheckBox(isDark, "Objects", true);
 		var _ROOM = CreateCheckBox(isDark, "Rooms", true);
@@ -1914,9 +1916,9 @@ public class MainWindow : Window
 		resourceGrid.Children.Add(_BGND);
 
 		mainPanel.Children.Add(resourceGrid);
-		
-		#region AssetPicker Shit
-		var centerContainer = new Grid
+        #endregion
+        #region AssetPicker Shit
+        var centerContainer = new Grid
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
@@ -1975,13 +1977,12 @@ public class MainWindow : Window
 
 		pickAssetsButton.Click += (s, e) =>
 		{
-			pickerWindow = new AssetPickerWindow(_data, isDark);
-			pickerWindow.Owner = this;
-			pickerWindow.ShowDialog();
+            PickerWindow = new AssetPickerWindow(_data, isDark);
+            PickerWindow.Owner = this;
+            PickerWindow.ShowDialog();
 
-			// Save
-			CSTM = pickerWindow.CSTM.ToList();
-			CSTMLabel.Text = $"Assets Selected: {CSTM.Count}";
+            // Reload Number of Assets Selected
+			CSTMLabel.Text = $"Assets Selected: {UISettings.CSTM.Count}";
 		};
 
 		Grid.SetColumn(pickAssetsButton, 1);
@@ -2004,36 +2005,34 @@ public class MainWindow : Window
 
 			// Enable Pick Assets button
 			pickAssetsButton.IsEnabled = true;
-			
-			// because why not
-			CSTMLabel.Text = $"Assets Selected: 0";
+
+            // Load Number of Assets Selected
+            CSTMLabel.Text = $"Assets Selected: {UISettings.CSTM.Count}";
 		};
 
 		_CSTM.Unchecked += (s, e) =>
 		{
-			// enable all resource checkboxes
+			// Re-enable all resource checkboxes
 			resourceCheckboxes.ForEach(cb => cb.IsEnabled = true);
 
 			// Disable the Pick Assets button
 			pickAssetsButton.IsEnabled = false;
 
-			// Handle specific checkboxes based on data availability
-			_SEQN.IsEnabled = _data.Sequences != null;
-			_SEQN.IsChecked = _data.Sequences != null;
-
-			_ACRV.IsEnabled = _data.AnimationCurves != null;
-			_ACRV.IsChecked = _data.AnimationCurves != null;
+			// Check these if they're null first
+			_SEQN.IsEnabled = _data?.Sequences != null;
+			_SEQN.IsChecked = _data?.Sequences != null;
+			_ACRV.IsEnabled = _data?.AnimationCurves != null;
+			_ACRV.IsChecked = _data?.AnimationCurves != null;
 
 			// Check all the enabled checkboxes
 			resourceCheckboxes.Where(cb => cb.IsEnabled).ToList().ForEach(cb => cb.IsChecked = true);
 			
 			// WIPE
 			CSTMLabel.Text = "";
-			CSTM.Clear();
+            UISettings.CSTM.Clear();
 		};
         #endregion
-
-        // Settings section
+        #region Decompiler Settings
         mainPanel.Children.Add(new TextBlock
 		{
 			Text = "Decompiler Settings",
@@ -2073,11 +2072,11 @@ public class MainWindow : Window
 		settingsGrid.Children.Add(_GENROOM);
 
 		mainPanel.Children.Add(settingsGrid);
-
+        #endregion
         #region CPU Controls
         var cpuLabel = new Label
 		{
-			Content = $"CPU Usage: {cpu_usage}%",
+			Content = $"CPU Usage: {UISettings.CPU_Usage}%",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Margin = new Thickness(0, 10, 0, 0)
 		};
@@ -2086,7 +2085,7 @@ public class MainWindow : Window
 		{
 			Minimum = 1,
 			Maximum = 100,
-			Value = cpu_usage,
+			Value = UISettings.CPU_Usage,
 			Width = 200,
 			Margin = new Thickness(0, 0, 0, 0),
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -2096,8 +2095,8 @@ public class MainWindow : Window
 
 		cpuSlider.ValueChanged += (s, e) =>
 		{
-			cpu_usage = (int)cpuSlider.Value;
-			cpuLabel.Content = $"CPU Usage: {cpu_usage}%";
+            UISettings.CPU_Usage = (int)cpuSlider.Value;
+			cpuLabel.Content = $"CPU Usage: {UISettings.CPU_Usage}%";
 		};
 
 		var cpuPanel = new StackPanel
@@ -2124,31 +2123,31 @@ public class MainWindow : Window
 		};
 		OKBT.Click += (o, s) =>
 		{
-			DUMP = true;
+            UISettings.DUMP = true;
 
-			OBJT = _OBJT.IsChecked == true;
-			ROOM = _ROOM.IsChecked == true;
-			EXTN = _EXTN.IsChecked == true;
-			SCPT = _SCPT.IsChecked == true;
-			TMLN = _TMLN.IsChecked == true;
-			SOND = _SOND.IsChecked == true;
-			SHDR = _SHDR.IsChecked == true;
-			PATH = _PATH.IsChecked == true;
-			ACRV = _ACRV.IsChecked == true;
-			SEQN = _SEQN.IsChecked == true;
-			FONT = _FONT.IsChecked == true;
-			SPRT = _SPRT.IsChecked == true;
-			BGND = _BGND.IsChecked == true;
+            UISettings.OBJT = _OBJT.IsChecked == true;
+            UISettings.ROOM = _ROOM.IsChecked == true;
+            UISettings.EXTN = _EXTN.IsChecked == true;
+            UISettings.SCPT = _SCPT.IsChecked == true;
+            UISettings.TMLN = _TMLN.IsChecked == true;
+            UISettings.SOND = _SOND.IsChecked == true;
+            UISettings.SHDR = _SHDR.IsChecked == true;
+            UISettings.PATH = _PATH.IsChecked == true;
+            UISettings.ACRV = _ACRV.IsChecked == true;
+            UISettings.SEQN = _SEQN.IsChecked == true;
+            UISettings.FONT = _FONT.IsChecked == true;
+            UISettings.SPRT = _SPRT.IsChecked == true;
+            UISettings.BGND = _BGND.IsChecked == true;
 
-			LOG = _LOG.IsChecked == true;
-			YYMPS = _YYMPS.IsChecked == true;
-			ENUM = _ENUM.IsChecked == true;
-			ADDFILES = _ADDFILES.IsChecked == true;
-			FIXAUDIO = _FIXA.IsChecked == true;
-			FIXTILE = _FIXT.IsChecked == true;
-			GENROOM = _GENROOM.IsChecked == true;
-			
-			CSTM_Enable = _CSTM.IsChecked == true;
+            UISettings.LOG = _LOG.IsChecked == true;
+            UISettings.YYMPS = _YYMPS.IsChecked == true;
+            UISettings.ENUM = _ENUM.IsChecked == true;
+            UISettings.ADDFILES = _ADDFILES.IsChecked == true;
+            UISettings.FIXAUDIO = _FIXA.IsChecked == true;
+            UISettings.FIXTILE = _FIXT.IsChecked == true;
+            UISettings.GENROOM = _GENROOM.IsChecked == true;
+
+            UISettings.CSTM_Enable = _CSTM.IsChecked == true;
 
 			Close();
 		};
@@ -2184,7 +2183,6 @@ public class AssetPickerWindow : Window
     private TreeView treeView;
     private ListBox listBox;
     private TextBox searchTreeBox, searchListBox;
-	public List<string> CSTM = new List<string>();
 
     public AssetPickerWindow(UndertaleData Data, bool isDark)
     {
@@ -2206,7 +2204,7 @@ public class AssetPickerWindow : Window
         Background = isDark ? BGgrey : BGwhite;
         Foreground = isDark ? BasicWhite : BasicBlack;
 
-        #region title bar
+        #region Title Bar
         var titleBar = new DockPanel
         {
             Height = 30,
@@ -2267,8 +2265,8 @@ public class AssetPickerWindow : Window
         {
             if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
             {
-                if (!CSTM.Contains(item.Header.ToString()))
-                    CSTM.Add(item.Header.ToString());
+                if (!UISettings.CSTM.Contains(item.Header.ToString()))
+                    UISettings.CSTM.Add(item.Header.ToString());
                 UpdateList(searchListBox.Text);
             }
         };
@@ -2294,8 +2292,8 @@ public class AssetPickerWindow : Window
         {
             if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
             {
-                if (!CSTM.Contains(item.Header.ToString()))
-                    CSTM.Add(item.Header.ToString());
+                if (!UISettings.CSTM.Contains(item.Header.ToString()))
+                    UISettings.CSTM.Add(item.Header.ToString());
                 UpdateList(searchListBox.Text);
             }
         };
@@ -2315,7 +2313,7 @@ public class AssetPickerWindow : Window
         {
             if (listBox.SelectedItem != null)
             {
-                CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
+                UISettings.CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
                 UpdateList(searchListBox.Text);
             }
         };
@@ -2346,7 +2344,7 @@ public class AssetPickerWindow : Window
         {
             if (listBox.SelectedItem != null)
             {
-                CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
+                UISettings.CSTM.RemoveAll(r => r == listBox.SelectedItem.ToString());
                 UpdateList(searchListBox.Text);
             }
         };
@@ -2423,7 +2421,7 @@ public class AssetPickerWindow : Window
                 "Rooms" => Data?.Rooms?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Extensions" => Data?.Extensions?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 "Sequences" => Data?.Sequences?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
-                "Curves" => Data?.AnimationCurves?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
+                "Animation Curves" => Data?.AnimationCurves?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
                 _ => Enumerable.Empty<string>()
             };
 
@@ -2438,7 +2436,7 @@ public class AssetPickerWindow : Window
     private void UpdateList(string search)
     {
         listBox.Items.Clear();
-        foreach (var item in CSTM)
+        foreach (var item in UISettings.CSTM)
         {
             if (item != null && item.Contains(search, StringComparison.OrdinalIgnoreCase))
                 listBox.Items.Add(item);
@@ -2447,47 +2445,12 @@ public class AssetPickerWindow : Window
 }
 #endregion
 
-// thank god this works
-// the other solution was such a hack
-bool isDarkEnabled = SettingsWindow.EnableDarkMode;
-
 // open main window
-var window = new MainWindow(Data, scriptDir, isDarkEnabled);
-window.ShowDialog();
-
-#region save values
-DUMP = window.DUMP;
-
-OBJT = window.OBJT;
-ROOM = window.ROOM;
-EXTN = window.EXTN;
-SCPT = window.SCPT;
-TMLN = window.TMLN;
-SOND = window.SOND;
-SHDR = window.SHDR;
-PATH = window.PATH;
-ACRV = window.ACRV;
-SEQN = window.SEQN;
-FONT = window.FONT;
-SPRT = window.SPRT;
-BGND = window.BGND;
-
-LOG = window.LOG;
-YYMPS = window.YYMPS;
-ENUM = window.ENUM;
-ADDFILES = window.ADDFILES;
-FIXAUDIO = window.FIXAUDIO;
-FIXTILE = window.FIXTILE;
-GENROOM = window.GENROOM;
-
-cpu_usage = window.cpu_usage;
-
-CSTM_Enable = window.CSTM_Enable;
-CSTM = window.CSTM;
-#endregion
+var MainWin = new MainWindow(Data, scriptDir, SettingsWindow.EnableDarkMode);
+MainWin.ShowDialog();
 
 // if exit
-if (!DUMP)
+if (!UISettings.DUMP)
     return;
 
 #endregion
@@ -2495,7 +2458,7 @@ if (!DUMP)
 #region Datafile Copier
 async Task DumpDatafiles()
 {
-    if (!ADDFILES)
+    if (!UISettings.ADDFILES)
         return;
 
     // just in case
@@ -2559,7 +2522,7 @@ public static readonly Dictionary<GMAssetType, string> assetTypes = new Dictiona
 
 string IdToHex(uint id)
 {
-    if (!GENROOM)
+    if (!UISettings.GENROOM)
         return id.ToString();
 
     // gamemaker IDE does it kinda like this
@@ -2624,7 +2587,7 @@ string GetRunnerFile(string fileDir)
 /// <param name="message"></param>
 public void PushToLog(string message)
 {
-    if (!YYMPS)
+    if (!UISettings.YYMPS)
         File.AppendAllText(scriptDir + "script.log", $"{message}\n");
 }
 /// <summary>
@@ -2932,7 +2895,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
             string dumpedCode = context.DecompileToString();
 
             // enum replacement.
-            if (ENUM)
+            if (UISettings.ENUM)
             {
                 // crystal didn't account for this, so i'll do it i guess
                 var unknownName = SettingsWindow.DecompilerSettings.UnknownEnumName;
@@ -2950,7 +2913,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                 dumpedCode = Regex.Replace(dumpedCode, "gml_Script_", "");
             }
             // generated room stuff idk
-            if (GENROOM)
+            if (UISettings.GENROOM)
             {
                 // if it has "graphic_" or "inst_"
                 dumpedCode = Regex.Replace(dumpedCode, @"(graphic_|inst_)(\d+)", match =>
@@ -2965,7 +2928,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                 errorList.Add($"{error.CodeEntryName} | {error.Message}");
 
             // logspam the line
-            if (LOG)
+            if (UISettings.LOG)
                 PushToLog($"'{code.Name.Content}' successfully decompiled.");
 
             return dumpedCode;
@@ -3066,7 +3029,7 @@ void DumpScript(UndertaleScript s, int index)
 async Task DumpScripts()
 {
     var watch = Stopwatch.StartNew();
-    if (SCPT || CSTM_Enable)
+    if (UISettings.SCPT || UISettings.CSTM_Enable)
     {
         PushToLog("Dumping Scripts...");
         await Task.Run(() => Parallel.ForEach(scriptsToDump, parallelOptions, (scr, state, index) =>
@@ -3076,14 +3039,14 @@ async Task DumpScripts()
                 r_num++;
                 return;
             }
-            if (SCPT || (CSTM_Enable && CSTM.Contains(scr.Name.Content)))
+            if (UISettings.SCPT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(scr.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Script: {scr.Name.Content}", r_num++, toDump);
 
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Dumping script '{scr.Name.Content}'...");
                 DumpScript(scr, (int)index);
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Script '{scr.Name.Content}' successfully dumped.");
             }
         }));
@@ -3130,8 +3093,6 @@ void DumpObject(UndertaleGameObject o, int index)
     {
         var eventList = o.Events[i];
         var parentEventList = o.ParentId?.Events[i];
-
-
 
         if (i == (int)EventType.PreCreate)
         {
@@ -3187,8 +3148,6 @@ void DumpObject(UndertaleGameObject o, int index)
                         }
                     }
 
-
-
                     // If the property is not overridden, add it to the final properties
                     if (!isOverridden)
                     {
@@ -3196,7 +3155,6 @@ void DumpObject(UndertaleGameObject o, int index)
                     }
                 }
             }
-
 
             // Assign the final properties and overridden properties to the dumped object
             dumpedObject.properties = finalprops;
@@ -3248,7 +3206,7 @@ void DumpObject(UndertaleGameObject o, int index)
 }
 async Task DumpObjects()
 {
-    if (OBJT || CSTM_Enable)
+    if (UISettings.OBJT || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Objects...");
@@ -3260,16 +3218,16 @@ async Task DumpObjects()
                 return;
             }
 
-            if (OBJT || (CSTM_Enable && CSTM.Contains(obj.Name.Content)))
+            if (UISettings.OBJT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(obj.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping object '{obj.Name.Content}'...");
                 DumpObject(obj, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Object '{obj.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -3382,7 +3340,7 @@ public void DumpSound(UndertaleSound s, int index)
         return;
     }
 
-    if (FIXAUDIO)
+    if (UISettings.FIXAUDIO)
     {
         // rename files without extension
         if (dumpedSoundPath.IndexOf(fileExt, 0, StringComparison.OrdinalIgnoreCase) == -1 && dumpedSoundPath.EndsWith($".{fileExt}"))
@@ -3439,7 +3397,7 @@ public void DumpSound(UndertaleSound s, int index)
 }
 async Task DumpSounds()
 {
-    if (SOND || CSTM_Enable)
+    if (UISettings.SOND || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sounds...");
@@ -3450,16 +3408,16 @@ async Task DumpSounds()
                 r_num++;
                 return;
             }
-            if (SOND || (CSTM_Enable && CSTM.Contains(snd.Name.Content)))
+            if (UISettings.SOND || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(snd.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Sound: {snd.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping sound '{snd.Name.Content}'...");
                 DumpSound(snd, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Sound '{snd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -3810,7 +3768,7 @@ void DumpRoom(UndertaleRoom r, int index)
 }
 async Task DumpRooms()
 {
-    if (ROOM || CSTM_Enable)
+    if (UISettings.ROOM || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Rooms...");
@@ -3821,16 +3779,16 @@ async Task DumpRooms()
                 r_num++;
                 return;
             }
-            if (ROOM || (CSTM_Enable && CSTM.Contains(rm.Name.Content)))
+            if (UISettings.ROOM || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(rm.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Room: {rm.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping room '{rm.Name.Content}'...");
                 DumpRoom(rm, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Room '{rm.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4028,7 +3986,7 @@ void DumpSprite(UndertaleSprite s, int index)
 }
 async Task DumpSprites()
 {
-    if (SPRT || CSTM_Enable)
+    if (UISettings.SPRT || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sprites...");
@@ -4039,16 +3997,16 @@ async Task DumpSprites()
                 r_num++;
                 return;
             }
-            if (SPRT || (CSTM_Enable && CSTM.Contains(spr.Name.Content)))
+            if (UISettings.SPRT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(spr.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Sprite: {spr.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping sprite '{spr.Name.Content}'...");
                 DumpSprite(spr, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Sprite '{spr.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4125,12 +4083,6 @@ void DumpFont(UndertaleFont f, int index)
     if (fontRange is not null)
         dumpedFont.ranges.Add(fontRange);
 
-    /*
-    using (TextureWorker t = new TextureWorker())
-    {
-        t.ExportAsPNG(, $"{assetDir}{fontName}.png");
-    };
-    */
     imagesToDump.Add(new ImageAssetData(f.Texture, assetDir, fontName + ".png"));
 
     File.WriteAllText($"{assetDir}{fontName}.yy", JsonSerializer.Serialize(dumpedFont, jsonOptions));
@@ -4141,7 +4093,7 @@ void DumpFont(UndertaleFont f, int index)
 }
 async Task DumpFonts()
 {
-    if (FONT || CSTM_Enable)
+    if (UISettings.FONT || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Fonts...");
@@ -4152,16 +4104,16 @@ async Task DumpFonts()
                 r_num++;
                 return;
             }
-            if (FONT || (CSTM_Enable && CSTM.Contains(fnt.Name.Content)))
+            if (UISettings.FONT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(fnt.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Font: {fnt.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping font '{fnt.Name.Content}'...");
                 DumpFont(fnt, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Font '{fnt.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4622,7 +4574,7 @@ void DumpSequence(UndertaleSequence s, int index)
 }
 async Task DumpSequences()
 {
-    if (SEQN || CSTM_Enable)
+    if (UISettings.SEQN || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sequences...");
@@ -4633,16 +4585,16 @@ async Task DumpSequences()
                 r_num++;
                 return;
             }
-            if (SEQN || (CSTM_Enable && CSTM.Contains(seq.Name.Content)))
+            if (UISettings.SEQN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(seq.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Sequence: {seq.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping '{seq.Name.Content}'...");
                 DumpSequence(seq, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Sequence '{seq.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4696,7 +4648,7 @@ void DumpShader(UndertaleShader s, int index)
 }
 async Task DumpShaders()
 {
-    if (SHDR || CSTM_Enable)
+    if (UISettings.SHDR || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Shaders...");
@@ -4708,16 +4660,16 @@ async Task DumpShaders()
                 return;
             }
 
-            if (SHDR || (CSTM_Enable && CSTM.Contains(shd.Name.Content)))
+            if (UISettings.SHDR || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(shd.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping shader '{shd.Name.Content}'...");
                 DumpShader(shd, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Shader '{shd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4850,7 +4802,7 @@ void DumpExtension(UndertaleExtension e, int index)
 }
 async Task DumpExtensions()
 {
-    if (EXTN || CSTM_Enable)
+    if (UISettings.EXTN || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Extensions...");
@@ -4861,15 +4813,15 @@ async Task DumpExtensions()
                 r_num++;
                 return;
             }
-            if (EXTN || (CSTM_Enable && CSTM.Contains(ext.Name.Content)))
+            if (UISettings.EXTN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(ext.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Extension: {ext.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping extension '{ext.Name.Content}'...");
                 DumpExtension(ext, (int)index);
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Extension '{ext.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -4972,7 +4924,7 @@ void DumpPath(UndertalePath p, int index)
 }
 async Task DumpPaths()
 {
-    if (PATH || CSTM_Enable)
+    if (UISettings.PATH || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Paths...");
@@ -4983,16 +4935,16 @@ async Task DumpPaths()
                 r_num++;
                 return;
             }
-            if (PATH || (CSTM_Enable && CSTM.Contains(pth.Name.Content)))
+            if (UISettings.PATH || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(pth.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Path: {pth.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping path '{pth.Name.Content}'...");
                 DumpPath(pth, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Path '{pth.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -5040,7 +4992,7 @@ void DumpAnimCurve(UndertaleAnimationCurve c, int index)
 }
 async Task DumpAnimCurves()
 {
-    if (ACRV || CSTM_Enable)
+    if (UISettings.ACRV || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog($"Dumping Animation Curves...");
@@ -5051,16 +5003,16 @@ async Task DumpAnimCurves()
                 r_num++;
                 return;
             }
-            if (ACRV || (CSTM_Enable && CSTM.Contains(cur.Name.Content)))
+            if (UISettings.ACRV || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(cur.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Animation Curve: {cur.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping animation curve '{cur.Name.Content}'...");
                 DumpAnimCurve(cur, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Animation curve '{cur.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -5101,7 +5053,7 @@ void DumpTileSet(UndertaleBackground t, int index)
         tags = GetTags(t)
     };
 
-    if (FIXTILE)
+    if (UISettings.FIXTILE)
     {
         dumpedTileset.tilexoff = 0;
         dumpedTileset.tileyoff = 0;
@@ -5154,7 +5106,7 @@ void DumpTileSet(UndertaleBackground t, int index)
     if (t.Texture is not null)
     {
         MagickImage finalResult = null;
-        if (FIXTILE)
+        if (UISettings.FIXTILE)
         {
             TextureWorker worker = new(); // wont let me use 'using'
             // obtain the image for the background and seperate the image into a list of tiles.
@@ -5264,7 +5216,7 @@ void DumpTileSet(UndertaleBackground t, int index)
 
         framesTrack.keyframes.Keyframes.Add(currentKeyframe);
         dumpedSprite.sequence.tracks.Add(framesTrack);
-        if (FIXTILE)
+        if (UISettings.FIXTILE)
         {
             TextureWorker.SaveImageToFile(finalResult, $"{spriteassetDir}{frameGUID}.png");
             File.Copy($"{spriteassetDir}{frameGUID}.png", $"{layersPath}{frameGUID}\\{layerGUID}.png");
@@ -5294,7 +5246,7 @@ void DumpTileSet(UndertaleBackground t, int index)
 }
 async Task DumpTileSets()
 {
-    if (BGND || CSTM_Enable)
+    if (UISettings.BGND || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog($"Dumping Tilesets...");
@@ -5305,16 +5257,16 @@ async Task DumpTileSets()
                 r_num++;
                 return;
             }
-            if (BGND || (CSTM_Enable && CSTM.Contains(ts.Name.Content)))
+            if (UISettings.BGND || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(ts.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Tileset: {ts.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping tileset '{ts.Name.Content}'...");
                 DumpTileSet(ts, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Tileset '{ts.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -5368,7 +5320,7 @@ void DumpTimeline(UndertaleTimeline t, int index)
 }
 async Task DumpTimelines()
 {
-    if (TMLN || CSTM_Enable)
+    if (UISettings.TMLN || UISettings.CSTM_Enable)
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Timelines...");
@@ -5379,16 +5331,16 @@ async Task DumpTimelines()
                 r_num++;
                 return;
             }
-            if (TMLN || (CSTM_Enable && CSTM.Contains(tl.Name.Content)))
+            if (UISettings.TMLN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(tl.Name.Content)))
             {
                 SetProgressBar(null, $"Exporting Timeline: {tl.Name.Content}", r_num++, toDump);
 
                 var assetWatch = Stopwatch.StartNew();
-                if (LOG) 
+                if (UISettings.LOG) 
                     PushToLog($"Dumping timeline '{tl.Name.Content}'...");
                 DumpTimeline(tl, (int)index);
                 assetWatch.Stop();
-                if (LOG)
+                if (UISettings.LOG)
                     PushToLog($"Timelines '{tl.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
             }
         }));
@@ -5456,7 +5408,7 @@ async Task DumpTexGroups()
     foreach (UndertaleTextureGroupInfo tg in Data.TextureGroupInfo)
     {
         DumpTexGroup(tg);
-        if (LOG)
+        if (UISettings.LOG)
             PushToLog($"'{tg.Name.Content}' successfully dumped.");
     }
     watch.Stop();
@@ -5499,7 +5451,7 @@ async Task DumpTextures()
 void DumpOptions()
 {
     // don't do this shit if YYMPS
-    if (YYMPS)
+    if (UISettings.YYMPS)
         return;
 
     // we're only doing main and windows, cant really test all others.
@@ -5558,7 +5510,7 @@ void DumpOptions()
     }
 
     // icon handling
-    if (!YYMPS)
+    if (!UISettings.YYMPS)
     {
         string iconsDir = windowsOptionsDirectory + "icons\\";
         Directory.CreateDirectory(iconsDir);
@@ -5592,7 +5544,7 @@ void DumpOptions()
 
 #region Program
 // scuffed CPU usage limiter
-double usageLimit = Math.Clamp((float)cpu_usage, 0f, 100f);
+double usageLimit = Math.Clamp((float)UISettings.CPU_Usage, 0f, 100f);
 int processorCount = Environment.ProcessorCount;
 int threadsToUse = Math.Clamp((int)Math.Floor(processorCount * (usageLimit / 100)), 1, processorCount);
 ParallelOptions parallelOptions = new()
@@ -5616,20 +5568,20 @@ var iniData = IniParser.ParseToDictionary(rootDir + "options.ini");
 // get amount of assets to dump
 public int toDump =
   // account for custom pick
-  ((CSTM.Count > 0 && CSTM_Enable) ? CSTM.Count :
+  ((UISettings.CSTM.Count > 0 && UISettings.CSTM_Enable) ? UISettings.CSTM.Count :
   // else if normal
-  (OBJT ? Data.GameObjects.Count : 0) +
-   (SOND ? Data.Sounds.Count : 0) +
-    (ROOM ? Data.Rooms.Count : 0) +
-     (SPRT ? Data.Sprites.Count : 0) +
-      (FONT ? Data.Fonts.Count : 0) +
-       (SHDR ? Data.Shaders.Count : 0) +
-        (EXTN ? Data.Extensions.Count : 0) +
-         (PATH ? Data.Paths.Count : 0) +
-          (ACRV ? Data.AnimationCurves.Count : 0) +
-           (BGND ? (Data.Backgrounds.Count * 2) : 0) +
-            (SEQN ? Data.Sequences.Count : 0) +
-             (TMLN ? Data.Timelines.Count : 0));
+  (UISettings.OBJT ? Data.GameObjects.Count : 0) +
+   (UISettings.SOND ? Data.Sounds.Count : 0) +
+    (UISettings.ROOM ? Data.Rooms.Count : 0) +
+     (UISettings.SPRT ? Data.Sprites.Count : 0) +
+      (UISettings.FONT ? Data.Fonts.Count : 0) +
+       (UISettings.SHDR ? Data.Shaders.Count : 0) +
+        (UISettings.EXTN ? Data.Extensions.Count : 0) +
+         (UISettings.PATH ? Data.Paths.Count : 0) +
+          (UISettings.ACRV ? Data.AnimationCurves.Count : 0) +
+           (UISettings.BGND ? (Data.Backgrounds.Count * 2) : 0) +
+            (UISettings.SEQN ? Data.Sequences.Count : 0) +
+             (UISettings.TMLN ? Data.Timelines.Count : 0));
 
 SetUMTConsoleText("Initializing...");
 
@@ -5638,7 +5590,7 @@ await DumpTexGroups();
 // might aswell do this as well
 await DumpAudioGroups();
 // just because I dont consider it a real asset.
-if (!YYMPS)
+if (!UISettings.YYMPS)
     DumpOptions();
 
 // for DumpScripts & the progress bar
@@ -5669,7 +5621,7 @@ foreach (UndertaleScript scr in Data.Scripts)
     }
     scriptsToDump.Add(scr);
 }
-toDump += (SCPT ? scriptsToDump.Count : 0);
+toDump += (UISettings.SCPT ? scriptsToDump.Count : 0);
 
 SetProgressBar(null, "Exporting Assets...", 0, toDump);
 StartProgressBarUpdater();
@@ -5720,12 +5672,12 @@ Project Decompiled by Ultimate_GMS2_Decompiler_v3.csx
 		Original Version by crystallizedsparkle
 ";
 // create the readme
-if (!YYMPS)
+if (!UISettings.YYMPS)
     CreateNote("README", "DecompilerGenerated", readMeMessage);
 
 // Custom Stuff
 #region Extract Asset Order Note
-if (!YYMPS)
+if (!UISettings.YYMPS)
 {
     string asset_text = "Generated by Ultimate_GMS2_Decompiler_v3.csx";
 
@@ -5829,7 +5781,7 @@ void DumpEnums(UndertaleCode code)
 }
 #endregion
 
-if (SCPT
+if (UISettings.SCPT
     // add anyways if any rooms, objects, or scripts were decompiled using asset picker
     // kinda hacky, but not really, and idc
     || Directory.Exists(scriptDir + "scripts")
@@ -5901,7 +5853,7 @@ if (SCPT
     #endregion
     #region Extract UnknownEnums
     // if bitwise enums are to be used, don't do it at all
-    if (!ENUM && Data?.Code is not null)// also YYC check
+    if (!UISettings.ENUM && Data?.Code is not null)// also YYC check
     {
         globalInitCode += "// Generic Enum Declaration\n";
 
@@ -5910,9 +5862,6 @@ if (SCPT
             if (_code.ParentEntry is null)
                 enumtoDump.Add(_code);
         }
-
-        // search for UnknownEnum Values
-        await DumpEnum();
 
         #region Proper Ordering
         List<long> sorted = new List<long>();
@@ -5981,7 +5930,6 @@ if (SCPT
 
     PushToLog("Created GlobalInit Script.");
 }
-
 #endregion
 
 // YYMPS Packages are literally just normal GameMaker Projects
@@ -5990,7 +5938,7 @@ if (SCPT
 // to tell gamemaker that its a package rather than a full project
 // so yeah
 #region YYMPS Maker
-if (YYMPS)
+if (UISettings.YYMPS)
 {
     // metadata.json
     var metadata = new
@@ -6027,23 +5975,16 @@ if (YYMPS)
     if (File.Exists(yymps))
         File.Delete(yymps);
 
-    // the main event i guess
-    async Task CreateYYMPS()
-    {
-        // Compress to YYMPS
-        ZipFile.CreateFromDirectory(scriptDir, yymps);
+    // Compress to YYMPS
+    ZipFile.CreateFromDirectory(scriptDir, yymps);
 
-        // delete the directory
-        Directory.Delete(scriptDir, true);
+    // delete the original directory
+    Directory.Delete(scriptDir, true);
 
-        // Wait until the directory is fully deleted
-        // because bad stuffs happen if the script finished and its not completely deleted
-        while (Directory.Exists(scriptDir))
-            { await Task.Delay(1000); } // wait 1000 ms before next check
-    }
-
-    // to wait for yymps creation to fully finish
-    await CreateYYMPS();
+    // Wait until the directory is fully deleted
+    // because bad stuffs happen if the script finished and its not completely deleted
+    while (Directory.Exists(scriptDir))
+        await Task.Delay(1000); // wait 1000 ms before next check
 }
 #endregion
 else
@@ -6069,9 +6010,9 @@ else
 totalTime.Stop();
 PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
 
-ScriptMessage($"Script done with {errorList.Count} error{(errorList.Count == 1 ? "" : "s")}!" + (!YYMPS ? "\n\nDouble Check that all necessary files/folders are in the 'datafiles' directory!" : ""));
+ScriptMessage($"Script done with {errorList.Count} error{(errorList.Count == 1 ? "" : "s")}!" + (!UISettings.YYMPS ? "\n\nDouble Check that all necessary files/folders are in the 'datafiles' directory!" : ""));
 
-Process.Start("explorer.exe", (!YYMPS ? scriptDir : $"{rootDir}Export_YYMPS\\"));
+Process.Start("explorer.exe", (!UISettings.YYMPS ? scriptDir : $"{rootDir}Export_YYMPS\\"));
 
 GC.Collect();
 
