@@ -2774,7 +2774,6 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
 
     return propList;
 }
-
 public bool IsGameAsset(string assetname)
 {
     if (CheckAssetChunks(Data?.Sprites)) return true;
@@ -3030,7 +3029,7 @@ string GetTexturePageSize()
 #endregion
 
 #region Main Resource Dumpers
-
+#region Scripts
 void DumpScript(UndertaleScript s, int index)
 {
     string scriptName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Script_{index}");
@@ -3060,7 +3059,6 @@ void DumpScript(UndertaleScript s, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpScripts()
 {
     var watch = Stopwatch.StartNew();
@@ -3090,7 +3088,8 @@ async Task DumpScripts()
     watch.Stop();
     PushToLog($"Scripts complete! Took {watch.ElapsedMilliseconds} ms");
 }
-
+#endregion
+#region Objects
 void DumpObject(UndertaleGameObject o, int index)
 {
     string objectName = ((o?.Name?.Content != null || o.Name.Content != "") ? o.Name.Content : $"Unknown_Object_{index}");
@@ -3243,7 +3242,6 @@ void DumpObject(UndertaleGameObject o, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpObjects()
 {
     if (OBJT || CSTM_Enable)
@@ -3277,7 +3275,8 @@ async Task DumpObjects()
     else
         return;
 }
-
+#endregion
+#region Sounds
 public void DumpSound(UndertaleSound s, int index)
 {
     string soundName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sound_{index}");
@@ -3434,7 +3433,6 @@ public void DumpSound(UndertaleSound s, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpSounds()
 {
     if (SOND || CSTM_Enable)
@@ -3467,7 +3465,8 @@ async Task DumpSounds()
     else
         return;
 }
-
+#endregion
+#region Rooms
 void DumpRoom(UndertaleRoom r, int index)
 {
     string roomName = ((r?.Name?.Content != null || r.Name.Content != "") ? r.Name.Content : $"Unknown_Room_{index}");
@@ -3805,7 +3804,6 @@ void DumpRoom(UndertaleRoom r, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpRooms()
 {
     if (ROOM || CSTM_Enable)
@@ -3841,7 +3839,8 @@ async Task DumpRooms()
     else
         return;
 }
-
+#endregion
+#region Sprites
 void DumpSprite(UndertaleSprite s, int index)
 {
     bool exportFrames = true;
@@ -4023,7 +4022,6 @@ void DumpSprite(UndertaleSprite s, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpSprites()
 {
     if (SPRT || CSTM_Enable)
@@ -4056,7 +4054,8 @@ async Task DumpSprites()
     else
         return;
 }
-
+#endregion
+#region Fonts
 void DumpFont(UndertaleFont f, int index)
 {
     string fontName = ((f?.Name?.Content != null || f.Name.Content != "") ? f.Name.Content : $"Unknown_Font_{index}");
@@ -4136,7 +4135,6 @@ void DumpFont(UndertaleFont f, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpFonts()
 {
     if (FONT || CSTM_Enable)
@@ -4169,7 +4167,8 @@ async Task DumpFonts()
     else
         return;
 }
-
+#endregion
+#region Sequences
 GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 {
     var seqName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sequence");
@@ -4602,7 +4601,6 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 
     return dumpedSequence;
 }
-
 void DumpSequence(UndertaleSequence s, int index)
 {
     string sequenceName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sequence_{index}");
@@ -4618,7 +4616,6 @@ void DumpSequence(UndertaleSequence s, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpSequences()
 {
     if (SEQN || CSTM_Enable)
@@ -4651,7 +4648,8 @@ async Task DumpSequences()
     else
         return;
 }
-
+#endregion
+#region Shaders
 void DumpShader(UndertaleShader s, int index)
 {
     string shaderName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Shader_{index}");
@@ -4692,7 +4690,6 @@ void DumpShader(UndertaleShader s, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpShaders()
 {
     if (SHDR || CSTM_Enable)
@@ -4726,7 +4723,8 @@ async Task DumpShaders()
     else
         return;
 }
-
+#endregion
+#region Extensions
 void DumpExtension(UndertaleExtension e, int index)
 {
     string extensionName = ((e?.Name?.Content != null || e.Name.Content != "") ? e.Name.Content : $"Unknown_Extension_{index}");
@@ -4846,7 +4844,6 @@ void DumpExtension(UndertaleExtension e, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpExtensions()
 {
     if (EXTN || CSTM_Enable)
@@ -4943,7 +4940,8 @@ async Task DumpExtensions()
     else
         return;
 }
-
+#endregion
+#region Paths
 void DumpPath(UndertalePath p, int index)
 {
     string pathName = ((p?.Name?.Content != null || p.Name.Content != "") ? p.Name.Content : $"Unknown_Path_{index}");
@@ -4968,7 +4966,6 @@ void DumpPath(UndertalePath p, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpPaths()
 {
     if (PATH || CSTM_Enable)
@@ -5001,7 +4998,8 @@ async Task DumpPaths()
     else
         return;
 }
-
+#endregion
+#region Anim Curves
 void DumpAnimCurve(UndertaleAnimationCurve c, int index)
 {
     string curveName = ((c?.Name?.Content != null || c.Name.Content != "") ? c.Name.Content : $"Unknown_AnimCurve_{index}");
@@ -5036,7 +5034,6 @@ void DumpAnimCurve(UndertaleAnimationCurve c, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpAnimCurves()
 {
     if (ACRV || CSTM_Enable)
@@ -5069,7 +5066,8 @@ async Task DumpAnimCurves()
     else
         return;
 }
-
+#endregion
+#region Tile Sets
 void DumpTileSet(UndertaleBackground t, int index)
 {
     string tilesetName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Tileset_{index}");
@@ -5290,7 +5288,6 @@ void DumpTileSet(UndertaleBackground t, int index)
 
     IncrementProgressParallel();
 }
-
 async Task DumpTileSets()
 {
     if (BGND || CSTM_Enable)
@@ -5323,7 +5320,8 @@ async Task DumpTileSets()
     else
         return;
 }
-
+#endregion
+#region Timeline
 void DumpTimeline(UndertaleTimeline t, int index)
 {
     string timelineName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Timeline_{index}");
@@ -5364,7 +5362,6 @@ void DumpTimeline(UndertaleTimeline t, int index)
     IncrementProgressParallel();
 
 }
-
 async Task DumpTimelines()
 {
     if (TMLN || CSTM_Enable)
@@ -5397,7 +5394,9 @@ async Task DumpTimelines()
     else
         return;
 }
+#endregion
 
+#region TexGroups
 void DumpTexGroup(UndertaleTextureGroupInfo t)
 {
     if (t.Name.Content.ToLower().StartsWith("__yy__") || t.Name.Content.ToLower().StartsWith("_yy_"))
@@ -5447,7 +5446,6 @@ void DumpTexGroup(UndertaleTextureGroupInfo t)
 
     finalExport.TextureGroups.Add(dumpedTexGroup);
 }
-
 async Task DumpTexGroups()
 {
     var watch = Stopwatch.StartNew();
@@ -5460,6 +5458,7 @@ async Task DumpTexGroups()
     watch.Stop();
     PushToLog($"Texture Groups complete! Took {watch.ElapsedMilliseconds} ms");
 }
+#endregion
 
 async Task DumpAudioGroups()
 {
@@ -5468,7 +5467,6 @@ async Task DumpAudioGroups()
     watch.Stop();
     PushToLog($"Audio Groups complete! Took {watch.ElapsedMilliseconds} ms");
 }
-
 async Task DumpTextures()
 {
     var watch = Stopwatch.StartNew();
