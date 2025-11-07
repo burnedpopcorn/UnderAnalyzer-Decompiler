@@ -3325,7 +3325,13 @@ public void DumpSound(UndertaleSound s, int index)
     byte[] fileSignature = new byte[3];
 
     // copy the first 3 bytes into this array
-    Array.Copy(fileData, 0, fileSignature, 0, 3);
+    if (fileData.Length > 3)
+        Array.Copy(fileData, 0, fileSignature, 0, 3);
+    else
+    {
+        errorList.Add($"{soundName} | Unable to fetch format (Sound is empty).");
+        return;
+    }
 
     // set these for future operations
     WaveStream ws = null;
@@ -3353,24 +3359,33 @@ public void DumpSound(UndertaleSound s, int index)
         }
     }
 
-    switch (fileExt)
+    try
     {
-        case "wav":
-            ws = new WaveFileReader(dumpedSoundPath);
-            break;
+        switch (fileExt)
+        {
+            case "wav":
+                ws = new WaveFileReader(dumpedSoundPath);
+                break;
 
-        case "ogg":
-            ws = new VorbisWaveReader(dumpedSoundPath);
-            break;
+            case "ogg":
+                ws = new VorbisWaveReader(dumpedSoundPath);
+                break;
 
-        case "mp3":
-            ws = new Mp3FileReader(dumpedSoundPath);
-            break;
+            case "mp3":
+                ws = new Mp3FileReader(dumpedSoundPath);
+                break;
 
-        case "wma":
-			ws = new MediaFoundationReader(dumpedSoundPath);
-			break;
+            case "wma":
+                ws = new MediaFoundationReader(dumpedSoundPath);
+                break;
+        }
     }
+    catch
+    {
+        errorList.Add($"{soundName} | Unable to read {fileExt} file.");
+        return;
+    }
+
     // set the sound file name in the yy file
     dumpedSound.soundFile = (s.File is not null) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
 
