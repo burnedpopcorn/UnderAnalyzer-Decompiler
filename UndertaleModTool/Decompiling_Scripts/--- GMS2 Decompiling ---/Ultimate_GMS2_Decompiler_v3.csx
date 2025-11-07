@@ -2457,47 +2457,6 @@ if (!UISettings.DUMP)
 
 #endregion
 
-#region Datafile Copier
-async Task DumpDatafiles()
-{
-    if (!UISettings.ADDFILES)
-        return;
-
-    // just in case
-    Directory.CreateDirectory(scriptDir + "datafiles\\");
-
-    // Get all files and subdirectories
-    foreach (var file in Directory.GetFiles(rootDir, "*", SearchOption.AllDirectories))
-    {
-        // Skip these files                                                        //also get rid of sounds because yeah
-        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
-            continue;
-
-        string relativePath = Path.GetRelativePath(rootDir, file);
-        string destinationFile = Path.Combine(scriptDir + "datafiles\\", relativePath);
-
-        // Skip "Exported_Project" or "Export_YYMPS" directories and files within them
-        string dirName = Path.GetDirectoryName(file);
-        if (!dirName.Contains("Exported_Project") && !dirName.Contains("Export_YYMPS"))
-        {
-            // Ensure it exists
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
-
-            // Copy the file
-            File.Copy(file, destinationFile, true);
-
-            // add to yyp
-            int folderpos = destinationFile.IndexOf("datafiles");
-            string trimmedfolder = destinationFile.Substring(folderpos);
-            finalExport.IncludedFiles.Add(new GMProject.GMIncludedFile(Path.GetFileName(destinationFile))
-            {
-                filePath = Path.GetDirectoryName(trimmedfolder).Replace("\\", "/")
-            });
-        }
-    }
-}
-#endregion
-
 #region Useful Tools
 
 // this dictionary holds all the names of the assets
@@ -5041,6 +5000,14 @@ async Task DumpAnimCurves()
 }
 #endregion
 #region Tile Sets
+// TODO - Replace crystallizedsparkle's Fix Tilesets code and actually fix tileset seperation
+// NOTES - (Using CST1229's script to easily find correct tileset sep values)
+
+// if (Tile Count < 1000) Tile_Count / Tile_Sep = Tile_Columns + 7
+// if (Tile Count > 1000) Tile_Count / Tile_Sep = (Tile_Columns * 2) - 7
+// Tile_Sep is the important one here I think, and the one that needs to be isolated
+
+// 7 might be (Unknown_Always_2 + Output_Border_X + Output_Border_Y + Items_Per_Tile) = (2+2+2+1)
 void DumpTileSet(UndertaleBackground t, int index)
 {
     string tilesetName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Tileset_{index}");
@@ -5433,6 +5400,44 @@ async Task DumpTexGroups()
 }
 #endregion
 
+async Task DumpDatafiles()
+{
+    if (!UISettings.ADDFILES)
+        return;
+
+    // just in case
+    Directory.CreateDirectory(scriptDir + "datafiles\\");
+
+    // Get all files and subdirectories
+    foreach (var file in Directory.GetFiles(rootDir, "*", SearchOption.AllDirectories))
+    {
+        // Skip these files                                                        //also get rid of sounds because yeah
+        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
+            continue;
+
+        string relativePath = Path.GetRelativePath(rootDir, file);
+        string destinationFile = Path.Combine(scriptDir + "datafiles\\", relativePath);
+
+        // Skip "Exported_Project" or "Export_YYMPS" directories and files within them
+        string dirName = Path.GetDirectoryName(file);
+        if (dirName.Contains("Exported_Project") || dirName.Contains("Export_YYMPS"))
+            continue;
+
+        // Ensure it exists
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
+
+        // Copy the file
+        File.Copy(file, destinationFile, true);
+
+        // add to yyp
+        int folderpos = destinationFile.IndexOf("datafiles");
+        string trimmedfolder = destinationFile.Substring(folderpos);
+        finalExport.IncludedFiles.Add(new GMProject.GMIncludedFile(Path.GetFileName(destinationFile))
+        {
+            filePath = Path.GetDirectoryName(trimmedfolder).Replace("\\", "/")
+        });
+    }
+}
 async Task DumpAudioGroups()
 {
     var watch = Stopwatch.StartNew();
@@ -5556,7 +5561,6 @@ void DumpOptions()
     finalExport.Options.Add(new AssetReference { name = dumpedMainOptions.name, path = $"options/main/options_main.yy" });
     finalExport.Options.Add(new AssetReference { name = dumpedWindowsOptions.name, path = $"options/windows/options_windows.yy" });
 }
-
 #endregion
 
 #region Program
