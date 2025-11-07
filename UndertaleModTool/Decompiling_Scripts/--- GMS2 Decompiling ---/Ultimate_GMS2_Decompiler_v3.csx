@@ -2715,12 +2715,14 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
 
     if (eventList.Count >= 1 && eventList[0].Actions.Count >= 1)
     {
+        // Dump Precreate Code
         string dumpedCode = DumpCode(eventList[0].Actions[0].CodeId, new DecompileSettings
         {
             UseSemicolon = false,
             AllowLeftoverDataOnStack = true
         });
 
+        // go through each precreate variable
         foreach (Match match in assignmentRegex.Matches(dumpedCode))
         {
             string name = match.Groups[1].Value;
@@ -2738,7 +2740,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             // Boolean
             else if (rawValue == "true" || rawValue == "false")
                 prop.varType = 3;
-            // Decimal
+            // Decimal (Real)
             else if (Regex.IsMatch(rawValue, @"^\d+\.\d+$"))
                 prop.varType = 0;
             // Integer or Color
@@ -2768,6 +2770,9 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             else
                 prop.varType = 4;
 
+            // List (Type 6) is impossible to extract, since the list options (other than default) aren't present in code
+            // and Default value in list would just end up being one of the other types above
+
             propList.Add(prop);
         }
     }
@@ -2787,8 +2792,7 @@ public bool IsGameAsset(string assetname)
     if (CheckAssetChunks(Data?.Timelines)) return true;
     if (CheckAssetChunks(Data?.Paths)) return true;
     if (CheckAssetChunks(Data?.Fonts)) return true;
-    // might not be used at all, but if so, then its probably Data.Functions, not Data.Scripts
-    //if (CheckAssetChunks(Data?.Functions)) return true;
+    if (CheckAssetChunks(Data?.Scripts)) return true;
     if (CheckAssetChunks(Data?.Extensions)) return true;
 
     return false;
