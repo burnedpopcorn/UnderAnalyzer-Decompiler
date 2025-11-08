@@ -51,6 +51,8 @@ using NAudio.Vorbis;
 using Underanalyzer;
 using Underanalyzer.Decompiler;
 using UndertaleModLib.Util;
+using UndertaleModLib.Models;
+using static UndertaleModLib.Models.UndertaleRoom;
 using Underanalyzer.Decompiler.AST;
 using Underanalyzer.Decompiler.GameSpecific;
 using Underanalyzer.Decompiler.ControlFlow;
@@ -1781,8 +1783,9 @@ public static class UISettings
 public class MainWindow : Window
 {	
 	private AssetPickerWindow PickerWindow;
+    private UnscrambleWindow TilesetWindow;
 
-	public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
+    public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
 	{
 		Title = "Ultimate_GMS2_Decompiler_v3";
 		// remove OS title bar
@@ -1914,6 +1917,7 @@ public class MainWindow : Window
 
 		mainPanel.Children.Add(resourceGrid);
         #endregion
+
         #region AssetPicker Shit
         var centerContainer = new Grid
 		{
@@ -1923,9 +1927,11 @@ public class MainWindow : Window
 		};
 		centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 		centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-		// CheckBox + Label
-		var leftStack = new StackPanel
+        // CheckBox + Label
+        var leftStack = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -1933,7 +1939,7 @@ public class MainWindow : Window
 			Margin = new Thickness(0, 0, 16, 0) // space between left and right
 		};
 
-		var _CSTM = new CheckBox
+        var _CSTM = new CheckBox
 		{
 			Content = "Pick Assets",
 			IsChecked = false,
@@ -1944,14 +1950,14 @@ public class MainWindow : Window
 			Foreground = isDark ? BasicWhite : BasicBlack
 		};
 
-		var CSTMLabel = new TextBlock
+        var CSTMLabel = new TextBlock
 		{
 			Text = "",
 			Foreground = Foreground,
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
-		leftStack.Children.Add(_CSTM);
+        leftStack.Children.Add(_CSTM);
 		leftStack.Children.Add(CSTMLabel);
 		Grid.SetColumn(leftStack, 0);
 		centerContainer.Children.Add(leftStack);
@@ -1960,9 +1966,9 @@ public class MainWindow : Window
 		var pickAssetsButton = new Button
 		{
 			Content = "Pick Individual Assets...",
-			Width = 180,
+			Width = 150,
 			Height = 30,
-			Margin = new Thickness(0),
+			Margin = new Thickness(0, 0, 0, 4),
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			IsEnabled = false,
@@ -1985,50 +1991,111 @@ public class MainWindow : Window
 		Grid.SetColumn(pickAssetsButton, 1);
 		centerContainer.Children.Add(pickAssetsButton);
 
-		// Add to main layout
-		mainPanel.Children.Add(centerContainer);
+        // bulk
+        var resourceCheckboxes = new List<CheckBox> { _OBJT, _ROOM, _EXTN, _SCPT, _TMLN, _SOND, _SHDR, _PATH, _ACRV, _SEQN, _FONT, _SPRT, _BGND };
+        // For Pick Assets CHECKBOX
+        _CSTM.Checked += (s, e) =>
+        {
+            // disable all resource checkboxes
+            resourceCheckboxes.ForEach(cb => { cb.IsChecked = false; cb.IsEnabled = false; });
 
-		// bulk
-		var resourceCheckboxes = new List<CheckBox>
-		{
-			_OBJT, _ROOM, _EXTN, _SCPT, _TMLN, _SOND, _SHDR, _PATH,
-			_ACRV, _SEQN, _FONT, _SPRT, _BGND
-		};
-		// For Pick Assets CHECKBOX
-		_CSTM.Checked += (s, e) =>
-		{
-			// disable all resource checkboxes
-			resourceCheckboxes.ForEach(cb => { cb.IsChecked = false; cb.IsEnabled = false; });
-
-			// Enable Pick Assets button
-			pickAssetsButton.IsEnabled = true;
+            // Enable Pick Assets button
+            pickAssetsButton.IsEnabled = true;
 
             // Load Number of Assets Selected
             CSTMLabel.Text = $"Assets Selected: {UISettings.CSTM.Count}";
-		};
+        };
 
-		_CSTM.Unchecked += (s, e) =>
-		{
-			// Re-enable all resource checkboxes
-			resourceCheckboxes.ForEach(cb => cb.IsEnabled = true);
+        _CSTM.Unchecked += (s, e) =>
+        {
+            // Re-enable all resource checkboxes
+            resourceCheckboxes.ForEach(cb => cb.IsEnabled = true);
 
-			// Disable the Pick Assets button
-			pickAssetsButton.IsEnabled = false;
+            // Disable the Pick Assets button
+            pickAssetsButton.IsEnabled = false;
 
-			// Check these if they're null first
-			_SEQN.IsEnabled = _data?.Sequences != null;
-			_SEQN.IsChecked = _data?.Sequences != null;
-			_ACRV.IsEnabled = _data?.AnimationCurves != null;
-			_ACRV.IsChecked = _data?.AnimationCurves != null;
+            // Check these if they're null first
+            _SEQN.IsEnabled = _data?.Sequences != null;
+            _SEQN.IsChecked = _data?.Sequences != null;
+            _ACRV.IsEnabled = _data?.AnimationCurves != null;
+            _ACRV.IsChecked = _data?.AnimationCurves != null;
 
-			// Check all the enabled checkboxes
-			resourceCheckboxes.Where(cb => cb.IsEnabled).ToList().ForEach(cb => cb.IsChecked = true);
-			
-			// WIPE
-			CSTMLabel.Text = "";
+            // Check all the enabled checkboxes
+            resourceCheckboxes.Where(cb => cb.IsEnabled).ToList().ForEach(cb => cb.IsChecked = true);
+
+            // WIPE
+            CSTMLabel.Text = "";
             UISettings.CSTM.Clear();
-		};
+        };
         #endregion
+        #region Fix Tilesets
+        var rightStack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(16, 0, 16, 0) // space between left and right
+        };
+        var _FIXTS = new CheckBox
+        {
+            Content = "Fix Tilesets",
+            IsChecked = false,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 4),
+            ToolTip = "Opens a Window that allows you to manually fix all Tileset Images",
+
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack
+        };
+
+        // Right side: Button
+        var FixTSButton = new Button
+        {
+            Content = "Check All Tilesets...",
+            Width = 150,
+            Height = 30,
+            Margin = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = "Opens a Window that allows you to manually fix all Tileset Images",
+            IsEnabled = false,
+
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack,
+            BorderBrush = isDark ? BGgrey : lightgrey
+        };
+
+        FixTSButton.Click += (s, e) =>
+        {
+            TilesetWindow = new UnscrambleWindow(_data);
+            TilesetWindow.Owner = this;
+            TilesetWindow.ShowDialog();
+        };
+
+        // For Fix Tileset CHECKBOX
+        _FIXTS.Checked += (s, e) =>
+        {
+            // Enable Fix Tileset button
+            FixTSButton.IsEnabled = true;
+        };
+
+        _FIXTS.Unchecked += (s, e) =>
+        {
+            // Disable Fix Tileset button
+            FixTSButton.IsEnabled = false;
+        };
+
+        rightStack.Children.Add(_FIXTS);
+        Grid.SetColumn(rightStack, 2);
+        centerContainer.Children.Add(rightStack);
+
+        Grid.SetColumn(FixTSButton, 3);
+        centerContainer.Children.Add(FixTSButton);
+        #endregion
+
+        // Add Asset Picker and Fix Tileset elements
+        mainPanel.Children.Add(centerContainer);
+
         #region Decompiler Settings
         mainPanel.Children.Add(new TextBlock
 		{
@@ -2037,7 +2104,7 @@ public class MainWindow : Window
 			Margin = new Thickness(0, 12, 0, 4)
 		});
 
-		var settingsGrid = new UniformGrid { Columns = 4 };
+		var settingsGrid = new UniformGrid { Columns = 3 };
 
 		var _LOG = CreateCheckBox(isDark, "Log Assets");
 		_LOG.ToolTip = "Logs every Asset that gets decompiled\nMostly for Debugging, will clog up the logs if enabled.";
@@ -2054,9 +2121,6 @@ public class MainWindow : Window
 		var _FIXA = CreateCheckBox(isDark, "Fix Audio");
 		_FIXA.ToolTip = "If a .wav file is labelled a .mp3, this setting will label it back to .wav.";
 
-		var _FIXT = CreateCheckBox(isDark, "Fix Tilesets");
-		_FIXT.ToolTip = "Fixes Tileset Separation, slower due to image processing.";
-
 		var _GENROOM = CreateCheckBox(isDark, "Generate Room Name");
 		_GENROOM.ToolTip = "Simulates GameMaker asset naming behavior.";
 
@@ -2065,7 +2129,6 @@ public class MainWindow : Window
 		settingsGrid.Children.Add(_ENUM);
 		settingsGrid.Children.Add(_ADDFILES);
 		settingsGrid.Children.Add(_FIXA);
-		settingsGrid.Children.Add(_FIXT);
 		settingsGrid.Children.Add(_GENROOM);
 
 		mainPanel.Children.Add(settingsGrid);
@@ -2141,12 +2204,13 @@ public class MainWindow : Window
             UISettings.ENUM = _ENUM.IsChecked == true;
             UISettings.ADDFILES = _ADDFILES.IsChecked == true;
             UISettings.FIXAUDIO = _FIXA.IsChecked == true;
-            UISettings.FIXTILE = _FIXT.IsChecked == true;
             UISettings.GENROOM = _GENROOM.IsChecked == true;
 
             UISettings.CSTM_Enable = _CSTM.IsChecked == true;
 
-			Close();
+            UISettings.FIXTILE = _FIXTS.IsChecked == true;
+
+            Close();
 		};
 
 		mainPanel.Children.Add(OKBT);
@@ -2443,6 +2507,296 @@ public class AssetPickerWindow : Window
             if (item != null && item.Contains(search, StringComparison.OrdinalIgnoreCase))
                 listBox.Items.Add(item);
         }
+    }
+}
+#endregion
+#region Fix Tileset stuffs
+public class UnscrambleWindow : Window
+{
+    private readonly UndertaleData _data;
+    private int CurrentIndex = 0;
+
+    private readonly Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
+    private readonly Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
+
+    private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground];
+    private UndertaleBackground CurrentBackground => _data.Backgrounds[CurrentIndex];
+    private uint TileColumns
+    {
+        get => TileColumnsMap[CurrentBackground];
+        set => TileColumnsMap[CurrentBackground] = value;
+    }
+
+    private TextBoxDark ColumnsText;
+    private System.Windows.Controls.Image TilesImage;
+    private Canvas TilesCanvas;
+    private DrawingBrush GridBrush;
+    private ScrollViewer TilesScroller;
+
+    public System.Windows.Controls.Image OutputImage;
+
+    public UnscrambleWindow(UndertaleData data)
+    {
+        _data = data; // keep single reference
+        Title = "Unscramble Tilesets";
+
+        // Initialize TileData for all backgrounds
+        foreach (var bg in _data.Backgrounds)
+        {
+            TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
+            TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
+        }
+
+        Width = 960;
+        Height = 540;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        Closing += OnClosing;
+        FontSize = 16;
+
+        MouseLeave += Window_MouseLeave;
+        MouseUp += Tiles_MouseUp;
+        MouseMove += Tiles_MouseMove;
+
+        var grid = new Grid();
+        grid.Margin = new Thickness(8);
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.RowDefinitions.Add(new RowDefinition() { Height = new(0, GridUnitType.Auto) });
+        Content = grid;
+
+        TilesScroller = new ScrollViewer
+        {
+            Margin = new Thickness(0, 0, 0, 8),
+            Background = System.Windows.Media.Brushes.DarkGray,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Visible,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
+        };
+        grid.Children.Add(TilesScroller);
+
+        TilesCanvas = new Canvas();
+        TilesCanvas.MouseDown += Tiles_MouseDown;
+        TilesScroller.Content = TilesCanvas;
+
+        GridBrush = new DrawingBrush()
+        {
+            Stretch = Stretch.Fill,
+            TileMode = TileMode.Tile,
+            Viewbox = new Rect(0, 0, 20, 20),
+            ViewboxUnits = BrushMappingMode.Absolute,
+            ViewportUnits = BrushMappingMode.Absolute,
+        };
+
+        var grp = new DrawingGroup();
+        grp.Children.Add(new GeometryDrawing(
+            System.Windows.Media.Brushes.White, null, new PathGeometry
+            {
+                Figures = PathFigureCollection.Parse("M0,0 L20,0 20,20, 0,20Z")
+            }
+        ));
+        grp.Children.Add(new GeometryDrawing(
+            System.Windows.Media.Brushes.LightGray, null, new PathGeometry
+            {
+                Figures = PathFigureCollection.Parse("M0,10 L20,10 20,20, 10,20 10,0 0,0Z")
+            }
+        ));
+        GridBrush.Drawing = grp;
+        TilesCanvas.Background = GridBrush;
+
+        TilesImage = new System.Windows.Controls.Image();
+        TilesImage.Stretch = Stretch.None;
+        RenderOptions.SetBitmapScalingMode(TilesImage, BitmapScalingMode.NearestNeighbor);
+        TilesImage.SnapsToDevicePixels = true;
+        TilesCanvas.Children.Add(TilesImage);
+
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        Grid.SetRow(stack, 1);
+        grid.Children.Add(stack);
+
+        var instructions = new TextBlock()
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Text = "Adjust the number of columns until the tileset looks right:",
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+        stack.Children.Add(instructions);
+
+        var MinusButton = new ButtonDark() { Content = "-", Width = 24, Height = 24, VerticalAlignment = VerticalAlignment.Center };
+        MinusButton.Click += (s, e) =>
+        {
+            TileColumns = Math.Max(1, TileColumns - 1);
+            ColumnsText.Text = TileColumns.ToString();
+            Render();
+        };
+        MinusButton.Margin = new Thickness(0, 0, 8, 0);
+        stack.Children.Add(MinusButton);
+
+        ColumnsText = new TextBoxDark()
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = 48,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+        stack.Children.Add(ColumnsText);
+
+        ColumnsText.TextChanged += (s, e) =>
+        {
+            if (uint.TryParse(ColumnsText.Text, out uint val))
+            {
+                TileColumns = Math.Max(1, val);
+                Render();
+            }
+        };
+
+        var PlusButton = new ButtonDark() { Content = "+", Width = 24, Height = 24, VerticalAlignment = VerticalAlignment.Center };
+        PlusButton.Click += (s, e) =>
+        {
+            TileColumns++;
+            ColumnsText.Text = TileColumns.ToString();
+            Render();
+        };
+        stack.Children.Add(PlusButton);
+
+        var doneInstructions = new TextBlock()
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Text = "Navigate Tilesets:",
+            Margin = new Thickness(16, 0, 8, 0)
+        };
+        stack.Children.Add(doneInstructions);
+
+        var PrevButton = new ButtonDark()
+        {
+            Content = "←",
+            Width = 32,
+            Height = 24,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        PrevButton.Click += (s, e) =>
+        {
+            SaveCurrentData();
+            CurrentIndex = (CurrentIndex - 1 + _data.Backgrounds.Count) % _data.Backgrounds.Count;
+            LoadCurrentTileset();
+        };
+        stack.Children.Add(PrevButton);
+
+        var NextButton = new ButtonDark()
+        {
+            Content = "→",
+            Width = 32,
+            Height = 24,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        NextButton.Click += (s, e) =>
+        {
+            SaveCurrentData();
+            CurrentIndex = (CurrentIndex + 1) % _data.Backgrounds.Count;
+            LoadCurrentTileset();
+        };
+        stack.Children.Add(NextButton);
+
+        LoadCurrentTileset();
+    }
+
+    // Drag-scrolling
+    private bool IsDragging = false;
+    public System.Windows.Point DrawingStart;
+    public System.Windows.Point ScrollViewStart;
+
+    private void Tiles_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        IsDragging = true;
+        DrawingStart = e.GetPosition(this as Window);
+        ScrollViewStart = new System.Windows.Point(TilesScroller.HorizontalOffset, TilesScroller.VerticalOffset);
+    }
+    private void Tiles_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        IsDragging = false;
+    }
+    private void Tiles_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!IsDragging) return;
+
+        System.Windows.Point pos = e.GetPosition(this as Window);
+        TilesScroller.ScrollToHorizontalOffset(Math.Clamp(
+            ScrollViewStart.X + -(pos.X - DrawingStart.X), 0, TilesScroller.ScrollableWidth
+        ));
+        TilesScroller.ScrollToVerticalOffset(Math.Clamp(
+            ScrollViewStart.Y + -(pos.Y - DrawingStart.Y), 0, TilesScroller.ScrollableHeight
+        ));
+    }
+    private void Window_MouseLeave(object sender, MouseEventArgs e)
+    {
+        IsDragging = false;
+    }
+
+    private void LoadCurrentTileset()
+    {
+        Title = $"Unscramble Tileset [{CurrentIndex + 1}/{_data.Backgrounds.Count}] - {CurrentBackground.Name}";
+        ColumnsText.Text = TileColumns.ToString();
+        Render();
+    }
+
+    private void SaveCurrentData()
+    {
+        PopulatePalette();
+    }
+
+    public void Render()
+    {
+        PopulatePalette();
+
+        var loader = new CachedTileDataLoader();
+        var src = loader.Convert(new object[] { TileData }, null, null, null);
+        TilesImage.Source = src as ImageSource;
+    }
+
+    private void PopulatePalette()
+    {
+        var bg = CurrentBackground;
+        var data = TileData;
+
+        if (data.TileData == null || data.TileData.Length == 0)
+            data.TileData = new uint[(int)Math.Ceiling(bg.GMS2TileCount / (double)TileColumns)][];
+
+        data.TilesX = Math.Max(TileColumns, 1);
+        data.TilesY = (uint)Math.Ceiling((double)bg.GMS2TileCount / data.TilesX);
+
+        GridBrush.Viewport = new Rect(0, 0, bg.GMS2TileWidth, bg.GMS2TileHeight);
+
+        TilesImage.Width = data.TilesX * bg.GMS2TileWidth;
+        TilesImage.Height = data.TilesY * bg.GMS2TileHeight;
+        TilesCanvas.Width = TilesImage.Width;
+        TilesCanvas.Height = TilesImage.Height;
+
+        data.TileData = Enumerable.Range(0, (int)data.TilesY)
+            .Select(_ => new uint[(int)data.TilesX])
+            .ToArray();
+
+        int i = 0;
+        int itemsPerTile = (int)bg.GMS2ItemsPerTileCount;
+        int count = (int)bg.GMS2TileCount * itemsPerTile;
+
+        for (int y = 0; y < data.TilesY; y++)
+        {
+            for (int x = 0; x < data.TilesX; x++)
+            {
+                if (i >= count)
+                    data.TileData[y][x] = 0;
+                else
+                    data.TileData[y][x] = bg.GMS2TileIds[i].ID;
+                i += itemsPerTile;
+            }
+        }
+    }
+
+    private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        foreach (var kvp in TileDataMap)
+            kvp.Value.Dispose();
     }
 }
 #endregion
@@ -5000,14 +5354,6 @@ async Task DumpAnimCurves()
 }
 #endregion
 #region Tile Sets
-// TODO - Replace crystallizedsparkle's Fix Tilesets code and actually fix tileset seperation
-// NOTES - (Using CST1229's script to easily find correct tileset sep values)
-
-// if (Tile Count < 1000) Tile_Count / Tile_Sep = Tile_Columns + 7
-// if (Tile Count > 1000) Tile_Count / Tile_Sep = (Tile_Columns * 2) - 7
-// Tile_Sep is the important one here I think, and the one that needs to be isolated
-
-// 7 might be (Unknown_Always_2 + Output_Border_X + Output_Border_Y + Items_Per_Tile) = (2+2+2+1)
 void DumpTileSet(UndertaleBackground t, int index)
 {
     string tilesetName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Tileset_{index}");
@@ -5025,6 +5371,10 @@ void DumpTileSet(UndertaleBackground t, int index)
         // copied this chunk from quantum
         tileWidth = (int)t.GMS2TileWidth,
         tileHeight = (int)t.GMS2TileHeight,
+        tilexoff = 0,
+        tileyoff = 0,
+        tilehsep = 0,
+        tilevsep = 0,
         tileAnimation = new GMTileSet.TileAnimation(),
         out_tilehborder = (int)t.GMS2OutputBorderX,
         out_tilevborder = (int)t.GMS2OutputBorderY,
@@ -5036,21 +5386,6 @@ void DumpTileSet(UndertaleBackground t, int index)
         textureGroupId = GetTextureGroup(t.Name.Content),
         tags = GetTags(t)
     };
-
-    if (UISettings.FIXTILE)
-    {
-        dumpedTileset.tilexoff = 0;
-        dumpedTileset.tileyoff = 0;
-        dumpedTileset.tilehsep = 0;
-        dumpedTileset.tilevsep = 0;
-    }
-    else
-    {
-        dumpedTileset.tilexoff = (int)t.GMS2OutputBorderX;
-        dumpedTileset.tileyoff = (int)t.GMS2OutputBorderY;
-        dumpedTileset.tilehsep = (int)t.GMS2OutputBorderX * 2;
-        dumpedTileset.tilevsep = (int)t.GMS2OutputBorderY * 2;
-    }
 
     dumpedTileset.tileAnimation.frameData = t.GMS2TileIds.Select(t => t.ID).ToArray();
 
@@ -5090,60 +5425,47 @@ void DumpTileSet(UndertaleBackground t, int index)
     if (t.Texture is not null)
     {
         MagickImage finalResult = null;
-        if (UISettings.FIXTILE)
+        TextureWorker worker = new(); // wont let me use 'using'
+        // obtain the image for the background and seperate the image into a list of tiles.
+        var image = worker.GetTextureFor(t.Texture, tilesetName);
+
+        worker.Dispose();
+        var tiledImage = image.CropToTiles(
+            (uint)(dumpedTileset.tileWidth + ((int)t.GMS2OutputBorderX * 2)),
+            (uint)(dumpedTileset.tileHeight + ((int)t.GMS2OutputBorderY * 2))
+        ).ToList();
+
+        // set the geometry to the tileset dimensions
+        var geometry = new MagickGeometry((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
+        var settings = new MagickReadSettings
         {
-            TextureWorker worker = new(); // wont let me use 'using'
-            // obtain the image for the background and seperate the image into a list of tiles.
-            var image = worker.GetTextureFor(t.Texture, tilesetName);
-            // dump the tileset early because why not.
-            TextureWorker.SaveImageToFile(image, $"{assetDir}output_tileset.png");
+            BackgroundColor = MagickColors.Transparent,
+            Width = (uint)dumpedTileset.tileWidth,
+            Height = (uint)dumpedTileset.tileHeight
+        };
+        // iterate through each tile, fixing the padding by setting the tileset to the correct dimensions.
+        for (int i = 0; i <= tiledImage.Count - 1; i++)
+            tiledImage[i].Extent(geometry, Gravity.Center, MagickColors.Transparent);
 
-            worker.Dispose();
-            var tiledImage = image.CropToTiles(
-                (uint)(dumpedTileset.tileWidth + ((int)t.GMS2OutputBorderX * 2)),
-                (uint)(dumpedTileset.tileHeight + ((int)t.GMS2OutputBorderY * 2))
-            ).ToList();
+        using var exportedImage = new MagickImageCollection();
+        // construct the image by each tile.
+        foreach (var tile in tiledImage)
+            exportedImage.Add(tile);
 
-            // set the geometry to the tileset dimensions
-            var geometry = new MagickGeometry((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
-            //remove checkerboard
-            var settings = new MagickReadSettings
-            {
-                BackgroundColor = MagickColors.Transparent,
-                Width = (uint)dumpedTileset.tileWidth,
-                Height = (uint)dumpedTileset.tileHeight
-            };
-            tiledImage[0] = new MagickImage("xc:none", settings);
-            // iterate through each tile, fixing the padding by setting the tileset to the correct dimensions.
-            for (int i = 0; i <= tiledImage.Count - 1; i++)
-            {
-                tiledImage[i].Extent(geometry, Gravity.Center, MagickColors.Transparent);
-            }
+        MontageSettings ms = new MontageSettings()
+        {
+            Geometry = geometry,
+            TileGeometry = new MagickGeometry((uint)dumpedTileset.out_columns, 0),
+            BackgroundColor = MagickColors.None,
+            Gravity = Gravity.Center
+        };
 
-            using var exportedImage = new MagickImageCollection();
-            // construct the image by each tile.
-            foreach (var tile in tiledImage)
-            {
-                exportedImage.Add(tile);
-            }
+        // save the image to a file when complete.
+        using (var result = exportedImage.Montage(ms))
+            finalResult = (MagickImage)result.Clone();
 
-            MontageSettings ms = new MontageSettings()
-            {
-                Geometry = geometry,
-                TileGeometry = new MagickGeometry((uint)dumpedTileset.out_columns, 0),
-                BackgroundColor = MagickColors.None,
-                Gravity = Gravity.Center
-            };
-
-            // save the image to a file when complete.
-            using (var result = exportedImage.Montage(ms))
-            {
-                finalResult = (MagickImage)result.Clone();
-            }
-
-            image.Dispose();
-            exportedImage.Dispose();
-        }
+        image.Dispose();
+        exportedImage.Dispose();
 
         GMSprite dumpedSprite = new(spriteName)
         {
@@ -5151,11 +5473,11 @@ void DumpTileSet(UndertaleBackground t, int index)
             preMultiplyAlpha = t.Transparent,
             edgeFiltering = t.Smooth,
             bbox_left = 0,
-            bbox_right = (finalResult is not null ? (int)finalResult.Width : (int)t.Texture.TargetWidth) - 1,
-            bbox_bottom = (finalResult is not null ? (int)finalResult.Height : (int)t.Texture.TargetWidth) - 1,
+            bbox_right = (int)finalResult.Width,
+            bbox_bottom = (int)finalResult.Height,
             bbox_top = 0,
-            width = (finalResult is not null ? (int)finalResult.Width : (int)t.Texture.TargetWidth),
-            height = (finalResult is not null ? (int)finalResult.Height : (int)t.Texture.TargetHeight),
+            width = (int)finalResult.Width,
+            height = (int)finalResult.Height,
             sequence = new GMSequence(spriteName)
             {
                 length = 1,
@@ -5200,19 +5522,13 @@ void DumpTileSet(UndertaleBackground t, int index)
 
         framesTrack.keyframes.Keyframes.Add(currentKeyframe);
         dumpedSprite.sequence.tracks.Add(framesTrack);
-        if (UISettings.FIXTILE)
-        {
-            TextureWorker.SaveImageToFile(finalResult, $"{spriteassetDir}{frameGUID}.png");
-            File.Copy($"{spriteassetDir}{frameGUID}.png", $"{layersPath}{frameGUID}\\{layerGUID}.png");
-            // cleanup
-            finalResult.Dispose();
-        }
-        else
-        {
-            imagesToDump.Add(new ImageAssetData(t.Texture, spriteassetDir, frameGUID + ".png"));
-            imagesToDump.Add(new ImageAssetData(t.Texture, $"{layersPath}{frameGUID}\\", layerGUID + ".png"));
-            imagesToDump.Add(new ImageAssetData(t.Texture, assetDir, "output_tileset.png"));
-        }
+
+        // save tileset sprite
+        TextureWorker.SaveImageToFile(finalResult, $"{spriteassetDir}{frameGUID}.png");
+        TextureWorker.SaveImageToFile(finalResult, $"{layersPath}{frameGUID}\\{layerGUID}.png");
+        TextureWorker.SaveImageToFile(finalResult, $"{assetDir}output_tileset.png");
+        // cleanup
+        finalResult.Dispose();
 
         File.WriteAllText($"{spriteassetDir}\\{spriteName}.yy", JsonSerializer.Serialize(dumpedSprite, jsonOptions));
 
