@@ -2511,20 +2511,25 @@ public class AssetPickerWindow : Window
 }
 #endregion
 #region Fix Tileset stuffs
+public static class TilesetSaveData
+{
+    public static Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
+    public static Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
+
+    // store modified images
+    public static Dictionary<UndertaleBackground, ImageSource> TilesetImageMap = new();
+}
 public class UnscrambleWindow : Window
 {
     private readonly UndertaleData _data;
     private int CurrentIndex = 0;
 
-    private readonly Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
-    private readonly Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
-
-    private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground];
+    private Layer.LayerTilesData TileData => TilesetSaveData.TileDataMap[CurrentBackground];
     private UndertaleBackground CurrentBackground => _data.Backgrounds[CurrentIndex];
     private uint TileColumns
     {
-        get => TileColumnsMap[CurrentBackground];
-        set => TileColumnsMap[CurrentBackground] = value;
+        get => TilesetSaveData.TileColumnsMap[CurrentBackground];
+        set => TilesetSaveData.TileColumnsMap[CurrentBackground] = value;
     }
 
     private System.Windows.Controls.TextBlock titleText;
@@ -2560,13 +2565,16 @@ public class UnscrambleWindow : Window
         Foreground = isDark ? BasicWhite : BasicBlack;
         FontSize = 16;
 
+        // Init
         foreach (var bg in _data.Backgrounds)
         {
-            TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
-            TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
+            if (!TilesetSaveData.TileDataMap.ContainsKey(bg))
+                TilesetSaveData.TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
+
+            if (!TilesetSaveData.TileColumnsMap.ContainsKey(bg))
+                TilesetSaveData.TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
-        Closing += OnClosing;
         MouseLeave += Window_MouseLeave;
         MouseUp += Tiles_MouseUp;
         MouseMove += Tiles_MouseMove;
@@ -2620,7 +2628,7 @@ public class UnscrambleWindow : Window
         DockPanel.SetDock(grid, Dock.Bottom);
         layout.Children.Add(grid);
 
-        // canvas and scroll
+        #region Canvas
         TilesScroller = new ScrollViewer
         {
             Margin = new Thickness(0, 0, 0, 8),
@@ -2667,7 +2675,7 @@ public class UnscrambleWindow : Window
         };
         RenderOptions.SetBitmapScalingMode(TilesImage, BitmapScalingMode.NearestNeighbor);
         TilesCanvas.Children.Add(TilesImage);
-
+        #endregion
         #region Controls
         var stack = new StackPanel
         {
@@ -2803,6 +2811,9 @@ public class UnscrambleWindow : Window
         LoadCurrentTileset();
     }
 
+    #region Helper Shit
+
+    #region Mouse Funcs
     // drag scrolling
     private bool IsDragging = false;
     public System.Windows.Point DrawingStart;
@@ -2827,6 +2838,7 @@ public class UnscrambleWindow : Window
         ));
     }
     private void Window_MouseLeave(object sender, MouseEventArgs e) => IsDragging = false;
+    #endregion
 
     private void LoadCurrentTileset()
     {
@@ -2836,7 +2848,13 @@ public class UnscrambleWindow : Window
         Render();
     }
 
-    private void SaveCurrentData() => PopulatePalette();
+    private void SaveCurrentData()
+    {
+        PopulatePalette();
+
+        if (TilesImage.Source != null)
+            TilesetSaveData.TilesetImageMap[CurrentBackground] = TilesImage.Source;
+    }
 
     public void Render()
     {
@@ -2844,6 +2862,7 @@ public class UnscrambleWindow : Window
         var loader = new CachedTileDataLoader();
         var src = loader.Convert(new object[] { TileData }, null, null, null);
         TilesImage.Source = src as ImageSource;
+        TilesetSaveData.TilesetImageMap[CurrentBackground] = TilesImage.Source;
     }
 
     private void PopulatePalette()
@@ -2884,12 +2903,7 @@ public class UnscrambleWindow : Window
             }
         }
     }
-
-    private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
-    {
-        foreach (var kvp in TileDataMap)
-            kvp.Value.Dispose();
-    }
+    #endregion
 }
 #endregion
 
