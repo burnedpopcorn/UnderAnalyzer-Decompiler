@@ -63,6 +63,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shell;
 using System.Windows.Input;
 #endregion
@@ -2517,7 +2518,7 @@ public static class TilesetSaveData
     public static Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
 
     // store modified images
-    public static Dictionary<UndertaleBackground, ImageSource> TilesetImageMap = new();
+    public static Dictionary<UndertaleBackground, MagickImage> TilesetImageMap = new();
 }
 public class UnscrambleWindow : Window
 {
@@ -2538,8 +2539,6 @@ public class UnscrambleWindow : Window
     private Canvas TilesCanvas;
     private DrawingBrush GridBrush;
     private ScrollViewer TilesScroller;
-
-    public System.Windows.Controls.Image OutputImage;
 
     public UnscrambleWindow(UndertaleData data, bool isDark = true)
     {
@@ -2575,6 +2574,7 @@ public class UnscrambleWindow : Window
                 TilesetSaveData.TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
+        Closing += OnClosing;
         MouseLeave += Window_MouseLeave;
         MouseUp += Tiles_MouseUp;
         MouseMove += Tiles_MouseMove;
@@ -2848,13 +2848,7 @@ public class UnscrambleWindow : Window
         Render();
     }
 
-    private void SaveCurrentData()
-    {
-        PopulatePalette();
-
-        if (TilesImage.Source != null)
-            TilesetSaveData.TilesetImageMap[CurrentBackground] = TilesImage.Source;
-    }
+    private void SaveCurrentData() => PopulatePalette();
 
     public void Render()
     {
@@ -2862,7 +2856,6 @@ public class UnscrambleWindow : Window
         var loader = new CachedTileDataLoader();
         var src = loader.Convert(new object[] { TileData }, null, null, null);
         TilesImage.Source = src as ImageSource;
-        TilesetSaveData.TilesetImageMap[CurrentBackground] = TilesImage.Source;
     }
 
     private void PopulatePalette()
@@ -2903,6 +2896,75 @@ public class UnscrambleWindow : Window
             }
         }
     }
+
+    private MagickImage Convert_ImageSource(ImageSource imageSource)
+    {
+        using var memoryStream = new MemoryStream();
+
+        // Encode the BitmapSource into a common format (like PNG)
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create((BitmapSource)imageSource));
+        encoder.Save(memoryStream);
+
+        // Reset stream position before reading
+        memoryStream.Position = 0;
+
+        // Create a MagickImage from the stream
+        return new MagickImage(memoryStream);
+    }
+
+    private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // Save All Images
+        foreach (var bg in _data.Backgrounds)
+        {
+            // Set TileData and TileColumns
+            var data = TilesetSaveData.TileDataMap[bg];
+            uint columns = TilesetSaveData.TileColumnsMap[bg];
+
+            data.TilesX = Math.Max(columns, 1);
+            data.TilesY = (uint)Math.Ceiling((double)bg.GMS2TileCount / data.TilesX);
+
+            // create new image
+            var tempImage = new System.Windows.Controls.Image
+            {
+                Width = data.TilesX * bg.GMS2TileWidth,
+                Height = data.TilesY * bg.GMS2TileHeight,
+                Stretch = Stretch.None,
+                SnapsToDevicePixels = true
+            };
+
+            GridBrush.Viewport = new Rect(0, 0, bg.GMS2TileWidth, bg.GMS2TileHeight);
+
+            data.TileData = Enumerable.Range(0, (int)data.TilesY)
+                .Select(_ => new uint[(int)data.TilesX])
+                .ToArray();
+
+            int iTile = 0;
+            int itemsPerTile = (int)bg.GMS2ItemsPerTileCount;
+            int count = (int)bg.GMS2TileCount * itemsPerTile;
+
+            for (int y = 0; y < data.TilesY; y++)
+            {
+                for (int x = 0; x < data.TilesX; x++)
+                {
+                    if (iTile >= count)
+                        data.TileData[y][x] = 0;
+                    else
+                        data.TileData[y][x] = bg.GMS2TileIds[iTile].ID;
+
+                    iTile += itemsPerTile;
+                }
+            }
+
+            var loader = new CachedTileDataLoader();
+            var src = loader.Convert(new object[] { data }, null, null, null);
+            tempImage.Source = src as ImageSource;
+
+            // Convert to MagickImage and store
+            TilesetSaveData.TilesetImageMap[bg] = Convert_ImageSource(tempImage.Source);
+        }
+    }
     #endregion
 }
 #endregion
@@ -2913,7 +2975,10 @@ MainWin.ShowDialog();
 
 // if exit
 if (!UISettings.DUMP)
+{
+    GC.Collect();
     return;
+}
 
 #endregion
 
@@ -3105,6 +3170,9 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             UseSemicolon = false,
             AllowLeftoverDataOnStack = true
         });
+
+        if (dumpedCode is null)
+            return propList;
 
         // go through each precreate variable
         foreach (Match match in assignmentRegex.Matches(dumpedCode))
@@ -5463,7 +5531,7 @@ async Task DumpAnimCurves()
 void DumpTileSet(UndertaleBackground t, int index)
 {
     string tilesetName = ((t?.Name?.Content != null || t.Name.Content != "") ? t.Name.Content : $"Unknown_Tileset_{index}");
-    string spriteName = "_decompiled_" + tilesetName;
+    string spriteName = tilesetName + "_sprite";
     string assetDir = $"{scriptDir}tilesets\\{tilesetName}\\";
     string spriteassetDir = $"{scriptDir}sprites\\{spriteName}\\";
     string layersPath = spriteassetDir + "layers\\";
@@ -5485,7 +5553,7 @@ void DumpTileSet(UndertaleBackground t, int index)
         out_tilehborder = (int)t.GMS2OutputBorderX,
         out_tilevborder = (int)t.GMS2OutputBorderY,
         spriteNoExport = true,
-        out_columns = (int)t.GMS2TileColumns,
+        out_columns = UISettings.FIXTILE ? (int)TilesetSaveData.TileColumnsMap[t] : (int)t.GMS2TileColumns,
         tile_count = (int)t.GMS2TileCount,
         parent = GetParentFolder(GMAssetType.TileSet),
         spriteId = (t.Texture is null ? null : new AssetReference(spriteName, GMAssetType.Sprite)),
@@ -5531,47 +5599,57 @@ void DumpTileSet(UndertaleBackground t, int index)
     if (t.Texture is not null)
     {
         MagickImage finalResult = null;
-        TextureWorker worker = new(); // wont let me use 'using'
-        // obtain the image for the background and seperate the image into a list of tiles.
+
+        // Decompile shit tileset first
+        // needed for who knows why
+        TextureWorker worker = new();
         var image = worker.GetTextureFor(t.Texture, tilesetName);
-
+        TextureWorker.SaveImageToFile(image, $"{assetDir}output_tileset.png");
         worker.Dispose();
-        var tiledImage = image.CropToTiles(
-            (uint)(dumpedTileset.tileWidth + ((int)t.GMS2OutputBorderX * 2)),
-            (uint)(dumpedTileset.tileHeight + ((int)t.GMS2OutputBorderY * 2))
-        ).ToList();
 
-        // set the geometry to the tileset dimensions
-        var geometry = new MagickGeometry((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
-        var settings = new MagickReadSettings
+        // Get actually good tileset sprites
+        if (UISettings.FIXTILE && TilesetSaveData.TilesetImageMap[t] != null)
+            finalResult = TilesetSaveData.TilesetImageMap[t];
+        // or not if user is too lazy to do it manually i guess
+        else
         {
-            BackgroundColor = MagickColors.Transparent,
-            Width = (uint)dumpedTileset.tileWidth,
-            Height = (uint)dumpedTileset.tileHeight
-        };
-        // iterate through each tile, fixing the padding by setting the tileset to the correct dimensions.
-        for (int i = 0; i <= tiledImage.Count - 1; i++)
-            tiledImage[i].Extent(geometry, Gravity.Center, MagickColors.Transparent);
+            var tiledImage = image.CropToTiles(
+                (uint)(dumpedTileset.tileWidth + ((int)t.GMS2OutputBorderX * 2)),
+                (uint)(dumpedTileset.tileHeight + ((int)t.GMS2OutputBorderY * 2))
+            ).ToList();
 
-        using var exportedImage = new MagickImageCollection();
-        // construct the image by each tile.
-        foreach (var tile in tiledImage)
-            exportedImage.Add(tile);
+            // set the geometry to the tileset dimensions
+            var geometry = new MagickGeometry((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
+            var settings = new MagickReadSettings
+            {
+                BackgroundColor = MagickColors.Transparent,
+                Width = (uint)dumpedTileset.tileWidth,
+                Height = (uint)dumpedTileset.tileHeight
+            };
+            // iterate through each tile, fixing the padding by setting the tileset to the correct dimensions.
+            for (int i = 0; i <= tiledImage.Count - 1; i++)
+                tiledImage[i].Extent(geometry, Gravity.Center, MagickColors.Transparent);
 
-        MontageSettings ms = new MontageSettings()
-        {
-            Geometry = geometry,
-            TileGeometry = new MagickGeometry((uint)dumpedTileset.out_columns, 0),
-            BackgroundColor = MagickColors.None,
-            Gravity = Gravity.Center
-        };
+            using var exportedImage = new MagickImageCollection();
+            // construct the image by each tile.
+            foreach (var tile in tiledImage)
+                exportedImage.Add(tile);
 
-        // save the image to a file when complete.
-        using (var result = exportedImage.Montage(ms))
-            finalResult = (MagickImage)result.Clone();
+            MontageSettings ms = new MontageSettings()
+            {
+                Geometry = geometry,
+                TileGeometry = new MagickGeometry((uint)dumpedTileset.out_columns, 0),
+                BackgroundColor = MagickColors.None,
+                Gravity = Gravity.Center
+            };
 
+            // save the image to a file when complete.
+            using (var result = exportedImage.Montage(ms))
+                finalResult = (MagickImage)result.Clone();
+
+            exportedImage.Dispose();
+        }
         image.Dispose();
-        exportedImage.Dispose();
 
         GMSprite dumpedSprite = new(spriteName)
         {
@@ -5632,7 +5710,6 @@ void DumpTileSet(UndertaleBackground t, int index)
         // save tileset sprite
         TextureWorker.SaveImageToFile(finalResult, $"{spriteassetDir}{frameGUID}.png");
         TextureWorker.SaveImageToFile(finalResult, $"{layersPath}{frameGUID}\\{layerGUID}.png");
-        TextureWorker.SaveImageToFile(finalResult, $"{assetDir}output_tileset.png");
         // cleanup
         finalResult.Dispose();
 
