@@ -2527,7 +2527,8 @@ public class UnscrambleWindow : Window
         set => TileColumnsMap[CurrentBackground] = value;
     }
 
-    private TextBoxDark ColumnsText;
+    private System.Windows.Controls.TextBlock titleText;
+    private System.Windows.Controls.TextBox ColumnsText;
     private System.Windows.Controls.Image TilesImage;
     private Canvas TilesCanvas;
     private DrawingBrush GridBrush;
@@ -2535,39 +2536,95 @@ public class UnscrambleWindow : Window
 
     public System.Windows.Controls.Image OutputImage;
 
-    public UnscrambleWindow(UndertaleData data)
+    public UnscrambleWindow(UndertaleData data, bool isDark = true)
     {
-        _data = data; // keep single reference
-        Title = "Unscramble Tilesets";
+        _data = data;
 
-        // Initialize TileData for all backgrounds
+        Title = "Unscramble Tilesets";
+        WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.NoResize;
+        Width = 960;
+        Height = 540;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+        // Theme
+        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+        var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
+        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+
+        var BasicWhite = System.Windows.Media.Brushes.White;
+        var BasicBlack = System.Windows.Media.Brushes.Black;
+
+        Background = isDark ? BGgrey : BGwhite;
+        Foreground = isDark ? BasicWhite : BasicBlack;
+        FontSize = 16;
+
         foreach (var bg in _data.Backgrounds)
         {
             TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
             TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
-        Width = 960;
-        Height = 540;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Closing += OnClosing;
-        FontSize = 16;
-
         MouseLeave += Window_MouseLeave;
         MouseUp += Tiles_MouseUp;
         MouseMove += Tiles_MouseMove;
 
-        var grid = new Grid();
-        grid.Margin = new Thickness(8);
-        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        grid.RowDefinitions.Add(new RowDefinition());
-        grid.RowDefinitions.Add(new RowDefinition() { Height = new(0, GridUnitType.Auto) });
-        Content = grid;
+        // layout root
+        var layout = new DockPanel();
 
+        #region Title Bar
+        var titleBar = new DockPanel
+        {
+            Height = 30,
+            Background = isDark ? darkgrey : lightgrey,
+            LastChildFill = true
+        };
+
+        titleText = new TextBlock
+        {
+            Text = Title,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 0, 0),
+            Foreground = Foreground
+        };
+
+        var closeButton = new Button
+        {
+            Content = "X",
+            Width = 40,
+            Height = 30,
+            Background = System.Windows.Media.Brushes.Transparent,
+            Foreground = Foreground,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            FontWeight = FontWeights.Bold,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        closeButton.Click += (s, e) => Close();
+        titleBar.MouseLeftButtonDown += (s, e) => { if (e.ButtonState == MouseButtonState.Pressed) DragMove(); };
+
+        DockPanel.SetDock(closeButton, Dock.Right);
+        titleBar.Children.Add(closeButton);
+        titleBar.Children.Add(titleText);
+
+        DockPanel.SetDock(titleBar, Dock.Top);
+        layout.Children.Add(titleBar);
+        #endregion
+
+        // main grid
+        var grid = new Grid { Margin = new Thickness(10) };
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
+
+        DockPanel.SetDock(grid, Dock.Bottom);
+        layout.Children.Add(grid);
+
+        // canvas and scroll
         TilesScroller = new ScrollViewer
         {
             Margin = new Thickness(0, 0, 0, 8),
-            Background = System.Windows.Media.Brushes.DarkGray,
+            Background = isDark ? darkgrey : lightgrey,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Visible,
             VerticalScrollBarVisibility = ScrollBarVisibility.Visible
         };
@@ -2577,6 +2634,7 @@ public class UnscrambleWindow : Window
         TilesCanvas.MouseDown += Tiles_MouseDown;
         TilesScroller.Content = TilesCanvas;
 
+        // grid pattern BG
         GridBrush = new DrawingBrush()
         {
             Stretch = Stretch.Fill,
@@ -2585,7 +2643,6 @@ public class UnscrambleWindow : Window
             ViewboxUnits = BrushMappingMode.Absolute,
             ViewportUnits = BrushMappingMode.Absolute,
         };
-
         var grp = new DrawingGroup();
         grp.Children.Add(new GeometryDrawing(
             System.Windows.Media.Brushes.White, null, new PathGeometry
@@ -2602,12 +2659,16 @@ public class UnscrambleWindow : Window
         GridBrush.Drawing = grp;
         TilesCanvas.Background = GridBrush;
 
-        TilesImage = new System.Windows.Controls.Image();
-        TilesImage.Stretch = Stretch.None;
+        // Tile Image
+        TilesImage = new System.Windows.Controls.Image
+        {
+            Stretch = Stretch.None,
+            SnapsToDevicePixels = true
+        };
         RenderOptions.SetBitmapScalingMode(TilesImage, BitmapScalingMode.NearestNeighbor);
-        TilesImage.SnapsToDevicePixels = true;
         TilesCanvas.Children.Add(TilesImage);
 
+        #region Controls
         var stack = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -2616,15 +2677,27 @@ public class UnscrambleWindow : Window
         Grid.SetRow(stack, 1);
         grid.Children.Add(stack);
 
-        var instructions = new TextBlock()
+        var instructions = new TextBlock
         {
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Adjust the number of columns until the tileset looks right:",
-            Margin = new Thickness(0, 0, 8, 0)
+            Margin = new Thickness(0, 0, 8, 0),
+            Foreground = Foreground
         };
         stack.Children.Add(instructions);
 
-        var MinusButton = new ButtonDark() { Content = "-", Width = 24, Height = 24, VerticalAlignment = VerticalAlignment.Center };
+        #region Minus Button
+        var MinusButton = new Button
+        {
+            Content = "-",
+            Width = 24,
+            Height = 24,
+            VerticalAlignment = VerticalAlignment.Center,
+
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack,
+            BorderBrush = isDark ? BGgrey : lightgrey
+        };
         MinusButton.Click += (s, e) =>
         {
             TileColumns = Math.Max(1, TileColumns - 1);
@@ -2633,8 +2706,9 @@ public class UnscrambleWindow : Window
         };
         MinusButton.Margin = new Thickness(0, 0, 8, 0);
         stack.Children.Add(MinusButton);
-
-        ColumnsText = new TextBoxDark()
+        #endregion
+        #region Value Textbox
+        ColumnsText = new TextBox
         {
             VerticalAlignment = VerticalAlignment.Center,
             Width = 48,
@@ -2650,8 +2724,19 @@ public class UnscrambleWindow : Window
                 Render();
             }
         };
+        #endregion
+        #region Plus Button
+        var PlusButton = new Button
+        {
+            Content = "+",
+            Width = 24,
+            Height = 24,
+            VerticalAlignment = VerticalAlignment.Center,
 
-        var PlusButton = new ButtonDark() { Content = "+", Width = 24, Height = 24, VerticalAlignment = VerticalAlignment.Center };
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack,
+            BorderBrush = isDark ? BGgrey : lightgrey
+        };
         PlusButton.Click += (s, e) =>
         {
             TileColumns++;
@@ -2659,21 +2744,28 @@ public class UnscrambleWindow : Window
             Render();
         };
         stack.Children.Add(PlusButton);
+        #endregion
 
-        var doneInstructions = new TextBlock()
+        var doneInstructions = new TextBlock
         {
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Navigate Tilesets:",
-            Margin = new Thickness(16, 0, 8, 0)
+            Margin = new Thickness(16, 0, 8, 0),
+            Foreground = Foreground
         };
         stack.Children.Add(doneInstructions);
 
-        var PrevButton = new ButtonDark()
+        #region Previous Button
+        var PrevButton = new Button
         {
-            Content = "←",
+            Content = "<-",
             Width = 32,
             Height = 24,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack,
+            BorderBrush = isDark ? BGgrey : lightgrey
         };
         PrevButton.Click += (s, e) =>
         {
@@ -2682,13 +2774,18 @@ public class UnscrambleWindow : Window
             LoadCurrentTileset();
         };
         stack.Children.Add(PrevButton);
-
-        var NextButton = new ButtonDark()
+        #endregion
+        #region Next Button
+        var NextButton = new Button
         {
-            Content = "→",
+            Content = "->",
             Width = 32,
             Height = 24,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+
+            Background = isDark ? darkgrey : lightgrey,
+            Foreground = isDark ? BasicWhite : BasicBlack,
+            BorderBrush = isDark ? BGgrey : lightgrey
         };
         NextButton.Click += (s, e) =>
         {
@@ -2697,11 +2794,16 @@ public class UnscrambleWindow : Window
             LoadCurrentTileset();
         };
         stack.Children.Add(NextButton);
+        #endregion
+
+        #endregion
+
+        Content = layout;
 
         LoadCurrentTileset();
     }
 
-    // Drag-scrolling
+    // drag scrolling
     private bool IsDragging = false;
     public System.Windows.Point DrawingStart;
     public System.Windows.Point ScrollViewStart;
@@ -2712,14 +2814,10 @@ public class UnscrambleWindow : Window
         DrawingStart = e.GetPosition(this as Window);
         ScrollViewStart = new System.Windows.Point(TilesScroller.HorizontalOffset, TilesScroller.VerticalOffset);
     }
-    private void Tiles_MouseUp(object sender, MouseButtonEventArgs e)
-    {
-        IsDragging = false;
-    }
+    private void Tiles_MouseUp(object sender, MouseButtonEventArgs e) => IsDragging = false;
     private void Tiles_MouseMove(object sender, MouseEventArgs e)
     {
         if (!IsDragging) return;
-
         System.Windows.Point pos = e.GetPosition(this as Window);
         TilesScroller.ScrollToHorizontalOffset(Math.Clamp(
             ScrollViewStart.X + -(pos.X - DrawingStart.X), 0, TilesScroller.ScrollableWidth
@@ -2728,27 +2826,21 @@ public class UnscrambleWindow : Window
             ScrollViewStart.Y + -(pos.Y - DrawingStart.Y), 0, TilesScroller.ScrollableHeight
         ));
     }
-    private void Window_MouseLeave(object sender, MouseEventArgs e)
-    {
-        IsDragging = false;
-    }
+    private void Window_MouseLeave(object sender, MouseEventArgs e) => IsDragging = false;
 
     private void LoadCurrentTileset()
     {
         Title = $"Unscramble Tileset [{CurrentIndex + 1}/{_data.Backgrounds.Count}] - {CurrentBackground.Name}";
+        titleText.Text = Title;
         ColumnsText.Text = TileColumns.ToString();
         Render();
     }
 
-    private void SaveCurrentData()
-    {
-        PopulatePalette();
-    }
+    private void SaveCurrentData() => PopulatePalette();
 
     public void Render()
     {
         PopulatePalette();
-
         var loader = new CachedTileDataLoader();
         var src = loader.Convert(new object[] { TileData }, null, null, null);
         TilesImage.Source = src as ImageSource;
