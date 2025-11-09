@@ -1773,6 +1773,7 @@ if (!UISettings.YYMPS)
 
 #region Main UI
 
+#region UI Settings Variables
 public static class UISettings
 {
     public static bool DUMP, // If user continued with decompiling
@@ -1792,7 +1793,7 @@ public static class UISettings
     // should be obvious
     public static int CPU_Usage = 70;
 }
-
+#endregion
 #region Theme Class
 public static class Theme
 {
@@ -1825,7 +1826,9 @@ public static class Theme
 #region Main UI Window
 public class UIWindow : Window
 {
+    // Get data.win in this scope
     private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
+
     private AssetPickerWindow PickerWindow;
     private UnscrambleWindow TilesetWindow;
 
@@ -1844,7 +1847,6 @@ public class UIWindow : Window
 		Foreground = Theme.WindowForeground;
 		
 		var mainPanel = new StackPanel { Margin = new Thickness(8) };
-		var tooltip = new ToolTip();
 
         #region Title Bar
         var titleBar = new DockPanel 
@@ -1889,7 +1891,8 @@ public class UIWindow : Window
 		mainPanel.Children.Insert(0, titleBar);
         #endregion
 
-        // Back to sanity kinda
+        #region Main Resource Checkboxes
+
         mainPanel.Children.Add(new TextBlock
 		{
 			Text = "Original Script by crystallizedsparkle\n\tImproved by burnedpopcorn180",
@@ -1904,7 +1907,6 @@ public class UIWindow : Window
 			Margin = new Thickness(0, 8, 0, 4)
 		});
 
-        #region Main Resource Checkboxes
         var resourceGrid = new UniformGrid { Columns = 6 };
 		var _PRJT = CreateCheckBox("Project File", true, false);
 		var _OBJT = CreateCheckBox("Objects", true);
@@ -1997,7 +1999,7 @@ public class UIWindow : Window
 		Grid.SetColumn(leftStack, 0);
 		centerContainer.Children.Add(leftStack);
 
-		// Right side: Button
+		// Right side Button
 		var pickAssetsButton = new Button
         {
 			Content = "Pick Individual Assets...",
@@ -2076,12 +2078,12 @@ public class UIWindow : Window
             IsChecked = false,
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 0, 0, 4),
-            ToolTip = "Opens a Window that allows you to manually fix all Tileset Images",
+            ToolTip = "Allows you to manually fix all Tileset Images\nThis is completely optional and a bit time-consuming, but is highly recommended to do so",
             Background = Theme.ElementBackground,
             Foreground = Theme.WindowForeground
         };
 
-        // Right side: Button
+        // Right side Button
         var FixTSButton = new Button
         {
             Content = "Check All Tilesets...",
@@ -2201,7 +2203,7 @@ public class UIWindow : Window
 		mainPanel.Children.Add(cpuPanel);
         #endregion
 
-        // OK Button
+        #region OK Button
         var OKBT = new Button
         {
 			Content = "Start Dump",
@@ -2244,10 +2246,11 @@ public class UIWindow : Window
             Close();
 		};
 
-		mainPanel.Children.Add(OKBT);
+        mainPanel.Children.Add(OKBT);
+        #endregion
 
-		//no scroll bar
-		Content = mainPanel;
+        //no scroll bar
+        Content = mainPanel;
 	}
 
 	private CheckBox CreateCheckBox(string content, bool isChecked = false, bool? enabled = true)
@@ -2264,10 +2267,12 @@ public class UIWindow : Window
 	}
 }
 #endregion
-#region Asset Picker
+#region Asset Picker Window
 public class AssetPickerWindow : Window
 {
+    // Get data.win in this scope
     private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
+
     private TreeView treeView;
     private ListBox listBox;
     private TextBox searchTreeBox, searchListBox;
@@ -2322,19 +2327,17 @@ public class AssetPickerWindow : Window
         layout.Children.Add(titleBar);
         #endregion
 
-        var grid = new Grid
-        {
-            Margin = new Thickness(10)
-        };
+        var grid = new Grid { Margin = new Thickness(10) };
 
         for (int i = 0; i < 3; i++)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         for (int i = 0; i < 3; i++)
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
+        #region Left (All Assets) TreeView + SearchBox
         // Search box for tree
         searchTreeBox = new TextBox { Width = 200, Margin = new Thickness(0, 0, 8, 4) };
-        searchTreeBox.TextChanged += (s, e) => UpdateTree(searchTreeBox.Text, Data);
+        searchTreeBox.TextChanged += (s, e) => UpdateTree(searchTreeBox.Text);
         Grid.SetRow(searchTreeBox, 0);
         Grid.SetColumn(searchTreeBox, 0);
         grid.Children.Add(searchTreeBox);
@@ -2353,7 +2356,7 @@ public class AssetPickerWindow : Window
         Grid.SetRow(treeView, 1);
         Grid.SetColumn(treeView, 0);
         grid.Children.Add(treeView);
-
+        #endregion
         #region Arrow Buttons
         var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
 
@@ -2401,7 +2404,7 @@ public class AssetPickerWindow : Window
         Grid.SetColumn(buttonPanel, 1);
         grid.Children.Add(buttonPanel);
         #endregion
-
+        #region Right (Selected Assets) ListBox + SearchBox
         // Search box for list
         searchListBox = new TextBox { Width = 200, Margin = new Thickness(0, 0, 0, 4) };
         searchListBox.TextChanged += (s, e) => UpdateList(searchListBox.Text);
@@ -2428,6 +2431,7 @@ public class AssetPickerWindow : Window
         Grid.SetRow(listBox, 1);
         Grid.SetColumn(listBox, 2);
         grid.Children.Add(listBox);
+        #endregion
 
         // OK Button
         var okButton = new Button
@@ -2450,11 +2454,12 @@ public class AssetPickerWindow : Window
         layout.Children.Add(grid);
         Content = layout;
 
-        BuildInitialTree(Data);
+        BuildInitialTree();
         UpdateList("");
     }
 
-    private void BuildInitialTree(UndertaleData Data)
+    #region Helper Funcs
+    private void BuildInitialTree()
     {
         treeView.Items.Clear();
         var root = new TreeViewItem { Header = "Data", IsExpanded = true };
@@ -2468,10 +2473,10 @@ public class AssetPickerWindow : Window
             root.Items.Add(new TreeViewItem { Header = c });
 
         treeView.Items.Add(root);
-        UpdateTree("", Data);
+        UpdateTree("");
     }
 
-    private void UpdateTree(string search, UndertaleData Data)
+    private void UpdateTree(string search)
     {
         foreach (TreeViewItem cat in ((TreeViewItem)treeView.Items[0]).Items)
         {
@@ -2523,9 +2528,10 @@ public class AssetPickerWindow : Window
                 listBox.Items.Add(item);
         }
     }
+    #endregion
 }
 #endregion
-#region Fix Tileset
+#region Fix Tileset Window
 // Save data for when Decompiling
 // and if user wants to go back into Fix TS Window with their progress intact
 public static class TilesetSaveData
@@ -2536,12 +2542,14 @@ public static class TilesetSaveData
     // store modified images
     public static Dictionary<UndertaleBackground, MagickImage> TilesetImageMap = new();
 }
+
 public class UnscrambleWindow : Window
 {
+    // Get data.win in this scope
     private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
-    private int CurrentIndex = 0;
 
-    Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
+    private int CurrentIndex = 0;
+    private Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
     private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground];
     private UndertaleBackground CurrentBackground => Data.Backgrounds[CurrentIndex];
     private uint TileColumns
@@ -2570,7 +2578,7 @@ public class UnscrambleWindow : Window
         Background = Theme.WindowBackground;
         Foreground = Theme.WindowForeground;
 
-        // Init
+        #region Init
         foreach (var bg in Data.Backgrounds)
         {
             TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
@@ -2579,13 +2587,14 @@ public class UnscrambleWindow : Window
                 TilesetSaveData.TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
-        Closing += OnClosing;
+        Closing += SaveTilesets;
         MouseLeave += Window_MouseLeave;
         MouseUp += Tiles_MouseUp;
         MouseMove += Tiles_MouseMove;
 
         // layout root
         var layout = new DockPanel();
+        #endregion
 
         #region Title Bar
         var titleBar = new DockPanel
@@ -2625,7 +2634,7 @@ public class UnscrambleWindow : Window
         layout.Children.Add(titleBar);
         #endregion
 
-        // main grid
+        // main Grid
         var grid = new Grid { Margin = new Thickness(10) };
         grid.RowDefinitions.Add(new RowDefinition());
         grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
@@ -2914,7 +2923,7 @@ public class UnscrambleWindow : Window
         return new MagickImage(memoryStream);
     }
 
-    private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
+    private void SaveTilesets(object sender, System.ComponentModel.CancelEventArgs e)
     {
         // Save All Images
         foreach (var bg in Data.Backgrounds)
@@ -5040,7 +5049,6 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                     break;
             }
 
-
             // TODO: VISIBILITY
             currentTrack.trackColour = colour;
             currentTrack.isCreationTrack = track.IsCreationTrack;
@@ -5049,7 +5057,6 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
             currentTrack.name = track.Name.Content;
 
             currentTrack.tracks = DumpTracks(track.Tracks, colour);
-
 
             dumpedTracks.Add(currentTrack);
         }
@@ -5622,7 +5629,7 @@ void DumpTileSet(UndertaleBackground t, int index)
             // remove checkerboard tile
             finalResult.Composite(new MagickImage("xc:none", settings), 0, 0, CompositeOperator.Over);
         }
-        // or not if user is too lazy to do it manually i guess
+        // or don't if user is too lazy to do it manually i guess
         else
         {
             var tiledImage = image.CropToTiles(
@@ -5726,7 +5733,6 @@ void DumpTileSet(UndertaleBackground t, int index)
         CreateProjectResource(GMAssetType.Sprite, spriteName, Data.Sprites.Count + index);
 
         IncrementProgressParallel();
-
     }
 
     File.WriteAllText($"{assetDir}\\{tilesetName}.yy", JsonSerializer.Serialize(dumpedTileset, jsonOptions));
