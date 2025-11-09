@@ -371,10 +371,15 @@ public class GMProject : GMResource
         public string IDEVersion { get; set; } = "2022.0.3.85"; // the IDE version this script was made for
 
         // YYMPS metadata (don't add if not yymps)
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? PackageType { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? PackageName { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? PackageID { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? PackagePublisher { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? PackageVersion { get; set; } = null;
     }
 
@@ -3180,6 +3185,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             AllowLeftoverDataOnStack = true
         });
 
+        // if precreate is null, stop
         if (dumpedCode is null)
             return propList;
 
@@ -5050,6 +5056,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
             }
 
             // TODO: VISIBILITY
+            // Probably not gonna happen, since utmt can't extract that value yet
             currentTrack.trackColour = colour;
             currentTrack.isCreationTrack = track.IsCreationTrack;
             if (currentTrack.builtinName == -1)
@@ -6469,6 +6476,14 @@ if (UISettings.SCPT
 }
 #endregion
 
+void CreateYYP() 
+{
+    // order all of the resources correctly and Make YYP
+    finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
+    string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
+    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
+}
+
 // YYMPS Packages are literally just normal GameMaker Projects
 // that are compressed as a ZIP file with the .yymps file extension
 // and with some additional metadata in the .yyp and an extra metadata.json
@@ -6497,9 +6512,7 @@ if (UISettings.YYMPS)
     finalExport.MetaData.PackageVersion = "1.0.0";
 
     // Make YYP
-    finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
-    string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
-    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
+    CreateYYP();
 
     // Make final YYMPS directory
     string yympsfolder = $"{rootDir}/Export_YYMPS/";
@@ -6526,18 +6539,7 @@ if (UISettings.YYMPS)
 #endregion
 else
 {
-    // Add Null Ignore Condition specifically just for YYP
-    jsonOptions = new JsonSerializerOptions
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        WriteIndented = true
-    };
-
-    // order all of the resources correctly and Make YYP
-    finalExport.resources = new ConcurrentQueue<GMProject.Resource>(finalExport.resources.OrderBy(asset => asset.order));
-    string yypStr = JsonSerializer.Serialize(finalExport, jsonOptions);
-    File.WriteAllText($"{scriptDir}{finalExport.name}.yyp", yypStr);
+    CreateYYP();
 
     // add error log if not a yymps
     if (errorList.Count > 0)
