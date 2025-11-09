@@ -1775,12 +1775,21 @@ if (!UISettings.YYMPS)
 
 public static class UISettings
 {
-    public static bool DUMP, OBJT, ROOM, EXTN, SCPT, TMLN, SOND, SHDR, PATH, ACRV, SEQN, FONT, SPRT, BGND, 
-        LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, FIXTILE, GENROOM;
+    public static bool DUMP, // If user continued with decompiling
+        // Main Asset Types to decompile
+        OBJT, ROOM, EXTN, SCPT, TMLN, 
+        SOND, SHDR, PATH, ACRV, SEQN, FONT, 
+        SPRT, BGND,
+        // If Fix Tileset
+        FIXTILE,
+        // Other Options
+        LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, GENROOM;
 
+    // Asset Picker List and if enabled
     public static List<string> CSTM = new List<string>();
     public static bool CSTM_Enable = false;
 
+    // should be obvious
     public static int CPU_Usage = 70;
 }
 
@@ -1813,13 +1822,14 @@ public static class Theme
 }
 #endregion
 
-#region Main Window stuffs
-public class MainWindow : Window
-{	
-	private AssetPickerWindow PickerWindow;
+#region Main UI Window
+public class UIWindow : Window
+{
+    private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
+    private AssetPickerWindow PickerWindow;
     private UnscrambleWindow TilesetWindow;
 
-    public MainWindow(UndertaleData _data)
+    public UIWindow()
 	{
 		Title = "Ultimate_GMS2_Decompiler_v4";
 		// remove OS title bar
@@ -1907,7 +1917,7 @@ public class MainWindow : Window
 		var _PATH = CreateCheckBox("Paths", true);
 
 		var _ACRV = CreateCheckBox("Anim. Curves", true);
-		if (_data.AnimationCurves == null)
+		if (Data.AnimationCurves == null)
 		{
 			_ACRV.IsEnabled = false;
 			_ACRV.IsChecked = false;
@@ -1915,7 +1925,7 @@ public class MainWindow : Window
 		}
 
 		var _SEQN = CreateCheckBox("Sequences", true);
-		if (_data.Sequences == null)
+		if (Data.Sequences == null)
 		{
 			_SEQN.IsEnabled = false;
 			_SEQN.IsChecked = false;
@@ -2004,7 +2014,7 @@ public class MainWindow : Window
 
 		pickAssetsButton.Click += (s, e) =>
 		{
-            PickerWindow = new AssetPickerWindow(_data);
+            PickerWindow = new AssetPickerWindow();
             PickerWindow.Owner = this;
             PickerWindow.ShowDialog();
 
@@ -2039,10 +2049,10 @@ public class MainWindow : Window
             pickAssetsButton.IsEnabled = false;
 
             // Check these if they're null first
-            _SEQN.IsEnabled = _data?.Sequences != null;
-            _SEQN.IsChecked = _data?.Sequences != null;
-            _ACRV.IsEnabled = _data?.AnimationCurves != null;
-            _ACRV.IsChecked = _data?.AnimationCurves != null;
+            _SEQN.IsEnabled = Data?.Sequences != null;
+            _SEQN.IsChecked = Data?.Sequences != null;
+            _ACRV.IsEnabled = Data?.AnimationCurves != null;
+            _ACRV.IsChecked = Data?.AnimationCurves != null;
 
             // Check all the enabled checkboxes
             resourceCheckboxes.Where(cb => cb.IsEnabled).ToList().ForEach(cb => cb.IsChecked = true);
@@ -2089,7 +2099,7 @@ public class MainWindow : Window
 
         FixTSButton.Click += (s, e) =>
         {
-            TilesetWindow = new UnscrambleWindow(_data);
+            TilesetWindow = new UnscrambleWindow();
             TilesetWindow.Owner = this;
             TilesetWindow.ShowDialog();
         };
@@ -2201,6 +2211,7 @@ public class MainWindow : Window
             Foreground = Theme.WindowForeground,
             BorderBrush = Theme.ButtonBrush
         };
+        // Save Options
 		OKBT.Click += (o, s) =>
 		{
             UISettings.DUMP = true;
@@ -2253,14 +2264,15 @@ public class MainWindow : Window
 	}
 }
 #endregion
-#region Asset Picker stuffs
+#region Asset Picker
 public class AssetPickerWindow : Window
 {
+    private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
     private TreeView treeView;
     private ListBox listBox;
     private TextBox searchTreeBox, searchListBox;
 
-    public AssetPickerWindow(UndertaleData Data)
+    public AssetPickerWindow()
     {
         Title = "Asset Picker";
         WindowStyle = WindowStyle.None;
@@ -2513,10 +2525,12 @@ public class AssetPickerWindow : Window
     }
 }
 #endregion
-#region Fix Tileset stuffs
+#region Fix Tileset
+// Save data for when Decompiling
+// and if user wants to go back into Fix TS Window with their progress intact
 public static class TilesetSaveData
 {
-    public static Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
+    // store tile column amount
     public static Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
 
     // store modified images
@@ -2524,11 +2538,12 @@ public static class TilesetSaveData
 }
 public class UnscrambleWindow : Window
 {
-    private readonly UndertaleData _data;
+    private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
     private int CurrentIndex = 0;
 
-    private Layer.LayerTilesData TileData => TilesetSaveData.TileDataMap[CurrentBackground];
-    private UndertaleBackground CurrentBackground => _data.Backgrounds[CurrentIndex];
+    Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
+    private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground];
+    private UndertaleBackground CurrentBackground => Data.Backgrounds[CurrentIndex];
     private uint TileColumns
     {
         get => TilesetSaveData.TileColumnsMap[CurrentBackground];
@@ -2542,10 +2557,8 @@ public class UnscrambleWindow : Window
     private DrawingBrush GridBrush;
     private ScrollViewer TilesScroller;
 
-    public UnscrambleWindow(UndertaleData data)
+    public UnscrambleWindow()
     {
-        _data = data;
-
         Title = "Unscramble Tilesets";
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
@@ -2556,13 +2569,11 @@ public class UnscrambleWindow : Window
         // Theme
         Background = Theme.WindowBackground;
         Foreground = Theme.WindowForeground;
-        //FontSize = 16;
 
         // Init
-        foreach (var bg in _data.Backgrounds)
+        foreach (var bg in Data.Backgrounds)
         {
-            if (!TilesetSaveData.TileDataMap.ContainsKey(bg))
-                TilesetSaveData.TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
+            TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
 
             if (!TilesetSaveData.TileColumnsMap.ContainsKey(bg))
                 TilesetSaveData.TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
@@ -2769,7 +2780,7 @@ public class UnscrambleWindow : Window
         PrevButton.Click += (s, e) =>
         {
             SaveCurrentData();
-            CurrentIndex = (CurrentIndex - 1 + _data.Backgrounds.Count) % _data.Backgrounds.Count;
+            CurrentIndex = (CurrentIndex - 1 + Data.Backgrounds.Count) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
         stack.Children.Add(PrevButton);
@@ -2788,7 +2799,7 @@ public class UnscrambleWindow : Window
         NextButton.Click += (s, e) =>
         {
             SaveCurrentData();
-            CurrentIndex = (CurrentIndex + 1) % _data.Backgrounds.Count;
+            CurrentIndex = (CurrentIndex + 1) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
         stack.Children.Add(NextButton);
@@ -2832,7 +2843,7 @@ public class UnscrambleWindow : Window
 
     private void LoadCurrentTileset()
     {
-        Title = $"Unscramble Tileset [{CurrentIndex + 1}/{_data.Backgrounds.Count}] - {CurrentBackground.Name}";
+        Title = $"Unscramble Tileset [{CurrentIndex + 1}/{Data.Backgrounds.Count}] - {CurrentBackground.Name}";
         titleText.Text = Title;
         ColumnsText.Text = TileColumns.ToString();
         Render();
@@ -2906,10 +2917,10 @@ public class UnscrambleWindow : Window
     private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         // Save All Images
-        foreach (var bg in _data.Backgrounds)
+        foreach (var bg in Data.Backgrounds)
         {
             // Set TileData and TileColumns
-            var data = TilesetSaveData.TileDataMap[bg];
+            var data = TileDataMap[bg];
             uint columns = TilesetSaveData.TileColumnsMap[bg];
 
             data.TilesX = Math.Max(columns, 1);
@@ -2960,8 +2971,7 @@ public class UnscrambleWindow : Window
 #endregion
 
 // open main window
-var MainWin = new MainWindow(Data);
-MainWin.ShowDialog();
+new UIWindow().ShowDialog();
 
 // if exit
 if (!UISettings.DUMP)
