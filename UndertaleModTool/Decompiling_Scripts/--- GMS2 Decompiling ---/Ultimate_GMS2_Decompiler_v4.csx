@@ -1784,13 +1784,42 @@ public static class UISettings
     public static int CPU_Usage = 70;
 }
 
+#region Theme Class
+public static class Theme
+{
+    // If Dark Mode
+    public static bool IsDark = SettingsWindow.EnableDarkMode;
+
+    // Individual Colors
+    public static SolidColorBrush LightGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245)); 
+    public static SolidColorBrush DarkGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48)); 
+    public static SolidColorBrush BG_Grey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23)); 
+    public static SolidColorBrush BG_White = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+
+    // Simple Colors
+    public static SolidColorBrush BasicWhite = System.Windows.Media.Brushes.White;
+    public static SolidColorBrush BasicBlack = System.Windows.Media.Brushes.Black;
+    public static SolidColorBrush Transparent = System.Windows.Media.Brushes.Transparent;
+
+    // Main Colors
+    public static SolidColorBrush WindowBackground = IsDark ? BG_Grey : BG_White;
+    public static SolidColorBrush WindowForeground = IsDark ? BasicWhite : BasicBlack;
+    public static SolidColorBrush ElementBackground = IsDark ? DarkGrey : LightGrey;
+    public static SolidColorBrush ButtonBrush = IsDark ? BG_Grey : LightGrey;
+
+    // Get Grid Tile Colors from Settings
+    public static SolidColorBrush GridTileLight = (SolidColorBrush)Application.Current.Resources["TransparencyGridColor1"];
+    public static SolidColorBrush GridTileDark = (SolidColorBrush)Application.Current.Resources["TransparencyGridColor2"];
+}
+#endregion
+
 #region Main Window stuffs
 public class MainWindow : Window
 {	
 	private AssetPickerWindow PickerWindow;
     private UnscrambleWindow TilesetWindow;
 
-    public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
+    public MainWindow(UndertaleData _data)
 	{
 		Title = "Ultimate_GMS2_Decompiler_v4";
 		// remove OS title bar
@@ -1801,46 +1830,38 @@ public class MainWindow : Window
 		WindowStartupLocation = WindowStartupLocation.CenterScreen;
 		
 		// Theme
-		var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-		var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
-
-        var BasicWhite = System.Windows.Media.Brushes.White;
-		var BasicBlack = System.Windows.Media.Brushes.Black;
-		
-		Background = isDark ? BGgrey : BGwhite;
-		Foreground = isDark ? BasicWhite : BasicBlack;//text
+		Background = Theme.WindowBackground;
+		Foreground = Theme.WindowForeground;
 		
 		var mainPanel = new StackPanel { Margin = new Thickness(8) };
 		var tooltip = new ToolTip();
 
         #region Title Bar
-        var titleBar = new DockPanel
-		{
-			Height = 30,
-			Background = isDark ? darkgrey : lightgrey,
-		};
+        var titleBar = new DockPanel 
+        { 
+            Height = 30,
+            Background = Theme.ElementBackground
+        };
 
 		var titleText = new TextBlock
-		{
+        {
 			Text = Title,
 			VerticalAlignment = VerticalAlignment.Center,
 			Margin = new Thickness(10, 0, 0, 0),
-			Foreground = Foreground,
-		};
+            Foreground = Theme.WindowForeground
+        };
 
 		var closeButton = new Button
-		{
+        {
 			Content = "X",
 			Width = 40,
 			Height = 30,
-			Background = System.Windows.Media.Brushes.Transparent,
-			Foreground = Foreground,
-			BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Background = Theme.Transparent,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.Transparent,
 			HorizontalAlignment = HorizontalAlignment.Right,
 			Padding = new Thickness(0),
-			FontWeight = FontWeights.Bold,
+			FontWeight = FontWeights.Bold
 		};
 
 		closeButton.Click += (s, e) => this.Close();
@@ -1875,17 +1896,17 @@ public class MainWindow : Window
 
         #region Main Resource Checkboxes
         var resourceGrid = new UniformGrid { Columns = 6 };
-		var _PRJT = CreateCheckBox(isDark, "Project File", true, false);
-		var _OBJT = CreateCheckBox(isDark, "Objects", true);
-		var _ROOM = CreateCheckBox(isDark, "Rooms", true);
-		var _EXTN = CreateCheckBox(isDark, "Extensions", true);
-		var _SCPT = CreateCheckBox(isDark, "Scripts", true);
-		var _TMLN = CreateCheckBox(isDark, "Timelines", true);
-		var _SOND = CreateCheckBox(isDark, "Sounds", true);
-		var _SHDR = CreateCheckBox(isDark, "Shaders", true);
-		var _PATH = CreateCheckBox(isDark, "Paths", true);
+		var _PRJT = CreateCheckBox("Project File", true, false);
+		var _OBJT = CreateCheckBox("Objects", true);
+		var _ROOM = CreateCheckBox("Rooms", true);
+		var _EXTN = CreateCheckBox("Extensions", true);
+		var _SCPT = CreateCheckBox("Scripts", true);
+		var _TMLN = CreateCheckBox("Timelines", true);
+		var _SOND = CreateCheckBox("Sounds", true);
+		var _SHDR = CreateCheckBox("Shaders", true);
+		var _PATH = CreateCheckBox("Paths", true);
 
-		var _ACRV = CreateCheckBox(isDark, "Anim. Curves", true);
+		var _ACRV = CreateCheckBox("Anim. Curves", true);
 		if (_data.AnimationCurves == null)
 		{
 			_ACRV.IsEnabled = false;
@@ -1893,7 +1914,7 @@ public class MainWindow : Window
 			_ACRV.Content = "ACRV (2.3+)";
 		}
 
-		var _SEQN = CreateCheckBox(isDark, "Sequences", true);
+		var _SEQN = CreateCheckBox("Sequences", true);
 		if (_data.Sequences == null)
 		{
 			_SEQN.IsEnabled = false;
@@ -1901,9 +1922,9 @@ public class MainWindow : Window
 			_SEQN.Content = "SEQN (2.3+)";
 		}
 
-		var _FONT = CreateCheckBox(isDark, "Fonts", true);
-		var _SPRT = CreateCheckBox(isDark, "Sprites", true);
-		var _BGND = CreateCheckBox(isDark, "Tilesets", true);
+		var _FONT = CreateCheckBox("Fonts", true);
+		var _SPRT = CreateCheckBox("Sprites", true);
+		var _BGND = CreateCheckBox("Tilesets", true);
 
 		resourceGrid.Children.Add(_PRJT);
 		resourceGrid.Children.Add(_OBJT);
@@ -1945,22 +1966,21 @@ public class MainWindow : Window
 		};
 
         var _CSTM = new CheckBox
-		{
+        {
 			Content = "Pick Assets",
 			IsChecked = false,
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Margin = new Thickness(0, 0, 0, 4),
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
+        };
 
         var CSTMLabel = new TextBlock
-		{
+        {
 			Text = "",
-			Foreground = Foreground,
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
+			HorizontalAlignment = HorizontalAlignment.Center,
+            Foreground = Theme.WindowForeground
+        };
 
         leftStack.Children.Add(_CSTM);
 		leftStack.Children.Add(CSTMLabel);
@@ -1969,7 +1989,7 @@ public class MainWindow : Window
 
 		// Right side: Button
 		var pickAssetsButton = new Button
-		{
+        {
 			Content = "Pick Individual Assets...",
 			Width = 150,
 			Height = 30,
@@ -1977,15 +1997,14 @@ public class MainWindow : Window
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			IsEnabled = false,
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack,
-			BorderBrush = isDark ? BGgrey : lightgrey
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
+        };
 
 		pickAssetsButton.Click += (s, e) =>
 		{
-            PickerWindow = new AssetPickerWindow(_data, isDark);
+            PickerWindow = new AssetPickerWindow(_data);
             PickerWindow.Owner = this;
             PickerWindow.ShowDialog();
 
@@ -2048,9 +2067,8 @@ public class MainWindow : Window
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 0, 0, 4),
             ToolTip = "Opens a Window that allows you to manually fix all Tileset Images",
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
         };
 
         // Right side: Button
@@ -2064,10 +2082,9 @@ public class MainWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             ToolTip = "Opens a Window that allows you to manually fix all Tileset Images",
             IsEnabled = false,
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
 
         FixTSButton.Click += (s, e) =>
@@ -2111,22 +2128,22 @@ public class MainWindow : Window
 
 		var settingsGrid = new UniformGrid { Columns = 3 };
 
-		var _LOG = CreateCheckBox(isDark, "Log Assets");
+		var _LOG = CreateCheckBox("Log Assets");
 		_LOG.ToolTip = "Logs every Asset that gets decompiled\nMostly for Debugging, will clog up the logs if enabled.";
 
-		var _YYMPS = CreateCheckBox(isDark, "Export as YYMPS");
+		var _YYMPS = CreateCheckBox("Export as YYMPS");
 		_YYMPS.ToolTip = "Exports decompiled resources\nas a GameMaker Importable Package.";
 
-		var _ENUM = CreateCheckBox(isDark, "Bitwise Enums");
+		var _ENUM = CreateCheckBox("Bitwise Enums");
 		_ENUM.ToolTip = "Turns Unknown Enums into Bitwise Operations.\n\nExample:\nUnknownEnum.Value_1 -> (1 << 0)";
 
-		var _ADDFILES = CreateCheckBox(isDark, "Add Datafiles", true);
+		var _ADDFILES = CreateCheckBox("Add Datafiles", true);
 		_ADDFILES.ToolTip = "Attempts to automatically add included datafiles\nMight be inaccurate and might miss some files";
 
-		var _FIXA = CreateCheckBox(isDark, "Fix Audio");
+		var _FIXA = CreateCheckBox("Fix Audio");
 		_FIXA.ToolTip = "If a .wav file is labelled a .mp3, this setting will label it back to .wav.";
 
-		var _GENROOM = CreateCheckBox(isDark, "Generate Room Name");
+		var _GENROOM = CreateCheckBox("Generate Room Name");
 		_GENROOM.ToolTip = "Simulates GameMaker asset naming behavior.";
 
 		settingsGrid.Children.Add(_LOG);
@@ -2147,16 +2164,15 @@ public class MainWindow : Window
 		};
 
 		var cpuSlider = new Slider
-		{
+        {
 			Minimum = 1,
 			Maximum = 100,
 			Value = UISettings.CPU_Usage,
 			Width = 200,
 			Margin = new Thickness(0, 0, 0, 0),
 			HorizontalAlignment = HorizontalAlignment.Center,
-			
-			Foreground = isDark ? BasicWhite : BasicBlack
-		};
+            Foreground = Theme.WindowForeground
+        };
 
 		cpuSlider.ValueChanged += (s, e) =>
 		{
@@ -2177,15 +2193,14 @@ public class MainWindow : Window
 
         // OK Button
         var OKBT = new Button
-		{
+        {
 			Content = "Start Dump",
 			Height = 48,
 			Margin = new Thickness(0, 10, 0, 0),
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack,
-			BorderBrush = isDark ? BGgrey : lightgrey
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
+        };
 		OKBT.Click += (o, s) =>
 		{
             UISettings.DUMP = true;
@@ -2224,22 +2239,17 @@ public class MainWindow : Window
 		Content = mainPanel;
 	}
 
-	private CheckBox CreateCheckBox(bool isDark, string content, bool isChecked = false, bool? enabled = true)
+	private CheckBox CreateCheckBox(string content, bool isChecked = false, bool? enabled = true)
 	{
-		var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-		var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-		var BasicWhite = System.Windows.Media.Brushes.White;
-		var BasicBlack = System.Windows.Media.Brushes.Black;
-		
 		return new CheckBox
-		{
+        {
 			Content = content,
 			IsChecked = isChecked,
 			IsEnabled = enabled ?? true,
 			Margin = new Thickness(4),
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
+        };
 	}
 }
 #endregion
@@ -2250,7 +2260,7 @@ public class AssetPickerWindow : Window
     private ListBox listBox;
     private TextBox searchTreeBox, searchListBox;
 
-    public AssetPickerWindow(UndertaleData Data, bool isDark)
+    public AssetPickerWindow(UndertaleData Data)
     {
         Title = "Asset Picker";
         WindowStyle = WindowStyle.None;
@@ -2259,23 +2269,15 @@ public class AssetPickerWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
 		// Themes
-        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-		var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
-
-        var BasicWhite = System.Windows.Media.Brushes.White;
-		var BasicBlack = System.Windows.Media.Brushes.Black;
-
-        Background = isDark ? BGgrey : BGwhite;
-        Foreground = isDark ? BasicWhite : BasicBlack;
+        Background = Theme.WindowBackground;
+        Foreground = Theme.WindowForeground;
 
         #region Title Bar
         var titleBar = new DockPanel
         {
             Height = 30,
 			LastChildFill = true,
-            Background = isDark ? darkgrey : lightgrey
+            Background = Theme.ElementBackground
         };
 
         var titleText = new TextBlock
@@ -2283,7 +2285,7 @@ public class AssetPickerWindow : Window
             Text = Title,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(10, 0, 0, 0),
-            Foreground = Foreground,
+            Foreground = Theme.WindowForeground
         };
 
         var closeButton = new Button
@@ -2291,9 +2293,9 @@ public class AssetPickerWindow : Window
             Content = "X",
             Width = 40,
             Height = 30,
-            Background = System.Windows.Media.Brushes.Transparent,
-            Foreground = Foreground,
-            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Background = Theme.Transparent,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.Transparent,
             FontWeight = FontWeights.Bold,
 			HorizontalAlignment = HorizontalAlignment.Right
         };
@@ -2343,17 +2345,16 @@ public class AssetPickerWindow : Window
         #region Arrow Buttons
         var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
 
-        var addButton = new Button 
-		{ 
+        var addButton = new Button
+        { 
 			Content = "->", 
 			Width = 40, 
 			Height = 32, 
 			Margin = new Thickness(0, 4, 0, 4),
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack,
-			BorderBrush = isDark ? BGgrey : lightgrey
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
+        };
         addButton.Click += (s, e) =>
         {
             if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
@@ -2365,16 +2366,15 @@ public class AssetPickerWindow : Window
         };
         buttonPanel.Children.Add(addButton);
 
-        var removeButton = new Button 
-		{ 
+        var removeButton = new Button
+        { 
 			Content = "<-", 
 			Width = 40, 
 			Height = 32,
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack,
-			BorderBrush = isDark ? BGgrey : lightgrey
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
+        };
         removeButton.Click += (s, e) =>
         {
             if (listBox.SelectedItem != null)
@@ -2398,14 +2398,13 @@ public class AssetPickerWindow : Window
         grid.Children.Add(searchListBox);
 
         // ListBox
-        listBox = new ListBox 
-		{ 
+        listBox = new ListBox
+        { 
 			Width = 200, 
 			Height = 400,
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack
-		};
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
+        };
         listBox.MouseDoubleClick += (s, e) =>
         {
             if (listBox.SelectedItem != null)
@@ -2426,10 +2425,9 @@ public class AssetPickerWindow : Window
             Height = 32,
             Margin = new Thickness(0, 8, 0, 0),
             HorizontalAlignment = HorizontalAlignment.Center,
-			
-			Background = isDark ? darkgrey : lightgrey,
-			Foreground = isDark ? BasicWhite : BasicBlack,
-			BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         okButton.Click += (s, e) => Close();
 		
@@ -2477,13 +2475,13 @@ public class AssetPickerWindow : Window
 
                 // Ensures only Code entries are here
                 "Scripts" => Data?.Code?.Select(s => s?.Name?.Content)
-                    .Where(n => n.StartsWith("gml_GlobalScript_"))
+                    .Where(n => n != null && n.StartsWith("gml_GlobalScript_"))
                     .Select(n => n.Substring("gml_GlobalScript_".Length)) 
                     ?? Enumerable.Empty<string>(),
 
                 // Exclude GameMaker Internal Shaders
                 "Shaders" => Data?.Shaders?.Select(s => s?.Name?.Content)
-                    .Where(n => !n.StartsWith("__yy_") && !n.StartsWith("_filter_")) 
+                    .Where(n => n != null && !n.StartsWith("__yy_") && !n.StartsWith("_filter_")) 
                     ?? Enumerable.Empty<string>(),
 
                 "Fonts" => Data?.Fonts?.Select(s => s?.Name?.Content) ?? Enumerable.Empty<string>(),
@@ -2544,7 +2542,7 @@ public class UnscrambleWindow : Window
     private DrawingBrush GridBrush;
     private ScrollViewer TilesScroller;
 
-    public UnscrambleWindow(UndertaleData data, bool isDark = true)
+    public UnscrambleWindow(UndertaleData data)
     {
         _data = data;
 
@@ -2556,17 +2554,9 @@ public class UnscrambleWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         // Theme
-        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-        var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
-
-        var BasicWhite = System.Windows.Media.Brushes.White;
-        var BasicBlack = System.Windows.Media.Brushes.Black;
-
-        Background = isDark ? BGgrey : BGwhite;
-        Foreground = isDark ? BasicWhite : BasicBlack;
-        FontSize = 16;
+        Background = Theme.WindowBackground;
+        Foreground = Theme.WindowForeground;
+        //FontSize = 16;
 
         // Init
         foreach (var bg in _data.Backgrounds)
@@ -2590,8 +2580,8 @@ public class UnscrambleWindow : Window
         var titleBar = new DockPanel
         {
             Height = 30,
-            Background = isDark ? darkgrey : lightgrey,
-            LastChildFill = true
+            LastChildFill = true,
+            Background = Theme.ElementBackground
         };
 
         titleText = new TextBlock
@@ -2599,7 +2589,7 @@ public class UnscrambleWindow : Window
             Text = Title,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(10, 0, 0, 0),
-            Foreground = Foreground
+            Foreground = Theme.WindowForeground
         };
 
         var closeButton = new Button
@@ -2607,9 +2597,9 @@ public class UnscrambleWindow : Window
             Content = "X",
             Width = 40,
             Height = 30,
-            Background = System.Windows.Media.Brushes.Transparent,
-            Foreground = Foreground,
-            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Background = Theme.Transparent,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.Transparent,
             FontWeight = FontWeights.Bold,
             HorizontalAlignment = HorizontalAlignment.Right
         };
@@ -2636,9 +2626,9 @@ public class UnscrambleWindow : Window
         TilesScroller = new ScrollViewer
         {
             Margin = new Thickness(0, 0, 0, 8),
-            Background = isDark ? darkgrey : lightgrey,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Visible,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Visible
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+            Background = Theme.ElementBackground
         };
         grid.Children.Add(TilesScroller);
 
@@ -2657,13 +2647,13 @@ public class UnscrambleWindow : Window
         };
         var grp = new DrawingGroup();
         grp.Children.Add(new GeometryDrawing(
-            System.Windows.Media.Brushes.White, null, new PathGeometry
+            Theme.GridTileLight, null, new PathGeometry
             {
                 Figures = PathFigureCollection.Parse("M0,0 L20,0 20,20, 0,20Z")
             }
         ));
         grp.Children.Add(new GeometryDrawing(
-            System.Windows.Media.Brushes.LightGray, null, new PathGeometry
+            Theme.GridTileDark, null, new PathGeometry
             {
                 Figures = PathFigureCollection.Parse("M0,10 L20,10 20,20, 10,20 10,0 0,0Z")
             }
@@ -2694,7 +2684,7 @@ public class UnscrambleWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Adjust the number of columns until the tileset looks right:",
             Margin = new Thickness(0, 0, 8, 0),
-            Foreground = Foreground
+            Foreground = Theme.WindowForeground
         };
         stack.Children.Add(instructions);
 
@@ -2705,10 +2695,9 @@ public class UnscrambleWindow : Window
             Width = 24,
             Height = 24,
             VerticalAlignment = VerticalAlignment.Center,
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         MinusButton.Click += (s, e) =>
         {
@@ -2744,10 +2733,9 @@ public class UnscrambleWindow : Window
             Width = 24,
             Height = 24,
             VerticalAlignment = VerticalAlignment.Center,
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         PlusButton.Click += (s, e) =>
         {
@@ -2763,7 +2751,7 @@ public class UnscrambleWindow : Window
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Navigate Tilesets:",
             Margin = new Thickness(16, 0, 8, 0),
-            Foreground = Foreground
+            Foreground = Theme.WindowForeground
         };
         stack.Children.Add(doneInstructions);
 
@@ -2774,10 +2762,9 @@ public class UnscrambleWindow : Window
             Width = 32,
             Height = 24,
             VerticalAlignment = VerticalAlignment.Center,
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         PrevButton.Click += (s, e) =>
         {
@@ -2794,10 +2781,9 @@ public class UnscrambleWindow : Window
             Width = 32,
             Height = 24,
             VerticalAlignment = VerticalAlignment.Center,
-
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         NextButton.Click += (s, e) =>
         {
@@ -2974,7 +2960,7 @@ public class UnscrambleWindow : Window
 #endregion
 
 // open main window
-var MainWin = new MainWindow(Data, scriptDir, SettingsWindow.EnableDarkMode);
+var MainWin = new MainWindow(Data);
 MainWin.ShowDialog();
 
 // if exit
