@@ -2937,6 +2937,10 @@ public class UnscrambleWindow : Window
             var data = TileDataMap[bg];
             uint columns = TilesetSaveData.TileColumnsMap[bg];
 
+            // skip tileset if tileset or its image is null
+            if (bg is null || data.TileData == null || data.TileData.Length == 0)
+                continue;
+
             data.TilesX = Math.Max(columns, 1);
             data.TilesY = (uint)Math.Ceiling((double)bg.GMS2TileCount / data.TilesX);
 
@@ -5732,6 +5736,7 @@ void DumpTileSet(UndertaleBackground t, int index)
         // save tileset sprite
         TextureWorker.SaveImageToFile(finalResult, $"{spriteassetDir}{frameGUID}.png");
         TextureWorker.SaveImageToFile(finalResult, $"{layersPath}{frameGUID}\\{layerGUID}.png");
+
         // cleanup
         finalResult.Dispose();
 
