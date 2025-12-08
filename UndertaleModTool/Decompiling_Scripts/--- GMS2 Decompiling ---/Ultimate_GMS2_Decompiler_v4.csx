@@ -2542,10 +2542,10 @@ public class AssetPickerWindow : Window
 public static class TilesetSaveData
 {
     // store tile column amount
-    public static Dictionary<UndertaleBackground, uint> TileColumnsMap = new();
+    public static Dictionary<string, uint> TileColumnsMap = new();
 
     // store modified images
-    public static Dictionary<UndertaleBackground, MagickImage> TilesetImageMap = new();
+    public static Dictionary<string, MagickImage> TilesetImageMap = new();
 }
 
 public class UnscrambleWindow : Window
@@ -2554,13 +2554,13 @@ public class UnscrambleWindow : Window
     private readonly UndertaleData Data = ((MainWindow)Application.Current.MainWindow).Data;
 
     private int CurrentIndex = 0;
-    private Dictionary<UndertaleBackground, Layer.LayerTilesData> TileDataMap = new();
-    private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground];
+    private Dictionary<string, Layer.LayerTilesData> TileDataMap = new();
+    private Layer.LayerTilesData TileData => TileDataMap[CurrentBackground.Name.Content];
     private UndertaleBackground CurrentBackground => Data.Backgrounds[CurrentIndex];
     private uint TileColumns
     {
-        get => TilesetSaveData.TileColumnsMap[CurrentBackground];
-        set => TilesetSaveData.TileColumnsMap[CurrentBackground] = value;
+        get => TilesetSaveData.TileColumnsMap[CurrentBackground.Name.Content];
+        set => TilesetSaveData.TileColumnsMap[CurrentBackground.Name.Content] = value;
     }
 
     private System.Windows.Controls.TextBlock titleText;
@@ -2586,10 +2586,11 @@ public class UnscrambleWindow : Window
         #region Init
         foreach (var bg in Data.Backgrounds)
         {
-            TileDataMap[bg] = new Layer.LayerTilesData() { Background = bg };
+            var tsName = bg.Name.Content;
+            TileDataMap[tsName] = new Layer.LayerTilesData() { Background = bg };
 
-            if (!TilesetSaveData.TileColumnsMap.ContainsKey(bg))
-                TilesetSaveData.TileColumnsMap[bg] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
+            if (!TilesetSaveData.TileColumnsMap.ContainsKey(tsName))
+                TilesetSaveData.TileColumnsMap[tsName] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
         Closing += SaveTilesets;
@@ -2857,7 +2858,7 @@ public class UnscrambleWindow : Window
 
     private void LoadCurrentTileset()
     {
-        Title = $"Unscramble Tileset [{CurrentIndex + 1}/{Data.Backgrounds.Count}] - {CurrentBackground.Name}";
+        Title = $"Unscramble Tileset [{CurrentIndex + 1}/{Data.Backgrounds.Count}] - {CurrentBackground.Name.Content}";
         titleText.Text = Title;
         ColumnsText.Text = TileColumns.ToString();
         Render();
@@ -2934,8 +2935,9 @@ public class UnscrambleWindow : Window
         foreach (var bg in Data.Backgrounds)
         {
             // Set TileData and TileColumns
-            var data = TileDataMap[bg];
-            uint columns = TilesetSaveData.TileColumnsMap[bg];
+            var tsName = bg.Name.Content;
+            var data = TileDataMap[tsName];
+            uint columns = TilesetSaveData.TileColumnsMap[tsName];
 
             // skip tileset if tileset or its image is null
             if (bg is null || data.TileData == null || data.TileData.Length == 0)
@@ -2981,7 +2983,7 @@ public class UnscrambleWindow : Window
             tempImage.Source = src as ImageSource;
 
             // Convert to MagickImage and store
-            TilesetSaveData.TilesetImageMap[bg] = Convert_ImageSource(tempImage.Source);
+            TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(tempImage.Source);
         }
     }
     #endregion
@@ -5571,7 +5573,7 @@ void DumpTileSet(UndertaleBackground t, int index)
         out_tilehborder = (int)t.GMS2OutputBorderX,
         out_tilevborder = (int)t.GMS2OutputBorderY,
         spriteNoExport = true,
-        out_columns = UISettings.FIXTILE ? (int)TilesetSaveData.TileColumnsMap[t] : (int)t.GMS2TileColumns,
+        out_columns = (int)t.GMS2TileColumns,
         tile_count = (int)t.GMS2TileCount,
         parent = GetParentFolder(GMAssetType.TileSet),
         spriteId = (t.Texture is null ? null : new AssetReference(spriteName, GMAssetType.Sprite)),
@@ -5633,9 +5635,9 @@ void DumpTileSet(UndertaleBackground t, int index)
         };
 
         // Get actually good tileset sprites
-        if (UISettings.FIXTILE && TilesetSaveData.TilesetImageMap[t] != null)
+        if (UISettings.FIXTILE && TilesetSaveData.TilesetImageMap[t.Name.Content] != null)
         {
-            finalResult = TilesetSaveData.TilesetImageMap[t];
+            finalResult = TilesetSaveData.TilesetImageMap[t.Name.Content];
 
             // remove checkerboard tile
             finalResult.Composite(new MagickImage("xc:none", settings), 0, 0, CompositeOperator.Over);
