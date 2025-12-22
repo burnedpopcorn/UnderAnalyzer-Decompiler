@@ -4271,7 +4271,7 @@ void DumpRoom(UndertaleRoom r, int index)
     {
         inheritViewSettings = false,
         clearDisplayBuffer = r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer),
-        clearViewBackground = r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ShowColor),
+        clearViewBackground = r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearViewBackground),
         enableViews = r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews)
     };
     dumpedRoom.physicsSettings = new GMRoom.GMRoomPhysicsSettings

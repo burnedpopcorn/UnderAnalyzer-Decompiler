@@ -1,10 +1,16 @@
 /*
-    Ultimate_GMS1_Decompiler_v2.csx
+    Ultimate_GMS1_Decompiler_v3.csx
+        Improved by burnedpopcorn180
 
-    Improved by burnedpopcorn180
+            Original Script by cubeww
+            Fixed Version by CST1229
 
-    Original Script by cubeww
-    Fixed Version by CST1229
+    This Script is Compatible with Both My UnderAnalyzer Decompiler
+    and Bleeding Edge UTMT 0.8.3.0+
+
+    Ultimate_GMS1_Decompiler_v3 Changes:
+        - Cleaned Up all UI code
+        - Fixed Shader Trimming
 
     Ultimate_GMS1_Decompiler_v2 Changes:
         - Rewrote UI to look better and use Dark Mode
@@ -17,6 +23,7 @@
         - Added ability to log all code entries that failed to decompile to a text file
 */
 
+#region Usings
 using System;
 using System.IO;
 using System.Text;
@@ -38,7 +45,9 @@ using UndertaleModLib.Util;
 using Underanalyzer.Decompiler;
 using Underanalyzer;
 using UndertaleModTool;
+#endregion
 
+#region Init
 // make sure a data.win is loaded
 EnsureDataLoaded();
 
@@ -55,20 +64,48 @@ List<string> errLog = new List<string>();
 // UnderAnalyzer shit
 GlobalDecompileContext decompileContext = new(Data);
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
+#endregion
 
-#region --------------- UI --------------------------
+#region Main UI
 
-public bool DUMP;
-public bool OBJT, ROOM, SCPT, TMLN, SOND, SHDR, PATH, FONT, SPRT, BGND;
+public static class UISettings
+{
+    public static bool DUMP, // If user chose to go through with decompiling
+        // main resources user wants to dump
+        OBJT, ROOM, SCPT, TMLN, SOND, SHDR, PATH, FONT, SPRT, BGND;
+}
+
+#region Theme Class
+public static class Theme
+{
+    // If Dark Mode
+    public static bool IsDark = SettingsWindow.EnableDarkMode;
+
+    // Individual Colors
+    public static SolidColorBrush LightGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
+    public static SolidColorBrush DarkGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
+    public static SolidColorBrush BG_Grey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
+    public static SolidColorBrush BG_White = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+
+    // Simple Colors
+    public static SolidColorBrush BasicWhite = System.Windows.Media.Brushes.White;
+    public static SolidColorBrush BasicBlack = System.Windows.Media.Brushes.Black;
+    public static SolidColorBrush Transparent = System.Windows.Media.Brushes.Transparent;
+
+    // Main Colors
+    public static SolidColorBrush WindowBackground = IsDark ? BG_Grey : BG_White;
+    public static SolidColorBrush WindowForeground = IsDark ? BasicWhite : BasicBlack;
+    public static SolidColorBrush ElementBackground = IsDark ? DarkGrey : LightGrey;
+    public static SolidColorBrush ButtonBrush = IsDark ? BG_Grey : LightGrey;
+}
+#endregion
 
 #region Main Window stuffs
-public class MainWindow : Window
+public class UIWindow : Window
 {
-    public bool DUMP, OBJT, ROOM, SCPT, TMLN, SOND, SHDR, PATH, FONT, SPRT, BGND;
-
-    public MainWindow(UndertaleData _data, string scriptDir, bool isDark)
+    public UIWindow()
     {
-        Title = "Ultimate_GMS1_Decompiler_v2";
+        Title = "Ultimate_GMS1_Decompiler_v3";
         // remove OS title bar
         WindowStyle = WindowStyle.None;
         AllowsTransparency = false;
@@ -76,17 +113,8 @@ public class MainWindow : Window
         SizeToContent = SizeToContent.WidthAndHeight;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-        // Theme
-        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-        var BGgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-        var BGwhite = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
-
-        var BasicWhite = System.Windows.Media.Brushes.White;
-        var BasicBlack = System.Windows.Media.Brushes.Black;
-
-        Background = isDark ? BGgrey : BGwhite;
-        Foreground = isDark ? BasicWhite : BasicBlack;//text
+        Background = Theme.WindowBackground;
+        Foreground = Theme.WindowForeground;//text
 
         var mainPanel = new StackPanel { Margin = new Thickness(8) };
         var tooltip = new ToolTip();
@@ -95,7 +123,7 @@ public class MainWindow : Window
         var titleBar = new DockPanel
         {
             Height = 30,
-            Background = isDark ? darkgrey : lightgrey,
+            Background = Theme.ElementBackground,
         };
 
         var titleText = new TextBlock
@@ -111,9 +139,9 @@ public class MainWindow : Window
             Content = "X",
             Width = 40,
             Height = 30,
-            Background = System.Windows.Media.Brushes.Transparent,
+            Background = Theme.Transparent,
             Foreground = Foreground,
-            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            BorderBrush = Theme.Transparent,
             HorizontalAlignment = HorizontalAlignment.Right,
             Padding = new Thickness(0),
             FontWeight = FontWeights.Bold,
@@ -137,7 +165,7 @@ public class MainWindow : Window
         // Back to sanity kinda
         mainPanel.Children.Add(new TextBlock
         {
-            Text = "Welcome to Ultimate_GMS1_Decompiler_v2!\n\nSelect the parts you want to be included in the project, or just press \"Start Export\" to do a full Export",
+            Text = "Welcome to Ultimate_GMS1_Decompiler_v3!\n\nSelect the parts you want to be included in the project, or just press \"Start Dump\" to do a full Export",
             Margin = new Thickness(0, 20, 0, 8)
         });
 
@@ -150,16 +178,16 @@ public class MainWindow : Window
         });
 
         var resourceGrid = new UniformGrid { Columns = 6 };
-        var _OBJT = CreateCheckBox(isDark, "Objects", true);
-        var _ROOM = CreateCheckBox(isDark, "Rooms", true);
-        var _SCPT = CreateCheckBox(isDark, "Scripts", true);
-        var _TMLN = CreateCheckBox(isDark, "Timelines", true);
-        var _SOND = CreateCheckBox(isDark, "Sounds", true);
-        var _SHDR = CreateCheckBox(isDark, "Shaders", true);
-        var _PATH = CreateCheckBox(isDark, "Paths", true);
-        var _FONT = CreateCheckBox(isDark, "Fonts", true);
-        var _SPRT = CreateCheckBox(isDark, "Sprites", true);
-        var _BGND = CreateCheckBox(isDark, "Tilesets", true);
+        var _OBJT = CreateCheckBox("Objects", true);
+        var _ROOM = CreateCheckBox("Rooms", true);
+        var _SCPT = CreateCheckBox("Scripts", true);
+        var _TMLN = CreateCheckBox("Timelines", true);
+        var _SOND = CreateCheckBox("Sounds", true);
+        var _SHDR = CreateCheckBox("Shaders", true);
+        var _PATH = CreateCheckBox("Paths", true);
+        var _FONT = CreateCheckBox("Fonts", true);
+        var _SPRT = CreateCheckBox("Sprites", true);
+        var _BGND = CreateCheckBox("Tilesets", true);
 
         resourceGrid.Children.Add(_OBJT);
         resourceGrid.Children.Add(_ROOM);
@@ -177,28 +205,28 @@ public class MainWindow : Window
         // OK Button
         var OKBT = new Button
         {
-            Content = Directory.Exists($"{scriptDir}") ? "Overwrite Dump" : "Start Dump",
+            Content = "Start Dump",
             Height = 48,
             Margin = new Thickness(0, 10, 0, 0),
 
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack,
-            BorderBrush = isDark ? BGgrey : lightgrey
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
         };
         OKBT.Click += (o, s) =>
         {
-            DUMP = true;
+            UISettings.DUMP = true;
 
-            OBJT = _OBJT.IsChecked == true;
-            ROOM = _ROOM.IsChecked == true;
-            SCPT = _SCPT.IsChecked == true;
-            TMLN = _TMLN.IsChecked == true;
-            SOND = _SOND.IsChecked == true;
-            SHDR = _SHDR.IsChecked == true;
-            PATH = _PATH.IsChecked == true;
-            FONT = _FONT.IsChecked == true;
-            SPRT = _SPRT.IsChecked == true;
-            BGND = _BGND.IsChecked == true;
+            UISettings.OBJT = _OBJT.IsChecked == true;
+            UISettings.ROOM = _ROOM.IsChecked == true;
+            UISettings.SCPT = _SCPT.IsChecked == true;
+            UISettings.TMLN = _TMLN.IsChecked == true;
+            UISettings.SOND = _SOND.IsChecked == true;
+            UISettings.SHDR = _SHDR.IsChecked == true;
+            UISettings.PATH = _PATH.IsChecked == true;
+            UISettings.FONT = _FONT.IsChecked == true;
+            UISettings.SPRT = _SPRT.IsChecked == true;
+            UISettings.BGND = _BGND.IsChecked == true;
 
             Close();
         };
@@ -209,54 +237,34 @@ public class MainWindow : Window
         Content = mainPanel;
     }
 
-    private CheckBox CreateCheckBox(bool isDark, string content, bool isChecked = false, bool? enabled = true)
+    private CheckBox CreateCheckBox(string content, bool isChecked = false, bool? enabled = true)
     {
-        var lightgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-        var darkgrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-        var BasicWhite = System.Windows.Media.Brushes.White;
-        var BasicBlack = System.Windows.Media.Brushes.Black;
-
         return new CheckBox
         {
             Content = content,
             IsChecked = isChecked,
             IsEnabled = enabled ?? true,
             Margin = new Thickness(4),
-            Background = isDark ? darkgrey : lightgrey,
-            Foreground = isDark ? BasicWhite : BasicBlack
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
         };
     }
 }
 #endregion
 
-// dark mode
-bool isDarkEnabled = SettingsWindow.EnableDarkMode;
-
 // open main window
-var _w = new MainWindow(Data, projFolder, isDarkEnabled);
-_w.ShowDialog();
-
-#region save values
-DUMP = _w.DUMP;
-
-OBJT = _w.OBJT;
-ROOM = _w.ROOM;
-SCPT = _w.SCPT;
-TMLN = _w.TMLN;
-SOND = _w.SOND;
-SHDR = _w.SHDR;
-PATH = _w.PATH;
-FONT = _w.FONT;
-SPRT = _w.SPRT;
-BGND = _w.BGND;
-#endregion
+new UIWindow().ShowDialog();
 
 // if exit
-if (!DUMP)
+if (!UISettings.DUMP)
+{
+    GC.Collect();
     return;
+}
+
 #endregion
 
-#region --------------- Helper Functions ------------
+#region Helper Functions
 string GetFolder(string path)
 {
     return Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
@@ -284,7 +292,7 @@ string AddtoLog(string assettype, string assetname)
 }
 #endregion
 
-#region --------------- Start Exporting -------------
+#region Start Dumping
 // check and account for old decomp attempt
 if (Directory.Exists(projFolder))
     Directory.Delete(projFolder, true);
@@ -293,15 +301,15 @@ Directory.CreateDirectory(projFolder);
 
 // Find Amount of Assets that will be extracted
 var resourceNum = 
-  (OBJT ? Data.GameObjects.Count : 0) +
-   (SOND ? Data.Sounds.Count : 0) +
-    (ROOM ? Data.Rooms.Count : 0) +
-     (SPRT ? Data.Sprites.Count : 0) +
-      (FONT ? Data.Fonts.Count : 0) +
-       (SHDR ? Data.Shaders.Count : 0) +
-        (PATH ? Data.Paths.Count : 0) +
-         (BGND ? Data.Backgrounds.Count : 0) +
-          (TMLN ? Data.Timelines.Count : 0);
+  (UISettings.OBJT ? Data.GameObjects.Count : 0) +
+   (UISettings.SOND ? Data.Sounds.Count : 0) +
+    (UISettings.ROOM ? Data.Rooms.Count : 0) +
+     (UISettings.SPRT ? Data.Sprites.Count : 0) +
+      (UISettings.FONT ? Data.Fonts.Count : 0) +
+       (UISettings.SHDR ? Data.Shaders.Count : 0) +
+        (UISettings.PATH ? Data.Paths.Count : 0) +
+         (UISettings.BGND ? Data.Backgrounds.Count : 0) +
+          (UISettings.TMLN ? Data.Timelines.Count : 0);
 
 // Export Resources
 await Task.WhenAll(
@@ -321,7 +329,7 @@ await Task.WhenAll(
 GenerateProjectFile();
 
 #endregion
-#region --------------- Export Completed ------------
+#region Dump Finished
 // changed from .Cleanup due to dumb new utmt shit
 worker.Dispose();
 HideProgressBar();
@@ -338,11 +346,12 @@ else // If there weren't any errors found
 System.Diagnostics.Process.Start("explorer.exe", projFolder);
 #endregion
 
-// All Export Functions
-#region --------------- Export Sprite ---------------
+#region Main Export Functions
+
+#region Sprites
 async Task ExportSprites()
 {
-    if (SPRT)
+    if (UISettings.SPRT)
     {
         Directory.CreateDirectory(projFolder + "/sprites/images");
         await Task.Run(() => Parallel.ForEach(Data.Sprites, ExportSprite));
@@ -406,10 +415,10 @@ void ExportSprite(UndertaleSprite sprite)
     }
 }
 #endregion
-#region --------------- Export Background -----------
+#region Backgrounds
 async Task ExportBackground()
 {
-    if (BGND)
+    if (UISettings.BGND)
     {
         Directory.CreateDirectory(projFolder + "/background/images");
         await Task.Run(() => Parallel.ForEach(Data.Backgrounds, ExportBackground));
@@ -449,10 +458,10 @@ void ExportBackground(UndertaleBackground background)
         worker.ExportAsPNG(background.Texture, projFolder + "/background/images/" + background.Name.Content + ".png");
 }
 #endregion
-#region --------------- Export Object ---------------
+#region Objects
 async Task ExportGameObjects()
 {
-    if (OBJT)
+    if (UISettings.OBJT)
     {
         Directory.CreateDirectory(projFolder + "/objects");
         await Task.Run(() => Parallel.ForEach(Data.GameObjects, ExportGameObject));
@@ -564,10 +573,10 @@ void ExportGameObject(UndertaleGameObject gameObject)
     File.WriteAllText(projFolder + "/objects/" + gameObject.Name.Content + ".object.gmx", gmx.ToString() + eol);
 }
 #endregion
-#region --------------- Export Room -----------------
+#region Rooms
 async Task ExportRooms()
 {
-    if (ROOM)
+    if (UISettings.ROOM)
     {
         Directory.CreateDirectory(projFolder + "/rooms");
         await Task.Run(() => Parallel.ForEach(Data.Rooms, ExportRoom));
@@ -594,8 +603,8 @@ void ExportRoom(UndertaleRoom room)
             new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
             new XElement("code", (room.CreationCodeId != null) ? decompileCode(room.CreationCodeId) : ""),
             new XElement("enableViews", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
-            new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ShowColor))),
-            //new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearDisplayBuffer))),
+            new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearViewBackground))),
+            new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer))),//added back cuz yeah
             new XElement("makerSettings",
                 new XElement("isSet", 0),
                 new XElement("w", 1024),
@@ -718,10 +727,10 @@ void ExportRoom(UndertaleRoom room)
     File.WriteAllText(projFolder + "/rooms/" + room.Name.Content + ".room.gmx", gmx.ToString() + eol);
 }
 #endregion
-#region --------------- Export Sound ----------------
+#region Sounds
 async Task ExportSounds()
 {
-    if (SOND)
+    if (UISettings.SOND)
     {
         Directory.CreateDirectory(projFolder + "/sound/audio");
         await Task.Run(() => Parallel.ForEach(Data.Sounds, ExportSound));
@@ -774,10 +783,10 @@ void ExportSound(UndertaleSound sound)
         File.Copy($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content, projFolder + "/sound/audio/" + sound.File.Content, true);
 }
 #endregion
-#region --------------- Export Script ---------------
+#region Scripts
 async Task ExportScripts()
 {
-    if (SCPT)
+    if (UISettings.SCPT)
     {
         Directory.CreateDirectory(projFolder + "/scripts/");
         await Task.Run(() => Parallel.ForEach(Data.Scripts, ExportScript));
@@ -794,10 +803,10 @@ void ExportScript(UndertaleScript script)
     File.WriteAllText(scriptpath, scriptcode);
 }
 #endregion
-#region --------------- Export Font -----------------
+#region Fonts
 async Task ExportFonts()
 {
-    if (FONT)
+    if (UISettings.FONT)
     {
         Directory.CreateDirectory(projFolder + "/fonts/");
         await Task.Run(() => Parallel.ForEach(Data.Fonts, ExportFont));
@@ -852,10 +861,10 @@ void ExportFont(UndertaleFont font)
     worker.ExportAsPNG(font.Texture, projFolder + "/fonts/" + font.Name.Content + ".png");
 }
 #endregion
-#region --------------- Export Paths ----------------
+#region Paths
 async Task ExportPaths()
 {
-    if (PATH)
+    if (UISettings.PATH)
     {
         Directory.CreateDirectory(projFolder + "/paths");
         await Task.Run(() => Parallel.ForEach(Data.Paths, ExportPath));
@@ -889,10 +898,10 @@ void ExportPath(UndertalePath path)
     File.WriteAllText(projFolder + "/paths/" + path.Name.Content + ".path.gmx", gmx.ToString() + eol);
 }
 #endregion
-#region --------------- Export Timelines ------------
+#region Timelines
 async Task ExportTimelines()
 {
-    if (TMLN)
+    if (UISettings.TMLN)
     {
         Directory.CreateDirectory(projFolder + "/timelines");
         await Task.Run(() => Parallel.ForEach(Data.Timelines, ExportTimeline));
@@ -943,10 +952,10 @@ void ExportTimeline(UndertaleTimeline timeline)
     File.WriteAllText(projFolder + "/timelines/" + timeline.Name.Content + ".timeline.gmx", gmx.ToString() + eol);
 }
 #endregion
-#region --------------- Export Shaders --------------
+#region Shaders
 async Task ExportShaders()
 {
-    if (SHDR)
+    if (UISettings.SHDR)
     {
         Directory.CreateDirectory(projFolder + "/shaders");
         await Task.Run(() => Parallel.ForEach(Data.Shaders, ExportShader));
@@ -959,22 +968,44 @@ void ExportShader(UndertaleShader shader)
     string vertex = shader.GLSL_ES_Vertex.Content;
     string fragment = shader.GLSL_ES_Fragment.Content;
 
-    // to avoid declaring useless shit
-    if (vertex != null && fragment != null)
+    string TrimShader(string shader, string functionName)
     {
-        string splitter = "#define _YY_GLSL";
-        if (vertex.Contains(splitter))
-            vertex = vertex.Substring(vertex.IndexOf(splitter) + splitter.Length);
-        if (fragment.Contains(splitter))
-            fragment = fragment.Substring(fragment.IndexOf(splitter) + splitter.Length);
+        // this fuck ass regex man
+        // this finds the position of a basic GM function that is always compiled with the shader
+        string pattern = @"\w+\s+" + functionName + @"\s*\([^)]*\)\s*\{" +
+                         @"(?>[^{}]+|(?<open>\{)|(?<-open>\}))*" +
+                         @"(?(open)(?!))\}";
+
+        // find pattern
+        Match match = Regex.Match(shader, pattern, RegexOptions.Singleline);
+
+        // remove basic GM function and all the others above it
+        if (match.Success)
+            return shader.Substring(match.Index + match.Length).TrimStart();
+
+        return shader;
     }
 
+    // Trim Vertex at vec4 DoLighting
+    if (vertex != null) vertex = TrimShader(vertex, "DoLighting");
+
+    // Trim Fragment at void DoFog
+    if (fragment != null) fragment = TrimShader(fragment, "DoFog");
+
+    // add gamemaker marker between them since they share the same file
+    string finalshader = 
+        vertex
+        + "//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n\n" +
+        fragment;
+
     UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
-    File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", vertex + "\n//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n" + fragment);
+    File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", finalshader);
 }
 #endregion
 
-#region --------------- Generate Project File -------
+#endregion
+
+#region Generate GMX
 void GenerateProjectFile()
 {
     UpdateProgressBar(null, $"Generating Project File...", progress++, resourceNum);
@@ -985,16 +1016,16 @@ void GenerateProjectFile()
     );
 
     // Write all resource indexes to project.gmx
-    if (SOND) WriteIndexes<UndertaleSound>(gmx.Element("assets"), "sounds", "sound", Data.Sounds, "sound", "sound\\");
-    if (SPRT) WriteIndexes<UndertaleSprite>(gmx.Element("assets"), "sprites", "sprites", Data.Sprites, "sprite", "sprites\\");
-    if (BGND) WriteIndexes<UndertaleBackground>(gmx.Element("assets"), "backgrounds", "background", Data.Backgrounds, "background", "background\\");
-    if (SCPT) WriteIndexes<UndertaleScript>(gmx.Element("assets"), "scripts", "scripts", Data.Scripts, "script", "scripts\\", ".gml");
-    if (FONT) WriteIndexes<UndertaleFont>(gmx.Element("assets"), "fonts", "fonts", Data.Fonts, "font", "fonts\\");
-    if (OBJT) WriteIndexes<UndertaleGameObject>(gmx.Element("assets"), "objects", "objects", Data.GameObjects, "object", "objects\\");
-    if (ROOM) WriteIndexes<UndertaleRoom>(gmx.Element("assets"), "rooms", "rooms", Data.Rooms, "room", "rooms\\");
-    if (PATH) WriteIndexes<UndertalePath>(gmx.Element("assets"), "paths", "paths", Data.Paths, "path", "paths\\");
-    if (TMLN) WriteIndexes<UndertaleTimeline>(gmx.Element("assets"), "timelines", "timelines", Data.Timelines, "timeline", "timelines\\");
-    if (SHDR) WriteIndexes<UndertaleShader>(gmx.Element("assets"), "shaders", "shaders", Data.Shaders, "shader", "shaders\\", ".shader");
+    if (UISettings.SOND) WriteIndexes<UndertaleSound>(gmx.Element("assets"), "sounds", "sound", Data.Sounds, "sound", "sound\\");
+    if (UISettings.SPRT) WriteIndexes<UndertaleSprite>(gmx.Element("assets"), "sprites", "sprites", Data.Sprites, "sprite", "sprites\\");
+    if (UISettings.BGND) WriteIndexes<UndertaleBackground>(gmx.Element("assets"), "backgrounds", "background", Data.Backgrounds, "background", "background\\");
+    if (UISettings.SCPT) WriteIndexes<UndertaleScript>(gmx.Element("assets"), "scripts", "scripts", Data.Scripts, "script", "scripts\\", ".gml");
+    if (UISettings.FONT) WriteIndexes<UndertaleFont>(gmx.Element("assets"), "fonts", "fonts", Data.Fonts, "font", "fonts\\");
+    if (UISettings.OBJT) WriteIndexes<UndertaleGameObject>(gmx.Element("assets"), "objects", "objects", Data.GameObjects, "object", "objects\\");
+    if (UISettings.ROOM) WriteIndexes<UndertaleRoom>(gmx.Element("assets"), "rooms", "rooms", Data.Rooms, "room", "rooms\\");
+    if (UISettings.PATH) WriteIndexes<UndertalePath>(gmx.Element("assets"), "paths", "paths", Data.Paths, "path", "paths\\");
+    if (UISettings.TMLN) WriteIndexes<UndertaleTimeline>(gmx.Element("assets"), "timelines", "timelines", Data.Timelines, "timeline", "timelines\\");
+    if (UISettings.SHDR) WriteIndexes<UndertaleShader>(gmx.Element("assets"), "shaders", "shaders", Data.Shaders, "shader", "shaders\\", ".shader");
 
     File.WriteAllText(projFolder + GameName + ".project.gmx", gmx.ToString() + eol);
 }
