@@ -9,6 +9,7 @@
     and Bleeding Edge UTMT 0.8.3.0+
 
     Ultimate_GMS1_Decompiler_v3 Changes:
+        - Added Options and Icon Extraction
         - Cleaned Up all UI code
         - Fixed Shader Trimming
 
@@ -26,12 +27,18 @@
 #region Usings
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Reflection;
+using System.Security;
+using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Drawing.Imaging;
+using ImageMagick;
 // new ui
 using System.Windows;
 using System.Windows.Controls;
@@ -64,6 +71,179 @@ List<string> errLog = new List<string>();
 // UnderAnalyzer shit
 GlobalDecompileContext decompileContext = new(Data);
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
+
+// thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
+#region Extract Icon Functions
+internal static class ExtractIcon
+{
+    [UnmanagedFunctionPointer(CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Unicode)]
+    [SuppressUnmanagedCodeSecurity]
+    internal delegate bool ENUMRESNAMEPROC(IntPtr hModule, IntPtr lpszType, IntPtr lpszName, IntPtr lParam);
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr LockResource(IntPtr hResData);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [SuppressUnmanagedCodeSecurity]
+    public static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpszType, ENUMRESNAMEPROC lpEnumFunc, IntPtr lParam);
+
+
+    private const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
+    private readonly static IntPtr RT_ICON = (IntPtr)3;
+    private readonly static IntPtr RT_GROUP_ICON = (IntPtr)14;
+
+    public static Icon ExtractIconFromExecutable(string path)
+    {
+        IntPtr hModule = LoadLibraryEx(path, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+        var tmpData = new List<byte[]>();
+
+        ENUMRESNAMEPROC callback = (h, t, name, l) =>
+        {
+            var dir = GetDataFromResource(hModule, RT_GROUP_ICON, name);
+
+            // Calculate the size of an entire .icon file.
+
+            int count = BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
+            int len = 6 + 16 * count;                   // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+            for (int i = 0; i < count; ++i)
+                len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);   // GRPICONDIRENTRY.dwBytesInRes
+
+            using (var dst = new BinaryWriter(new MemoryStream(len)))
+            {
+                // Copy GRPICONDIR to ICONDIR.
+
+                dst.Write(dir, 0, 6);
+
+                int picOffset = 6 + 16 * count; // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+
+                for (int i = 0; i < count; ++i)
+                {
+                    // Load the picture.
+
+                    ushort id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);    // GRPICONDIRENTRY.nID
+                    var pic = GetDataFromResource(hModule, RT_ICON, (IntPtr)id);
+
+                    // Copy GRPICONDIRENTRY to ICONDIRENTRY.
+
+                    dst.Seek(6 + 16 * i, 0);
+
+                    dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
+                    dst.Write(pic.Length);          // ICONDIRENTRY.dwBytesInRes
+                    dst.Write(picOffset);           // ICONDIRENTRY.dwImageOffset
+
+                    // Copy a picture.
+
+                    dst.Seek(picOffset, 0);
+                    dst.Write(pic, 0, pic.Length);
+
+                    picOffset += pic.Length;
+                }
+
+                tmpData.Add(((MemoryStream)dst.BaseStream).ToArray());
+            }
+            return true;
+        };
+        EnumResourceNames(hModule, RT_GROUP_ICON, callback, IntPtr.Zero);
+        byte[][] iconData = tmpData.ToArray();
+        using (var ms = new MemoryStream(iconData[0]))
+        {
+            return new Icon(ms);
+        }
+    }
+    private static byte[] GetDataFromResource(IntPtr hModule, IntPtr type, IntPtr name)
+    {
+        // Load the binary data from the specified resource.
+
+        IntPtr hResInfo = FindResource(hModule, name, type);
+
+        IntPtr hResData = LoadResource(hModule, hResInfo);
+
+        IntPtr pResData = LockResource(hResData);
+
+        uint size = SizeofResource(hModule, hResInfo);
+
+        byte[] buf = new byte[size];
+        Marshal.Copy(pResData, buf, 0, buf.Length);
+
+        return buf;
+    }
+}
+
+public IMagickImage? Convert_Icon(Bitmap _icon, uint _width, uint _height)
+{
+    try
+    {
+        // create new IMagick image
+        IMagickImage img = null;
+
+        // Convert bitmap to IMagickImage
+        using (var memoryStream = new MemoryStream())
+        {
+            // save Bitmap to MemoryStream
+            _icon.Save(memoryStream, ImageFormat.Png);
+
+            // reset memory stream position
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // create a MagickImage from MemoryStream
+            img = new MagickImage(memoryStream);
+        }
+
+        // stop interpolation
+        img.FilterType = FilterType.Point;
+
+        // set size
+        var size = new MagickGeometry(_width, _height);
+        // maintain the aspect ratio
+        size.IgnoreAspectRatio = false;
+        // resize image
+        img.Resize(size);
+
+        return img;
+    }
+    catch (Exception)
+    {
+        // if it fails, just return null
+        return null;
+    }
+}
+#endregion
+
+// Get Runner Data
+string Runner = GetFolder(FilePath) + GameName + ".exe";
+string rName = "", rVersion = "", 
+        rCompany = "", rProduct = "", 
+        rCopyright = "", rDescription = "";
+// Icons
+public IMagickImage? WinIcon = null, BigIcon = null;
+
+if (File.Exists(Runner))
+{
+    var rInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Runner);
+
+    rName = Path.GetFileNameWithoutExtension(Runner);
+    rVersion = rInfo.FileVersion;
+    rCompany = rInfo.CompanyName;
+    rProduct = rInfo.ProductName;
+    rCopyright = rInfo.LegalCopyright;
+    rDescription = rInfo.FileDescription;
+
+    // Icon
+    Bitmap ExeIcon = ExtractIcon.ExtractIconFromExecutable(Runner).ToBitmap();
+    WinIcon = Convert_Icon(ExeIcon, 48, 48); // 48x48
+    BigIcon = Convert_Icon(ExeIcon, 256, 256); // 256x256
+}
 #endregion
 
 #region Main UI
@@ -290,6 +470,37 @@ string AddtoLog(string assettype, string assetname)
     errLog.Add($"{assettype}:   {assetname}");
     return "/*\nDECOMPILER FAILED!\n\n";
 }
+
+// got from gms2 decompiler
+string GetTexturePageSize()
+{
+    int[] sizes = new int[6];
+    int[] types = [256, 512, 1024, 2048, 4096, 8192];
+    Dictionary<string, int> appearances = new();
+    if (Data.EmbeddedTextures.Count == 0)
+        return "2048";
+
+    foreach (UndertaleEmbeddedTexture page in Data.EmbeddedTextures)
+    {
+        for (int i = 0; i < sizes.Length; i++)
+        {
+            if (page.TextureData.Width == types[i] && page.TextureData.Height == types[i])
+            {
+                string sizeStr = types[i].ToString();
+                if (appearances.ContainsKey(sizeStr))
+                    appearances[sizeStr]++;
+                else
+                    appearances[sizeStr] = 1;
+            }
+        }
+    }
+
+    if (appearances.Count == 0)
+        return "2048";
+
+    KeyValuePair<string, int> mostAppeared = appearances.Aggregate((l, r) => l.Value > r.Value ? l : r);
+    return mostAppeared.Key;
+}
 #endregion
 
 #region Start Dumping
@@ -309,7 +520,8 @@ var resourceNum =
        (UISettings.SHDR ? Data.Shaders.Count : 0) +
         (UISettings.PATH ? Data.Paths.Count : 0) +
          (UISettings.BGND ? Data.Backgrounds.Count : 0) +
-          (UISettings.TMLN ? Data.Timelines.Count : 0);
+          (UISettings.TMLN ? Data.Timelines.Count : 0) +
+           (UISettings.SCPT ? Data.Scripts.Count : 0);
 
 // Export Resources
 await Task.WhenAll(
@@ -324,6 +536,12 @@ await Task.WhenAll(
     ExportTimelines(),
     ExportShaders()
 );
+
+// Make Config
+Directory.CreateDirectory(projFolder + "/configs");
+Directory.CreateDirectory(projFolder + "/configs/Default");
+Directory.CreateDirectory(projFolder + "/configs/Default/windows");
+ExportConfig();
 
 // Generate project file
 GenerateProjectFile();
@@ -995,11 +1213,134 @@ void ExportShader(UndertaleShader shader)
     // add gamemaker marker between them since they share the same file
     string finalshader = 
         vertex
-        + "//######################_==_YOYO_SHADER_MARKER_==_######################@~//\n\n" +
+        + "//######################_==_YOYO_SHADER_MARKER_==_######################@~" +
         fragment;
 
     UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
     File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", finalshader);
+}
+#endregion
+
+#region Config Options
+void ExportConfig()
+{
+    // universal func to get both types of flags
+    bool HasFlag(dynamic Flag)
+    { 
+        if (Flag is UndertaleOptions.OptionsFlags)
+            return Data.Options.Info.HasFlag(Flag);
+        if (Flag is UndertaleGeneralInfo.InfoFlags)
+            return Data.GeneralInfo.Info.HasFlag(Flag);
+
+        return false;
+    }
+
+    var gmx = new XDocument(
+        new XComment(gmxDeclaration),
+        new XElement("Config",
+            new XElement("Options",
+                // Options (Flags)
+                new XElement("option_fullscreen", HasFlag(UndertaleOptions.OptionsFlags.FullScreen)),
+                new XElement("option_interpolate", HasFlag(UndertaleOptions.OptionsFlags.InterpolatePixels)),
+                new XElement("option_use_new_audio", HasFlag(UndertaleOptions.OptionsFlags.UseNewAudio)),
+                new XElement("option_noborder", HasFlag(UndertaleOptions.OptionsFlags.NoBorder)),
+                new XElement("option_showcursor", HasFlag(UndertaleOptions.OptionsFlags.ShowCursor)),
+                new XElement("option_sizeable", HasFlag(UndertaleOptions.OptionsFlags.Sizeable)),
+                new XElement("option_stayontop", HasFlag(UndertaleOptions.OptionsFlags.StayOnTop)),
+                new XElement("option_changeresolution", HasFlag(UndertaleOptions.OptionsFlags.ChangeResolution)),
+                new XElement("option_nobuttons", HasFlag(UndertaleOptions.OptionsFlags.NoButtons)),
+                new XElement("option_screenkey", HasFlag(UndertaleOptions.OptionsFlags.ScreenKey)),
+                new XElement("option_helpkey", HasFlag(UndertaleOptions.OptionsFlags.HelpKey)),
+                new XElement("option_quitkey", HasFlag(UndertaleOptions.OptionsFlags.QuitKey)),
+                new XElement("option_savekey", HasFlag(UndertaleOptions.OptionsFlags.SaveKey)),
+                new XElement("option_screenshotkey", HasFlag(UndertaleOptions.OptionsFlags.ScreenShotKey)),
+                new XElement("option_closeesc", HasFlag(UndertaleOptions.OptionsFlags.CloseSec)),
+                new XElement("option_freeze", HasFlag(UndertaleOptions.OptionsFlags.Freeze)),
+                new XElement("option_showprogress", HasFlag(UndertaleOptions.OptionsFlags.ShowProgress) ? 1 : 0),//seems to be real
+                new XElement("option_loadtransparent", HasFlag(UndertaleOptions.OptionsFlags.LoadTransparent)),
+                new XElement("option_scaleprogress", HasFlag(UndertaleOptions.OptionsFlags.ScaleProgress)),
+                new XElement("option_displayerrors", HasFlag(UndertaleOptions.OptionsFlags.DisplayErrors)),
+                new XElement("option_writeerrors", HasFlag(UndertaleOptions.OptionsFlags.WriteErrors)),
+                new XElement("option_aborterrors", HasFlag(UndertaleOptions.OptionsFlags.AbortErrors)),
+                new XElement("option_variableerrors", HasFlag(UndertaleOptions.OptionsFlags.VariableErrors)),
+                new XElement("option_use_fast_collision", HasFlag(UndertaleOptions.OptionsFlags.UseFastCollision)),
+                new XElement("option_fast_collision_compatibility", HasFlag(UndertaleOptions.OptionsFlags.FastCollisionCompatibility)),
+                // Options (REAL SHIT)
+                new XElement("option_scale", Data.Options.Scale),
+                new XElement("option_windowcolor", (byte)Data.Options.WindowColor), //"clBlack" also can be found?
+                new XElement("option_colordepth", Data.Options.ColorDepth),
+                new XElement("option_resolution", Data.Options.Resolution),
+                new XElement("option_frequency", Data.Options.Frequency),
+                new XElement("option_sync_vertex", Data.Options.VertexSync),
+                new XElement("option_loadalpha", Data.Options.LoadAlpha),
+
+                // Info
+                new XElement("option_display_name", Data.GeneralInfo.DisplayName.Content),
+                new XElement("option_gameid", Data.GeneralInfo.GameID),
+                new XElement("option_borderless", HasFlag(UndertaleGeneralInfo.InfoFlags.BorderlessWindow)),
+                new XElement("option_windows_texture_page", GetTexturePageSize())
+            )
+        )
+    );
+
+    // for appending shit
+    var OptionsNode = gmx.Element("Config").Element("Options");
+
+    // Runner Data and shit
+    if (File.Exists(Runner))
+    {
+        OptionsNode.Add(
+            new XElement("option_windows_company_info", rCompany),
+            new XElement("option_windows_copyright_info", rCopyright),
+            new XElement("option_windows_description_info", rDescription),
+            new XElement("option_windows_product_info", rProduct),
+            new XElement("option_icon", "nil"),//idk, not sure if it changes (also "nil" is null for some reason)
+            new XElement("option_windows_game_icon", "runner_icon.ico")
+        );
+        if (WinIcon != null) WinIcon.Write($"{projFolder}/configs/Default/windows/runner_icon.ico");
+        if (BigIcon != null) BigIcon.Write($"{projFolder}/configs/Default/windows/Runner_Icon_256.ico");
+    }
+
+    // splash screen handling
+    if (File.Exists($"{projFolder}/splash.png"))
+    {
+        OptionsNode.Add(
+            new XElement("option_windows_splash_background_colour", "#000000"),// no way to find it, so default
+            new XElement("option_windows_splash_screen", "Configs\\Default\\windows\\splash.png"),
+            new XElement("option_windows_use_splash", "true")
+        );
+        File.Copy($"{projFolder}/splash.png", $"{projFolder}/configs/Default/windows/splash.png");
+    }
+    else
+        OptionsNode.Add(new XElement("option_windows_use_splash", "false"));
+
+    // add steam id if enabled
+    var SteamEnabled = HasFlag(UndertaleGeneralInfo.InfoFlags.SteamEnabled);
+    if (SteamEnabled)
+    {
+        OptionsNode.Add(
+            new XElement("option_windows_enable_steam", SteamEnabled),
+            new XElement("option_windows_steam_app_id", Data.GeneralInfo.SteamAppID)
+        );
+    }
+
+    // constants in the data file.
+    foreach (UndertaleOptions.Constant con in Data.Options.Constants)
+    {
+        if (con.Name.Content.Contains("SleepMargin"))
+            OptionsNode.Add(new XElement("option_windows_sleep_margin", Int32.Parse(con.Value.Content)));
+    }
+
+    // i gotta man
+    OptionsNode.Add(new XElement("option_information",
+        $@"This is a Decompilation of {Data.GeneralInfo.DisplayName.Content}
+
+--------------------------------------------------------
+Project Decompiled by Ultimate_GMS1_Decompiler_v3.csx
+	Improved by burnedpopcorn180
+		Original Version by cubeww and CST1229"));
+
+    File.WriteAllText(projFolder + "/configs/Default.config.gmx", gmx.ToString() + eol);
 }
 #endregion
 
@@ -1012,7 +1353,12 @@ void GenerateProjectFile()
 
     var gmx = new XDocument(
         new XComment(gmxDeclaration),
-        new XElement("assets")
+        new XElement("assets", 
+            // add config shit
+            new XElement("Configs", new XAttribute("name", "configs"),
+                new XElement("Config", "Configs\\Default")
+            )
+        )
     );
 
     // Write all resource indexes to project.gmx
