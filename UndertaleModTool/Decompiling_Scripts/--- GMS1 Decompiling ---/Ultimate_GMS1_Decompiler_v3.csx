@@ -24,6 +24,9 @@
         - Added ability to log all code entries that failed to decompile to a text file
 */
 
+// TODO - extract texture groups and apply them to sprites and shit
+//          rn they are just hard-coded to be in the Default one
+
 #region Usings
 using System;
 using System.IO;
@@ -474,7 +477,6 @@ string AddtoLog(string assettype, string assetname)
 // got from gms2 decompiler
 string GetTexturePageSize()
 {
-    int[] sizes = new int[6];
     int[] types = [256, 512, 1024, 2048, 4096, 8192];
     Dictionary<string, int> appearances = new();
     if (Data.EmbeddedTextures.Count == 0)
@@ -482,9 +484,13 @@ string GetTexturePageSize()
 
     foreach (UndertaleEmbeddedTexture page in Data.EmbeddedTextures)
     {
-        for (int i = 0; i < sizes.Length; i++)
+        for (int i = 0; i < types.Length; i++)
         {
-            if (page.TextureData.Width == types[i] && page.TextureData.Height == types[i])
+            // Scaled ones have a bunch of textures within it, while non-scaled ones dont and are small as fuck
+            // so just ignore the small ones
+            if (page.Scaled == 1 && 
+                (page.TextureData.Width == types[i] && page.TextureData.Height == types[i])
+            )
             {
                 string sizeStr = types[i].ToString();
                 if (appearances.ContainsKey(sizeStr))
@@ -538,9 +544,6 @@ await Task.WhenAll(
 );
 
 // Make Config
-Directory.CreateDirectory(projFolder + "/configs");
-Directory.CreateDirectory(projFolder + "/configs/Default");
-Directory.CreateDirectory(projFolder + "/configs/Default/windows");
 ExportConfig();
 
 // Generate project file
@@ -1235,6 +1238,9 @@ void ExportConfig()
         return false;
     }
 
+    string ConfigDir = $"{projFolder}/Configs/Default/windows";
+    Directory.CreateDirectory(ConfigDir);
+
     var gmx = new XDocument(
         new XComment(gmxDeclaration),
         new XElement("Config",
@@ -1267,7 +1273,7 @@ void ExportConfig()
                 new XElement("option_fast_collision_compatibility", HasFlag(UndertaleOptions.OptionsFlags.FastCollisionCompatibility)),
                 // Options (REAL SHIT)
                 new XElement("option_scale", Data.Options.Scale),
-                new XElement("option_windowcolor", (byte)Data.Options.WindowColor), //"clBlack" also can be found?
+                new XElement("option_windowcolor", $"${Data.Options.WindowColor:X8}"), // uint as $AABBGGRR
                 new XElement("option_colordepth", Data.Options.ColorDepth),
                 new XElement("option_resolution", Data.Options.Resolution),
                 new XElement("option_frequency", Data.Options.Frequency),
@@ -1297,8 +1303,8 @@ void ExportConfig()
             new XElement("option_icon", "nil"),//idk, not sure if it changes (also "nil" is null for some reason)
             new XElement("option_windows_game_icon", "runner_icon.ico")
         );
-        if (WinIcon != null) WinIcon.Write($"{projFolder}/configs/Default/windows/runner_icon.ico");
-        if (BigIcon != null) BigIcon.Write($"{projFolder}/configs/Default/windows/Runner_Icon_256.ico");
+        if (WinIcon != null) WinIcon.Write($"{ConfigDir}/runner_icon.ico");
+        if (BigIcon != null) BigIcon.Write($"{ConfigDir}/Runner_Icon_256.ico");
     }
 
     // splash screen handling
@@ -1307,12 +1313,12 @@ void ExportConfig()
         OptionsNode.Add(
             new XElement("option_windows_splash_background_colour", "#000000"),// no way to find it, so default
             new XElement("option_windows_splash_screen", "Configs\\Default\\windows\\splash.png"),
-            new XElement("option_windows_use_splash", "true")
+            new XElement("option_windows_use_splash", "1")
         );
-        File.Copy($"{projFolder}/splash.png", $"{projFolder}/configs/Default/windows/splash.png");
+        File.Copy($"{projFolder}/splash.png", $"{ConfigDir}/splash.png");
     }
     else
-        OptionsNode.Add(new XElement("option_windows_use_splash", "false"));
+        OptionsNode.Add(new XElement("option_windows_use_splash", "0"));
 
     // add steam id if enabled
     var SteamEnabled = HasFlag(UndertaleGeneralInfo.InfoFlags.SteamEnabled);
@@ -1329,6 +1335,10 @@ void ExportConfig()
     {
         if (con.Name.Content.Contains("SleepMargin"))
             OptionsNode.Add(new XElement("option_windows_sleep_margin", Int32.Parse(con.Value.Content)));
+
+        // TODO - This exists, but idk the XML element name
+        //if (con.Name.Content.Contains("DrawColour"))
+        //    OptionsNode.Add(new XElement("option_windows_sleep_margin", UInt32.Parse(con.Value.Content)));
     }
 
     // i gotta man
@@ -1340,7 +1350,7 @@ Project Decompiled by Ultimate_GMS1_Decompiler_v3.csx
 	Improved by burnedpopcorn180
 		Original Version by cubeww and CST1229"));
 
-    File.WriteAllText(projFolder + "/configs/Default.config.gmx", gmx.ToString() + eol);
+    File.WriteAllText(projFolder + "/Configs/Default.config.gmx", gmx.ToString() + eol);
 }
 #endregion
 
