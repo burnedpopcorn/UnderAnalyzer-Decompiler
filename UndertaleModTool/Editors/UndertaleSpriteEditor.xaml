@@ -68,9 +68,9 @@
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Margin="3">Width:</TextBlock>
-            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding Width}"/>
+            <TextBox Grid.Column="1" Margin="3" Text="{Binding Width}"/>
             <TextBlock Grid.Column="2" Margin="3">Height:</TextBlock>
-            <local:TextBoxDark Grid.Column="3" Margin="3" Text="{Binding Height}"/>
+            <TextBox Grid.Column="3" Margin="3" Text="{Binding Height}"/>
         </Grid>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Margin</TextBlock>
@@ -86,13 +86,13 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Margin="3">Left:</TextBlock>
-            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding MarginLeft}"/>
+            <TextBox Grid.Column="1" Margin="3" Text="{Binding MarginLeft}"/>
             <TextBlock Grid.Column="2" Margin="3">Right:</TextBlock>
-            <local:TextBoxDark Grid.Column="3" Margin="3" Text="{Binding MarginRight}"/>
+            <TextBox Grid.Column="3" Margin="3" Text="{Binding MarginRight}"/>
             <TextBlock Grid.Column="4" Margin="3">Bottom:</TextBlock>
-            <local:TextBoxDark Grid.Column="5" Margin="3" Text="{Binding MarginBottom}"/>
+            <TextBox Grid.Column="5" Margin="3" Text="{Binding MarginBottom}"/>
             <TextBlock Grid.Column="6" Margin="3">Top:</TextBlock>
-            <local:TextBoxDark Grid.Column="7" Margin="3" Text="{Binding MarginTop}"/>
+            <TextBox Grid.Column="7" Margin="3" Text="{Binding MarginTop}"/>
         </Grid>
 
         <TextBlock Grid.Row="4" Grid.Column="0" Margin="3">Transparent</TextBlock>
@@ -120,9 +120,9 @@
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Margin="3">X:</TextBlock>
-            <local:TextBoxDark Grid.Column="1" Margin="3" Text="{Binding OriginXWrapper}"/>
+            <TextBox Grid.Column="1" Margin="3" Text="{Binding OriginXWrapper}"/>
             <TextBlock Grid.Column="2" Margin="3">Y:</TextBlock>
-            <local:TextBoxDark Grid.Column="3" Margin="3" Text="{Binding OriginYWrapper}"/>
+            <TextBox Grid.Column="3" Margin="3" Text="{Binding OriginYWrapper}"/>
         </Grid>
 
         <TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Textures</TextBlock>

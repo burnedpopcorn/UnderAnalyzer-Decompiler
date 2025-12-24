@@ -250,10 +250,10 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Shader Extension Flag</TextBlock>
-                <local:TextBoxDark Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Options.ShaderExtensionFlag}" />
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="3" Text="{Binding Options.ShaderExtensionFlag}" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Margin="3">Shader Extension Version</TextBlock>
-                <local:TextBoxDark Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Options.ShaderExtensionVersion}" />
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="3" Text="{Binding Options.ShaderExtensionVersion}" />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Margin="3">Flags</TextBlock>
                 <local:FlagsBox Grid.Row="3" Grid.Column="1" Margin="3" Value="{Binding Options.Info}" />
