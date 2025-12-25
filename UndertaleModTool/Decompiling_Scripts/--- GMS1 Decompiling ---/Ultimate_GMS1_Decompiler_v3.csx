@@ -9,7 +9,7 @@
     and Bleeding Edge UTMT 0.8.3.0+
 
     Ultimate_GMS1_Decompiler_v3 Changes:
-        - Added Options and Icon Extraction
+        - Added support for Options and Icon Extraction
         - Cleaned Up all UI code
         - Fixed Shader Trimming
 
@@ -23,9 +23,6 @@
         - Added support for decompiling Shaders
         - Added ability to log all code entries that failed to decompile to a text file
 */
-
-// TODO - extract texture groups and apply them to sprites and shit
-//          rn they are just hard-coded to be in the Default one
 
 #region Usings
 using System;
@@ -1262,7 +1259,7 @@ void ExportConfig()
                 new XElement("option_screenshotkey", HasFlag(UndertaleOptions.OptionsFlags.ScreenShotKey)),
                 new XElement("option_closeesc", HasFlag(UndertaleOptions.OptionsFlags.CloseSec)),
                 new XElement("option_freeze", HasFlag(UndertaleOptions.OptionsFlags.Freeze)),
-                new XElement("option_showprogress", HasFlag(UndertaleOptions.OptionsFlags.ShowProgress) ? 1 : 0),//seems to be real
+                new XElement("option_showprogress", HasFlag(UndertaleOptions.OptionsFlags.ShowProgress) ? 1 : 0), //real, not bool
                 new XElement("option_loadtransparent", HasFlag(UndertaleOptions.OptionsFlags.LoadTransparent)),
                 new XElement("option_scaleprogress", HasFlag(UndertaleOptions.OptionsFlags.ScaleProgress)),
                 new XElement("option_displayerrors", HasFlag(UndertaleOptions.OptionsFlags.DisplayErrors)),
@@ -1273,7 +1270,7 @@ void ExportConfig()
                 new XElement("option_fast_collision_compatibility", HasFlag(UndertaleOptions.OptionsFlags.FastCollisionCompatibility)),
                 // Options (REAL SHIT)
                 new XElement("option_scale", Data.Options.Scale),
-                new XElement("option_windowcolor", $"${Data.Options.WindowColor:X8}"), // uint as $AABBGGRR
+                new XElement("option_windowcolor", $"${Data.Options.WindowColor:X8}"), // uint as "$AABBGGRR"
                 new XElement("option_colordepth", Data.Options.ColorDepth),
                 new XElement("option_resolution", Data.Options.Resolution),
                 new XElement("option_frequency", Data.Options.Frequency),
@@ -1284,6 +1281,7 @@ void ExportConfig()
                 new XElement("option_display_name", Data.GeneralInfo.DisplayName.Content),
                 new XElement("option_gameid", Data.GeneralInfo.GameID),
                 new XElement("option_borderless", HasFlag(UndertaleGeneralInfo.InfoFlags.BorderlessWindow)),
+                new XElement("option_windows_save_location", HasFlag(UndertaleGeneralInfo.InfoFlags.UseAppDataSaveLocation) ? 1 : 0), //real, not bool
                 new XElement("option_windows_texture_page", GetTexturePageSize())
             )
         )
@@ -1333,12 +1331,15 @@ void ExportConfig()
     // constants in the data file.
     foreach (UndertaleOptions.Constant con in Data.Options.Constants)
     {
-        if (con.Name.Content.Contains("SleepMargin"))
-            OptionsNode.Add(new XElement("option_windows_sleep_margin", Int32.Parse(con.Value.Content)));
+        string conStr = con.Name.Content;
+        var conVal = con.Value.Content;
+
+        if (conStr.Contains("SleepMargin"))
+            OptionsNode.Add(new XElement("option_windows_sleep_margin", Int32.Parse(conVal)));
 
         // TODO - This exists, but idk the XML element name
-        //if (con.Name.Content.Contains("DrawColour"))
-        //    OptionsNode.Add(new XElement("option_windows_sleep_margin", UInt32.Parse(con.Value.Content)));
+        //if (conStr.Contains("DrawColour"))
+        //    OptionsNode.Add(new XElement("option_draw_colour", UInt32.Parse(conVal)));
     }
 
     // i gotta man
