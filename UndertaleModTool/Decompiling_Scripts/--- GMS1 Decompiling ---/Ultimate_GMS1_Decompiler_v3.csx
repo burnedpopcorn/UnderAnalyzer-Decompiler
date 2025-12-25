@@ -52,6 +52,10 @@ using UndertaleModLib.Util;
 using Underanalyzer.Decompiler;
 using Underanalyzer;
 using UndertaleModTool;
+
+// just to shorten options code
+using OptFlags = UndertaleModLib.Models.UndertaleOptions.OptionsFlags;
+using InfoFlags = UndertaleModLib.Models.UndertaleGeneralInfo.InfoFlags;
 #endregion
 
 #region Init
@@ -1227,12 +1231,18 @@ void ExportConfig()
     // universal func to get both types of flags
     bool HasFlag(dynamic Flag)
     { 
-        if (Flag is UndertaleOptions.OptionsFlags)
+        if (Flag is OptFlags)
             return Data.Options.Info.HasFlag(Flag);
-        if (Flag is UndertaleGeneralInfo.InfoFlags)
+        if (Flag is InfoFlags)
             return Data.GeneralInfo.Info.HasFlag(Flag);
 
         return false;
+    }
+
+    // same thing as above, but returns int values
+    int HasFlagAsInt(dynamic Flag)
+    {
+        return HasFlag(Flag) ? 1 : 0;
     }
 
     string ConfigDir = $"{projFolder}/Configs/Default/windows";
@@ -1243,31 +1253,33 @@ void ExportConfig()
         new XElement("Config",
             new XElement("Options",
                 // Options (Flags)
-                new XElement("option_fullscreen", HasFlag(UndertaleOptions.OptionsFlags.FullScreen)),
-                new XElement("option_interpolate", HasFlag(UndertaleOptions.OptionsFlags.InterpolatePixels)),
-                new XElement("option_use_new_audio", HasFlag(UndertaleOptions.OptionsFlags.UseNewAudio)),
-                new XElement("option_noborder", HasFlag(UndertaleOptions.OptionsFlags.NoBorder)),
-                new XElement("option_showcursor", HasFlag(UndertaleOptions.OptionsFlags.ShowCursor)),
-                new XElement("option_sizeable", HasFlag(UndertaleOptions.OptionsFlags.Sizeable)),
-                new XElement("option_stayontop", HasFlag(UndertaleOptions.OptionsFlags.StayOnTop)),
-                new XElement("option_changeresolution", HasFlag(UndertaleOptions.OptionsFlags.ChangeResolution)),
-                new XElement("option_nobuttons", HasFlag(UndertaleOptions.OptionsFlags.NoButtons)),
-                new XElement("option_screenkey", HasFlag(UndertaleOptions.OptionsFlags.ScreenKey)),
-                new XElement("option_helpkey", HasFlag(UndertaleOptions.OptionsFlags.HelpKey)),
-                new XElement("option_quitkey", HasFlag(UndertaleOptions.OptionsFlags.QuitKey)),
-                new XElement("option_savekey", HasFlag(UndertaleOptions.OptionsFlags.SaveKey)),
-                new XElement("option_screenshotkey", HasFlag(UndertaleOptions.OptionsFlags.ScreenShotKey)),
-                new XElement("option_closeesc", HasFlag(UndertaleOptions.OptionsFlags.CloseSec)),
-                new XElement("option_freeze", HasFlag(UndertaleOptions.OptionsFlags.Freeze)),
-                new XElement("option_showprogress", HasFlag(UndertaleOptions.OptionsFlags.ShowProgress) ? 1 : 0), //real, not bool
-                new XElement("option_loadtransparent", HasFlag(UndertaleOptions.OptionsFlags.LoadTransparent)),
-                new XElement("option_scaleprogress", HasFlag(UndertaleOptions.OptionsFlags.ScaleProgress)),
-                new XElement("option_displayerrors", HasFlag(UndertaleOptions.OptionsFlags.DisplayErrors)),
-                new XElement("option_writeerrors", HasFlag(UndertaleOptions.OptionsFlags.WriteErrors)),
-                new XElement("option_aborterrors", HasFlag(UndertaleOptions.OptionsFlags.AbortErrors)),
-                new XElement("option_variableerrors", HasFlag(UndertaleOptions.OptionsFlags.VariableErrors)),
-                new XElement("option_use_fast_collision", HasFlag(UndertaleOptions.OptionsFlags.UseFastCollision)),
-                new XElement("option_fast_collision_compatibility", HasFlag(UndertaleOptions.OptionsFlags.FastCollisionCompatibility)),
+                new XElement("option_fullscreen", HasFlag(OptFlags.FullScreen)),
+                new XElement("option_interpolate", HasFlag(OptFlags.InterpolatePixels)),
+                new XElement("option_use_new_audio", HasFlag(OptFlags.UseNewAudio)),
+                new XElement("option_noborder", HasFlag(OptFlags.NoBorder)),
+                new XElement("option_showcursor", HasFlag(OptFlags.ShowCursor)),
+                new XElement("option_sizeable", HasFlag(OptFlags.Sizeable)),
+                new XElement("option_stayontop", HasFlag(OptFlags.StayOnTop)),
+                new XElement("option_changeresolution", HasFlag(OptFlags.ChangeResolution)),
+                new XElement("option_nobuttons", HasFlag(OptFlags.NoButtons)),
+                new XElement("option_screenkey", HasFlag(OptFlags.ScreenKey)),
+                new XElement("option_helpkey", HasFlag(OptFlags.HelpKey)),
+                new XElement("option_quitkey", HasFlag(OptFlags.QuitKey)),
+                new XElement("option_savekey", HasFlag(OptFlags.SaveKey)),
+                new XElement("option_screenshotkey", HasFlag(OptFlags.ScreenShotKey)),
+                new XElement("option_closeesc", HasFlag(OptFlags.CloseSec)),
+                new XElement("option_freeze", HasFlag(OptFlags.Freeze)),
+                new XElement("option_showprogress", HasFlagAsInt(OptFlags.ShowProgress)),
+                new XElement("option_loadtransparent", HasFlag(OptFlags.LoadTransparent)),
+                new XElement("option_scaleprogress", HasFlag(OptFlags.ScaleProgress)),
+                new XElement("option_displayerrors", HasFlag(OptFlags.DisplayErrors)),
+                new XElement("option_writeerrors", HasFlag(OptFlags.WriteErrors)),
+                new XElement("option_aborterrors", HasFlag(OptFlags.AbortErrors)),
+                new XElement("option_variableerrors", HasFlag(OptFlags.VariableErrors)),
+                new XElement("option_psvita_fronttouch", BoolToString(HasFlag(OptFlags.UseFrontTouch))),//PS Vita shit
+                new XElement("option_psvita_reartouch", BoolToString(HasFlag(OptFlags.UseRearTouch))),//uses -1 and 0 for some fucking reason
+                new XElement("option_use_fast_collision", HasFlag(OptFlags.UseFastCollision)),
+                new XElement("option_fast_collision_compatibility", HasFlag(OptFlags.FastCollisionCompatibility)),
                 // Options (REAL SHIT)
                 new XElement("option_scale", Data.Options.Scale),
                 new XElement("option_windowcolor", $"${Data.Options.WindowColor:X8}"), // uint as "$AABBGGRR"
@@ -1280,8 +1292,8 @@ void ExportConfig()
                 // Info
                 new XElement("option_display_name", Data.GeneralInfo.DisplayName.Content),
                 new XElement("option_gameid", Data.GeneralInfo.GameID),
-                new XElement("option_borderless", HasFlag(UndertaleGeneralInfo.InfoFlags.BorderlessWindow)),
-                new XElement("option_windows_save_location", HasFlag(UndertaleGeneralInfo.InfoFlags.UseAppDataSaveLocation) ? 1 : 0), //real, not bool
+                new XElement("option_borderless", HasFlag(InfoFlags.BorderlessWindow)),
+                new XElement("option_windows_save_location", HasFlagAsInt(InfoFlags.UseAppDataSaveLocation)),
                 new XElement("option_windows_texture_page", GetTexturePageSize())
             )
         )
@@ -1298,7 +1310,6 @@ void ExportConfig()
             new XElement("option_windows_copyright_info", rCopyright),
             new XElement("option_windows_description_info", rDescription),
             new XElement("option_windows_product_info", rProduct),
-            new XElement("option_icon", "nil"),//idk, not sure if it changes (also "nil" is null for some reason)
             new XElement("option_windows_game_icon", "runner_icon.ico")
         );
         if (WinIcon != null) WinIcon.Write($"{ConfigDir}/runner_icon.ico");
@@ -1309,17 +1320,16 @@ void ExportConfig()
     if (File.Exists($"{projFolder}/splash.png"))
     {
         OptionsNode.Add(
-            new XElement("option_windows_splash_background_colour", "#000000"),// no way to find it, so default
             new XElement("option_windows_splash_screen", "Configs\\Default\\windows\\splash.png"),
-            new XElement("option_windows_use_splash", "1")
+            new XElement("option_windows_use_splash", 1)
         );
         File.Copy($"{projFolder}/splash.png", $"{ConfigDir}/splash.png");
     }
     else
-        OptionsNode.Add(new XElement("option_windows_use_splash", "0"));
+        OptionsNode.Add(new XElement("option_windows_use_splash", 0));
 
     // add steam id if enabled
-    var SteamEnabled = HasFlag(UndertaleGeneralInfo.InfoFlags.SteamEnabled);
+    var SteamEnabled = HasFlag(InfoFlags.SteamEnabled);
     if (SteamEnabled)
     {
         OptionsNode.Add(
