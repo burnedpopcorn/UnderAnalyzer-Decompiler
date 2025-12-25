@@ -1228,6 +1228,7 @@ void ExportShader(UndertaleShader shader)
 #region Config Options
 void ExportConfig()
 {
+    #region Setup shit
     // universal func to get both types of flags
     bool HasFlag(dynamic Flag)
     { 
@@ -1247,6 +1248,7 @@ void ExportConfig()
 
     string ConfigDir = $"{projFolder}/Configs/Default/windows";
     Directory.CreateDirectory(ConfigDir);
+    #endregion
 
     var gmx = new XDocument(
         new XComment(gmxDeclaration),
