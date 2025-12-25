@@ -10,6 +10,7 @@
 
     Ultimate_GMS1_Decompiler_v3 Changes:
         - Added support for Options and Icon Extraction
+        - Added support for automatic Datafiles Importing
         - Cleaned Up all UI code
         - Fixed Shader Trimming
 
@@ -76,6 +77,7 @@ List<string> errLog = new List<string>();
 GlobalDecompileContext decompileContext = new(Data);
 Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.DecompilerSettings;
 
+#region Get Runner Data
 // thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
 #region Extract Icon Functions
 internal static class ExtractIcon
@@ -248,6 +250,11 @@ if (File.Exists(Runner))
     WinIcon = Convert_Icon(ExeIcon, 48, 48); // 48x48
     BigIcon = Convert_Icon(ExeIcon, 256, 256); // 256x256
 }
+#endregion
+
+// init this because yeah
+CheckDatafiles();
+
 #endregion
 
 #region Main UI
@@ -1366,6 +1373,104 @@ Project Decompiled by Ultimate_GMS1_Decompiler_v3.csx
     File.WriteAllText(projFolder + "/Configs/Default.config.gmx", gmx.ToString() + eol);
 }
 #endregion
+#region DataFiles
+
+int TotalFiles = 0;
+void CheckDatafiles()
+{
+    // check all files in all subdirectories
+    foreach (var file in Directory.GetFiles(GetFolder(FilePath), "*", SearchOption.AllDirectories))
+    {
+        // Skip these files                                                        //also get rid of sounds because yeah
+        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
+            continue;
+
+        // Skip export folder
+        if (Path.GetDirectoryName(file).Contains($"{GameName}.gmx")) continue;
+
+        // add to the shit
+        TotalFiles++;
+    }
+}
+
+void AddDatafiles(XElement element, string filepath)
+{
+    #region Setup
+    // get relative directory name for xml
+    string outputPath = Path.Combine($"{projFolder}/datafiles", Path.GetRelativePath(GetFolder(FilePath), filepath));
+    var dirName = new DirectoryInfo(outputPath).Name;
+
+    // Skip export folder
+    if (dirName == $"{GameName}.gmx") return;
+
+    // start adding folder to xml
+    element.Add(
+        new XElement("datafiles", 
+            new XAttribute("number", TotalFiles), // number of ALL files
+            new XAttribute("name", dirName)// name of folder
+        )
+    );
+    // save element pointer for files
+    var DatafileXML = element.Element("datafiles");
+    #endregion
+
+    // Copy and Record all Files
+    foreach (var file in Directory.GetFiles(filepath))
+    {
+        #region Copy Files
+
+        // Skip these files                                                        //also get rid of sounds because yeah
+        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
+            continue;
+
+        string relativePath = Path.GetRelativePath(GetFolder(FilePath), file);
+        string destinationFile = Path.Combine(projFolder + "/datafiles", relativePath);
+
+        // Skip export folder
+        if (Path.GetDirectoryName(file).Contains($"{GameName}.gmx")) continue;
+
+        // Ensure it exists
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
+
+        // Copy the file
+        File.Copy(file, destinationFile, true);
+
+        #endregion
+        #region Add Files to XML
+
+        string FileName = Path.GetFileName(file);
+        long FileSize = new FileInfo(file).Length;
+
+        DatafileXML.Add(
+            new XElement("datafile",
+                new XElement("name", FileName),
+                new XElement("exists", -1),
+                new XElement("size", FileSize),
+                new XElement("exportAction", 2),
+                new XElement("exportDir", ""), //empty cuz yeah
+                new XElement("overwrite", 0),
+                new XElement("freeData", -1),
+                new XElement("removeEnd", 0),
+                new XElement("store", 0),
+                // im skipping config options, fuck off
+                new XElement("filename", FileName) // basically just copy of name
+            )
+        );
+
+        #endregion
+    }
+
+    // Search Sub-Directories
+    foreach (var dir in Directory.GetDirectories(filepath))
+    {
+        // Skip export folder
+        if (Path.GetDirectoryName(dir).Contains($"{GameName}.gmx")) continue;
+
+        // recursive function no way
+        AddDatafiles(DatafileXML, dir);
+    }
+}
+#endregion
 
 #endregion
 
@@ -1383,6 +1488,9 @@ void GenerateProjectFile()
             )
         )
     );
+
+    // what do you think
+    AddDatafiles(gmx.Element("assets"), GetFolder(FilePath));
 
     // Write all resource indexes to project.gmx
     if (UISettings.SOND) WriteIndexes<UndertaleSound>(gmx.Element("assets"), "sounds", "sound", Data.Sounds, "sound", "sound\\");
