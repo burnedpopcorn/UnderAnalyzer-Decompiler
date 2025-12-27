@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
+using UndertaleModLib.Models;
 
 namespace UndertaleModTool
 {
@@ -86,58 +87,27 @@ namespace UndertaleModTool
         {
             // Get data.win
             var data = mainWindow.Data;
-            // Get all existing Vars and Funcs from the data.win
-            var allexistingvars = data.Variables;
-            var allexistingfuncs = data.Functions;
-
-            // Lists to stop it from adding duplicates to a new row
-            List<string> writtenVars = new();
-            List<string> writtenFuncs = new();
+            List<string> SavedVars = new();
 
             // Find all entries and add them to the thing
-            foreach (var vars in allexistingvars)
+            foreach (UndertaleVariable Var in data.Variables)
             {
-                string stringvars = vars.ToString();
-                // Filter out useless crap
+                string vName = Var.Name.Content;
+
+                // add variable if its a custom variable
                 if (
-                    // GameMaker Variables that should DEFINITELY be ignored
-                    !stringvars.Contains("argument") 
-                    && !stringvars.Contains("undefined")
-                    // Just random crap
-                    && !stringvars.Contains("@")
-                    && !stringvars.Contains("$") 
-                    && !stringvars.Contains("__yy_") 
-                    && !stringvars.Contains("__struct__")
-                    )
+                    Var.InstanceType is UndertaleInstruction.InstanceType.Self &&
+                    !SavedVars.Contains(vName) && //make sure no repeats happen
+                    !(vName.Length < 2) && // make sure it has more than one character
+                    !vName.Contains('@') &&
+                    !vName.Contains('_') &&
+                    !vName.Contains("prototype") &&
+                    !vName.Contains("undefined") &&
+                    !vName.Contains("argument")
+                )
                 {
-                    // Check if it hasn't already been added
-                    if (!writtenVars.Contains(stringvars))
-                    {
-                        AddVarRow(stringvars, "");
-                        // If it hasn't been added yet, mark as added
-                        writtenVars.Add(stringvars);
-                    }
-                }
-            }
-            foreach (var funcs in allexistingfuncs)
-            {
-                string stringfuncs = funcs.ToString();
-                // Filter out useless crap
-                if (
-                    stringfuncs.Contains("gml_Script_") // this string NEEDS to be a part of func, as that means its a custom one, and not a GM one
-                    && !stringfuncs.Contains("_anon_") // when var = new function() | rarely have any arguments, and im just not supporting those
-                    // Random crap again
-                    && !stringfuncs.Contains("@")
-                    && !stringfuncs.Contains("__struct__")
-                    )
-                {
-                    // Check if it hasn't already been added
-                    if (!writtenFuncs.Contains(stringfuncs))
-                    {
-                        AddFunctionRow(stringfuncs, "");
-                        // If it hasn't been added yet, mark as added
-                        writtenFuncs.Add(stringfuncs);
-                    }
+                    AddVarRow(vName);
+                    SavedVars.Add(vName);//save it
                 }
             }
         }
