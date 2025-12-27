@@ -822,8 +822,8 @@ void ExportRoom(UndertaleRoom room)
             new XElement("caption", room.Caption.Content),
             new XElement("width", room.Width.ToString()),
             new XElement("height", room.Height.ToString()),
-            new XElement("vsnap", "32"),
-            new XElement("hsnap", "32"),
+            new XElement("vsnap", room.GridHeight.ToString()),//"32"),
+            new XElement("hsnap", room.GridWidth.ToString()),//"32"),
             new XElement("isometric", "0"),
             new XElement("speed", room.Speed.ToString()),
             new XElement("persistent", BoolToString(room.Persistent)),
@@ -867,7 +867,7 @@ void ExportRoom(UndertaleRoom room)
             new XAttribute("vtiled", BoolToString(i.TiledVertically)),
             new XAttribute("hspeed", i.SpeedX.ToString()),
             new XAttribute("vspeed", i.SpeedY.ToString()),
-            new XAttribute("stretch", "0")
+            new XAttribute("stretch", BoolToString(i.Stretch))//"0")
         );
         backgroundsNode.Add(backgroundNode);
     }
