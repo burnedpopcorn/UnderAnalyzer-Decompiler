@@ -10,7 +10,7 @@
 
     Ultimate_GMS1_Decompiler_v3 Changes:
         - Added support for Options and Icon Extraction
-        - Added support for automatic Datafiles Importing
+        - Added support for Automatically Importing Datafiles
         - Cleaned Up all UI code
         - Fixed Shader Trimming
 
