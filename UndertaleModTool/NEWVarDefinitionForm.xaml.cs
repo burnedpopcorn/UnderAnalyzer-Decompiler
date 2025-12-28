@@ -7,10 +7,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Linq;
+using UndertaleModLib;
 using UndertaleModLib.Models;
 
 namespace UndertaleModTool
@@ -20,10 +21,11 @@ namespace UndertaleModTool
         #region Public Assets
 
         // For data.win reading
-        private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+        private static readonly MainWindow mainWindow = (MainWindow)Application.Current.MainWindow;
+        private static readonly UndertaleData Data = mainWindow.Data;
 
         // For Function Saving
-        public static Dictionary<string, string[]> all_funcs;
+        public static Dictionary<string, string[]> all_funcs = new();
 
         // Helper class to hold row data
         public class RowData
@@ -85,12 +87,10 @@ namespace UndertaleModTool
 
         public void FindnAddAllVars() 
         {
-            // Get data.win
-            var data = mainWindow.Data;
             List<string> SavedVars = new();
 
             // Find all entries and add them to the thing
-            foreach (UndertaleVariable Var in data.Variables)
+            foreach (UndertaleVariable Var in Data.Variables)
             {
                 string vName = Var.Name.Content;
 
@@ -144,7 +144,7 @@ namespace UndertaleModTool
         public void PromptJSONLoad()
         {
             // Open file dialog to select the JSON file to load
-            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            Microsoft.Win32.OpenFileDialog openFileDialog = new();
             openFileDialog.Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*";
 
             if (openFileDialog.ShowDialog() == true)
@@ -233,7 +233,6 @@ namespace UndertaleModTool
                             else
                             {
                                 // shit hit the fan guys
-                                //MessageBox.Show($"Unexpected data format for {functionName}");
                                 mainWindow.ScriptMessage($"Unexpected data format for {functionName}");
                             }
                         }
@@ -273,7 +272,7 @@ namespace UndertaleModTool
         // Isn't built in above because of the Initial Row
         public void AddVarRow(string variableName = "", string assetType = "")
         {
-            Grid newRow = new Grid();
+            Grid newRow = new();
 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Textbox
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For ComboBox
@@ -281,12 +280,12 @@ namespace UndertaleModTool
 
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            TextBox variableTextBox = new TextBox { Text = variableName };  // Set the default text
+            TextBox variableTextBox = new() { Text = variableName };  // Set the default text
             newRow.Children.Add(variableTextBox);
             Grid.SetRow(variableTextBox, 0);
             Grid.SetColumn(variableTextBox, 0);
 
-            ComboBox newComboBox = new ComboBox
+            ComboBox newComboBox = new()
             {
                 ItemsSource = GetAssetTypes(),
                 SelectedItem = assetType // Set the default selection
@@ -295,7 +294,7 @@ namespace UndertaleModTool
             Grid.SetRow(newComboBox, 0);
             Grid.SetColumn(newComboBox, 1);
 
-            Button removeButton = new Button { Content = "DEL", Width = 30 };
+            Button removeButton = new() { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
@@ -320,7 +319,7 @@ namespace UndertaleModTool
         // Add Row Function for functions (2 TextBoxes)
         public void AddFunctionRow(string functionName = "gml_Script_", string functionArguments = "", string optionalArgumentsString = "")
         {
-            Grid newRow = new Grid();
+            Grid newRow = new();
 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox (Function Name)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox (Function Arguments)
@@ -330,7 +329,7 @@ namespace UndertaleModTool
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
             // First TextBox for Function Name
-            TextBox functionTextBox1 = new TextBox
+            TextBox functionTextBox1 = new()
             {
                 Text = functionName // Default function name
             };
@@ -339,7 +338,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox1, 0);
 
             // Second TextBox for Function Arguments
-            TextBox functionTextBox2 = new TextBox
+            TextBox functionTextBox2 = new()
             {
                 Text = functionArguments // Default function arguments
             };
@@ -348,7 +347,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox2, 1);
 
             // Third TextBox for Macro Input
-            TextBox functionTextBox3 = new TextBox
+            TextBox functionTextBox3 = new()
             {
                 Text = optionalArgumentsString // Default optional func args
             };
@@ -357,7 +356,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox3, 2);
 
             // Remove Button
-            Button removeButton = new Button { Content = "DEL", Width = 30 };
+            Button removeButton = new() { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
@@ -374,15 +373,12 @@ namespace UndertaleModTool
         #region Save Main JSON File Function (Shared)
         public void SaveButton_Func()
         {
-            // Get data from data.win
-            var data = mainWindow.Data;
-
             var rowsData = new List<RowData>();
 
             // Dictionaries for storing user input separately for function rows and variable rows
-            Dictionary<string, string> variableRows = new Dictionary<string, string>(); // Variable name and asset type
-            all_funcs = new Dictionary<string, string[]> { };
-            optionalfunc = new Dictionary<string, object> { };
+            Dictionary<string, string> variableRows = new(); // Variable name and asset type
+            all_funcs = new();
+            optionalfunc = new();
 
             // Loop through all rows in VariableRowsPanel
             foreach (var item in VariableRowsPanel.Children)
@@ -543,20 +539,17 @@ namespace UndertaleModTool
         // Function to make Loader JSON File (Only for Specific Game that is Currently Loaded)
         public void SaveButtonSingle_Click(object sender, RoutedEventArgs e)
         {
-            // Get data from data.win
-            var data = mainWindow.Data;
-
-            if (data == null)
+            if (Data is null)
             {
                 // Failsafe just in case user is dumb
-                Application.Current.MainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
+                mainWindow.ShowWarning("No data.win was loaded\nLoad a data.win first");
                 return;
             }
 
             // Get User Input and make Var Def JSON File
             SaveButton_Func();
 
-            string dataname = data.GeneralInfo.DisplayName + "";
+            string dataname = Data.GeneralInfo.DisplayName + "";
             string datanameclean = dataname.Replace("\"", "");
 
             // Loader JSON
@@ -566,11 +559,11 @@ namespace UndertaleModTool
                 Conditions = new[]
                 {
                     new
-                        {
-                            ConditionKind = "DisplayName.Regex",
-                            Value = $"(?i)^{datanameclean}"
-                        }
-                    },
+                    {
+                        ConditionKind = "DisplayName.Regex",
+                        Value = $"(?i)^{datanameclean}"
+                    }
+                },
                 UnderanalyzerFilename = "CUSTOM_DEFINITIONS.json"
             };
             // Write Loader JSON
@@ -591,10 +584,10 @@ namespace UndertaleModTool
                 Conditions = new[]
                 {
                     new
-                        {
-                            ConditionKind = "Always"
-                        }
-                    },
+                    {
+                        ConditionKind = "Always"
+                    }
+                },
                 UnderanalyzerFilename = "CUSTOM_DEFINITIONS.json"
             };
             // Write Loader JSON
