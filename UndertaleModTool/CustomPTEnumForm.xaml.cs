@@ -14,7 +14,8 @@ namespace UndertaleModTool
         #region Initialize
 
         // For data.win reading
-        private static readonly MainWindow mainWindow = Application.Current.MainWindow as MainWindow;
+        private static readonly MainWindow mainWindow = (MainWindow)Application.Current.MainWindow;
+        private static readonly UndertaleData Data = mainWindow.Data;
 
         // For Dark Mode Title Bar
         private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -45,7 +46,7 @@ namespace UndertaleModTool
         // Add Enum row
         public void AddENUMRow(string functionName = "gml_Script_", string functionArguments = "scr_", string optionalArgumentsString = "state")
         {
-            Grid newRow = new Grid();
+            Grid newRow = new();
 
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For First Textbox (code name to check)
             newRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });  // For Second TextBox (function prefix to check)
@@ -55,7 +56,7 @@ namespace UndertaleModTool
             newRow.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
             // First TextBox for code entry name
-            TextBox functionTextBox1 = new TextBox
+            TextBox functionTextBox1 = new()
             {
                 Text = functionName
             };
@@ -64,7 +65,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox1, 0);
 
             // Second TextBox for state functions
-            TextBox functionTextBox2 = new TextBox
+            TextBox functionTextBox2 = new()
             {
                 Text = functionArguments
             };
@@ -73,7 +74,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox2, 1);
 
             // Third TextBox for switch var name
-            TextBox functionTextBox3 = new TextBox
+            TextBox functionTextBox3 = new()
             {
                 Text = optionalArgumentsString,
                 Width = 75
@@ -83,7 +84,7 @@ namespace UndertaleModTool
             Grid.SetColumn(functionTextBox3, 2);
 
             // Remove Button
-            Button removeButton = new Button { Content = "DEL", Width = 30 };
+            Button removeButton = new() { Content = "DEL", Width = 30 };
             removeButton.Click += (s, e) =>
             {
                 VariableRowsPanel.Children.Remove(newRow);
@@ -98,9 +99,6 @@ namespace UndertaleModTool
         #region Save Inputs
         public void CSTMSaveInputsButton(object sender, RoutedEventArgs e)
         {
-            // Get data from data.win
-            var data = mainWindow.Data;
-
             // Loop through all rows in VariableRowsPanel
             var debugnum = 1;
             foreach (var item in VariableRowsPanel.Children)
@@ -152,10 +150,10 @@ namespace UndertaleModTool
                         {
                             try
                             {
-                                PT_AssetResolver.FindStateNames(data.Code.ByName(textBox1Text), // Code Entry to search
+                                PT_AssetResolver.FindStateNames(Data.Code.ByName(textBox1Text), // Code Entry to search
                                 textBox3Text,                                            // Switch Var Name, ex: switch (state)
                                 functionsin_tbox2,                                          // scripts of state name, ex: (scr_player_normal(); --> normal
-                                data // just here because
+                                Data // just here because
                                 );
                             }
                             catch (Exception ex)
@@ -167,7 +165,7 @@ namespace UndertaleModTool
                 }
             }
             // call main pt json func
-            PT_AssetResolver.InitializeTypes(data);
+            PT_AssetResolver.InitializeTypes(Data);
         }
 
         public void CSTMUseDefaultsButton(object sender, RoutedEventArgs e)
