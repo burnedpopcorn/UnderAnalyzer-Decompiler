@@ -1489,20 +1489,22 @@ void GenerateProjectFile()
         )
     );
 
+    XElement GMXAssets = gmx.Element("assets");
+
     // what do you think
-    AddDatafiles(gmx.Element("assets"), GetFolder(FilePath));
+    AddDatafiles(GMXAssets, GetFolder(FilePath));
 
     // Write all resource indexes to project.gmx
-    if (UISettings.SOND) WriteIndexes<UndertaleSound>(gmx.Element("assets"), "sounds", "sound", Data.Sounds, "sound", "sound\\");
-    if (UISettings.SPRT) WriteIndexes<UndertaleSprite>(gmx.Element("assets"), "sprites", "sprites", Data.Sprites, "sprite", "sprites\\");
-    if (UISettings.BGND) WriteIndexes<UndertaleBackground>(gmx.Element("assets"), "backgrounds", "background", Data.Backgrounds, "background", "background\\");
-    if (UISettings.SCPT) WriteIndexes<UndertaleScript>(gmx.Element("assets"), "scripts", "scripts", Data.Scripts, "script", "scripts\\", ".gml");
-    if (UISettings.FONT) WriteIndexes<UndertaleFont>(gmx.Element("assets"), "fonts", "fonts", Data.Fonts, "font", "fonts\\");
-    if (UISettings.OBJT) WriteIndexes<UndertaleGameObject>(gmx.Element("assets"), "objects", "objects", Data.GameObjects, "object", "objects\\");
-    if (UISettings.ROOM) WriteIndexes<UndertaleRoom>(gmx.Element("assets"), "rooms", "rooms", Data.Rooms, "room", "rooms\\");
-    if (UISettings.PATH) WriteIndexes<UndertalePath>(gmx.Element("assets"), "paths", "paths", Data.Paths, "path", "paths\\");
-    if (UISettings.TMLN) WriteIndexes<UndertaleTimeline>(gmx.Element("assets"), "timelines", "timelines", Data.Timelines, "timeline", "timelines\\");
-    if (UISettings.SHDR) WriteIndexes<UndertaleShader>(gmx.Element("assets"), "shaders", "shaders", Data.Shaders, "shader", "shaders\\", ".shader");
+    if (UISettings.SOND) WriteIndexes<UndertaleSound>(GMXAssets, "sounds", "sound", Data.Sounds, "sound", "sound\\");
+    if (UISettings.SPRT) WriteIndexes<UndertaleSprite>(GMXAssets, "sprites", "sprites", Data.Sprites, "sprite", "sprites\\");
+    if (UISettings.BGND) WriteIndexes<UndertaleBackground>(GMXAssets, "backgrounds", "background", Data.Backgrounds, "background", "background\\");
+    if (UISettings.SCPT) WriteIndexes<UndertaleScript>(GMXAssets, "scripts", "scripts", Data.Scripts, "script", "scripts\\", ".gml");
+    if (UISettings.FONT) WriteIndexes<UndertaleFont>(GMXAssets, "fonts", "fonts", Data.Fonts, "font", "fonts\\");
+    if (UISettings.OBJT) WriteIndexes<UndertaleGameObject>(GMXAssets, "objects", "objects", Data.GameObjects, "object", "objects\\");
+    if (UISettings.ROOM) WriteIndexes<UndertaleRoom>(GMXAssets, "rooms", "rooms", Data.Rooms, "room", "rooms\\");
+    if (UISettings.PATH) WriteIndexes<UndertalePath>(GMXAssets, "paths", "paths", Data.Paths, "path", "paths\\");
+    if (UISettings.TMLN) WriteIndexes<UndertaleTimeline>(GMXAssets, "timelines", "timelines", Data.Timelines, "timeline", "timelines\\");
+    if (UISettings.SHDR) WriteIndexes<UndertaleShader>(GMXAssets, "shaders", "shaders", Data.Shaders, "shader", "shaders\\", ".shader");
 
     File.WriteAllText(projFolder + GameName + ".project.gmx", gmx.ToString() + eol);
 }
