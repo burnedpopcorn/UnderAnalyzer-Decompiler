@@ -2750,7 +2750,7 @@ namespace UndertaleModTool
         public async void UpdateApp(SettingsWindow window)
         {
             // yeah, im not gonna make an Updater for this, sooo....
-            OpenBrowser("https://github.com/burnedpopcorn/UnderAnalyzer-Decompiler");
+            OpenBrowser("https://github.com/burnedpopcorn/UnderAnalyzer-Decompiler/releases");
         }
 
         private async void Command_Run(object sender, ExecutedRoutedEventArgs e)
