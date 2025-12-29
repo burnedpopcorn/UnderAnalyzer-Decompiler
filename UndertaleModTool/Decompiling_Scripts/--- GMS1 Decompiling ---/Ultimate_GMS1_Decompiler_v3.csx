@@ -481,40 +481,6 @@ string AddtoLog(string assettype, string assetname)
     errLog.Add($"{assettype}:   {assetname}");
     return "/*\nDECOMPILER FAILED!\n\n";
 }
-
-// got from gms2 decompiler
-string GetTexturePageSize()
-{
-    int[] types = [256, 512, 1024, 2048, 4096, 8192];
-    Dictionary<string, int> appearances = new();
-    if (Data.EmbeddedTextures.Count == 0)
-        return "2048";
-
-    foreach (UndertaleEmbeddedTexture page in Data.EmbeddedTextures)
-    {
-        for (int i = 0; i < types.Length; i++)
-        {
-            // Scaled ones have a bunch of textures within it, while non-scaled ones dont and are small as fuck
-            // so just ignore the small ones
-            if (page.Scaled == 1 && 
-                (page.TextureData.Width == types[i] && page.TextureData.Height == types[i])
-            )
-            {
-                string sizeStr = types[i].ToString();
-                if (appearances.ContainsKey(sizeStr))
-                    appearances[sizeStr]++;
-                else
-                    appearances[sizeStr] = 1;
-            }
-        }
-    }
-
-    if (appearances.Count == 0)
-        return "2048";
-
-    KeyValuePair<string, int> mostAppeared = appearances.Aggregate((l, r) => l.Value > r.Value ? l : r);
-    return mostAppeared.Key;
-}
 #endregion
 
 #region Start Dumping
@@ -1303,7 +1269,7 @@ void ExportConfig()
                 new XElement("option_gameid", Data.GeneralInfo.GameID),
                 new XElement("option_borderless", HasFlag(InfoFlags.BorderlessWindow)),
                 new XElement("option_windows_save_location", HasFlagAsInt(InfoFlags.UseAppDataSaveLocation)),
-                new XElement("option_windows_texture_page", GetTexturePageSize())
+                new XElement("option_windows_texture_page", "2048") //whatever, old approach didn't really work anyways in my testing
             )
         )
     );
