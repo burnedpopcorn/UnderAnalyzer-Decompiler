@@ -515,6 +515,11 @@ string AddtoLog(string assettype, string assetname)
 }
 
 #region explaination because of course
+// most of this explaination will be removed in 3 days or less
+// because i dont want to waste space on some guy that i dont want to give any attention to anymore
+// this is literally only here in the first place so that he'll read it
+// because for some fucking reason he's still stalking this project that he hates SOOOO much
+
 // rewriting this because i can't use gms2 decomp code because bro is still butthurt
 // this only works for like, bytecode 16 games im pretty sure
 // reason why it didn't work for me eariler is because i was testing a bytecode 13 game
