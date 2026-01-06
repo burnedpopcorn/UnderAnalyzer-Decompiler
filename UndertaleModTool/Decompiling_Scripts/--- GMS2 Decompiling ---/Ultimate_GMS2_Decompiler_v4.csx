@@ -2,8 +2,8 @@
     Ultimate_GMS2_Decompiler_v4
         The Ultimate GameMaker Studio 2 Decompiler
 
-    New Features by burnedpopcorn180
-    Original Decompiler made by crystallizedsparkle
+            New Features by burnedpopcorn180
+            Original Decompiler made by crystallizedsparkle
 
     Originally used 0.0.1-prerelease as a base
     and added some shit from 0.0.4prerelease and the latest public release 
@@ -14,7 +14,7 @@
     https://gamebanana.com/tools/19813
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
-    and Bleeding Edge UTMT 0.8.3.0+
+    and Bleeding Edge UTMT 0.8.4.0+
 
     List of New Features I added
         - Replaced YAML Config with an Advanced GUI

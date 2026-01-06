@@ -6,7 +6,7 @@
             Fixed Version by CST1229
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
-    and Bleeding Edge UTMT 0.8.3.0+
+    and Bleeding Edge UTMT 0.8.4.0+
 
     Ultimate_GMS1_Decompiler_v4 Changes:
         - Deleted a single function because of old-ass retarded drama with some guy
@@ -540,10 +540,14 @@ string AddtoLog(string assettype, string assetname)
 // it'll only be here just long enough for you to see it
 // since for some reason you still care about a decompiler you said was trash and badly coded
 // even though it has way more user-friendly features than yours ever did
-//    like YAML config? really? who actually would prefer a YAML config over an actual fucking UI
+//    you know, like the YYMPS feature and an actual UI instead of some yaml text config
+//    also, YAML config? really? who actually would prefer a YAML config over an actual fucking UI
 //    OHHHHH WAIT I FORGOT...
 //    Appearently using Windows Forms (or any form of a UI) is Lila's idea, so no one else is allowed
 //    to do something similar :|
+//      or did you think a C# YAML parser was something that everyone would think is cool and would rather have
+//      not everyone's a coder, and most people care more about usability
+//      than gushing over some unimpressive code you wrote
 
 // seriously man, why are you still stalking a project that you hate since "its so bad", while abandoning your own
 // OMG WOW I (ACCIDENTLY) RELEASED A MODIFIED VERSION OF YOUR SCRIPT SLIGHTLY EARILER THAN WHEN YOU WERE GOING TO
@@ -556,7 +560,7 @@ string AddtoLog(string assettype, string assetname)
 //    the current gms2 decompiler is fine and clean enough and exports everything UTMT can provide
 //    and im not the type of person to do port everything over from the current one just to spite you
 //    especially since i want this drama to die already
-//    ONLY reason why i did it with lila's is because yours was way better and more finished than hers
+//    ONLY reason why i did it with lila's is because yours was more functional and finished than hers
 
 // im only continuing to develop these scripts, not to keep this stupid drama alive, but because
 // i actually want to make decompiling GameMaker games better and easier for people to do
@@ -567,18 +571,32 @@ string AddtoLog(string assettype, string assetname)
 //    i mean, you literally had to beg a guy that made a PR in this repo to port over his improvements
 //    back to your original script (keep in mind this was AFTER you abandoned it)
 //    plus, when someone decompiled Heartbound for a code anaylsis video on Youtube, which script did they use?
+//    when people make decomps nowadays, what script/program do they use/recommend?
 //    oh yeah, that's right ... MINE asshole
 //    so yeah, its not my fault people pick THIS script over yours
 //    they prefer it because ITS FUNCTIONALLY BETTER and EASY TO USE (again, YAML config???)
-//    so i guess i get why you'd still be butthurt that the leaker's script is better than yours ever was
+//      so it that why you're still butthurt about this?
+//      because the leaker's script is better than yours ever was?
+//      i guess i get the anger now, but then again i didn't expect you to be THIS pathetic...
 
-// btw, this is the last time im ever gonna talk to you in any way
+// whatever the case, this is the last time im ever gonna talk to you in any way btw
 // even if you dmca me again or just generally annoy me somehow
-// because frankly i feel that, similar to lila, you just crave ANY sort of attention, even if its negative
-// so its best for me to not give you want you want
+// because frankly i feel that, similar to lila
+// what you REALLY want out of this is just ANY sort of attention, even if its negative
+// so that people will feel bad about you or something
+// i dont know, and i dont really care
+
+// as i have said many times, i dont to keep playing these stupid games of yours
+// and i certainly dont want to give you what you really crave
+// so its best for me to not give you want you want and to stop talking to you
+// you wont stop, because you are only persuing this for attention
+// you dont want to actually have a conversation and possibly even mend things
+// so there really isn't anything for me to gain by talking to you
+
 // plus, maybe the silent treatment will get you to do something actually productive in your life
 // instead of enabling you to stalk some random project
 #endregion
+
 string EstimateTPSize()
 {
     // if somehow there's no textures, return a GMS1 default size
@@ -612,7 +630,8 @@ string EstimateTPSize()
     var LikelySize = SizesFound.OrderByDescending(kvp => kvp.Value).First();
 
     // check first if it even worked
-    if (LikelySize.Value is 0) return "2048";
+    if (LikelySize.Value is 0) 
+        return "2048";
     else 
         return LikelySize.Key.ToString();
 }
