@@ -4223,14 +4223,14 @@ void DumpRoom(UndertaleRoom r, int index)
         dumpedLayer.visible = layer.IsVisible;
         dumpedLayer.depth = layer.LayerDepth;
         dumpedLayer.effectEnabled = layer.EffectEnabled;
-        // this made me get stuck for like an hour I didnt even know you could declare nullable things like this it feels wrong
         dumpedLayer.effectType = layer.EffectType?.Content;
 
         dumpedLayer.properties = layer.EffectProperties.Select(p => new GMRoom.GMREffectProperty
         {
-            name = p.Name.Content,
-            type = (int)p.Kind,
-            value = p.Value.Content
+            // TODO - maybe find out better safe defaults
+            name = (p?.Name?.Content != null) ? p.Name.Content : "",
+            type = (p?.Kind != null) ? (int)p.Kind : 0,
+            value = (p?.Value?.Content != null) ? p.Value.Content : ""
         }).ToArray();
 
         bool isFirstLayer = (i == 0 && layer.LayerDepth == 0);
@@ -6236,37 +6236,33 @@ if (!UISettings.YYMPS)
     asset_text += ("\nas the Decompiler often has to use an Asset's ID");
     asset_text += ("\nbecause it can only GUESS what is an Asset and what is just a Number");
 
-    asset_text += ("\n\nAssets Found:");
+    asset_text += ("\n\nAssets Found:\n");
 
-    asset_text += ("\n\nSprites: " + Data.Sprites.Count);
-    asset_text += ("\nObjects: " + Data.GameObjects.Count);
-    asset_text += ("\nRooms: " + Data.Rooms.Count);
-    asset_text += ("\nSounds: " + Data.Sounds.Count);
-    asset_text += ("\nBackgrounds: " + Data.Backgrounds.Count);
-    asset_text += ("\nShaders: " + Data.Shaders.Count);
-    asset_text += ("\nAnimation Curves: " + Data.AnimationCurves.Count);
-    asset_text += ("\nSequences: " + Data.Sequences.Count);
-    asset_text += ("\nTimelines: " + Data.Timelines.Count);
-    asset_text += ("\nPaths: " + Data.Paths.Count);
-    asset_text += ("\nFonts: " + Data.Fonts.Count);
-    asset_text += ("\nScripts: " + Data.Scripts.Count);
-    asset_text += ("\nExtensions: " + Data.Extensions.Count);
-    asset_text += ("\n\n");
+    #region Asset Count
+    void AddAssetCount(string Header, dynamic? Chunk)
+    {
+        if (Chunk != null)
+            asset_text += ($"\n{Header}: {Chunk.Count}");
+        else
+            asset_text += ($"\n{Header}: 0");
+    }
 
-    AddAssetChunk(Data?.Sprites, "SPRITES", "Sprites");
-    AddAssetChunk(Data?.GameObjects, "OBJECTS", "Objects");
-    AddAssetChunk(Data?.Rooms, "ROOMS", "Rooms");
-    AddAssetChunk(Data?.Sounds, "SOUNDS", "Sounds");
-    AddAssetChunk(Data?.Backgrounds, "BACKGROUNDS", "Backgrounds");
-    AddAssetChunk(Data?.Shaders, "SHADERS", "Shaders");
-    AddAssetChunk(Data?.AnimationCurves, "ANIMATION CURVES", "Animation Curves");
-    AddAssetChunk(Data?.Sequences, "SEQUENCES", "Sequences");
-    AddAssetChunk(Data?.Timelines, "TIMELINES", "Timelines");
-    AddAssetChunk(Data?.Paths, "PATHS", "Paths");
-    AddAssetChunk(Data?.Fonts, "FONTS", "Fonts");
-    AddAssetChunk(Data?.Scripts, "SCRIPTS", "Scripts");
-    AddAssetChunk(Data?.Extensions, "EXTENSIONS", "Extensions");
+    AddAssetCount("Sprites", Data?.Sprites);
+    AddAssetCount("Objects", Data?.GameObjects);
+    AddAssetCount("Rooms", Data?.Rooms);
+    AddAssetCount("Sounds", Data?.Sounds);
+    AddAssetCount("Backgrounds", Data?.Backgrounds);
+    AddAssetCount("Shaders", Data?.Shaders);
+    AddAssetCount("Animation Curves", Data?.AnimationCurves);
+    AddAssetCount("Sequences", Data?.Sequences);
+    AddAssetCount("Timelines", Data?.Timelines);
+    AddAssetCount("Paths", Data?.Paths);
+    AddAssetCount("Fonts", Data?.Fonts);
+    #endregion
 
+    asset_text += ("\n\n");//spacer
+
+    #region Asset Chunks
     void AddAssetChunk(dynamic? Chunk, string Header, string Type)
     {
         asset_text += ($"\n--------------------- {Header} ---------------------");
@@ -6286,6 +6282,19 @@ if (!UISettings.YYMPS)
         else
             asset_text += ($"\nNo {Type} could be Found");
     }
+
+    AddAssetChunk(Data?.Sprites, "SPRITES", "Sprites");
+    AddAssetChunk(Data?.GameObjects, "OBJECTS", "Objects");
+    AddAssetChunk(Data?.Rooms, "ROOMS", "Rooms");
+    AddAssetChunk(Data?.Sounds, "SOUNDS", "Sounds");
+    AddAssetChunk(Data?.Backgrounds, "BACKGROUNDS", "Backgrounds");
+    AddAssetChunk(Data?.Shaders, "SHADERS", "Shaders");
+    AddAssetChunk(Data?.AnimationCurves, "ANIMATION CURVES", "Animation Curves");
+    AddAssetChunk(Data?.Sequences, "SEQUENCES", "Sequences");
+    AddAssetChunk(Data?.Timelines, "TIMELINES", "Timelines");
+    AddAssetChunk(Data?.Paths, "PATHS", "Paths");
+    AddAssetChunk(Data?.Fonts, "FONTS", "Fonts");
+    #endregion
 
     // make it
     CreateNote("Asset_Order", "DecompilerGenerated", asset_text);
@@ -6404,10 +6413,11 @@ if (UISettings.SCPT
     #endregion
     #region Extract UnknownEnums
     // if bitwise enums are to be used, don't do it at all
-    if (!UISettings.ENUM && Data?.Code is not null)// also YYC check
+    if (!UISettings.ENUM && Data?.Code != null)// also YYC check
     {
         globalInitCode += "// Generic Enum Declaration\n";
 
+        // get all real code entries
         foreach (UndertaleCode _code in Data.Code)
         {
             if (_code.ParentEntry is null)
@@ -6446,7 +6456,7 @@ if (UISettings.SCPT
         #endregion
 
         // Adding Unknown Enums to the script
-        globalInitCode += "enum " + enumName + " \n{\n";
+        globalInitCode += "enum" + enumName + "\n{\n";
 
         long expectedValue = 0;
         foreach (long val in sorted)
