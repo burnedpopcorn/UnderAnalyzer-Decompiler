@@ -6303,44 +6303,6 @@ if (!UISettings.YYMPS)
 #endregion
 #region Create GlobalInit Script
 
-#region UnknownEnum Extraction Stuff
-
-DecompileSettings dSettings = new DecompileSettings();
-dSettings.MacroDeclarationsAtTop = true;
-dSettings.CreateEnumDeclarations = true;
-string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
-dSettings.UnknownEnumName = enumName;
-dSettings.UnknownEnumValuePattern = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
-HashSet<long> values = new HashSet<long>();
-List<UndertaleCode> enumtoDump = new();
-
-// search for all UnknownEnum values
-async Task DumpEnum()
-{
-    if (Data.GlobalFunctions is null)
-        await Task.Run(() => GlobalDecompileContext.BuildGlobalFunctionCache(Data));
-
-    await Task.Run(() => Parallel.ForEach(enumtoDump, DumpEnums));
-}
-
-// Check all Code Entries for Unknown Enums
-void DumpEnums(UndertaleCode code)
-{
-    if (code is not null)
-    {
-        try
-        {
-            var context = new DecompileContext(globalDecompileContext, code, dSettings);
-            BlockNode rootBlock = (BlockNode)context.DecompileToAST();
-            foreach (IStatementNode stmt in rootBlock.Children)
-                if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName)
-                    foreach (GMEnumValue val in decl.Enum.Values)
-                        values.Add(val.Value);
-        } catch { }
-    }
-}
-#endregion
-
 if (UISettings.SCPT
     // add anyways if any rooms, objects, or scripts were decompiled using asset picker
     // kinda hacky, but not really, and idc
@@ -6417,51 +6379,55 @@ if (UISettings.SCPT
     {
         globalInitCode += "// Generic Enum Declaration\n";
 
-        // get all real code entries
-        foreach (UndertaleCode _code in Data.Code)
+        #region Init
+        string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
+        string enumPat = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
+        HashSet<long> RawValues = new();
+
+        DecompileSettings dSettings = new DecompileSettings()
         {
-            if (_code.ParentEntry is null)
-                enumtoDump.Add(_code);
-        }
-
-        #region Proper Ordering
-        List<long> sorted = new List<long>();
-
-        // this sometimes fails, idk why
-        // this usually fixes itself after a single try tho, so....
-        int attempts = 0;
-        bool tryagain = true;
-        while (tryagain)
+            MacroDeclarationsAtTop = true,
+            CreateEnumDeclarations = true,
+            UnknownEnumName = enumName,
+            UnknownEnumValuePattern = enumPat
+        };
+        #endregion
+        #region Helper Func
+        // Check all Code Entries for Unknown Enums
+        void DumpEnumValues(UndertaleCode code)
         {
             try
             {
-                // clean and try again
-                values = new HashSet<long>();
-                await DumpEnum();
-                // https://github.com/UnderminersTeam/Underanalyzer/blob/main/Underanalyzer/Decompiler/AST/Nodes/EnumDeclNode.cs
-                sorted = new List<long>(values);
-                sorted.Sort((value1sort, value2sort) => Math.Sign(value1sort - value2sort));
-
-                // if successful, leave while loop and proceed
-                tryagain = false;
-            }
-            // if not, try again, or ask user in order to prevent endless loop
-            catch
-            {
-                attempts++;
-                if (attempts > 10)
-                    tryagain = ScriptQuestion($"UnknownEnum Extraction failed!\nTry again?\n\nAttempt {attempts}");
-            }
+                var context = new DecompileContext(globalDecompileContext, code, dSettings);
+                BlockNode rootBlock = (BlockNode)context.DecompileToAST();
+                foreach (IStatementNode stmt in rootBlock.Children)
+                    if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName)
+                        foreach (GMEnumValue val in decl.Enum.Values)
+                            RawValues.Add(val.Value);
+            } catch { }
         }
         #endregion
 
+        // search for all UnknownEnum values
+        List<UndertaleCode> searchcode = new();
+        foreach (UndertaleCode code in Data.Code)
+            if (code.ParentEntry == null && code != null)
+                searchcode.Add(code);
+
+        // get all UnknownEnum values
+        await Task.Run(() => Parallel.ForEach(searchcode, DumpEnumValues));
+
+        // order the values properly
+        List<long> SortedValues = RawValues.ToList();
+        SortedValues.Sort();
+
         // Adding Unknown Enums to the script
-        globalInitCode += "enum" + enumName + "\n{\n";
+        globalInitCode += "enum " + enumName + "\n{\n";
 
         long expectedValue = 0;
-        foreach (long val in sorted)
+        foreach (long val in SortedValues)
         {
-            string name = string.Format(dSettings.UnknownEnumValuePattern, val.ToString().Replace("-", "m"));
+            string name = string.Format(enumPat, val.ToString().Replace("-", "m"));
             // if in order, ex: 1, 2, 3
             if (val == expectedValue)
             {
