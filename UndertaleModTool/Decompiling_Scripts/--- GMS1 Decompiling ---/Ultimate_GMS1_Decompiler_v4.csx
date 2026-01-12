@@ -6,7 +6,7 @@
             Fixed Version by CST1229
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
-    and Bleeding Edge UTMT 0.8.4.0+
+    and Bleeding Edge UTMT 0.8.4.1+
 
     Ultimate_GMS1_Decompiler_v4 Changes:
         - Deleted a single function because OF COURSE

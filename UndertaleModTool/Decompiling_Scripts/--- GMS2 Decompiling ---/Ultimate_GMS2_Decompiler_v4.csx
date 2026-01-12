@@ -14,7 +14,7 @@
     https://gamebanana.com/tools/19813
 
     This Script is Compatible with Both My UnderAnalyzer Decompiler
-    and Bleeding Edge UTMT 0.8.4.0+
+    and Bleeding Edge UTMT 0.8.4.1+
 
     List of New Features I added
         - Replaced YAML Config with an Advanced GUI

@@ -226,7 +226,7 @@ namespace UndertaleModTool
             }
             OpenInTab(Highlighted);
 
-            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.8.4.0";
+            TitleMain = "UnderAnalyzer Decompiler | UTMT UI v0.8.4.1";
 
             CanSave = false;
             CanSafelySave = false;
@@ -277,6 +277,12 @@ namespace UndertaleModTool
                 if (foundSource is not null)
                 {
                     return foundSource;
+                }
+
+                // If the image is of unknown format, it cannot be displayed. Use a placeholder texture...
+                if (image.Format == GMImage.ImageFormat.Unknown)
+                {
+                    image = new GMImage(1, 1);
                 }
 
                 // If no source was found, then create a new one
@@ -1032,11 +1038,8 @@ namespace UndertaleModTool
                             CanSave = true;
                             CanSafelySave = true;
                             await UpdateProfile(data, filename);
-                            if (data != null)
-                            {
-                                data.ToolInfo.DecompilerSettings = SettingsWindow.DecompilerSettings;
-                                data.ToolInfo.InstanceIdPrefix = () => SettingsWindow.InstanceIdPrefix;
-                            }
+                            data.ToolInfo.DecompilerSettings = SettingsWindow.DecompilerSettings;
+                            data.ToolInfo.InstanceIdPrefix = () => SettingsWindow.InstanceIdPrefix;
                         }
                         if (data.IsYYC())
                         {
@@ -1049,8 +1052,21 @@ namespace UndertaleModTool
                                 this.ShowWarning("This game is set to run with the GameMaker Studio debugger and the normal runtime will simply hang after loading if the debugger is not running. You can turn this off in General Info by checking the \"Disable Debugger\" box and saving.", "GMS Debugger");
                             }
                         }
+                        if (data.EmbeddedTextures is not null)
+                        {
+                            foreach (UndertaleEmbeddedTexture tex in data.EmbeddedTextures)
+                            {
+                                if (tex?.TextureData?.Image?.Format == GMImage.ImageFormat.Unknown)
+                                {
+                                    this.ShowWarning("This game contains texture(s) with unknown or unsupported image formats. These will save/load, but will not display in editors, and many operations will fail regarding them. Proceed with caution.", "Unsupported textures");
+                                    break;
+                                }
+                            }
+                        }
                         if (Path.GetDirectoryName(FilePath) != Path.GetDirectoryName(filename))
+                        {
                             CloseChildFiles();
+                        }
 
                         Data = data;
 
