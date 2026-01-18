@@ -9,6 +9,7 @@
     and Bleeding Edge UTMT 0.8.4.1+
 
     Ultimate_GMS1_Decompiler_v4 Changes:
+        - Added support for Extension Extraction
         - Deleted a single function because OF COURSE
 
     Ultimate_GMS1_Decompiler_v3 Changes:
@@ -293,7 +294,7 @@ public static class UISettings
 {
     public static bool DUMP, // If user chose to go through with decompiling
         // main resources user wants to dump
-        OBJT, ROOM, SCPT, TMLN, SOND, SHDR, PATH, FONT, SPRT, BGND;
+        OBJT, ROOM, SCPT, TMLN, SOND, SHDR, EXTN, PATH, FONT, SPRT, BGND;
 }
 
 #region Theme Class
@@ -405,6 +406,7 @@ public class UIWindow : Window
         var _TMLN = CreateCheckBox("Timelines", true);
         var _SOND = CreateCheckBox("Sounds", true);
         var _SHDR = CreateCheckBox("Shaders", true);
+        var _EXTN = CreateCheckBox("Extensions", true);
         var _PATH = CreateCheckBox("Paths", true);
         var _FONT = CreateCheckBox("Fonts", true);
         var _SPRT = CreateCheckBox("Sprites", true);
@@ -416,6 +418,7 @@ public class UIWindow : Window
         resourceGrid.Children.Add(_TMLN);
         resourceGrid.Children.Add(_SOND);
         resourceGrid.Children.Add(_SHDR);
+        resourceGrid.Children.Add(_EXTN);
         resourceGrid.Children.Add(_PATH);
         resourceGrid.Children.Add(_FONT);
         resourceGrid.Children.Add(_SPRT);
@@ -444,6 +447,7 @@ public class UIWindow : Window
             UISettings.TMLN = _TMLN.IsChecked == true;
             UISettings.SOND = _SOND.IsChecked == true;
             UISettings.SHDR = _SHDR.IsChecked == true;
+            UISettings.EXTN = _EXTN.IsChecked == true;
             UISettings.PATH = _PATH.IsChecked == true;
             UISettings.FONT = _FONT.IsChecked == true;
             UISettings.SPRT = _SPRT.IsChecked == true;
@@ -575,10 +579,11 @@ var resourceNum =
      (UISettings.SPRT ? Data.Sprites.Count : 0) +
       (UISettings.FONT ? Data.Fonts.Count : 0) +
        (UISettings.SHDR ? Data.Shaders.Count : 0) +
-        (UISettings.PATH ? Data.Paths.Count : 0) +
-         (UISettings.BGND ? Data.Backgrounds.Count : 0) +
-          (UISettings.TMLN ? Data.Timelines.Count : 0) +
-           (UISettings.SCPT ? Data.Scripts.Count : 0);
+        (UISettings.EXTN ? Data.Extensions.Count : 0) +
+         (UISettings.PATH ? Data.Paths.Count : 0) +
+          (UISettings.BGND ? Data.Backgrounds.Count : 0) +
+           (UISettings.TMLN ? Data.Timelines.Count : 0) +
+            (UISettings.SCPT ? Data.Scripts.Count : 0);
 
 // Export Resources
 await Task.WhenAll(
@@ -591,7 +596,8 @@ await Task.WhenAll(
     ExportFonts(),
     ExportPaths(),
     ExportTimelines(),
-    ExportShaders()
+    ExportShaders(),
+    ExportExtensions()
 );
 
 // Make Config
@@ -1274,6 +1280,90 @@ void ExportShader(UndertaleShader shader)
     File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", finalshader);
 }
 #endregion
+#region Extensions
+async Task ExportExtensions()
+{
+    if (UISettings.EXTN)
+    {
+        Directory.CreateDirectory(projFolder + "/extensions");
+        await Task.Run(() => Parallel.ForEach(Data.Extensions, ExportExtension));
+    }
+}
+void ExportExtension(UndertaleExtension extension)
+{
+    UpdateProgressBar(null, $"Exporting Extension: {extension.Name.Content}", progress++, resourceNum);
+
+    // Save the extension GMX
+    var gmx = new XDocument(
+        new XComment(gmxDeclaration),
+        new XElement("extension",
+            new XElement("name", extension.Name.Content),
+            new XElement("version", extension.Version?.Content ?? ""),
+            new XElement("classname", extension.ClassName?.Content ?? ""),
+            new XElement("files")
+        )
+    );
+
+    foreach (UndertaleExtensionFile extFile in extension.Files)
+    {
+        var Xfiles = gmx.Element("extension").Element("files");
+
+        Xfiles.Add(
+            new XElement("file",
+                new XElement("filename", extFile.Filename.Content),
+                new XElement("origname", "extensions\\" + extFile.Filename.Content),// maybe not this
+                new XElement("init", extFile.InitScript.Content),
+                new XElement("final", extFile.CleanupScript.Content),
+                new XElement("kind", (int)extFile.Kind),
+                new XElement("functions")
+            )
+        );
+
+        var Xfunctions = Xfiles.Element("file").Element("functions");
+
+        switch ((int)extFile.Kind)
+        {
+            case 2:  // GML (TODO maybe)
+                break;
+
+            // DLL is 1, but this works as well
+            default: // include the other ones just in case
+                foreach (UndertaleExtensionFunction func in extFile.Functions)
+                {
+                    // construct new func element
+                    var Xfunc = new XElement("function",
+                        new XElement("name", func.Name.Content),
+                        new XElement("externalName", func.ExtName.Content),
+                        new XElement("kind", (int)func.Kind),
+                        new XElement("returnType", (int)func.RetType),
+                        new XElement("argCount", func.Arguments.Count),
+                        new XElement("args")
+                    );
+
+                    // add all args (arg, type)
+                    var Xargs = Xfunc.Element("args");
+                    foreach (var arg in func.Arguments)
+                        Xargs.Add(new XElement("arg", (int)arg.Type));
+
+                    // add element to functions list
+                    Xfunctions.Add(Xfunc);
+                }
+
+                // copy file
+                var compiledfilepath = $"{Path.GetDirectoryName(FilePath)}\\{extFile.Filename.Content}";
+                if (File.Exists(compiledfilepath))
+                {
+                    var newfilepath = projFolder + "/extensions/" + extension.Name.Content;
+                    Directory.CreateDirectory(newfilepath);
+                    File.Copy(compiledfilepath, $"{newfilepath}/{extFile.Filename.Content}", true);
+                }
+                break;
+        }
+    }
+
+    File.WriteAllText(projFolder + "/extensions/" + extension.Name.Content + ".extension.gmx", gmx.ToString() + eol);
+}
+#endregion
 
 #region Config Options
 void ExportConfig()
@@ -1514,7 +1604,6 @@ void AddDatafiles(XElement element, string filepath)
     }
 }
 #endregion
-
 #endregion
 
 #region Generate GMX
@@ -1536,6 +1625,7 @@ void GenerateProjectFile()
 
     // what do you think
     AddDatafiles(GMXAssets, GetFolder(FilePath));
+    AddExtensions(GMXAssets);
 
     // Write all resource indexes to project.gmx
     if (UISettings.SOND) WriteIndexes<UndertaleSound>(GMXAssets, "sounds", "sound", Data.Sounds, "sound", "sound\\");
@@ -1563,5 +1653,22 @@ void WriteIndexes<T>(XElement rootNode, string elementName, string attributeName
         resourcesNode.Add(resourceNode);
     }
     rootNode.Add(resourcesNode);
+}
+
+void AddExtensions(XElement rootNode)
+{
+    if (Data.Extensions.Count > 0)
+    {
+        var extXML = new XElement("NewExtensions");
+        int extindex = 0;
+
+        foreach (UndertaleExtension e in Data.Extensions)
+        {
+            extXML.Add(new XElement("extension", new XAttribute("index", extindex), $"extensions\\{e.Name.Content}"));
+            extindex++;
+        }
+
+        rootNode.Add(extXML);
+    }
 }
 #endregion
