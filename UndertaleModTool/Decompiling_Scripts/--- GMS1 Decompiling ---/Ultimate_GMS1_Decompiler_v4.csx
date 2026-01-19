@@ -1304,30 +1304,67 @@ void ExportExtension(UndertaleExtension extension)
         )
     );
 
+    var Xfiles = gmx.Element("extension").Element("files");
+
     foreach (UndertaleExtensionFile extFile in extension.Files)
     {
-        var Xfiles = gmx.Element("extension").Element("files");
-
-        Xfiles.Add(
-            new XElement("file",
-                new XElement("filename", extFile.Filename.Content),
-                new XElement("origname", "extensions\\" + extFile.Filename.Content),// maybe not this
-                new XElement("init", extFile.InitScript.Content),
-                new XElement("final", extFile.CleanupScript.Content),
-                new XElement("kind", (int)extFile.Kind),
-                new XElement("functions")
-            )
+        var XCurrentFile = new XElement("file",
+            new XElement("filename", extFile.Filename.Content),
+            new XElement("origname", "extensions\\" + extFile.Filename.Content),// maybe not this
+            new XElement("init", extFile.InitScript.Content),
+            new XElement("final", extFile.CleanupScript.Content),
+            new XElement("kind", (int)extFile.Kind),
+            new XElement("functions")
         );
+        var Xfunctions = XCurrentFile.Element("functions");
 
-        var Xfunctions = Xfiles.Element("file").Element("functions");
+        var newfilepath = projFolder + "/extensions/" + extension.Name.Content;
+        Directory.CreateDirectory(newfilepath);
 
         switch ((int)extFile.Kind)
         {
-            case 2:  // GML (TODO maybe)
+            case 2:  // GML
+
+                // Get shit
+                Dictionary<string, int> ExtGMLEntries;
+                string ExtGMLCode = string.Empty;
+                (ExtGMLEntries, ExtGMLCode) = CheckExtensionGML(extension);
+
+                foreach (string GMLEntryName in ExtGMLEntries.Keys)
+                {
+                    int maxArgs = ExtGMLEntries[GMLEntryName];
+
+                    // construct new func element
+                    var Xfunc = new XElement("function",
+                        new XElement("name", GMLEntryName),
+                        new XElement("externalName", GMLEntryName),
+                        new XElement("kind", 2),
+                        new XElement("returnType", 2), // default to Double, since idk how to find out
+                        new XElement("argCount", maxArgs),
+                        new XElement("args")
+                    );
+
+                    if (maxArgs > 0)
+                    {
+                        // add all args (arg, type)
+                        var Xargs = Xfunc.Element("args");
+                        for (var i = 0; i < maxArgs; i++)
+                            Xargs.Add(new XElement("arg", 2)); // default to Double AGAIN
+                    }
+
+                    // add element to functions list
+                    Xfunctions.Add(Xfunc);
+                }
+
+                // copy GML code
+                if (ExtGMLCode != string.Empty)
+                    File.WriteAllText($"{newfilepath}/{extension.Name.Content}.gml", ExtGMLCode);
+
                 break;
 
             // DLL is 1, but this works as well
             default: // include the other ones just in case
+
                 foreach (UndertaleExtensionFunction func in extFile.Functions)
                 {
                     // construct new func element
@@ -1349,19 +1386,66 @@ void ExportExtension(UndertaleExtension extension)
                     Xfunctions.Add(Xfunc);
                 }
 
-                // copy file
+                // copy DLL file
                 var compiledfilepath = $"{Path.GetDirectoryName(FilePath)}\\{extFile.Filename.Content}";
                 if (File.Exists(compiledfilepath))
-                {
-                    var newfilepath = projFolder + "/extensions/" + extension.Name.Content;
-                    Directory.CreateDirectory(newfilepath);
                     File.Copy(compiledfilepath, $"{newfilepath}/{extFile.Filename.Content}", true);
-                }
+
                 break;
         }
+
+        // add current file
+        Xfiles.Add(XCurrentFile);
     }
 
     File.WriteAllText(projFolder + "/extensions/" + extension.Name.Content + ".extension.gmx", gmx.ToString() + eol);
+}
+
+// I think i have to rewrite this so that Scripts can filter out...
+(Dictionary<string, int>, string) CheckExtensionGML(UndertaleExtension ext)
+{
+    Dictionary<string, int> DumpedExtGMLEntries = new();
+    string DumpedExtGMLCode = string.Empty;
+
+    foreach (UndertaleScript scr in Data.Scripts)
+    {
+        if (scr.Code == null) continue;
+
+        // name check
+        // see if the names are similar
+        string scrName = scr.Name.Content;
+        int index = scrName.IndexOf('_');
+        string extName = ext.Name.Content.ToLower();
+        // leave early if name check fails
+        if (index < 0 || !extName.Contains(scrName.ToLower().Substring(0, index))) continue;
+
+        // return check
+        // because most extension code has a return at the last line
+        string GMLCode = decompileCode(scr.Code);
+
+        string lastLine = GMLCode.TrimEnd(); //default just in case its one line
+        int lastNewLine = GMLCode.TrimEnd().LastIndexOf('\n');
+        if (lastNewLine > 0) // get last line
+            lastLine = GMLCode.TrimEnd().Substring(lastNewLine + 1);
+
+        // add shit if it passes return check
+        // (we already checked for name similarity above)
+        if (lastLine.Contains("return"))
+        {
+            // add function to global code string
+            DumpedExtGMLCode += $"#define {scrName}\n{GMLCode}";
+
+            // get the max amount of arguments
+            int? getmaxArgs = Regex.Matches(GMLCode, @"argument(\d+)").Cast<Match>()
+                .Select(m => (int?)int.Parse(m.Groups[1].Value)).Max();
+
+            // if argument[0] or if no normal args found, use -1
+            int maxArgs = (int)(getmaxArgs != null ? getmaxArgs + 1 : -1);
+            DumpedExtGMLEntries[scrName] = maxArgs;
+        }
+    }
+
+    return (DumpedExtGMLEntries, DumpedExtGMLCode);
 }
 #endregion
 
