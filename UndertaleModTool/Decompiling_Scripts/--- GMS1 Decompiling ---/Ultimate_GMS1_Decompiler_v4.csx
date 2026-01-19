@@ -286,6 +286,12 @@ if (File.Exists(Runner))
 // init this because yeah
 CheckDatafiles();
 
+// gotta redo this
+//         extName             scrName, maxArgs
+Dictionary<string, Dictionary<string, int>> DumpedExtGMLScripts = new();
+// extName, GMLCode
+Dictionary<string, string> DumpedExtGMLCode = new();
+
 #endregion
 
 #region Main UI
@@ -584,6 +590,9 @@ var resourceNum =
           (UISettings.BGND ? Data.Backgrounds.Count : 0) +
            (UISettings.TMLN ? Data.Timelines.Count : 0) +
             (UISettings.SCPT ? Data.Scripts.Count : 0);
+
+// Check Extension GMLs
+CheckExtensionGML();
 
 // Export Resources
 await Task.WhenAll(
@@ -1074,6 +1083,10 @@ void ExportScript(UndertaleScript script)
 {
     UpdateProgressBar(null, $"Exporting Script: {script.Name.Content}", progress++, resourceNum);
 
+    foreach (string extName in DumpedExtGMLScripts.Keys)
+        if (DumpedExtGMLScripts[extName].ContainsKey(script.Name.Content))
+            return;
+
     var scriptpath = projFolder + "/scripts/" + script.Name.Content + ".gml";
     var scriptcode = ((script.Code != null) ? decompileCode(script.Code) : AddtoLog("SCRIPT", script.Name.Content));
 
@@ -1325,14 +1338,14 @@ void ExportExtension(UndertaleExtension extension)
         {
             case 2:  // GML
 
-                // Get shit
-                Dictionary<string, int> ExtGMLEntries;
-                string ExtGMLCode = string.Empty;
-                (ExtGMLEntries, ExtGMLCode) = CheckExtensionGML(extension);
+                if (!DumpedExtGMLCode.ContainsKey(extension.Name.Content)|| !DumpedExtGMLScripts.ContainsKey(extension.Name.Content))
+                    break;
 
-                foreach (string GMLEntryName in ExtGMLEntries.Keys)
+                string ExtGMLCode = DumpedExtGMLCode[extension.Name.Content];
+
+                foreach (string GMLEntryName in DumpedExtGMLScripts[extension.Name.Content].Keys)
                 {
-                    int maxArgs = ExtGMLEntries[GMLEntryName];
+                    int maxArgs = DumpedExtGMLScripts[extension.Name.Content][GMLEntryName];
 
                     // construct new func element
                     var Xfunc = new XElement("function",
@@ -1401,51 +1414,67 @@ void ExportExtension(UndertaleExtension extension)
     File.WriteAllText(projFolder + "/extensions/" + extension.Name.Content + ".extension.gmx", gmx.ToString() + eol);
 }
 
-// I think i have to rewrite this so that Scripts can filter out...
-(Dictionary<string, int>, string) CheckExtensionGML(UndertaleExtension ext)
+void CheckExtensionGML()
 {
-    Dictionary<string, int> DumpedExtGMLEntries = new();
-    string DumpedExtGMLCode = string.Empty;
-
-    foreach (UndertaleScript scr in Data.Scripts)
+    foreach (UndertaleExtension ext in Data.Extensions)
     {
-        if (scr.Code == null) continue;
+        // weed out useless extensions
+        if (ext.Files.Count == 0) continue;
+        bool hasGML = false;
+        foreach (UndertaleExtensionFile extFile in ext.Files)
+            if ((int)extFile.Kind == 2)
+                hasGML = true;
 
-        // name check
-        // see if the names are similar
-        string scrName = scr.Name.Content;
-        int index = scrName.IndexOf('_');
-        string extName = ext.Name.Content.ToLower();
-        // leave early if name check fails
-        if (index < 0 || !extName.Contains(scrName.ToLower().Substring(0, index))) continue;
+        if (!hasGML) continue;
 
-        // return check
-        // because most extension code has a return at the last line
-        string GMLCode = decompileCode(scr.Code);
-
-        string lastLine = GMLCode.TrimEnd(); //default just in case its one line
-        int lastNewLine = GMLCode.TrimEnd().LastIndexOf('\n');
-        if (lastNewLine > 0) // get last line
-            lastLine = GMLCode.TrimEnd().Substring(lastNewLine + 1);
-
-        // add shit if it passes return check
-        // (we already checked for name similarity above)
-        if (lastLine.Contains("return"))
+        // start shit
+        string DumpedGMLCode = string.Empty;
+        foreach (UndertaleScript scr in Data.Scripts)
         {
-            // add function to global code string
-            DumpedExtGMLCode += $"#define {scrName}\n{GMLCode}";
+            if (scr.Code == null) continue;
 
-            // get the max amount of arguments
-            int? getmaxArgs = Regex.Matches(GMLCode, @"argument(\d+)").Cast<Match>()
-                .Select(m => (int?)int.Parse(m.Groups[1].Value)).Max();
+            // name check
+            // see if the names are similar
+            string scrName = scr.Name.Content;
+            int index = scrName.IndexOf('_');
+            string extName = ext.Name.Content.ToLower();
+            // leave early if name check fails
+            if (index < 0 || !extName.Contains(scrName.ToLower().Substring(0, index))) continue;
 
-            // if argument[0] or if no normal args found, use -1
-            int maxArgs = (int)(getmaxArgs != null ? getmaxArgs + 1 : -1);
-            DumpedExtGMLEntries[scrName] = maxArgs;
+            // return check
+            // because most extension code has a return at the last line
+            string GMLCode = decompileCode(scr.Code);
+
+            string lastLine = GMLCode.TrimEnd(); //default just in case its one line
+            int lastNewLine = GMLCode.TrimEnd().LastIndexOf('\n');
+            if (lastNewLine > 0) // get last line
+                lastLine = GMLCode.TrimEnd().Substring(lastNewLine + 1);
+
+            // add shit if it passes return check
+            // (we already checked for name similarity above)
+            if (lastLine.Contains("return"))
+            {
+                // add function to global code string
+                DumpedGMLCode += $"#define {scrName}\n{GMLCode}";
+
+                // get the max amount of arguments using normal args (argument0)
+                int maxArgs = Regex.Matches(GMLCode, @"argument(\d+)")
+                    .Cast<Match>().Select(m => int.Parse(m.Groups[1].Value))
+                    .DefaultIfEmpty(0).Max();
+
+                // if argument[0], use -1 instead
+                if (GMLCode.Contains("argument[0]")) maxArgs = -1;
+                else maxArgs++; // to make argument0 = 1, argument1 = 2...
+
+                if (!DumpedExtGMLScripts.ContainsKey(ext.Name.Content))
+                    DumpedExtGMLScripts[ext.Name.Content] = new Dictionary<string, int>();
+                DumpedExtGMLScripts[ext.Name.Content][scrName] = maxArgs;
+            }
         }
-    }
 
-    return (DumpedExtGMLEntries, DumpedExtGMLCode);
+        if (DumpedGMLCode != string.Empty)
+            DumpedExtGMLCode[ext.Name.Content] = DumpedGMLCode;
+    }
 }
 #endregion
 
