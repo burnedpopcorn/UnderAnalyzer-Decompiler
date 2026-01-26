@@ -51,9 +51,6 @@ using System.Windows.Media.Imaging;
 
 namespace UndertaleModTool
 {
-    /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged, IScriptInterface
     {
         /// Note for those who don't know what is "PropertyChanged.Fody" -
@@ -98,9 +95,10 @@ namespace UndertaleModTool
             } 
         }
 
-        public Visibility IsGMS2 => (Data?.GeneralInfo?.Major ?? 0) >= 2 ? Visibility.Visible : Visibility.Collapsed;
-        // God this is so ugly, if there's a better way, please, put in a pull request
-        public Visibility IsExtProductIDEligible => (((Data?.GeneralInfo?.Major ?? 0) >= 2) || (((Data?.GeneralInfo?.Major ?? 0) == 1) && (((Data?.GeneralInfo?.Build ?? 0) >= 1773) || ((Data?.GeneralInfo?.Build ?? 0) == 1539)))) ? Visibility.Visible : Visibility.Collapsed;
+        private static Visibility ToVisibility(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
+
+        public Visibility IsGMS2 => ToVisibility((Data?.GeneralInfo?.Major ?? 0) >= 2);
+        public Visibility IsExtProductIDEligible => ToVisibility(UndertaleExtension.ProductDataEligible(Data));
 
         public List<Tab> ClosedTabsHistory { get; } = new();
 
@@ -490,8 +488,7 @@ namespace UndertaleModTool
             ApplyCorrections();
             CrashCheck();
 
-            RunGMSDebuggerItem.Visibility = Settings.Instance.ShowDebuggerOption
-                                            ? Visibility.Visible : Visibility.Collapsed;
+            RunGMSDebuggerItem.Visibility = ToVisibility(Settings.Instance.ShowDebuggerOption);
         }
 
         public Dictionary<string, NamedPipeServerStream> childFiles = new Dictionary<string, NamedPipeServerStream>();
@@ -666,9 +663,7 @@ namespace UndertaleModTool
             OnPropertyChanged("FilePath");
             OnPropertyChanged("IsGMS2");
 
-            BackgroundsItemsList.Header = IsGMS2 == Visibility.Visible
-                                          ? "Tile sets"
-                                          : "Backgrounds & Tile sets";
+            BackgroundsItemsList.Header = IsGMS2 == Visibility.Visible ? "Tile sets" : "Backgrounds & Tile sets";
 
             Highlighted = new DescriptionView("Welcome to the UTMT/UnderAnalyzer Decompiler!", "New file created, have fun making a game out of nothing\nI TOLD YOU to open a data.win, not create a new file! :P");
             OpenInTab(Highlighted);
@@ -926,7 +921,7 @@ namespace UndertaleModTool
                 if (isDisassembly)
                 {
                     selectedCode = codeEditor.DisassemblyEditor?.SelectedText;
-                    if (String.IsNullOrEmpty(selectedCode))
+                    if (string.IsNullOrEmpty(selectedCode))
                         isDisassembly = false; // Don't check "In assembly" if there is nothing selected in there.
                 }
                 else
@@ -1080,9 +1075,7 @@ namespace UndertaleModTool
                         OnPropertyChanged("FilePath");
                         OnPropertyChanged("IsGMS2");
 
-                        BackgroundsItemsList.Header = IsGMS2 == Visibility.Visible
-                                                      ? "Tile sets"
-                                                      : "Backgrounds & Tile sets";
+                        BackgroundsItemsList.Header = IsGMS2 == Visibility.Visible ? "Tile sets" : "Backgrounds & Tile sets";
 
                         #pragma warning disable CA1416
                         UndertaleCodeEditor.gettext = null;
@@ -2955,12 +2948,12 @@ result in loss of work.");
 
         public void UpdateObjectLabel(object obj)
         {
-            int foundIndex = obj is UndertaleResource res ? Data.IndexOf(res, false) : -1;
+            int foundIndex = obj is UndertaleResource res ? Data.IndexOf(res, false) : -2;
             string idString;
 
-            if (foundIndex == -1)
+            if (foundIndex == -2)
                 idString = "None";
-            else if (foundIndex == -2)
+            else if (foundIndex == -1)
                 idString = "N/A";
             else
                 idString = Convert.ToString(foundIndex);
@@ -3624,8 +3617,7 @@ result in loss of work.");
             ScrollViewer viewer = sender as ScrollViewer;
 
             // Prevent receiving the mouse wheel event if there is nowhere to scroll.
-            if (viewer.ComputedVerticalScrollBarVisibility != Visibility.Visible
-                && e.Source == viewer)
+            if (viewer.ComputedVerticalScrollBarVisibility != Visibility.Visible && e.Source == viewer)
                 e.Handled = true;
         }
 
