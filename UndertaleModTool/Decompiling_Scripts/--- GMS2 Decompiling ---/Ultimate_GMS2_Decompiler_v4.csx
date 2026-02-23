@@ -2593,7 +2593,6 @@ public class UnscrambleWindow : Window
                 TilesetSaveData.TileColumnsMap[tsName] = bg.GMS2TileColumns > 0 ? bg.GMS2TileColumns : 10;
         }
 
-        Closing += SaveTilesets;
         MouseLeave += Window_MouseLeave;
         MouseUp += Tiles_MouseUp;
         MouseMove += Tiles_MouseMove;
@@ -2869,14 +2868,14 @@ public class UnscrambleWindow : Window
     public void Render()
     {
         PopulatePalette();
-        var loader = new CachedTileDataLoader();
-        var src = loader.Convert(new object[] { TileData }, null, null, null);
-        TilesImage.Source = src as ImageSource;
+        TilesImage.Source = GetTilesetImage(TileData);
     }
 
     private void PopulatePalette()
     {
+        #region Set Variables
         var bg = CurrentBackground;
+        var tsName = bg.Name.Content;
         var data = TileData;
 
         if (data.TileData == null || data.TileData.Length == 0)
@@ -2891,7 +2890,8 @@ public class UnscrambleWindow : Window
         TilesImage.Height = data.TilesY * bg.GMS2TileHeight;
         TilesCanvas.Width = TilesImage.Width;
         TilesCanvas.Height = TilesImage.Height;
-
+        #endregion
+        #region Fill Tiles
         data.TileData = Enumerable.Range(0, (int)data.TilesY)
             .Select(_ => new uint[(int)data.TilesX])
             .ToArray();
@@ -2911,6 +2911,24 @@ public class UnscrambleWindow : Window
                 i += itemsPerTile;
             }
         }
+        #endregion
+        #region Save Image
+        // make blank canvas
+        System.Windows.Controls.Image imgCanvas = new()
+        {
+            Width = TilesImage.Width,
+            Height = TilesImage.Height,
+            Stretch = Stretch.None,
+            SnapsToDevicePixels = true,
+            Source = GetTilesetImage(data) // get actual image
+        };
+        // Convert to MagickImage and store
+        TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(imgCanvas.Source);
+        #endregion
+    }
+
+    public ImageSource GetTilesetImage(Layer.LayerTilesData TileData) {
+        return (ImageSource)(new CachedTileDataLoader().Convert(new object[] { TileData }, null, null, null));
     }
 
     private MagickImage Convert_ImageSource(ImageSource imageSource)
@@ -2927,64 +2945,6 @@ public class UnscrambleWindow : Window
 
         // Create a MagickImage from the stream
         return new MagickImage(memoryStream);
-    }
-
-    private void SaveTilesets(object sender, System.ComponentModel.CancelEventArgs e)
-    {
-        // Save All Images
-        foreach (var bg in Data.Backgrounds)
-        {
-            // Set TileData and TileColumns
-            var tsName = bg.Name.Content;
-            var data = TileDataMap[tsName];
-            uint columns = TilesetSaveData.TileColumnsMap[tsName];
-
-            // skip tileset if tileset or its image is null
-            if (bg is null || data.TileData == null || data.TileData.Length == 0)
-                continue;
-
-            data.TilesX = Math.Max(columns, 1);
-            data.TilesY = (uint)Math.Ceiling((double)bg.GMS2TileCount / data.TilesX);
-
-            // create new image
-            var tempImage = new System.Windows.Controls.Image
-            {
-                Width = data.TilesX * bg.GMS2TileWidth,
-                Height = data.TilesY * bg.GMS2TileHeight,
-                Stretch = Stretch.None,
-                SnapsToDevicePixels = true
-            };
-
-            GridBrush.Viewport = new Rect(0, 0, bg.GMS2TileWidth, bg.GMS2TileHeight);
-
-            data.TileData = Enumerable.Range(0, (int)data.TilesY)
-                .Select(_ => new uint[(int)data.TilesX])
-                .ToArray();
-
-            int iTile = 0;
-            int itemsPerTile = (int)bg.GMS2ItemsPerTileCount;
-            int count = (int)bg.GMS2TileCount * itemsPerTile;
-
-            for (int y = 0; y < data.TilesY; y++)
-            {
-                for (int x = 0; x < data.TilesX; x++)
-                {
-                    if (iTile >= count)
-                        data.TileData[y][x] = 0;
-                    else
-                        data.TileData[y][x] = bg.GMS2TileIds[iTile].ID;
-
-                    iTile += itemsPerTile;
-                }
-            }
-
-            var loader = new CachedTileDataLoader();
-            var src = loader.Convert(new object[] { data }, null, null, null);
-            tempImage.Source = src as ImageSource;
-
-            // Convert to MagickImage and store
-            TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(tempImage.Source);
-        }
     }
     #endregion
 }
@@ -5635,7 +5595,9 @@ void DumpTileSet(UndertaleBackground t, int index)
         };
 
         // Get actually good tileset sprites
-        if (UISettings.FIXTILE && TilesetSaveData.TilesetImageMap[t.Name.Content] != null)
+        if (UISettings.FIXTILE 
+            && TilesetSaveData.TilesetImageMap.ContainsKey(t.Name.Content)
+            && TilesetSaveData.TilesetImageMap[t.Name.Content] != null)
         {
             finalResult = TilesetSaveData.TilesetImageMap[t.Name.Content];
 
