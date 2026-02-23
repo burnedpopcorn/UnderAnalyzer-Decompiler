@@ -248,6 +248,131 @@ public class EnumData
     public string Name { get; set; }
 }
 
+// thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
+#region Extract Icon Functions
+internal static class ExtractIcon
+{
+    [UnmanagedFunctionPointer(CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Unicode)]
+    [SuppressUnmanagedCodeSecurity]
+    internal delegate bool ENUMRESNAMEPROC(IntPtr hModule, IntPtr lpszType, IntPtr lpszName, IntPtr lParam);
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr LockResource(IntPtr hResData);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [SuppressUnmanagedCodeSecurity]
+    public static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpszType, ENUMRESNAMEPROC lpEnumFunc, IntPtr lParam);
+
+
+    private const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
+    private readonly static IntPtr RT_ICON = (IntPtr)3;
+    private readonly static IntPtr RT_GROUP_ICON = (IntPtr)14;
+
+    public static IMagickImage ExtractIconFromExecutable(string path)
+    {
+        IntPtr hModule = LoadLibraryEx(path, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+        var tmpData = new List<byte[]>();
+
+        ENUMRESNAMEPROC callback = (h, t, name, l) =>
+        {
+            var dir = GetDataFromResource(hModule, RT_GROUP_ICON, name);
+
+            // Calculate the size of an entire .icon file.
+
+            int count = BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
+            int len = 6 + 16 * count;                   // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+            for (int i = 0; i < count; ++i)
+                len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);   // GRPICONDIRENTRY.dwBytesInRes
+
+            using (var dst = new BinaryWriter(new MemoryStream(len)))
+            {
+                // Copy GRPICONDIR to ICONDIR.
+
+                dst.Write(dir, 0, 6);
+
+                int picOffset = 6 + 16 * count; // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+
+                for (int i = 0; i < count; ++i)
+                {
+                    // Load the picture.
+
+                    ushort id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);    // GRPICONDIRENTRY.nID
+                    var pic = GetDataFromResource(hModule, RT_ICON, (IntPtr)id);
+
+                    // Copy GRPICONDIRENTRY to ICONDIRENTRY.
+
+                    dst.Seek(6 + 16 * i, 0);
+
+                    dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
+                    dst.Write(pic.Length);          // ICONDIRENTRY.dwBytesInRes
+                    dst.Write(picOffset);           // ICONDIRENTRY.dwImageOffset
+
+                    // Copy a picture.
+
+                    dst.Seek(picOffset, 0);
+                    dst.Write(pic, 0, pic.Length);
+
+                    picOffset += pic.Length;
+                }
+
+                tmpData.Add(((MemoryStream)dst.BaseStream).ToArray());
+            }
+            return true;
+        };
+        EnumResourceNames(hModule, RT_GROUP_ICON, callback, IntPtr.Zero);
+        byte[][] iconData = tmpData.ToArray();
+        using (var ms = new MemoryStream(iconData[0]))
+        {
+            var ico = new Icon(ms);
+            return ConvertIcon(ico.ToBitmap());
+        }
+    }
+    private static IMagickImage ConvertIcon(Bitmap _icon)
+    {
+        // Convert bitmap to IMagickImage
+        using (MemoryStream memoryStream = new())
+        {
+            // save Bitmap to MemoryStream
+            _icon.Save(memoryStream, ImageFormat.Png);
+
+            // reset memory stream position
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            // create a MagickImage from MemoryStream
+            return new MagickImage(memoryStream);
+        }
+    }
+    private static byte[] GetDataFromResource(IntPtr hModule, IntPtr type, IntPtr name)
+    {
+        // Load the binary data from the specified resource.
+
+        IntPtr hResInfo = FindResource(hModule, name, type);
+
+        IntPtr hResData = LoadResource(hModule, hResInfo);
+
+        IntPtr pResData = LockResource(hResData);
+
+        uint size = SizeofResource(hModule, hResInfo);
+
+        byte[] buf = new byte[size];
+        Marshal.Copy(pResData, buf, 0, buf.Length);
+
+        return buf;
+    }
+}
+#endregion
+
 public class RunnerData
 {
     public RunnerData(string filePath)
@@ -257,7 +382,7 @@ public class RunnerData
 
         name = Path.GetFileNameWithoutExtension(filePath);
         path = filePath;
-        iconData = null;
+        iconData = ExtractIcon.ExtractIconFromExecutable(filePath);
         var runnerInfo = FileVersionInfo.GetVersionInfo(filePath);
 
         if (runnerInfo is null)
@@ -271,12 +396,27 @@ public class RunnerData
     }
     public string name { get; set; } = "decompiledGame";
     public string path { get; set; } = "";
-    public Icon? iconData { get; set; } = null;
+    public IMagickImage? iconData { get; set; } = null;
     public string version { get; set; } = "";
     public string companyName { get; set; } = "";
     public string productName { get; set; } = "";
     public string copyright { get; set; } = "";
     public string description { get; set; } = "";
+
+    public void DumpIcon(string filepath, uint _width = 256, uint _height = 256)
+    {
+        // stop interpolation
+        iconData.FilterType = FilterType.Point;
+        // set size
+        var size = new MagickGeometry(_width, _height);
+        // maintain the aspect ratio
+        size.IgnoreAspectRatio = false;
+        // resize image
+        iconData.Resize(size);
+
+        // write to file
+        iconData.Write(filepath);
+    }
 }
 
 public class ImageAssetData
@@ -1608,172 +1748,6 @@ Underanalyzer.Decompiler.IDecompileSettings decompilerSettings = Data.ToolInfo.D
 // progress bar
 public int r_num = 0;
 
-#endregion
-
-#region Icon shit
-
-// thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
-#region Extract Icon Functions
-internal static class ExtractIcon
-{
-    [UnmanagedFunctionPointer(CallingConvention.Winapi, SetLastError = true, CharSet = CharSet.Unicode)]
-    [SuppressUnmanagedCodeSecurity]
-    internal delegate bool ENUMRESNAMEPROC(IntPtr hModule, IntPtr lpszType, IntPtr lpszName, IntPtr lParam);
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
-
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr LockResource(IntPtr hResData);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
-
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    [SuppressUnmanagedCodeSecurity]
-    public static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpszType, ENUMRESNAMEPROC lpEnumFunc, IntPtr lParam);
-
-
-    private const uint LOAD_LIBRARY_AS_DATAFILE = 0x00000002;
-    private readonly static IntPtr RT_ICON = (IntPtr)3;
-    private readonly static IntPtr RT_GROUP_ICON = (IntPtr)14;
-
-    public static Icon ExtractIconFromExecutable(string path)
-    {
-        IntPtr hModule = LoadLibraryEx(path, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-        var tmpData = new List<byte[]>();
-
-        ENUMRESNAMEPROC callback = (h, t, name, l) =>
-        {
-            var dir = GetDataFromResource(hModule, RT_GROUP_ICON, name);
-
-            // Calculate the size of an entire .icon file.
-
-            int count = BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
-            int len = 6 + 16 * count;                   // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-            for (int i = 0; i < count; ++i)
-                len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);   // GRPICONDIRENTRY.dwBytesInRes
-
-            using (var dst = new BinaryWriter(new MemoryStream(len)))
-            {
-                // Copy GRPICONDIR to ICONDIR.
-
-                dst.Write(dir, 0, 6);
-
-                int picOffset = 6 + 16 * count; // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-
-                for (int i = 0; i < count; ++i)
-                {
-                    // Load the picture.
-
-                    ushort id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);    // GRPICONDIRENTRY.nID
-                    var pic = GetDataFromResource(hModule, RT_ICON, (IntPtr)id);
-
-                    // Copy GRPICONDIRENTRY to ICONDIRENTRY.
-
-                    dst.Seek(6 + 16 * i, 0);
-
-                    dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
-                    dst.Write(pic.Length);          // ICONDIRENTRY.dwBytesInRes
-                    dst.Write(picOffset);           // ICONDIRENTRY.dwImageOffset
-
-                    // Copy a picture.
-
-                    dst.Seek(picOffset, 0);
-                    dst.Write(pic, 0, pic.Length);
-
-                    picOffset += pic.Length;
-                }
-
-                tmpData.Add(((MemoryStream)dst.BaseStream).ToArray());
-            }
-            return true;
-        };
-        EnumResourceNames(hModule, RT_GROUP_ICON, callback, IntPtr.Zero);
-        byte[][] iconData = tmpData.ToArray();
-        using (var ms = new MemoryStream(iconData[0]))
-        {
-            return new Icon(ms);
-        }
-    }
-    private static byte[] GetDataFromResource(IntPtr hModule, IntPtr type, IntPtr name)
-    {
-        // Load the binary data from the specified resource.
-
-        IntPtr hResInfo = FindResource(hModule, name, type);
-
-        IntPtr hResData = LoadResource(hModule, hResInfo);
-
-        IntPtr pResData = LockResource(hResData);
-
-        uint size = SizeofResource(hModule, hResInfo);
-
-        byte[] buf = new byte[size];
-        Marshal.Copy(pResData, buf, 0, buf.Length);
-
-        return buf;
-    }
-}
-#endregion
-
-public IMagickImage? Convert_Icon(Bitmap _icon, uint _width, uint _height)
-{
-	try
-	{
-		// create new IMagick image
-		IMagickImage img = null;
-		
-		// Convert bitmap to IMagickImage
-		using (var memoryStream = new MemoryStream())
-		{
-			// save Bitmap to MemoryStream
-			_icon.Save(memoryStream, ImageFormat.Png);
-
-			// reset memory stream position
-			memoryStream.Seek(0, SeekOrigin.Begin);
-
-			// create a MagickImage from MemoryStream
-			img = new MagickImage(memoryStream);
-		}
-		
-		// stop interpolation
-		img.FilterType = FilterType.Point;
-		
-		// set size
-		var size = new MagickGeometry(_width, _height);
-		// maintain the aspect ratio
-		size.IgnoreAspectRatio = false;
-		// resize image
-		img.Resize(size);
-		
-		return img;
-	}
-	catch (Exception)
-	{
-		// if it fails, just return null
-		return null;
-	}
-}
-
-// get icon
-public IMagickImage mainoptionimg, winoptionimg;
-
-if (!UISettings.YYMPS)
-{
-	Icon ExeIcon = ExtractIcon.ExtractIconFromExecutable(runnerFile);
-	var iconbp = ExeIcon.ToBitmap();
-
-	// for main option (172x172)
-	mainoptionimg = Convert_Icon(iconbp, 172, 172);
-
-	// for windows icon (256x256)
-	winoptionimg = Convert_Icon(iconbp, 256, 256);
-}
 #endregion
 
 #region Main UI
@@ -3212,6 +3186,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
 
     return propList;
 }
+
 public bool IsGameAsset(string assetname)
 {
     if (CheckAssetChunks(Data?.Sprites)) return true;
@@ -3462,7 +3437,6 @@ string GetTexturePageSize()
     KeyValuePair<string, int> mostAppeared = appearances.Aggregate((l, r) => l.Value > r.Value ? l : r);
     return mostAppeared.Key;
 }
-
 #endregion
 
 #region Main Resource Dumpers
@@ -6021,16 +5995,13 @@ void DumpOptions()
     }
 
     // icon handling
-    if (!UISettings.YYMPS)
+    if (rData?.iconData != null)
     {
         string iconsDir = windowsOptionsDirectory + "icons\\";
         Directory.CreateDirectory(iconsDir);
 
-        // Icons
-        if (mainoptionimg != null)
-            mainoptionimg.Write(mainOptionsDirectory + "template_icon.png"); // 172x172 Icon for GM UI
-        if (winoptionimg != null)
-            winoptionimg.Write(iconsDir + "icon.ico"); // 256x256 Windows Icon
+        rData.DumpIcon(iconsDir + "icon.ico"); // 256x256 Windows Icon
+        rData.DumpIcon(mainOptionsDirectory + "template_icon.png", 172, 172); // 172x172 Icon for GM UI
     }
 
     // splash screen handling
