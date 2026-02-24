@@ -2702,7 +2702,7 @@ public class UnscrambleWindow : Window
         {
             TileColumns = Math.Max(1, TileColumns - 1);
             ColumnsText.Text = TileColumns.ToString();
-            Render();
+            RebuildCurrentTileset();
         };
         MinusButton.Margin = new Thickness(0, 0, 8, 0);
         stack.Children.Add(MinusButton);
@@ -2721,7 +2721,7 @@ public class UnscrambleWindow : Window
             if (uint.TryParse(ColumnsText.Text, out uint val))
             {
                 TileColumns = Math.Max(1, val);
-                Render();
+                RebuildCurrentTileset();
             }
         };
         #endregion
@@ -2740,7 +2740,7 @@ public class UnscrambleWindow : Window
         {
             TileColumns++;
             ColumnsText.Text = TileColumns.ToString();
-            Render();
+            RebuildCurrentTileset();
         };
         stack.Children.Add(PlusButton);
         #endregion
@@ -2767,7 +2767,7 @@ public class UnscrambleWindow : Window
         };
         PrevButton.Click += (s, e) =>
         {
-            SaveCurrentData();
+            RebuildCurrentTileset();
             CurrentIndex = (CurrentIndex - 1 + Data.Backgrounds.Count) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
@@ -2786,7 +2786,7 @@ public class UnscrambleWindow : Window
         };
         NextButton.Click += (s, e) =>
         {
-            SaveCurrentData();
+            RebuildCurrentTileset();
             CurrentIndex = (CurrentIndex + 1) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
@@ -2834,18 +2834,10 @@ public class UnscrambleWindow : Window
         Title = $"Unscramble Tileset [{CurrentIndex + 1}/{Data.Backgrounds.Count}] - {CurrentBackground.Name.Content}";
         titleText.Text = Title;
         ColumnsText.Text = TileColumns.ToString();
-        Render();
+        RebuildCurrentTileset();
     }
 
-    private void SaveCurrentData() => PopulatePalette();
-
-    public void Render()
-    {
-        PopulatePalette();
-        TilesImage.Source = GetTilesetImage(TileData);
-    }
-
-    private void PopulatePalette()
+    private void RebuildCurrentTileset()
     {
         #region Set Variables
         var bg = CurrentBackground;
@@ -2887,32 +2879,24 @@ public class UnscrambleWindow : Window
         }
         #endregion
         #region Save Image
-        // make blank canvas
-        System.Windows.Controls.Image imgCanvas = new()
-        {
-            Width = TilesImage.Width,
-            Height = TilesImage.Height,
-            Stretch = Stretch.None,
-            SnapsToDevicePixels = true,
-            Source = GetTilesetImage(data) // get actual image
-        };
+        TilesImage.Source = GetTilesetImage();
         // Convert to MagickImage and store
-        if (imgCanvas.Source != null)
-            TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(imgCanvas.Source);
+        if (TilesImage.Source != null)
+            TilesetSaveData.TilesetImageMap[tsName] = ConvertTilesetToMagickImage();
         #endregion
     }
 
-    public ImageSource GetTilesetImage(Layer.LayerTilesData TileData) {
+    private ImageSource GetTilesetImage() {
         return (ImageSource)(new CachedTileDataLoader().Convert(new object[] { TileData }, null, null, null));
     }
 
-    private MagickImage Convert_ImageSource(ImageSource imageSource)
+    private MagickImage ConvertTilesetToMagickImage()
     {
         using var memoryStream = new MemoryStream();
 
         // Encode the BitmapSource into a common format (like PNG)
         var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create((BitmapSource)imageSource));
+        encoder.Frames.Add(BitmapFrame.Create((BitmapSource)TilesImage.Source));
         encoder.Save(memoryStream);
 
         // Reset stream position before reading
