@@ -2897,7 +2897,8 @@ public class UnscrambleWindow : Window
             Source = GetTilesetImage(data) // get actual image
         };
         // Convert to MagickImage and store
-        TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(imgCanvas.Source);
+        if (imgCanvas.Source != null)
+            TilesetSaveData.TilesetImageMap[tsName] = Convert_ImageSource(imgCanvas.Source);
         #endregion
     }
 
