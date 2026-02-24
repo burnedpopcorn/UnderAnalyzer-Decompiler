@@ -2232,13 +2232,13 @@ public class UIWindow : Window
         Content = mainPanel;
 	}
 
-	private CheckBox CreateCheckBox(string content, bool isChecked = false, bool? enabled = true)
+	private CheckBox CreateCheckBox(string content, bool isChecked = false, bool enabled = true)
 	{
 		return new CheckBox
         {
 			Content = content,
 			IsChecked = isChecked,
-			IsEnabled = enabled ?? true,
+			IsEnabled = enabled,
 			Margin = new Thickness(4),
             Background = Theme.ElementBackground,
             Foreground = Theme.WindowForeground
@@ -2339,6 +2339,7 @@ public class AssetPickerWindow : Window
         #region Arrow Buttons
         var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
 
+        #region -> Button
         var addButton = new Button
         { 
 			Content = "->", 
@@ -2359,7 +2360,8 @@ public class AssetPickerWindow : Window
             }
         };
         buttonPanel.Children.Add(addButton);
-
+        #endregion
+        #region <- Button
         var removeButton = new Button
         { 
 			Content = "<-", 
@@ -2378,6 +2380,7 @@ public class AssetPickerWindow : Window
             }
         };
         buttonPanel.Children.Add(removeButton);
+        #endregion
 
         Grid.SetRow(buttonPanel, 1);
         Grid.SetColumn(buttonPanel, 1);
@@ -2411,8 +2414,7 @@ public class AssetPickerWindow : Window
         Grid.SetColumn(listBox, 2);
         grid.Children.Add(listBox);
         #endregion
-
-        // OK Button
+        #region OK Button
         var okButton = new Button
         {
             Content = "OK",
@@ -2425,10 +2427,11 @@ public class AssetPickerWindow : Window
             BorderBrush = Theme.ButtonBrush
         };
         okButton.Click += (s, e) => Close();
-		
+
         Grid.SetRow(okButton, 2);
         Grid.SetColumnSpan(okButton, 3);
         grid.Children.Add(okButton);
+        #endregion
 
         layout.Children.Add(grid);
         Content = layout;
