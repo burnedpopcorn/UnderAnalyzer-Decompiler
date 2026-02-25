@@ -58,7 +58,7 @@ namespace UndertaleModTool
         /// It does that on code compilation.
 
         private Tab _currentTab;
-
+        
         public UndertaleData Data { get; set; }
         public string FilePath { get; set; }
         public string ScriptPath { get; set; } // For the scripting interface specifically

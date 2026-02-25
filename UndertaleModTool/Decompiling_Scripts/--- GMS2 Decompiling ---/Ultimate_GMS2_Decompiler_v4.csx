@@ -3155,7 +3155,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 !rawValue.Contains("\"") // Stop Strings
                 && !Regex.IsMatch(rawValue, @"\W") 
                 && (!char.IsDigit(rawValue[0]) || rawValue.Length > 1) // Stop Ints
-                && IsGameAsset(rawValue) // Checks if value is a Game Asset
+                && Data.IndexOfByName(rawValue) != -1 // Checks if value is a Game Asset
             ) prop.varType = 5;
 
             // Expression
@@ -3173,38 +3173,6 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
     }
 
     return propList;
-}
-
-public bool IsGameAsset(string assetname)
-{
-    if (CheckAssetChunks(Data?.Sprites)) return true;
-    if (CheckAssetChunks(Data?.GameObjects)) return true;
-    if (CheckAssetChunks(Data?.Rooms)) return true;
-    if (CheckAssetChunks(Data?.Sounds)) return true;
-    if (CheckAssetChunks(Data?.Backgrounds)) return true;
-    if (CheckAssetChunks(Data?.Shaders)) return true;
-    if (CheckAssetChunks(Data?.AnimationCurves)) return true;
-    if (CheckAssetChunks(Data?.Sequences)) return true;
-    if (CheckAssetChunks(Data?.Timelines)) return true;
-    if (CheckAssetChunks(Data?.Paths)) return true;
-    if (CheckAssetChunks(Data?.Fonts)) return true;
-    if (CheckAssetChunks(Data?.Scripts)) return true;
-    if (CheckAssetChunks(Data?.Extensions)) return true;
-
-    return false;
-
-    bool CheckAssetChunks(dynamic? Chunk)
-    {
-        if (Chunk is null || Chunk.Count <= 0)
-            return false;
-
-        foreach (var asset in Chunk)
-        {
-            if (asset is null) continue;
-            if (asset.Name.Content == assetname) return true;
-        }
-        return false;
-    }
 }
 
 /// <summary>
@@ -3396,34 +3364,25 @@ string[]? GetTags(dynamic asset)
 
     return obtainedTags;
 }
+
 string GetTexturePageSize()
 {
-    int[] sizes = new int[6];
-    int[] types = [256, 512, 1024, 2048, 4096, 8192];
-    Dictionary<string, int> appearances = new();
-    if (Data.EmbeddedTextures.Count == 0)
-        return "2048x2048";
+    if (Data.EmbeddedTextures.Count == 0) return "2048x2048";
 
-    foreach (UndertaleEmbeddedTexture page in Data.EmbeddedTextures)
+    List<int> TexPageSizes = new() { 256, 512, 1024, 2048, 4096, 8192 };
+    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => size, size => 0);
+
+    foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures)
     {
-        for (int i = 0; i < sizes.Length; i++)
-        {
-            if (page.TextureData.Width == types[i] && page.TextureData.Height == types[i])
-            {
-                string sizeStr = $"{types[i].ToString()}x{types[i].ToString()}";
-                if (appearances.ContainsKey(sizeStr))
-                    appearances[sizeStr]++;
-                else
-                    appearances[sizeStr] = 1;
-            }
-        }
+        int Width = TexPage.TextureData.Width;
+        int Height = TexPage.TextureData.Height;
+
+        if (TexPageSizes.Contains(Width) && TexPageSizes.Contains(Height) && Width == Height)
+            SizesFound[$"{Width}x{Height}"]++;
     }
 
-    if (appearances.Count == 0)
-        return "2048x2048";
-
-    KeyValuePair<string, int> mostAppeared = appearances.Aggregate((l, r) => l.Value > r.Value ? l : r);
-    return mostAppeared.Key;
+    KeyValuePair<string, int> OrderedSizes = SizesFound.Aggregate((l, r) => l.Value > r.Value ? l : r);
+    return OrderedSizes.Value != 0 ? OrderedSizes.Key : "2048x2048";
 }
 #endregion
 
