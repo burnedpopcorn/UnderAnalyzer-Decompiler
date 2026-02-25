@@ -5989,7 +5989,7 @@ void DumpOptions()
         Directory.CreateDirectory(iconsDir);
 
         rData.DumpIcon(iconsDir + "icon.ico"); // 256x256 Windows Icon
-        rData.DumpIcon(mainOptionsDirectory + "template_icon.png", 172, 172); // 172x172 Icon for GM UI
+        rData.DumpIcon(dumpedMainOptions.option_template_icon, 172, 172); // 172x172 Icon for GM UI
     }
 
     // splash screen handling
