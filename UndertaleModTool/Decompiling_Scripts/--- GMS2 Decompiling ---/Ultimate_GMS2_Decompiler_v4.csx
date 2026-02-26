@@ -1,12 +1,14 @@
+
+#region Disclaimer
 /*
     Ultimate_GMS2_Decompiler_v4
         The Ultimate GameMaker Studio 2 Decompiler
 
             New Features by burnedpopcorn180
-            Original Decompiler made by crystallizedsparkle
+            Original Decompiler made by crystallizedsparkle/setupwitch
 
     Originally used 0.0.1-prerelease as a base
-    and added some shit from 0.0.4prerelease and the latest public release 
+    and updated some elements to use code from the latest public release 
     (commit hash 508b4aecc79ebd730bbd198ffed64f3340d23cbc as of time of writing)
     https://github.com/crystallizedsparkle/Gamemaker-LTS-Decompiler/
 
@@ -18,18 +20,20 @@
 
     List of New Features I added
         - Replaced YAML Config with an Advanced GUI
+        - Made Progress Bar display Asset Name currently being decompiled
+        - Added High Quality Icon Extraction
         - Added ability to select individual assets to decompile
-        - Added ability to decompile as a GameMaker Importable Package (YYMPS) rather than a full GameMaker Project
+        - Added ability to decompile as a GameMaker Importable Package (YYMPS) file
         - Added ability to include UnknownEnum Declaration into GlobalInit Script
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
-        - Added High Quality Icon Extraction for Project and Windows Build Icon
-        - Made Progress Bar display Asset Name currently being decompiled
-        - (NEW) Added ability to manually correct Tileset Seperation in the Fix Tileset Window
+        - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
+        - (NEW) Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
 
-    Included LICENSE file applies ONLY to crystallizedsparkle's code
+    Included LICENSE file applies ONLY to setupwitch's code
     Any of my own changes are not under this LICENSE file, and can be freely used by anyone
     (although credit would be nice)
  */
+#endregion
 
 #region Usings
 using System;
@@ -4540,7 +4544,6 @@ void DumpSprite(UndertaleSprite s, int index)
                         break;
                 }
             }
-
             imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
             imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
 
@@ -6153,7 +6156,7 @@ void DumpOptions()
 }
 #endregion
 
-#region Program
+#region Main Program
 
 #region Initialize Variables
 // create Exported_Project folder
