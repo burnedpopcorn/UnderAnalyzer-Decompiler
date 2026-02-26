@@ -423,16 +423,18 @@ public class RunnerData
 
 public class ImageAssetData
 {
-    public ImageAssetData(dynamic image, string filePath, string imageName)
+    public ImageAssetData(dynamic image, string filePath, string imageName, string spriteName)
     {
         this.image = image;
         this.filePath = filePath;
         this.imageName = imageName;
+        this.spriteName = spriteName;
     }
     // either UndertaleTexturePageItem or MagickImage
     public dynamic image { get; set; }
     public string filePath { get; set; }
     public string imageName { get; set; }
+    public string spriteName { get; set; }
     public void Dump(TextureWorker tw)
     {
         if (image is null) return;
@@ -4539,8 +4541,8 @@ void DumpSprite(UndertaleSprite s, int index)
                 }
             }
 
-            imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png"));
-            imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png"));
+            imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
+            imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
 
         }
 
@@ -4680,7 +4682,7 @@ void DumpFont(UndertaleFont f, int index)
     if (fontRange is not null)
         dumpedFont.ranges.Add(fontRange);
 
-    imagesToDump.Add(new ImageAssetData(f.Texture, assetDir, fontName + ".png"));
+    imagesToDump.Add(new ImageAssetData(f.Texture, assetDir, fontName + ".png", fontName));
 
     File.WriteAllText($"{assetDir}{fontName}.yy", JsonSerializer.Serialize(dumpedFont, jsonOptions));
 
@@ -6053,15 +6055,8 @@ async Task DumpTextures()
     {
         await Task.Run(() => Parallel.ForEach(imagesToDump, parallelOptions, imageData =>
         {
+            SetProgressBar(null, $"Dumping Texture: {imageData.spriteName}", imgsdumped++, imagesToDump.Count);
             imageData.Dump(tw);
-			
-			// get filename
-			var imgfilepath = Path.GetFileNameWithoutExtension(imageData.filePath.TrimEnd(Path.DirectorySeparatorChar));
-            // only update progress bar text if its an actual readable name
-            if (!Guid.TryParse(imgfilepath, out _))
-                SetProgressBar(null, $"Dumping Texture: {imgfilepath}", imgsdumped++, imagesToDump.Count);
-            else
-                imgsdumped++;
         }));
     }
     watch.Stop();
