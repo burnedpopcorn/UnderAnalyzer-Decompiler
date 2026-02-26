@@ -2156,7 +2156,7 @@ public class UIWindow : Window
             "\nUsing this WILL make force you to update to 2022.9 or newer" +
 
             "\n\nExample:" +
-            "\nstring(\"Value: {0}\", variable); -> $\"{variable}\";";
+            "\nstring(\"Value: {0}\", variable); -> $\"Value: {variable}\";";
 
         settingsGrid.Children.Add(_LOG);
 		settingsGrid.Children.Add(_YYMPS);
