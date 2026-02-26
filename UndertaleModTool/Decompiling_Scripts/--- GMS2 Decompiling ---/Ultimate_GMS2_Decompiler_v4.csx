@@ -42,10 +42,12 @@ using System.Security;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1763,7 +1765,9 @@ public static class UISettings
         // If Fix Tileset
         FIXTILE,
         // Other Options
-        LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, GENROOM;
+        LOG, YYMPS, ENUM, ADDFILES, FIXAUDIO, GENROOM, 
+        // Clean GML Options
+        DSCLEAN, STRCLEAN;
 
     // Asset Picker List and if enabled
     public static List<string> CSTM = new List<string>();
@@ -2117,34 +2121,54 @@ public class UIWindow : Window
 			Margin = new Thickness(0, 12, 0, 4)
 		});
 
-		var settingsGrid = new UniformGrid { Columns = 3 };
+		var settingsGrid = new UniformGrid { Columns = 4 };
 
 		var _LOG = CreateCheckBox("Log Assets");
-		_LOG.ToolTip = "Logs every Asset that gets decompiled\nMostly for Debugging, will clog up the logs if enabled.";
+		_LOG.ToolTip = "Logs every Asset that gets decompiled" +
+            "\nMostly for Debugging, will clog up the logs if enabled.";
 
 		var _YYMPS = CreateCheckBox("Export as YYMPS");
-		_YYMPS.ToolTip = "Exports decompiled resources\nas a GameMaker Importable Package.";
+		_YYMPS.ToolTip = "Exports decompiled resources as a GameMaker Importable Package." +
+            "\nUseful for importing assets from the loaded data.win into your own GameMaker project";
 
 		var _ENUM = CreateCheckBox("Bitwise Enums");
 		_ENUM.ToolTip = "Turns Unknown Enums into Bitwise Operations.\n\nExample:\nUnknownEnum.Value_1 -> (1 << 0)";
 
-		var _ADDFILES = CreateCheckBox("Add Datafiles", true);
-		_ADDFILES.ToolTip = "Attempts to automatically add included datafiles\nMight be inaccurate and might miss some files";
+        var _DSCLEAN = CreateCheckBox("Clean DS functions", true);
+        _DSCLEAN.ToolTip = "Converts all DS functions to their accessor syntax." +
+            "\n\nExample:" +
+            "\nds_map_set(map, key, value); -> map[? key] = value;";
+
+        var _ADDFILES = CreateCheckBox("Add Datafiles", true);
+		_ADDFILES.ToolTip = "Automatically add included datafiles" +
+            "\n(Note that it will copy any external file in the same directory as the data.win)";
 
 		var _FIXA = CreateCheckBox("Fix Audio");
-		_FIXA.ToolTip = "If a .wav file is labelled a .mp3, this setting will label it back to .wav.";
+		_FIXA.ToolTip = "Labels audio files with their technically correct file extension." +
+            "\nSo if a .wav file is incorrectly labelled as an .mp3 in the data.win, this setting will label it back to .wav.";
 
 		var _GENROOM = CreateCheckBox("Generate Room Name");
 		_GENROOM.ToolTip = "Simulates GameMaker asset naming behavior.";
 
-		settingsGrid.Children.Add(_LOG);
+        var _STRCLEAN = CreateCheckBox("Clean String Function", Data.IsVersionAtLeast(2022, 9));
+        _STRCLEAN.ToolTip = "Convert all string() functions to literal strings." +
+
+            "\n\nNOTE: GMS2 versions older than 2022.9 do not support this" +
+            "\nUsing this WILL make force you to update to 2022.9 or newer" +
+
+            "\n\nExample:" +
+            "\nstring(\"Value: {0}\", variable); -> $\"{variable}\";";
+
+        settingsGrid.Children.Add(_LOG);
 		settingsGrid.Children.Add(_YYMPS);
 		settingsGrid.Children.Add(_ENUM);
-		settingsGrid.Children.Add(_ADDFILES);
+        settingsGrid.Children.Add(_DSCLEAN);
+        settingsGrid.Children.Add(_ADDFILES);
 		settingsGrid.Children.Add(_FIXA);
 		settingsGrid.Children.Add(_GENROOM);
+        settingsGrid.Children.Add(_STRCLEAN);
 
-		mainPanel.Children.Add(settingsGrid);
+        mainPanel.Children.Add(settingsGrid);
         #endregion
         #region CPU Controls
         var cpuLabel = new Label
@@ -2214,9 +2238,11 @@ public class UIWindow : Window
             UISettings.LOG = _LOG.IsChecked == true;
             UISettings.YYMPS = _YYMPS.IsChecked == true;
             UISettings.ENUM = _ENUM.IsChecked == true;
+            UISettings.DSCLEAN = _DSCLEAN.IsChecked == true;
             UISettings.ADDFILES = _ADDFILES.IsChecked == true;
             UISettings.FIXAUDIO = _FIXA.IsChecked == true;
             UISettings.GENROOM = _GENROOM.IsChecked == true;
+            UISettings.STRCLEAN = _STRCLEAN.IsChecked == true;
 
             UISettings.CSTM_Enable = _CSTM.IsChecked == true;
 
@@ -3280,6 +3306,7 @@ public static Dictionary<string, string> ObjectPropertiesToDictionary(this strin
 
     return objectProperties;
 }
+
 /// <summary>
 /// decompiles any <c>UndertaleCode</c>
 /// </summary>
@@ -3292,10 +3319,10 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
     {
         try
         {
-            DecompileContext context = new DecompileContext(globalDecompileContext, code, (set is not null ? set : decompilerSettings));
+            DecompileContext context = new(globalDecompileContext, code, (set is not null ? set : decompilerSettings));
             string dumpedCode = context.DecompileToString();
 
-            // enum replacement.
+            // UnknownEnum to Bitwise Converter
             if (UISettings.ENUM)
             {
                 // crystal didn't account for this, so i'll do it i guess
@@ -3313,6 +3340,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                 // remove "gml_Script_" from things
                 dumpedCode = Regex.Replace(dumpedCode, "gml_Script_", "");
             }
+
             // generated room stuff idk
             if (UISettings.GENROOM)
             {
@@ -3325,6 +3353,16 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                     return $"{prefix}{hexValue}";
                 });
             }
+
+            // check for string() functions
+            if (UISettings.STRCLEAN)
+                dumpedCode = CheckStringFunction(dumpedCode);
+
+            // check for ds funcs that can be converted to use accessors
+            if (UISettings.DSCLEAN)
+                foreach (var accessor in AccessorMap)
+                    dumpedCode = CheckDSFunction(dumpedCode, accessor.Key, accessor.Value);
+
             foreach (IDecompileWarning error in context.Warnings)
                 errorList.Add($"{error.CodeEntryName} | {error.Message}");
 
@@ -3334,13 +3372,163 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
 
             return dumpedCode;
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             errorList.Add($"{code.Name.Content} | Failed to decompile.");
         }
     }
     return null;
 }
+
+#region GML Cleaner
+
+#region Accessors
+public struct AccessorMapping
+{
+    public string Symbol;
+    public int ArgCount;
+    public bool IsSetter;
+    public AccessorMapping(string s, int c, bool set)
+    {
+        Symbol = s;
+        ArgCount = c;
+        IsSetter = set;
+    }
+}
+
+public static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
+{
+    { "ds_list_find_value", new AccessorMapping("|", 2, false) },
+    { "ds_list_set",        new AccessorMapping("|", 3, true)  },
+
+    { "ds_map_find_value",  new AccessorMapping("?", 2, false) },
+    { "ds_map_set",         new AccessorMapping("?", 3, true)  },
+    { "ds_map_replace",     new AccessorMapping("?", 3, true)  },
+
+    { "ds_grid_get",        new AccessorMapping("#", 3, false) },
+    { "ds_grid_set",        new AccessorMapping("#", 4, true)  }
+};
+#endregion
+
+public static string CheckStringFunction(string code)
+{
+    int searchPos = 0;
+    string pattern = @"\bstring\s*\(";
+
+    while (searchPos < code.Length)
+    {
+        Match match = Regex.Match(code.Substring(searchPos), pattern);
+        if (!match.Success) break;
+
+        int startPos = searchPos + match.Index;
+        int parenStart = startPos + match.Length - 1;
+
+        var (args, endPos) = GetBalancedArgs(code, parenStart);
+
+        if (args != null && args.Count > 1)
+        {
+            string formatString = args[0].Trim('"', '\'');
+            string newText = formatString;
+
+            // Replace {0} with {arg}
+            for (int i = 1; i < args.Count; i++)
+            {
+                string placeholder = "{" + (i - 1) + "}";
+                newText = newText.Replace(placeholder, "{" + args[i] + "}");
+            }
+
+            newText = $"$\"{newText}\"";
+
+            code = code.Remove(startPos, endPos - startPos).Insert(startPos, newText);
+            searchPos = startPos + newText.Length;
+        }
+        else
+            searchPos = startPos + match.Length;
+    }
+    return code;
+}
+
+public static string CheckDSFunction(string code, string func, AccessorMapping map)
+{
+    int searchPos = 0;
+    string pattern = $@"\b{Regex.Escape(func)}\s*\(";
+
+    while (searchPos < code.Length)
+    {
+        Match match = Regex.Match(code.Substring(searchPos), pattern);
+        if (!match.Success) break;
+
+        int startPos = searchPos + match.Index;
+        int parenStart = startPos + match.Length - 1;
+
+        var (args, endPos) = GetBalancedArgs(code, parenStart);
+
+        if (args != null && args.Count == map.ArgCount)
+        {
+            string newText = map.Symbol == "#"
+                ? $"{args[0]}[# {args[1]}, {args[2]}]"  // if grid
+                : $"{args[0]}[{map.Symbol} {args[1]}]"; // if list or map
+
+            if (map.IsSetter)
+                newText += $" = {args[args.Count - 1]}";
+
+            code = code.Remove(startPos, endPos - startPos).Insert(startPos, newText);
+            searchPos = startPos + newText.Length;
+        }
+        else
+            searchPos = startPos + match.Length;
+    }
+    return code;
+}
+
+public static (List<string> args, int endPos) GetBalancedArgs(string text, int startIndex)
+{
+    List<string> args = new();
+    StringBuilder currentArg = new();
+
+    int parenDepth = 0, bracketDepth = 0;
+    bool inString = false;
+    char? quoteChar = null;
+
+    for (int i = startIndex + 1; i < text.Length; i++)
+    {
+        char c = text[i];
+
+        // String boundary logic (skipping escaped quotes)
+        if ((c == '"' || c == '\'') && (i == 0 || text[i - 1] != '\\'))
+        {
+            if (!inString) { inString = true; quoteChar = c; }
+            else if (c == quoteChar) inString = false;
+        }
+
+        if (!inString)
+        {
+            switch (c)
+            {
+                case '(': parenDepth++; break;
+                case ')': parenDepth--; break;
+                case '[': bracketDepth++; break;
+                case ']': bracketDepth--; break;
+            }
+
+            if (c == ',' && parenDepth == 0 && bracketDepth == 0)
+            {
+                args.Add(currentArg.ToString().Trim());
+                currentArg.Clear();
+                continue;
+            }
+
+            if (parenDepth < 0)
+            {
+                args.Add(currentArg.ToString().Trim());
+                return (args, i + 1);
+            }
+        }
+        currentArg.Append(c);
+    }
+    return (null, -1);
+}
+#endregion
+
 /// <summary>
 /// obtains the <c>tags</c> variable from any asset
 /// </summary>
@@ -3370,7 +3558,7 @@ string GetTexturePageSize()
     if (Data.EmbeddedTextures.Count == 0) return "2048x2048";
 
     List<int> TexPageSizes = new() { 256, 512, 1024, 2048, 4096, 8192 };
-    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => size, size => 0);
+    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => $"{size}x{size}", size => 0);
 
     foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures)
     {
