@@ -3322,7 +3322,8 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
             DecompileContext context = new(globalDecompileContext, code, (set is not null ? set : decompilerSettings));
             string dumpedCode = context.DecompileToString();
 
-            // UnknownEnum to Bitwise Converter
+            // Code Filters
+            #region UnknownEnum to Bitwise Converter
             if (UISettings.ENUM)
             {
                 // crystal didn't account for this, so i'll do it i guess
@@ -3340,8 +3341,8 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                 // remove "gml_Script_" from things
                 dumpedCode = Regex.Replace(dumpedCode, "gml_Script_", "");
             }
-
-            // generated room stuff idk
+            #endregion
+            #region generated room stuff idk
             if (UISettings.GENROOM)
             {
                 // if it has "graphic_" or "inst_"
@@ -3353,20 +3354,55 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
                     return $"{prefix}{hexValue}";
                 });
             }
-
-            // check for string() functions
+            #endregion
+            #region Clean string() Func
             if (UISettings.STRCLEAN)
-                dumpedCode = CheckStringFunction(dumpedCode);
+            {
+                dumpedCode = ParseGMLCode(dumpedCode, @"\bstring\s*\(", args =>
+                {
+                    if (args.Count <= 1) 
+                        return null;
 
-            // check for ds funcs that can be converted to use accessors
+                    string formatString = args[0].Trim('"', '\'');
+
+                    for (int i = 1; i < args.Count; i++)
+                        formatString = formatString.Replace("{" + (i - 1) + "}", "{" + args[i] + "}");
+
+                    return $"$\"{formatString}\"";
+                });
+            }
+            #endregion
+            #region Clean ds_* Funcs
             if (UISettings.DSCLEAN)
+            {
                 foreach (var accessor in AccessorMap)
-                    dumpedCode = CheckDSFunction(dumpedCode, accessor.Key, accessor.Value);
+                {
+                    string pattern = $@"\b{Regex.Escape(accessor.Key)}\s*\(";
+                    var map = accessor.Value;
 
+                    dumpedCode = ParseGMLCode(dumpedCode, pattern, args =>
+                    {
+                        if (args.Count != map.ArgCount) 
+                            return null;
+
+                        string transformed = map.Symbol == "#"
+                            ? $"{args[0]}[# {args[1]}, {args[2]}]"  // Grid
+                            : $"{args[0]}[{map.Symbol} {args[1]}]"; // List/Map
+
+                        if (map.IsSetter)
+                            transformed += $" = {args[^1]}";
+
+                        return transformed;
+                    });
+                }
+            }
+            #endregion
+
+            // report any decompiler warnings and errors
             foreach (IDecompileWarning error in context.Warnings)
                 errorList.Add($"{error.CodeEntryName} | {error.Message}");
 
-            // logspam the line
+            // Spam the line
             if (UISettings.LOG)
                 PushToLog($"'{code.Name.Content}' successfully decompiled.");
 
@@ -3409,123 +3445,97 @@ public static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
 };
 #endregion
 
-public static string CheckStringFunction(string code)
+public static string ParseGMLCode(string code, string pattern, Func<List<string>, string> formatFunc)
 {
     int searchPos = 0;
-    string pattern = @"\bstring\s*\(";
-
     while (searchPos < code.Length)
     {
+        // search for pattern
         Match match = Regex.Match(code.Substring(searchPos), pattern);
-        if (!match.Success) break;
+
+        // if it wasn't found, leave
+        if (!match.Success) 
+            break;
 
         int startPos = searchPos + match.Index;
         int parenStart = startPos + match.Length - 1;
 
-        var (args, endPos) = GetBalancedArgs(code, parenStart);
+        // get function information
+        var (args, endPos) = GetFunctionInfo(code, parenStart);
 
-        if (args != null && args.Count > 1)
+        if (args != null)
         {
-            string formatString = args[0].Trim('"', '\'');
-            string newText = formatString;
+            // clean the function
+            string cleanedFunc = formatFunc(args);
 
-            // Replace {0} with {arg}
-            for (int i = 1; i < args.Count; i++)
+            if (cleanedFunc != null)
             {
-                string placeholder = "{" + (i - 1) + "}";
-                newText = newText.Replace(placeholder, "{" + args[i] + "}");
-            }
-
-            newText = $"$\"{newText}\"";
-
-            code = code.Remove(startPos, endPos - startPos).Insert(startPos, newText);
-            searchPos = startPos + newText.Length;
-        }
-        else
-            searchPos = startPos + match.Length;
-    }
-    return code;
-}
-
-public static string CheckDSFunction(string code, string func, AccessorMapping map)
-{
-    int searchPos = 0;
-    string pattern = $@"\b{Regex.Escape(func)}\s*\(";
-
-    while (searchPos < code.Length)
-    {
-        Match match = Regex.Match(code.Substring(searchPos), pattern);
-        if (!match.Success) break;
-
-        int startPos = searchPos + match.Index;
-        int parenStart = startPos + match.Length - 1;
-
-        var (args, endPos) = GetBalancedArgs(code, parenStart);
-
-        if (args != null && args.Count == map.ArgCount)
-        {
-            string newText = map.Symbol == "#"
-                ? $"{args[0]}[# {args[1]}, {args[2]}]"  // if grid
-                : $"{args[0]}[{map.Symbol} {args[1]}]"; // if list or map
-
-            if (map.IsSetter)
-                newText += $" = {args[args.Count - 1]}";
-
-            code = code.Remove(startPos, endPos - startPos).Insert(startPos, newText);
-            searchPos = startPos + newText.Length;
-        }
-        else
-            searchPos = startPos + match.Length;
-    }
-    return code;
-}
-
-public static (List<string> args, int endPos) GetBalancedArgs(string text, int startIndex)
-{
-    List<string> args = new();
-    StringBuilder currentArg = new();
-
-    int parenDepth = 0, bracketDepth = 0;
-    bool inString = false;
-    char? quoteChar = null;
-
-    for (int i = startIndex + 1; i < text.Length; i++)
-    {
-        char c = text[i];
-
-        // String boundary logic (skipping escaped quotes)
-        if ((c == '"' || c == '\'') && (i == 0 || text[i - 1] != '\\'))
-        {
-            if (!inString) { inString = true; quoteChar = c; }
-            else if (c == quoteChar) inString = false;
-        }
-
-        if (!inString)
-        {
-            switch (c)
-            {
-                case '(': parenDepth++; break;
-                case ')': parenDepth--; break;
-                case '[': bracketDepth++; break;
-                case ']': bracketDepth--; break;
-            }
-
-            if (c == ',' && parenDepth == 0 && bracketDepth == 0)
-            {
-                args.Add(currentArg.ToString().Trim());
-                currentArg.Clear();
+                code = code.Remove(startPos, endPos - startPos).Insert(startPos, cleanedFunc);
+                searchPos = startPos + cleanedFunc.Length;
                 continue;
             }
-
-            if (parenDepth < 0)
-            {
-                args.Add(currentArg.ToString().Trim());
-                return (args, i + 1);
-            }
         }
-        currentArg.Append(c);
+
+        // set pos past this for the next iteration
+        searchPos = startPos + match.Length;
     }
-    return (null, -1);
+    return code;
+
+
+
+    (List<string> args, int endPos) GetFunctionInfo(string code, int parenStart)
+    {
+        List<string> args = new();
+        StringBuilder currentArg = new();
+
+        int parenDepth = 0, bracketDepth = 0;
+        bool inString = false;
+        char? quoteChar = null;
+
+        for (int i = parenStart + 1; i < code.Length; i++)
+        {
+            char c = code[i];
+
+            // skip escape quotes
+            if ((c == '"' || c == '\'') && (i == 0 || code[i - 1] != '\\'))
+            {
+                if (!inString)
+                {
+                    inString = true;
+                    quoteChar = c;
+                }
+                else if (c == quoteChar)
+                    inString = false;
+            }
+
+            if (!inString)
+            {
+                // update depth
+                switch (c)
+                {
+                    case '(': parenDepth++; break;
+                    case ')': parenDepth--; break;
+                    case '[': bracketDepth++; break;
+                    case ']': bracketDepth--; break;
+                }
+                // if onto the next argument in function, get it
+                if (c == ',' && parenDepth == 0 && bracketDepth == 0)
+                {
+                    args.Add(currentArg.ToString().Trim());
+                    currentArg.Clear();
+                    continue;
+                }
+                // if the function has been entirely read, return values
+                if (parenDepth < 0)
+                {
+                    args.Add(currentArg.ToString().Trim());
+                    return (args, i + 1);
+                }
+            }
+            currentArg.Append(c);
+        }
+        return (null, -1);
+    }
 }
 #endregion
 
