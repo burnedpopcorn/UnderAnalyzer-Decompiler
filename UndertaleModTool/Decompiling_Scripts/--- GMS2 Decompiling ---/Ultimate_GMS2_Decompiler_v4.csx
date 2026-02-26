@@ -423,14 +423,7 @@ public class RunnerData
 
 public class ImageAssetData
 {
-    public ImageAssetData(UndertaleTexturePageItem image, string filePath, string imageName)
-    {
-        this.image = image;
-        this.filePath = filePath;
-        this.imageName = imageName;
-    }
-
-    public ImageAssetData(MagickImage image, string filePath, string imageName)
+    public ImageAssetData(dynamic image, string filePath, string imageName)
     {
         this.image = image;
         this.filePath = filePath;
@@ -2953,25 +2946,25 @@ if (!UISettings.DUMP)
 #region Useful Tools
 
 // this dictionary holds all the names of the assets
-public static readonly Dictionary<GMAssetType, string> assetTypes = new Dictionary<GMAssetType, string>
+public static readonly Dictionary<GMAssetType, string> assetTypes = new()
 {
-{ GMAssetType.None, "" },
-{ GMAssetType.Room, "Room" },
-{ GMAssetType.Sprite, "Sprite" },
-{ GMAssetType.Object, "Object" },
-{ GMAssetType.Script, "Script" },
-{ GMAssetType.Sound, "Sound" },
-{ GMAssetType.AudioGroup, "AudioGroup" },
-{ GMAssetType.TileSet, "Tile Set" },
-{ GMAssetType.Note, "Note" },
-{ GMAssetType.TextureGroup, "TextureGroup" },
-{ GMAssetType.Font, "Font" },
-{ GMAssetType.Sequence, "Sequence" },
-{ GMAssetType.Shader, "Shader" },
-{ GMAssetType.Extension, "Extension" },
-{ GMAssetType.Path, "Path" },
-{ GMAssetType.AnimationCurve, "Animation Curve" },
-{ GMAssetType.Timeline, "Timeline" },
+    { GMAssetType.None, "" },
+    { GMAssetType.Room, "Room" },
+    { GMAssetType.Sprite, "Sprite" },
+    { GMAssetType.Object, "Object" },
+    { GMAssetType.Script, "Script" },
+    { GMAssetType.Sound, "Sound" },
+    { GMAssetType.AudioGroup, "AudioGroup" },
+    { GMAssetType.TileSet, "Tile Set" },
+    { GMAssetType.Note, "Note" },
+    { GMAssetType.TextureGroup, "TextureGroup" },
+    { GMAssetType.Font, "Font" },
+    { GMAssetType.Sequence, "Sequence" },
+    { GMAssetType.Shader, "Shader" },
+    { GMAssetType.Extension, "Extension" },
+    { GMAssetType.Path, "Path" },
+    { GMAssetType.AnimationCurve, "Animation Curve" },
+    { GMAssetType.Timeline, "Timeline" },
 };
 
 string IdToHex(uint id)
@@ -3319,7 +3312,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
     {
         try
         {
-            DecompileContext context = new(globalDecompileContext, code, (set is not null ? set : decompilerSettings));
+            DecompileContext context = new(globalDecompileContext, code, (set != null ? set : decompilerSettings));
             string dumpedCode = context.DecompileToString();
 
             // Code Filters
@@ -6064,11 +6057,8 @@ async Task DumpTextures()
 			
 			// get filename
 			var imgfilepath = Path.GetFileNameWithoutExtension(imageData.filePath.TrimEnd(Path.DirectorySeparatorChar));
-            // check if its garbage text (technically a GUID, but whatever)
-            var isGUID = Guid.TryParse(imgfilepath, out _);
-
             // only update progress bar text if its an actual readable name
-            if (!isGUID)
+            if (!Guid.TryParse(imgfilepath, out _))
                 SetProgressBar(null, $"Dumping Texture: {imgfilepath}", imgsdumped++, imagesToDump.Count);
             else
                 imgsdumped++;
@@ -6169,6 +6159,8 @@ void DumpOptions()
 #endregion
 
 #region Program
+
+#region Initialize Variables
 // create Exported_Project folder
 Directory.CreateDirectory(scriptDir);
 
@@ -6193,6 +6185,9 @@ finalExport.MetaData.IDEVersion = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.M
 
 // parse the options.ini file, some extension options export to it.
 var iniData = IniParser.ParseToDictionary(rootDir + "options.ini");
+#endregion
+#region Initialize Dumping
+SetUMTConsoleText("Initializing...");
 
 // get amount of assets to dump
 public int toDump =
@@ -6211,8 +6206,6 @@ public int toDump =
            (UISettings.BGND ? (Data.Backgrounds.Count * 2) : 0) +
             (UISettings.SEQN ? Data.Sequences.Count : 0) +
              (UISettings.TMLN ? Data.Timelines.Count : 0));
-
-SetUMTConsoleText("Initializing...");
 
 // doing this before main operation because its needed
 await DumpTexGroups();
@@ -6251,12 +6244,14 @@ foreach (UndertaleScript scr in Data.Scripts)
     scriptsToDump.Add(scr);
 }
 toDump += (UISettings.SCPT ? scriptsToDump.Count : 0);
+#endregion
 
+var totalTime = Stopwatch.StartNew();
+
+#region Dump Main Assets
 SetProgressBar(null, "Exporting Assets...", 0, toDump);
 StartProgressBarUpdater();
 SetUMTConsoleText("Running Decompiler...");
-
-var totalTime = Stopwatch.StartNew();
 
 await Task.WhenAll(
     DumpDatafiles(),
@@ -6277,7 +6272,8 @@ await Task.WhenAll(
 
 await StopProgressBarUpdater();
 HideProgressBar();
-
+#endregion
+#region Dump Textures
 public int imgsdumped = 0;
 if (imagesToDump.Count > 0)
 {
@@ -6289,6 +6285,8 @@ if (imagesToDump.Count > 0)
     await StopProgressBarUpdater();
     HideProgressBar();
 }
+#endregion
+#region README Note
 public int noteIndex = 0; // for the order
 string readMeMessage =
 $@"A Decompilation of {Data.GeneralInfo.DisplayName.Content}
@@ -6303,6 +6301,7 @@ Project Decompiled by Ultimate_GMS2_Decompiler_v4.csx
 // create the readme
 if (!UISettings.YYMPS)
     CreateNote("README", "DecompilerGenerated", readMeMessage);
+#endregion
 
 // Custom Stuff
 #region Extract Asset Order Note
@@ -6537,6 +6536,7 @@ if (UISettings.SCPT
 }
 #endregion
 
+#region Finish Export
 void CreateYYP() 
 {
     // order all of the resources correctly and Make YYP
@@ -6606,6 +6606,7 @@ else
     if (errorList.Count > 0)
         File.WriteAllLines(scriptDir + "errors.log", errorList);
 }
+#endregion
 
 totalTime.Stop();
 PushToLog($"All assets complete! Took {totalTime.ElapsedMilliseconds} ms");
