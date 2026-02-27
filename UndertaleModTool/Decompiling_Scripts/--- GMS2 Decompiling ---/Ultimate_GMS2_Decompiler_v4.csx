@@ -4515,27 +4515,34 @@ void DumpSprite(UndertaleSprite s, int index)
             string sType = string.Empty;
 
             // Vectors can't be supported because UTMT doesn't fully export all of its info
-            // and SWFs are a bitch and a half just to load into GameMaker
+            // and SWFs are a bitch and a half just to load into GameMaker, and sometimes crash UTMT
             // so since I can't even test SWFs, it probably won't happen either
             switch ((int)s.SSpriteType)
             {
                 // Normal (Raster)
                 case 0:
-                    // Set texture to be dumped later (Change to raster only later)
-                    Directory.CreateDirectory(layersPath + frameGUID);
+                    // Set frames to be dumped later
+                    Directory.CreateDirectory($"{layersPath}{frameGUID}");
                     imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
                     imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
                     break;
 
                 // SPINE
                 case 2: 
+                    // This approach assumes that the SPINE sprite only has one frame
+                    // I used the coin template to test, and that only had one frame
+                    // but I think its possible that there can be more than one, but idk
+
+                    // Dump SPINE Json and Atlas files
                     File.WriteAllText($"{assetDir}{frameGUID}.json", s.SpineJSON);
                     File.WriteAllText($"{assetDir}{frameGUID}.atlas", s.SpineAtlas);
 
+                    // Get the main texture filename from the first line in the atlas (includes extension)
                     string SpineTextureName = string.Empty;
                     using (StringReader r = new(s.SpineAtlas))
                         SpineTextureName = r.ReadLine();
 
+                    // Set frames to be dumped later
                     imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
                     if (SpineTextureName != string.Empty)
                         imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, SpineTextureName, spriteName));
