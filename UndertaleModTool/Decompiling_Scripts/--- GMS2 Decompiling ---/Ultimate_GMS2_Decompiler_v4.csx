@@ -230,7 +230,6 @@ public enum eOrigin
 }
 
 #endregion
-
 #region Internal Data Classes
 // really hacky way to get enums
 public class MacroData
@@ -448,7 +447,6 @@ public class ImageAssetData
 }
 
 #endregion
-
 #region Common Classes
 
 public class GMResource
@@ -625,7 +623,6 @@ public class GMProject : GMResource
 }
 
 #endregion
-
 #region GMObject Class
 
 public class GMObject : GMResource
@@ -696,7 +693,6 @@ public class GMOverriddenProperty : GMResource
 }
 
 #endregion
-
 #region GMScript Class
 
 public class GMScript : GMResource
@@ -712,7 +708,6 @@ public class GMScript : GMResource
 }
 
 #endregion
-
 #region GMSound Class
 
 public class GMSound : GMResource
@@ -738,7 +733,6 @@ public class GMSound : GMResource
 }
 
 #endregion
-
 #region GMRoom Class
 
 public class GMRoom : GMResource
@@ -995,7 +989,6 @@ public class GMRoom : GMResource
 }
 
 #endregion
-
 #region GMAnimCurve Class
 
 public class GMPoint
@@ -1043,7 +1036,6 @@ public class GMAnimCurve : GMResource
 }
 
 #endregion
-
 #region GMSprite Class
 
 public class GMSprite : GMResource
@@ -1116,7 +1108,6 @@ public class GMSprite : GMResource
 }
 
 #endregion
-
 #region GMSequence Class
 
 public class GMSequence : GMResource
@@ -1307,7 +1298,6 @@ public class MomentsEventKeyframe : GMResource
 }
 
 #endregion
-
 #region GMNote Class
 
 public class GMNotes : GMResource
@@ -1321,7 +1311,6 @@ public class GMNotes : GMResource
 }
 
 #endregion
-
 #region GMFont Class
 
 public class GMFont : GMResource
@@ -1385,7 +1374,6 @@ public class GMFont : GMResource
 
 
 #endregion
-
 #region GMShader Class
 
 public class GMShader : GMResource
@@ -1399,7 +1387,6 @@ public class GMShader : GMResource
 }
 
 #endregion
-
 #region GMExtension Class
 
 public class GMExtension : GMResource
@@ -1526,7 +1513,6 @@ public class GMExtension : GMResource
 
 
 #endregion
-
 #region GMPath Class
 
 public class GMPath : GMResource
@@ -1553,7 +1539,24 @@ public class GMPath : GMResource
 }
 
 #endregion
+#region  GMTimeline Class
 
+public class GMTimeline : GMResource
+{
+    public GMTimeline(string name)
+    {
+        this.name = name;
+    }
+    public List<GMMoment> momentList { get; set; } = new();
+
+    public class GMMoment : GMResource
+    {
+        public uint moment { get; set; }
+        public GMEvent evnt { get; set; }
+    }
+}
+
+#endregion
 #region GMTileSet Class
 
 public class GMTileSet : GMResource
@@ -1614,7 +1617,6 @@ public class GMTileSet : GMResource
 }
 
 #endregion
-
 #region GMOptions Class
 
 public class GMMainOptions : GMResource
@@ -1690,25 +1692,6 @@ public class ObjectProperty
         Prop = prop;
     }
 }
-
-#region  GMTimeline Class
-
-public class GMTimeline : GMResource
-{
-    public GMTimeline(string name)
-    {
-        this.name = name;
-    }
-    public List<GMMoment> momentList { get; set; } = new();
-
-    public class GMMoment : GMResource
-    {
-        public uint moment { get; set; }
-        public GMEvent evnt { get; set; }
-    }
-}
-
-#endregion
 
 #endregion
 
@@ -4418,7 +4401,9 @@ void DumpSprite(UndertaleSprite s, int index)
     if (spriteName.StartsWith("_filter_") || spriteName.StartsWith("_effect_")) return;
 
     Directory.CreateDirectory(assetDir);
-    Directory.CreateDirectory(layersPath);
+
+    if ((int)s.SSpriteType == 0) // if normal, make layers path
+        Directory.CreateDirectory(layersPath);
 
     GMSprite dumpedSprite = new(spriteName)
     {
@@ -4431,6 +4416,7 @@ void DumpSprite(UndertaleSprite s, int index)
         bbox_top = s.MarginTop,
         width = (int)s.Width,
         height = (int)s.Height,
+        type = (int)s.SSpriteType,
         // taken from quantum (thanks)
         collisionKind = s.SepMasks switch
         {
@@ -4522,33 +4508,49 @@ void DumpSprite(UndertaleSprite s, int index)
 
         string frameGUID = Guid.NewGuid().ToString();
 
-        // create the directory for the frame
-        Directory.CreateDirectory(layersPath + frameGUID);
-
         if (exportFrames)
         {
-            using (TextureWorker tw = new TextureWorker())
+            dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+
+            string sType = string.Empty;
+
+            // Vectors can't be supported because UTMT doesn't fully export all of its info
+            // and SWFs are a bitch and a half just to load into GameMaker
+            // so since I can't even test SWFs, it probably won't happen either
+            switch ((int)s.SSpriteType)
             {
-                switch ((int)s.SSpriteType)
-                {
-                    case 0: // raster
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
-                    case 1: // vector
-                        errorList.Add($"{dumpedSprite.name} | SWF sprites are not implemented, set to blank image.");
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
-                    case 2: // SPINE
-                        errorList.Add($"{dumpedSprite.name} | SPINE sprites are not implemented, set to blank image.");
-                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
-                        break;
-                }
+                // Normal (Raster)
+                case 0:
+                    // Set texture to be dumped later (Change to raster only later)
+                    Directory.CreateDirectory(layersPath + frameGUID);
+                    imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
+                    imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
+                    break;
+
+                // SPINE
+                case 2: 
+                    File.WriteAllText($"{assetDir}{frameGUID}.json", s.SpineJSON);
+                    File.WriteAllText($"{assetDir}{frameGUID}.atlas", s.SpineAtlas);
+
+                    string SpineTextureName = string.Empty;
+                    using (StringReader r = new(s.SpineAtlas))
+                        SpineTextureName = r.ReadLine();
+
+                    imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
+                    if (SpineTextureName != string.Empty)
+                        imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, SpineTextureName, spriteName));
+
+                    break;
+
+                // SWF
+                case 1: sType = "SWF"; break;
+                // Vector (SVGs)
+                case 3: sType = "Vector"; break;
             }
-            imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
-            imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
 
+            if (sType != string.Empty)
+                errorList.Add($"{dumpedSprite.name} | {sType} sprites are not implemented, set to blank image.");
         }
-
 
         Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
         {
@@ -6134,7 +6136,7 @@ void DumpOptions()
         Directory.CreateDirectory(iconsDir);
 
         rData.DumpIcon(iconsDir + "icon.ico"); // 256x256 Windows Icon
-        rData.DumpIcon(dumpedMainOptions.option_template_icon, 172, 172); // 172x172 Icon for GM UI
+        rData.DumpIcon(mainOptionsDirectory + "template_icon.png", 172, 172); // 172x172 Icon for GM UI
     }
 
     // splash screen handling
@@ -6289,7 +6291,7 @@ public int noteIndex = 0; // for the order
 string readMeMessage =
 $@"A Decompilation of {Data.GeneralInfo.DisplayName.Content}
 
-Original GameMaker Version: {Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}
+Original GameMaker Version: {finalExport.MetaData.IDEVersion}
 
 --------------------------------------------------------
 Project Decompiled by Ultimate_GMS2_Decompiler_v4.csx
