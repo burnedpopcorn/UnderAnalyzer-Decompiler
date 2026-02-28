@@ -4513,11 +4513,8 @@ void DumpSprite(UndertaleSprite s, int index)
         {
             dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
 
-            string sType = string.Empty;
+            string errorType = string.Empty;
 
-            // Vectors can't be supported because UTMT doesn't fully export all of its info
-            // and SWFs are a bitch and a half just to load into GameMaker, and sometimes crash UTMT
-            // so since I can't even test SWFs, it probably won't happen either
             switch ((int)s.SSpriteType)
             {
                 // Normal (Raster)
@@ -4547,21 +4544,30 @@ void DumpSprite(UndertaleSprite s, int index)
                     using (StringReader r = new(s.SpineAtlas))
                         SpineTextureName = r.ReadLine();
 
-                    // Set frames to be dumped later
+                    // Dump atlas texture as GM sprite frame (not used in SPINE system, only in GM UI)
                     imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
+                    // Dump SPINE Atlas texture
                     if (SpineTextureName != string.Empty)
                         imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, SpineTextureName, spriteName));
 
                     break;
 
                 // SWF
-                case 1: sType = "SWF"; break;
+                // (Can't test with ~2024.14, since that SWF version is too new for UTMT, so use 2022 LTS)
+                // For this, this .swf file would be $"{frameGUID}.swf", and that's all that is needed
+                // there is sometimes a sprite included, but it usually is complete garbage
+                // but UTMT doesn't seem to have a way to just get the original .swf contents
+                // and SWF is a dead filetype anyways, so yeah
+                case 1: errorType = "SWF"; break;
+
                 // Vector (SVGs)
-                case 3: sType = "Vector"; break;
+                // I myself can't test Vectors, because LTS doesn't support it, and 2024.14 doesn't work for reasons I forgot
+                // I think UTMT doesn't fully export anything important anyways, so also might not be possible
+                case 3: errorType = "Vector"; break;
             }
 
-            if (sType != string.Empty)
-                errorList.Add($"{dumpedSprite.name} | {sType} sprites are not implemented, set to blank image.");
+            if (errorType != string.Empty)
+                errorList.Add($"{dumpedSprite.name} | {errorType} sprites are not implemented, set to blank image.");
         }
 
         Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
