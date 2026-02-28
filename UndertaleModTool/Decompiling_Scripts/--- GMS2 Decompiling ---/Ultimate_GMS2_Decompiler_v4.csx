@@ -28,6 +28,7 @@
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
         - (NEW) Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
+        - (NEW) Added ability to export SPINE sprites
 
     Included LICENSE file applies ONLY to setupwitch's code
     Any of my own changes are not under this LICENSE file, and can be freely used by anyone
@@ -1860,7 +1861,7 @@ public class UIWindow : Window
 
         mainPanel.Children.Add(new TextBlock
 		{
-			Text = "Original Script by crystallizedsparkle\n\tImproved by burnedpopcorn180",
+			Text = "Original Script by setupwitch\n\tImproved by burnedpopcorn180",
 			Margin = new Thickness(0, 20, 0, 8)
 		});
 
@@ -4521,23 +4522,27 @@ void DumpSprite(UndertaleSprite s, int index)
             {
                 // Normal (Raster)
                 case 0:
-                    // Set frames to be dumped later
+                    // create directory for current frame
                     Directory.CreateDirectory($"{layersPath}{frameGUID}");
+                    // Set frames to be dumped later
                     imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
                     imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
                     break;
 
                 // SPINE
-                case 2: 
-                    // This approach assumes that the SPINE sprite only has one frame
-                    // I used the coin template to test, and that only had one frame
-                    // but I think its possible that there can be more than one, but idk
+                case 2:
+                    // Test Examples: https://en.esotericsoftware.com/spine-examples
+                    // Note that loading them is a pain
+                    // some are just unimportable, even in 2024.14
+                    // You also have to make sure the .json is named "{name}-pma.json" so it links correctly
+
+                    // Although this is in a for loop, it shouldn't break since there's only ever one frame, which is the atlas image
 
                     // Dump SPINE Json and Atlas files
                     File.WriteAllText($"{assetDir}{frameGUID}.json", s.SpineJSON);
                     File.WriteAllText($"{assetDir}{frameGUID}.atlas", s.SpineAtlas);
 
-                    // Get the main texture filename from the first line in the atlas (includes extension)
+                    // Get the main texture filename from the first line in the atlas (includes file extension)
                     string SpineTextureName = string.Empty;
                     using (StringReader r = new(s.SpineAtlas))
                         SpineTextureName = r.ReadLine();
@@ -6303,7 +6308,7 @@ Original GameMaker Version: {finalExport.MetaData.IDEVersion}
 --------------------------------------------------------
 Project Decompiled by Ultimate_GMS2_Decompiler_v4.csx
 	Improved by burnedpopcorn180
-		Original Version by crystallizedsparkle
+		Original Version by setupwitch
 ";
 // create the readme
 if (!UISettings.YYMPS)
