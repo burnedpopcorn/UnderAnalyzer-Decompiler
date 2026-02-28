@@ -2829,6 +2829,8 @@ public class UnscrambleWindow : Window
             Content = "Enable Low Performance",
             IsChecked = false,
             IsEnabled = true,
+            ToolTip = "Allows you to manually update the canvas whenever needed" +
+                "\nEnable this if Automatic Canvas updating is causing intense lag.",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(4),
             Background = Theme.ElementBackground,
@@ -2841,6 +2843,8 @@ public class UnscrambleWindow : Window
             Width = 100,
             Height = 24,
             IsEnabled = false,
+            ToolTip = "Manually Reload the Canvas" +
+                "\n(Enable Low Performance Mode to use it)",
             Margin = new Thickness(4, 4, 0, 4),
             VerticalAlignment = VerticalAlignment.Center,
             Background = Theme.ElementBackground,
