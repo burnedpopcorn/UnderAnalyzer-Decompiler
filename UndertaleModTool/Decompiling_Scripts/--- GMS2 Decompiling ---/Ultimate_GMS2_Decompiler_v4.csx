@@ -1811,17 +1811,17 @@ public class UIWindow : Window
 		// Theme
 		Background = Theme.WindowBackground;
 		Foreground = Theme.WindowForeground;
-		
-		var mainPanel = new StackPanel { Margin = new Thickness(8) };
+
+        StackPanel mainPanel = new() { Margin = new Thickness(8) };
 
         #region Title Bar
-        var titleBar = new DockPanel 
+        DockPanel titleBar = new() 
         { 
             Height = 30,
             Background = Theme.ElementBackground
         };
 
-		var titleText = new TextBlock
+        TextBlock titleText = new()
         {
 			Text = Title,
 			VerticalAlignment = VerticalAlignment.Center,
@@ -1829,7 +1829,7 @@ public class UIWindow : Window
             Foreground = Theme.WindowForeground
         };
 
-		var closeButton = new Button
+        Button closeButton = new()
         {
 			Content = "X",
 			Width = 40,
@@ -1873,18 +1873,18 @@ public class UIWindow : Window
 			Margin = new Thickness(0, 8, 0, 4)
 		});
 
-        var resourceGrid = new UniformGrid { Columns = 6 };
-		var _PRJT = CreateCheckBox("Project File", true, false);
-		var _OBJT = CreateCheckBox("Objects", true);
-		var _ROOM = CreateCheckBox("Rooms", true);
-		var _EXTN = CreateCheckBox("Extensions", true);
-		var _SCPT = CreateCheckBox("Scripts", true);
-		var _TMLN = CreateCheckBox("Timelines", true);
-		var _SOND = CreateCheckBox("Sounds", true);
-		var _SHDR = CreateCheckBox("Shaders", true);
-		var _PATH = CreateCheckBox("Paths", true);
+        UniformGrid resourceGrid = new() { Columns = 6 };
+        CheckBox _PRJT = CreateCheckBox("Project File", true, false);
+        CheckBox _OBJT = CreateCheckBox("Objects", true);
+        CheckBox _ROOM = CreateCheckBox("Rooms", true);
+        CheckBox _EXTN = CreateCheckBox("Extensions", true);
+        CheckBox _SCPT = CreateCheckBox("Scripts", true);
+        CheckBox _TMLN = CreateCheckBox("Timelines", true);
+        CheckBox _SOND = CreateCheckBox("Sounds", true);
+        CheckBox _SHDR = CreateCheckBox("Shaders", true);
+        CheckBox _PATH = CreateCheckBox("Paths", true);
 
-		var _ACRV = CreateCheckBox("Anim. Curves", true);
+        CheckBox _ACRV = CreateCheckBox("Anim. Curves", true);
 		if (Data.AnimationCurves == null)
 		{
 			_ACRV.IsEnabled = false;
@@ -1892,7 +1892,7 @@ public class UIWindow : Window
 			_ACRV.Content = "ACRV (2.3+)";
 		}
 
-		var _SEQN = CreateCheckBox("Sequences", true);
+        CheckBox _SEQN = CreateCheckBox("Sequences", true);
 		if (Data.Sequences == null)
 		{
 			_SEQN.IsEnabled = false;
@@ -1900,9 +1900,9 @@ public class UIWindow : Window
 			_SEQN.Content = "SEQN (2.3+)";
 		}
 
-		var _FONT = CreateCheckBox("Fonts", true);
-		var _SPRT = CreateCheckBox("Sprites", true);
-		var _BGND = CreateCheckBox("Tilesets", true);
+        CheckBox _FONT = CreateCheckBox("Fonts", true);
+        CheckBox _SPRT = CreateCheckBox("Sprites", true);
+        CheckBox _BGND = CreateCheckBox("Tilesets", true);
 
 		resourceGrid.Children.Add(_PRJT);
 		resourceGrid.Children.Add(_OBJT);
@@ -1923,7 +1923,7 @@ public class UIWindow : Window
         #endregion
 
         #region AssetPicker Shit
-        var centerContainer = new Grid
+        Grid centerContainer = new()
 		{
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
@@ -1935,7 +1935,7 @@ public class UIWindow : Window
         centerContainer.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         // CheckBox + Label
-        var leftStack = new StackPanel
+        StackPanel leftStack = new()
 		{
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -1943,7 +1943,7 @@ public class UIWindow : Window
 			Margin = new Thickness(0, 0, 16, 0) // space between left and right
 		};
 
-        var _CSTM = new CheckBox
+        CheckBox _CSTM = new()
         {
 			Content = "Pick Assets",
 			IsChecked = false,
@@ -1953,7 +1953,7 @@ public class UIWindow : Window
             Foreground = Theme.WindowForeground
         };
 
-        var CSTMLabel = new TextBlock
+        TextBlock CSTMLabel = new()
         {
 			Text = "",
 			HorizontalAlignment = HorizontalAlignment.Center,
@@ -1965,8 +1965,8 @@ public class UIWindow : Window
 		Grid.SetColumn(leftStack, 0);
 		centerContainer.Children.Add(leftStack);
 
-		// Right side Button
-		var pickAssetsButton = new Button
+        // Right side Button
+        Button pickAssetsButton = new()
         {
 			Content = "Pick Individual Assets...",
 			Width = 150,
@@ -2031,14 +2031,14 @@ public class UIWindow : Window
         };
         #endregion
         #region Fix Tilesets
-        var rightStack = new StackPanel
+        StackPanel rightStack = new()
         {
             Orientation = Orientation.Vertical,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(16, 0, 16, 0) // space between left and right
         };
-        var _FIXTS = new CheckBox
+        CheckBox _FIXTS = new()
         {
             Content = "Fix Tilesets",
             IsChecked = false,
@@ -2050,7 +2050,7 @@ public class UIWindow : Window
         };
 
         // Right side Button
-        var FixTSButton = new Button
+        Button FixTSButton = new()
         {
             Content = "Check All Tilesets...",
             Width = 150,
@@ -2104,36 +2104,36 @@ public class UIWindow : Window
 			Margin = new Thickness(0, 12, 0, 4)
 		});
 
-		var settingsGrid = new UniformGrid { Columns = 4 };
+        UniformGrid settingsGrid = new() { Columns = 4 };
 
-		var _LOG = CreateCheckBox("Log Assets");
+        CheckBox _LOG = CreateCheckBox("Log Assets");
 		_LOG.ToolTip = "Logs every Asset that gets decompiled" +
             "\nMostly for Debugging, will clog up the logs if enabled.";
 
-		var _YYMPS = CreateCheckBox("Export as YYMPS");
+        CheckBox _YYMPS = CreateCheckBox("Export as YYMPS");
 		_YYMPS.ToolTip = "Exports decompiled resources as a GameMaker Importable Package." +
             "\nUseful for importing assets from the loaded data.win into your own GameMaker project";
 
-		var _ENUM = CreateCheckBox("Bitwise Enums");
+        CheckBox _ENUM = CreateCheckBox("Bitwise Enums");
 		_ENUM.ToolTip = "Turns Unknown Enums into Bitwise Operations.\n\nExample:\nUnknownEnum.Value_1 -> (1 << 0)";
 
-        var _DSCLEAN = CreateCheckBox("Clean DS functions", true);
+        CheckBox _DSCLEAN = CreateCheckBox("Clean DS functions", true);
         _DSCLEAN.ToolTip = "Converts all DS functions to their accessor syntax." +
             "\n\nExample:" +
             "\nds_map_set(map, key, value); -> map[? key] = value;";
 
-        var _ADDFILES = CreateCheckBox("Add Datafiles", true);
+        CheckBox _ADDFILES = CreateCheckBox("Add Datafiles", true);
 		_ADDFILES.ToolTip = "Automatically add included datafiles" +
             "\n(Note that it will copy any external file in the same directory as the data.win)";
 
-		var _FIXA = CreateCheckBox("Fix Audio");
+        CheckBox _FIXA = CreateCheckBox("Fix Audio");
 		_FIXA.ToolTip = "Labels audio files with their technically correct file extension." +
             "\nSo if a .wav file is incorrectly labelled as an .mp3 in the data.win, this setting will label it back to .wav.";
 
-		var _GENROOM = CreateCheckBox("Generate Room Name");
+        CheckBox _GENROOM = CreateCheckBox("Generate Room Name");
 		_GENROOM.ToolTip = "Simulates GameMaker asset naming behavior.";
 
-        var _STRCLEAN = CreateCheckBox("Clean String Function", Data.IsVersionAtLeast(2022, 9));
+        CheckBox _STRCLEAN = CreateCheckBox("Clean String Function", Data.IsVersionAtLeast(2022, 9));
         _STRCLEAN.ToolTip = "Convert all string() functions to literal strings." +
 
             "\n\nNOTE: GMS2 versions older than 2022.9 do not support this" +
@@ -2154,14 +2154,14 @@ public class UIWindow : Window
         mainPanel.Children.Add(settingsGrid);
         #endregion
         #region CPU Controls
-        var cpuLabel = new Label
+        Label cpuLabel = new()
 		{
 			Content = $"CPU Usage: {UISettings.CPU_Usage}%",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Margin = new Thickness(0, 10, 0, 0)
 		};
 
-		var cpuSlider = new Slider
+        Slider cpuSlider = new()
         {
 			Minimum = 1,
 			Maximum = 100,
@@ -2178,7 +2178,7 @@ public class UIWindow : Window
 			cpuLabel.Content = $"CPU Usage: {UISettings.CPU_Usage}%";
 		};
 
-		var cpuPanel = new StackPanel
+        StackPanel cpuPanel = new()
 		{
 			Orientation = Orientation.Vertical,
 			HorizontalAlignment = HorizontalAlignment.Center
@@ -2190,7 +2190,7 @@ public class UIWindow : Window
         #endregion
 
         #region OK Button
-        var OKBT = new Button
+        Button OKBT = new()
         {
 			Content = "Start Dump",
 			Height = 48,
@@ -2278,14 +2278,14 @@ public class AssetPickerWindow : Window
         Foreground = Theme.WindowForeground;
 
         #region Title Bar
-        var titleBar = new DockPanel
+        DockPanel titleBar = new()
         {
             Height = 30,
 			LastChildFill = true,
             Background = Theme.ElementBackground
         };
 
-        var titleText = new TextBlock
+        TextBlock titleText = new()
         {
             Text = Title,
             VerticalAlignment = VerticalAlignment.Center,
@@ -2293,7 +2293,7 @@ public class AssetPickerWindow : Window
             Foreground = Theme.WindowForeground
         };
 
-        var closeButton = new Button
+        Button closeButton = new()
         {
             Content = "X",
             Width = 40,
@@ -2311,11 +2311,11 @@ public class AssetPickerWindow : Window
         DockPanel.SetDock(closeButton, Dock.Right);
         titleBar.Children.Add(closeButton);
 
-        var layout = new StackPanel();
+        StackPanel layout = new();
         layout.Children.Add(titleBar);
         #endregion
 
-        var grid = new Grid { Margin = new Thickness(10) };
+        Grid grid = new() { Margin = new Thickness(10) };
 
         for (int i = 0; i < 3; i++)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -2346,10 +2346,10 @@ public class AssetPickerWindow : Window
         grid.Children.Add(treeView);
         #endregion
         #region Arrow Buttons
-        var buttonPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
+        StackPanel buttonPanel = new() { Orientation = Orientation.Vertical, Margin = new Thickness(8, 0, 8, 0) };
 
         #region -> Button
-        var addButton = new Button
+        Button addButton = new()
         { 
 			Content = "->", 
 			Width = 40, 
@@ -2371,7 +2371,7 @@ public class AssetPickerWindow : Window
         buttonPanel.Children.Add(addButton);
         #endregion
         #region <- Button
-        var removeButton = new Button
+        Button removeButton = new()
         { 
 			Content = "<-", 
 			Width = 40, 
@@ -2424,7 +2424,7 @@ public class AssetPickerWindow : Window
         grid.Children.Add(listBox);
         #endregion
         #region OK Button
-        var okButton = new Button
+        Button okButton = new()
         {
             Content = "OK",
             Width = 100,
@@ -2453,7 +2453,7 @@ public class AssetPickerWindow : Window
     private void BuildInitialTree()
     {
         treeView.Items.Clear();
-        var root = new TreeViewItem { Header = "Data", IsExpanded = true };
+        TreeViewItem root = new() { Header = "Data", IsExpanded = true };
 
         var categories = new[]
         {
@@ -2556,6 +2556,8 @@ public class UnscrambleWindow : Window
     private DrawingBrush GridBrush;
     private ScrollViewer TilesScroller;
 
+    private bool LowPerformance = false;
+
     public UnscrambleWindow()
     {
         Title = "Unscramble Tilesets";
@@ -2588,7 +2590,7 @@ public class UnscrambleWindow : Window
         #endregion
 
         #region Title Bar
-        var titleBar = new DockPanel
+        DockPanel titleBar = new()
         {
             Height = 30,
             LastChildFill = true,
@@ -2603,7 +2605,7 @@ public class UnscrambleWindow : Window
             Foreground = Theme.WindowForeground
         };
 
-        var closeButton = new Button
+        Button closeButton = new()
         {
             Content = "X",
             Width = 40,
@@ -2626,8 +2628,9 @@ public class UnscrambleWindow : Window
         #endregion
 
         // main Grid
-        var grid = new Grid { Margin = new Thickness(10) };
+        Grid grid = new() { Margin = new Thickness(10) };
         grid.RowDefinitions.Add(new RowDefinition());
+        grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
         grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(0, GridUnitType.Auto) });
 
         DockPanel.SetDock(grid, Dock.Bottom);
@@ -2682,7 +2685,7 @@ public class UnscrambleWindow : Window
         TilesCanvas.Children.Add(TilesImage);
         #endregion
         #region Controls
-        var stack = new StackPanel
+        StackPanel stack = new()
         {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center
@@ -2690,7 +2693,7 @@ public class UnscrambleWindow : Window
         Grid.SetRow(stack, 1);
         grid.Children.Add(stack);
 
-        var instructions = new TextBlock
+        TextBlock instructions = new()
         {
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Adjust the number of columns until the tileset looks right:",
@@ -2700,7 +2703,7 @@ public class UnscrambleWindow : Window
         stack.Children.Add(instructions);
 
         #region Minus Button
-        var MinusButton = new Button
+        Button MinusButton = new()
         {
             Content = "-",
             Width = 24,
@@ -2714,7 +2717,8 @@ public class UnscrambleWindow : Window
         {
             TileColumns = Math.Max(1, TileColumns - 1);
             ColumnsText.Text = TileColumns.ToString();
-            RebuildCurrentTileset();
+            if (!LowPerformance)
+                RebuildCurrentTileset();
         };
         MinusButton.Margin = new Thickness(0, 0, 8, 0);
         stack.Children.Add(MinusButton);
@@ -2733,12 +2737,13 @@ public class UnscrambleWindow : Window
             if (uint.TryParse(ColumnsText.Text, out uint val))
             {
                 TileColumns = Math.Max(1, val);
-                RebuildCurrentTileset();
+                if (!LowPerformance)
+                    RebuildCurrentTileset();
             }
         };
         #endregion
         #region Plus Button
-        var PlusButton = new Button
+        Button PlusButton = new()
         {
             Content = "+",
             Width = 24,
@@ -2752,12 +2757,13 @@ public class UnscrambleWindow : Window
         {
             TileColumns++;
             ColumnsText.Text = TileColumns.ToString();
-            RebuildCurrentTileset();
+            if (!LowPerformance)
+                RebuildCurrentTileset();
         };
         stack.Children.Add(PlusButton);
         #endregion
 
-        var doneInstructions = new TextBlock
+        TextBlock doneInstructions = new()
         {
             VerticalAlignment = VerticalAlignment.Center,
             Text = "Navigate Tilesets:",
@@ -2767,7 +2773,7 @@ public class UnscrambleWindow : Window
         stack.Children.Add(doneInstructions);
 
         #region Previous Button
-        var PrevButton = new Button
+        Button PrevButton = new()
         {
             Content = "<-",
             Width = 32,
@@ -2779,14 +2785,15 @@ public class UnscrambleWindow : Window
         };
         PrevButton.Click += (s, e) =>
         {
-            RebuildCurrentTileset();
+            if (!LowPerformance)
+                RebuildCurrentTileset();
             CurrentIndex = (CurrentIndex - 1 + Data.Backgrounds.Count) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
         stack.Children.Add(PrevButton);
         #endregion
         #region Next Button
-        var NextButton = new Button
+        Button NextButton = new()
         {
             Content = "->",
             Width = 32,
@@ -2798,7 +2805,8 @@ public class UnscrambleWindow : Window
         };
         NextButton.Click += (s, e) =>
         {
-            RebuildCurrentTileset();
+            if (!LowPerformance)
+                RebuildCurrentTileset();
             CurrentIndex = (CurrentIndex + 1) % Data.Backgrounds.Count;
             LoadCurrentTileset();
         };
@@ -2807,40 +2815,57 @@ public class UnscrambleWindow : Window
 
         #endregion
 
+        #region Low Performance Mode
+        StackPanel stack2 = new()
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        Grid.SetRow(stack2, 2);
+        grid.Children.Add(stack2);
+
+        CheckBox LowPerCheckBox = new()
+        {
+            Content = "Enable Low Performance",
+            IsChecked = false,
+            IsEnabled = true,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(4),
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground
+        };
+
+        Button ReloadButton = new()
+        {
+            Content = "Reload Canvas",
+            Width = 100,
+            Height = 24,
+            IsEnabled = false,
+            Margin = new Thickness(4, 4, 0, 4),
+            VerticalAlignment = VerticalAlignment.Center,
+            Background = Theme.ElementBackground,
+            Foreground = Theme.WindowForeground,
+            BorderBrush = Theme.ButtonBrush
+        };
+
+        ReloadButton.Click += (s, e) => RebuildCurrentTileset();
+
+        LowPerCheckBox.Click += (s, e) =>
+        {
+            LowPerformance = !LowPerformance;
+            ReloadButton.IsEnabled = LowPerformance;
+        };
+
+        stack2.Children.Add(LowPerCheckBox);
+        stack2.Children.Add(ReloadButton);
+        #endregion
+
         Content = layout;
 
         LoadCurrentTileset();
     }
 
-    #region Helper Shit
-
-    #region Mouse Funcs
-    // drag scrolling
-    private bool IsDragging = false;
-    public System.Windows.Point DrawingStart;
-    public System.Windows.Point ScrollViewStart;
-
-    private void Tiles_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        IsDragging = true;
-        DrawingStart = e.GetPosition(this as Window);
-        ScrollViewStart = new System.Windows.Point(TilesScroller.HorizontalOffset, TilesScroller.VerticalOffset);
-    }
-    private void Tiles_MouseUp(object sender, MouseButtonEventArgs e) => IsDragging = false;
-    private void Tiles_MouseMove(object sender, MouseEventArgs e)
-    {
-        if (!IsDragging) return;
-        System.Windows.Point pos = e.GetPosition(this as Window);
-        TilesScroller.ScrollToHorizontalOffset(Math.Clamp(
-            ScrollViewStart.X + -(pos.X - DrawingStart.X), 0, TilesScroller.ScrollableWidth
-        ));
-        TilesScroller.ScrollToVerticalOffset(Math.Clamp(
-            ScrollViewStart.Y + -(pos.Y - DrawingStart.Y), 0, TilesScroller.ScrollableHeight
-        ));
-    }
-    private void Window_MouseLeave(object sender, MouseEventArgs e) => IsDragging = false;
-    #endregion
-
+    #region Rendering and Saving Tileset Functions
     private void LoadCurrentTileset()
     {
         Title = $"Unscramble Tileset [{CurrentIndex + 1}/{Data.Backgrounds.Count}] - {CurrentBackground.Name.Content}";
@@ -2897,6 +2922,35 @@ public class UnscrambleWindow : Window
             TilesetSaveData.TilesetImageMap[tsName] = ConvertTilesetToMagickImage();
         #endregion
     }
+    #endregion
+    #region Helper Shit
+
+    #region Mouse Funcs
+    // drag scrolling
+    private bool IsDragging = false;
+    public System.Windows.Point DrawingStart;
+    public System.Windows.Point ScrollViewStart;
+
+    private void Tiles_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        IsDragging = true;
+        DrawingStart = e.GetPosition(this as Window);
+        ScrollViewStart = new System.Windows.Point(TilesScroller.HorizontalOffset, TilesScroller.VerticalOffset);
+    }
+    private void Tiles_MouseUp(object sender, MouseButtonEventArgs e) => IsDragging = false;
+    private void Tiles_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!IsDragging) return;
+        System.Windows.Point pos = e.GetPosition(this as Window);
+        TilesScroller.ScrollToHorizontalOffset(Math.Clamp(
+            ScrollViewStart.X + -(pos.X - DrawingStart.X), 0, TilesScroller.ScrollableWidth
+        ));
+        TilesScroller.ScrollToVerticalOffset(Math.Clamp(
+            ScrollViewStart.Y + -(pos.Y - DrawingStart.Y), 0, TilesScroller.ScrollableHeight
+        ));
+    }
+    private void Window_MouseLeave(object sender, MouseEventArgs e) => IsDragging = false;
+    #endregion
 
     private ImageSource GetTilesetImage() {
         return (ImageSource)(new CachedTileDataLoader().Convert(new object[] { TileData }, null, null, null));
@@ -4555,8 +4609,10 @@ void DumpSprite(UndertaleSprite s, int index)
                 // SWF
                 // (Can't test with ~2024.14, since that SWF version is too new for UTMT, so use 2022 LTS)
                 // For this, this .swf file would be $"{frameGUID}.swf", and that's all that is needed
-                // there is sometimes a sprite included, but it usually is complete garbage
-                // but UTMT doesn't seem to have a way to just get the original .swf contents
+                // there is sometimes a sprite included, but it's usually complete garbage
+
+                // but UTMT doesn't seem to have a way to just get the original .swf
+                // and I am not making a UndertaleYYSWF to SWF convertor, that would be way too big and time-consuming
                 // and SWF is a dead filetype anyways, so yeah
                 case 1: errorType = "SWF"; break;
 
