@@ -37,46 +37,45 @@
 #endregion
 
 #region Usings
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Reflection;
-using System.Dynamic;
-using System.Linq;
-using System.Security;
+using ImageMagick;
+using NAudio.Vorbis;
+using NAudio.Wave;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
+using System.Dynamic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using NAudio.Wave;
-using NAudio.Vorbis;
-using Underanalyzer;
-using Underanalyzer.Decompiler;
-using UndertaleModLib.Util;
-using UndertaleModLib.Models;
-using static UndertaleModLib.Models.UndertaleRoom;
-using Underanalyzer.Decompiler.AST;
-using Underanalyzer.Decompiler.GameSpecific;
-using Underanalyzer.Decompiler.ControlFlow;
-using ImageMagick;
-
 // new ui
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shell;
-using System.Windows.Input;
+using Underanalyzer;
+using Underanalyzer.Decompiler;
+using Underanalyzer.Decompiler.AST;
+using Underanalyzer.Decompiler.ControlFlow;
+using Underanalyzer.Decompiler.GameSpecific;
+using UndertaleModLib.Models;
+using UndertaleModLib.Util;
+using static UndertaleModLib.Models.UndertaleRoom;
 #endregion
 
 #region Checks
@@ -1105,6 +1104,55 @@ public class GMSprite : GMResource
         public int highlightStyle { get; set; }
         public bool enabled { get; set; }
         public int[] tileMode { get; set; }
+    }
+}
+
+// Vector Class
+public class GMShape : GMResource
+{
+    public bool baked { get; set; } = false;
+    public bool hiddenGeometryClipped { get; set; } = false;
+    public float maxX { get; set; }
+    public float maxY { get; set; }
+    public float minX { get; set; }
+    public float minY { get; set; }
+    public double precision { get; set; } = 0.5;
+    public List<GMStyleGroups> styleGroups { get; set; } = new();
+    public bool triangulated { get; set; } = true;
+
+    public class GMStyleGroups : GMResource
+    {
+        public List<FillStyles> fillStyles { get; set; } = new();
+        public List<int> lineStyleData { get; set; } = new();
+        public List<GMSubShape> shapes { get; set; } = new();
+
+        public class FillStyles { 
+            public uint rgba { get; set; }
+        }
+    }
+    public class GMSubShape : GMResource
+    {
+        public List<int> AALines { get; set; } = new();
+        public List<Vec2> AAVectors { get; set; } = new();
+
+        public bool closed { get; set; } = true;
+
+        public int fillStyle0 { get; set; } = -1;
+        public int fillStyle1 { get; set; } = 0;
+
+        public List<int> linePoints { get; set; } = new();
+        public List<int> lines { get; set; } = new();
+        public int lineStyle { get; set; } = -1;
+        public List<int> lineTris { get; set; } = new();
+        public List<uint> pointColours { get; set; } = new();
+        public List<Vec2> points { get; set; } = new();
+        public List<int> tris { get; set; } = new();
+
+        public class Vec2
+        {
+            public float x { get; set; } = 0;
+            public float y { get; set; } = 0;
+        }
     }
 }
 
@@ -4551,6 +4599,8 @@ void DumpSprite(UndertaleSprite s, int index)
         // create the layer
         dumpedSprite.layers.Add(new GMSprite.GMImageLayer(layerId));
     }
+    else if ((int)s.SSpriteType == 3 && s.VectorShapes.Count != 0) // create layer for Vector sprites
+        dumpedSprite.layers.Add(new GMSprite.GMImageLayer(layerId));
     else
         exportFrames = false;
 
@@ -4561,31 +4611,85 @@ void DumpSprite(UndertaleSprite s, int index)
 
     GMSpriteFramesTrack framesTrack = new();
 
-    for (int i = 0; i < s.Textures.Count; i++)
+    // function to add to framesTrack
+    void AddKeyFrame(string frameGUID, int frameNum)
     {
-        UndertaleSprite.TextureEntry tex = s.Textures[i];
-
-        string frameGUID = Guid.NewGuid().ToString();
-
-        if (exportFrames)
+        Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
         {
-            dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+            Length = 1f,
+            Key = (float)frameNum,
+        };
 
-            string errorType = string.Empty;
+        currentKeyframe.Channels.Add("0", new SpriteFrameKeyframe
+        {
+            Id = new AssetReference(spriteName, GMAssetType.Sprite) { name = frameGUID },
+            name = String.Empty
+        });
 
-            switch ((int)s.SSpriteType)
+        framesTrack.keyframes.Keyframes.Add(currentKeyframe);
+    }
+
+    // dump frames
+    switch ((int)s.SSpriteType)
+    {
+        // Normal (Raster)
+        case 0:
             {
-                // Normal (Raster)
-                case 0:
-                    // create directory for current frame
-                    Directory.CreateDirectory($"{layersPath}{frameGUID}");
-                    // Set frames to be dumped later
-                    imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
-                    imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
-                    break;
+                for (int i = 0; i < s.Textures.Count; i++)
+                {
+                    UndertaleSprite.TextureEntry tex = s.Textures[i];
+                    string frameGUID = Guid.NewGuid().ToString();
 
-                // SPINE
-                case 2:
+                    if (exportFrames)
+                    {
+                        dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+
+                        // create directory for current frame
+                        Directory.CreateDirectory($"{layersPath}{frameGUID}");
+                        // Set frames to be dumped later
+                        imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, frameGUID + ".png", spriteName));
+                        imagesToDump.Add(new ImageAssetData(tex.Texture, $"{layersPath}{frameGUID}\\", layerId + ".png", spriteName));
+                    }
+
+                    AddKeyFrame(frameGUID, i);
+                }
+            }
+            break;
+
+        // SWF
+        // (Can't test with ~2024.14, since that SWF version is too new for UTMT, so use 2022 LTS)
+        // For this, this .swf file would be $"{frameGUID}.swf", and that's all that is needed
+        // there is sometimes a sprite included, but it's usually complete garbage
+
+        // but UTMT doesn't seem to have a way to just get the original .swf
+        // and I am not making a UndertaleYYSWF to SWF convertor, that would be way too big and time-consuming
+        // and SWF is a dead filetype anyways, so yeah
+        case 1:
+            errorList.Add($"{dumpedSprite.name} | SWF sprites are not implemented, set to blank image.");
+            break;
+
+        // SPINE
+        case 2:
+            {
+                if (s.Textures.Count > 1)
+                {
+                    errorList.Add($"{dumpedSprite.name} | SPINE Sprite has more then 1 texture, please report this immediately");
+                    break;
+                }
+
+                if (s.Textures.Count == 0)
+                {
+                    errorList.Add($"{dumpedSprite.name} | SPINE Sprite has 0 textures, please report this immediately");
+                    break;
+                }
+
+                UndertaleSprite.TextureEntry tex = s.Textures[0];
+                string frameGUID = Guid.NewGuid().ToString();
+
+                if (exportFrames)
+                {
+                    dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
+
                     // Test Examples: https://en.esotericsoftware.com/spine-examples
                     // Note that loading them is a pain
                     // some are just unimportable, even in 2024.14
@@ -4607,45 +4711,103 @@ void DumpSprite(UndertaleSprite s, int index)
                     // Dump SPINE Atlas texture
                     if (SpineTextureName != string.Empty)
                         imagesToDump.Add(new ImageAssetData(tex.Texture, assetDir, SpineTextureName, spriteName));
+                }
 
-                    break;
-
-                // SWF
-                // (Can't test with ~2024.14, since that SWF version is too new for UTMT, so use 2022 LTS)
-                // For this, this .swf file would be $"{frameGUID}.swf", and that's all that is needed
-                // there is sometimes a sprite included, but it's usually complete garbage
-
-                // but UTMT doesn't seem to have a way to just get the original .swf
-                // and I am not making a UndertaleYYSWF to SWF convertor, that would be way too big and time-consuming
-                // and SWF is a dead filetype anyways, so yeah
-                case 1: errorType = "SWF"; break;
-
-                // Vector (SVGs)
-                // I myself can't test Vectors, because LTS doesn't support it, and 2024.14 doesn't work for reasons I forgot
-                // I think UTMT doesn't fully export anything important anyways, so also might not be possible
-                case 3: errorType = "Vector"; break;
+                AddKeyFrame(frameGUID, 0);
             }
+            break;
 
-            if (errorType != string.Empty)
-                errorList.Add($"{dumpedSprite.name} | {errorType} sprites are not implemented, set to blank image.");
-        }
-
-        Keyframe<SpriteFrameKeyframe> currentKeyframe = new()
-        {
-            Length = 1f,
-            Key = (float)i,
-        };
-
-        currentKeyframe.Channels.Add("0", new SpriteFrameKeyframe
-        {
-            Id = new AssetReference(spriteName, GMAssetType.Sprite)
+        // Vector (SVGs)
+        case 3:
             {
-                name = frameGUID
-            },
-            name = String.Empty
-        });
+                // theres should only ever one, but whatever
+                for (int i = 0; i < s.VectorShapes.Count; i++)
+                {
+                    // set shit up
+                    string frameGUID = Guid.NewGuid().ToString();
+                    dumpedSprite.frames.Add(new GMSprite.GMSpriteFrame(frameGUID));
 
-        framesTrack.keyframes.Keyframes.Add(currentKeyframe);
+                    #region Dump GM .dat file
+                    // get current shape
+                    var rawVecShape = s.VectorShapes[i];
+
+                    GMShape vecShape = new()
+                    {
+                        maxX = rawVecShape.MaxX,
+                        maxY = rawVecShape.MaxY,
+                        minX = rawVecShape.MinX,
+                        minY = rawVecShape.MinY
+                    };
+
+                    // add all the shape data
+                    foreach (var rawStyleGroup in rawVecShape.StyleGroups)
+                    {
+                        GMShape.GMStyleGroups styleGroup = new();
+
+                        // add fill color data
+                        foreach (var rawfillStyle in rawStyleGroup.FillStyles)
+                        {
+                            var fData = rawfillStyle.SolidFillData;
+                            styleGroup.fillStyles.Add(new()
+                            {
+                                // fuck this bitwise shit took a while to figure out
+                                rgba = (
+                                    ((uint)fData.Red << 24) |
+                                    ((uint)fData.Green << 16) |
+                                    ((uint)fData.Blue << 8) |
+                                    (uint)fData.Alpha)
+                            });
+                        }
+
+                        // add shape data
+                        foreach (var rawSubShape in rawStyleGroup.Subshapes)
+                        {
+                            GMShape.GMSubShape SubShape = new()
+                            {
+                                fillStyle0 = rawSubShape.FillStyleOne,
+                                fillStyle1 = rawSubShape.FillStyleTwo,
+                                lineStyle = rawSubShape.LineStyle
+                            };
+
+                            // add AAVectors
+                            foreach (var AAVec in rawSubShape.AAVectors)
+                                SubShape.AAVectors.Add(new() { x = AAVec.X, y = AAVec.Y });
+
+                            // add Points
+                            foreach (var Point in rawSubShape.Points)
+                                SubShape.points.Add(new() { x = Point.X, y = Point.Y });
+
+                            // add PointColors
+                            foreach (uint PointCol in rawSubShape.PointColors)
+                                SubShape.pointColours.Add(PointCol);
+
+                            // add Triangles
+                            foreach (int Tri in rawSubShape.Triangles)
+                                SubShape.tris.Add(Tri);
+
+                            // since UTMT puts them in a class with seperate X and Y vars
+                            // and GM puts them in a flat 2D array
+                            foreach (var AALine in rawSubShape.AALines)
+                            {
+                                SubShape.AALines.Add(AALine.X);
+                                SubShape.AALines.Add(AALine.Y);
+                            }
+
+                            styleGroup.shapes.Add(SubShape);
+                        }
+
+                        // add color fill and shape data to thing
+                        vecShape.styleGroups.Add(styleGroup);
+                    }
+
+                    // save stuff to a .dat file for some reason
+                    File.WriteAllText($"{assetDir}{frameGUID}.dat", JsonSerializer.Serialize(vecShape, jsonOptions));
+                    #endregion
+
+                    AddKeyFrame(frameGUID, i);
+                }
+            }
+            break;
     }
 
     if (s.V2Sequence is not null)
