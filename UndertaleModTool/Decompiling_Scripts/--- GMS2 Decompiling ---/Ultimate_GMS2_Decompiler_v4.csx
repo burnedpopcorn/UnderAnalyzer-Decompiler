@@ -27,8 +27,9 @@
         - Added ability to include UnknownEnum Declaration into GlobalInit Script
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
-        - (NEW) Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
-        - (NEW) Added ability to export SPINE sprites
+        - Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
+        - Added ability to export SPINE sprites
+        - (NEW) Added ability to export Vector (SVG) sprites
 
     Included LICENSE file applies ONLY to setupwitch's code
     Any of my own changes are not under this LICENSE file, and can be freely used by anyone
@@ -1176,13 +1177,14 @@ public static class GMShapeToSVG
 
                 // get fill color
                 string fill = "#000000";
+                float opacity = 1;
                 if (sub.fillStyle1 >= 0 && sub.fillStyle1 < styleGroup.fillStyles.Count)
-                    fill = RGBAtoHex(styleGroup.fillStyles[sub.fillStyle1].rgba);
+                    (fill, opacity) = RGBAtoHex(styleGroup.fillStyles[sub.fillStyle1].rgba);
 
                 // get paths
                 var loops = ExtractLoops(sub);
                 foreach (var loop in loops)
-                    sb.AppendLine($"<path d=\"{BuildPath(loop, sub.points)}\" fill=\"{fill}\" />");
+                    sb.AppendLine($"<path d=\"{BuildPath(loop, sub.points)}\" fill=\"{fill}\" fill-opacity=\"{opacity}\" />");
             }
         }
 
@@ -1299,14 +1301,14 @@ public static class GMShapeToSVG
         return sb.ToString();
     }
 
-    private static string RGBAtoHex(uint rgba)
+    private static (string, float) RGBAtoHex(uint rgba)
     {
         byte r = (byte)(rgba >> 24);
         byte g = (byte)(rgba >> 16);
         byte b = (byte)(rgba >> 8);
         byte a = (byte)(rgba);
 
-        return $"#{r:X2}{g:X2}{b:X2}";
+        return ($"#{r:X2}{g:X2}{b:X2}", (float)a / 255);
     }
     #endregion
 }
