@@ -4966,10 +4966,7 @@ void DumpSprite(UndertaleSprite s, int index)
 
                     // Dump .SVG as PNG
                     using (MagickImage image = new(Encoding.UTF8.GetBytes(SVGContents)))
-                    {
-                        image.Format = MagickFormat.Svg; // make sure it knows its a SVG file
                         image.Write($"{assetDir}{frameGUID}.png", MagickFormat.Png);
-                    }
 
                     AddKeyFrame(frameGUID, i);
                 }
