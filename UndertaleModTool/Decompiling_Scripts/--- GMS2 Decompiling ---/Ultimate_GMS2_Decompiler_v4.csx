@@ -1301,10 +1301,10 @@ public static class GMShapeToSVG
 
     private static string RGBAtoHex(uint rgba)
     {
-        byte a = (byte)(rgba >> 24);
-        byte r = (byte)(rgba >> 16);
-        byte g = (byte)(rgba >> 8);
-        byte b = (byte)(rgba);
+        byte r = (byte)(rgba >> 24);
+        byte g = (byte)(rgba >> 16);
+        byte b = (byte)(rgba >> 8);
+        byte a = (byte)(rgba);
 
         return $"#{r:X2}{g:X2}{b:X2}";
     }
