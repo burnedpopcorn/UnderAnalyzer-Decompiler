@@ -475,10 +475,8 @@ public class AssetReference
         path = CreateFilePath(name, type);
     }
     // overload method
-    public AssetReference()
-    {
+    public AssetReference() { }
 
-    }
     public string name { get; set; }
     public string path { get; set; }
 }
@@ -616,7 +614,9 @@ public class GMProject : GMResource
             new GMFolder("Animation Curves", "folders/Animation Curves.yy") { order = ++currentOrder },
             new GMFolder("Notes", "folders/Notes.yy") { order = ++currentOrder },
             new GMFolder("Extensions", "folders/Extensions.yy") { order = ++currentOrder },
-            new GMFolder("DecompilerGenerated", "folders/DecompilerGenerated.yy") { order = ++currentOrder }, // for things like tile data & gml_pragma.
+
+            // for things like tile data & gml_pragma.
+            new GMFolder("DecompilerGenerated", "folders/DecompilerGenerated.yy") { order = ++currentOrder },
             new GMFolder("GeneratedTileSprites", "folders/DecompilerGenerated/GeneratedTileSprites.yy") { order = ++currentOrder }
         };
 
@@ -777,8 +777,6 @@ public class GMRoom : GMResource
         public bool inheritItemSettings { get; set; }
     }
 
-
-
     public class GMRSpriteGraphic : GMRAsset
     {
         public GMRSpriteGraphic()
@@ -799,10 +797,8 @@ public class GMRoom : GMResource
         {
             this.name = name;
         }
-        public GMRLayerBase()
-        {
+        public GMRLayerBase() { }
 
-        }
         public bool visible { get; set; } = true;
         public float depth { get; set; } = 0;
         public bool userdefinedDepth { get; set; } = false;
@@ -911,7 +907,6 @@ public class GMRoom : GMResource
             public List<uint> TileSerialiseData { get; set; } = new();
         }
     }
-
 
     public class GMRInstanceLayer : GMRLayerBase
     {
@@ -1026,9 +1021,8 @@ public class GMAnimCurve : GMResource
     }
     public class GMAnimCurvePoint : GMPoint
     {
-        public GMAnimCurvePoint(float x, float y) : base(x, y)
-        {
-        }
+        public GMAnimCurvePoint(float x, float y) : base(x, y) { }
+
         public float th0 { get; set; }
         public float th1 { get; set; }
         public float tv0 { get; set; }
@@ -1351,6 +1345,7 @@ public class GMSequence : GMResource
     public AssetReference spriteId { get; set; }
 }
 
+#region Tracks
 public class GMBaseTrack : GMResource
 {
     public uint trackColour { get; set; } = 0U;
@@ -1361,24 +1356,22 @@ public class GMBaseTrack : GMResource
     public List<dynamic> tracks { get; set; } = new();
     public List<GMEvent> events { get; set; } = new();
     public bool isCreationTrack { get; set; }
-    public string[] modifiers { get; set; } = new string[0]; // IDE considers this a dictionary??? weird.
+
+    // this actually determines if a track is visible
+    // if its empty, then visible, but if its has a InvisibleModifier, then its not
+    public List<InvisibleModifier> modifiers { get; set; } = new();
 }
 
-public class GMGraphicTrack : GMBaseTrack
-{
+public class InvisibleModifier : GMResource {
+    public string resourceType { get { return "InvisibleModifier"; } }
+}
+
+public class GMGraphicTrack : GMBaseTrack {
     public KeyframeStore<AssetSpriteKeyframe> keyframes { get; set; } = new();
 }
 
-public class GMTextTrack : GMBaseTrack
-{
+public class GMTextTrack : GMBaseTrack {
     public KeyframeStore<AssetTextKeyframe> keyframes { get; set; } = new();
-}
-
-public class AssetTextKeyframe : AssetKeyframe
-{
-    public string? Text { get; set; } = null;
-    public bool Wrap { get; set; }
-    public int Alignment { get; set; } = 0;
 }
 
 public class GMSpriteFramesTrack : GMBaseTrack
@@ -1388,63 +1381,48 @@ public class GMSpriteFramesTrack : GMBaseTrack
     public string name { get; set; } = "frames";
 }
 
-public class GMGroupTrack : GMBaseTrack
-{
+public class GMGroupTrack : GMBaseTrack { }
 
-}
+public class GMClipMaskTrack : GMBaseTrack { }
 
-public class GMClipMaskTrack : GMBaseTrack
-{
+public class GMClipMask_Mask : GMBaseTrack { }
 
-}
-public class GMClipMask_Mask : GMBaseTrack
-{
+public class GMClipMask_Subject : GMBaseTrack { }
 
-}
-public class GMClipMask_Subject : GMBaseTrack
-{
-
-}
-
-public class GMRealTrack : GMBaseTrack
-{
+public class GMRealTrack : GMBaseTrack {
     public KeyframeStore<RealKeyframe> keyframes { get; set; } = new();
 }
 
-public class GMColourTrack : GMBaseTrack
-{
+public class GMColourTrack : GMBaseTrack {
     public KeyframeStore<ColourKeyframe> keyframes { get; set; } = new();
 }
 
-public class GMAudioTrack : GMBaseTrack
-{
+public class GMAudioTrack : GMBaseTrack {
     public KeyframeStore<AudioKeyframe> keyframes { get; set; } = new();
 }
 
-public class GMInstanceTrack : GMBaseTrack
-{
+public class GMInstanceTrack : GMBaseTrack {
     public KeyframeStore<AssetInstanceKeyframe> keyframes { get; set; } = new();
 }
 
-public class GMSequenceTrack : GMBaseTrack
-{
+public class GMSequenceTrack : GMBaseTrack {
     public KeyframeStore<AssetSequenceKeyframe> keyframes { get; set; } = new();
 }
+#endregion
+#region Keyframes
+public class AssetSequenceKeyframe : AssetKeyframe { }
 
-public class AssetSequenceKeyframe : AssetKeyframe
+public class AssetInstanceKeyframe : AssetKeyframe { }
+
+public class AssetSpriteKeyframe : AssetKeyframe { }
+
+public class AssetTextKeyframe : AssetKeyframe
 {
-
+    public string? Text { get; set; } = null;
+    public bool Wrap { get; set; }
+    public int Alignment { get; set; } = 0;
 }
 
-public class AssetInstanceKeyframe : AssetKeyframe
-{
-
-}
-
-public class AssetSpriteKeyframe : AssetKeyframe
-{
-
-}
 public class AnimCurveKeyframe : GMResource
 {
     // yeah you can put anim curves inside of sequences (scary!!!)
@@ -1452,18 +1430,15 @@ public class AnimCurveKeyframe : GMResource
     public GMAnimCurve EmbeddedAnimCurve { get; set; }
 }
 
-public class RealKeyframe : AnimCurveKeyframe
-{
+public class RealKeyframe : AnimCurveKeyframe {
     public float RealValue { get; set; }
 }
 
-public class ColourKeyframe : AnimCurveKeyframe
-{
+public class ColourKeyframe : AnimCurveKeyframe {
     public uint Colour { get; set; }
 }
 
-public class AudioKeyframe : AssetKeyframe
-{
+public class AudioKeyframe : AssetKeyframe {
     public int Mode { get; set; }
 }
 
@@ -1485,24 +1460,20 @@ public class Keyframe<T> : GMResource
     public Dictionary<string, T> Channels { get; set; } = new();
 }
 
-public class AssetKeyframe : GMResource
-{
+public class AssetKeyframe : GMResource {
     public AssetReference Id { get; set; }
 }
 
-public class SpriteFrameKeyframe : AssetKeyframe
-{
+public class SpriteFrameKeyframe : AssetKeyframe { }
 
-}
-public class MessageEventKeyframe : GMResource
-{
+public class MessageEventKeyframe : GMResource {
     public string[] Events { get; set; } = new string[0];
 }
 
-public class MomentsEventKeyframe : GMResource
-{
+public class MomentsEventKeyframe : GMResource {
     public List<string> Events { get; set; } = new();
 }
+#endregion
 
 #endregion
 #region GMNote Class
@@ -1738,9 +1709,8 @@ public class GMPath : GMResource
 
     public class GMPathPoint : GMPoint
     {
-        public GMPathPoint(float x, float y) : base(x, y)
-        {
-        }
+        public GMPathPoint(float x, float y) : base(x, y) { }
+
         public float speed { get; set; } = 100f;
     }
 }
@@ -5546,8 +5516,12 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                     break;
             }
 
-            // TODO: VISIBILITY
-            // Probably not gonna happen, since utmt can't extract that value yet
+            // Track Visibility
+            // if Tags list is empty, then visible, if Tags list has one entry (with value 1) then not visible
+            // (UTMT, should this be a bool instead of a List<int>?)
+            if (track.Tags != null && track.Tags.Count > 0 && track.Tags[0] == 1)
+                currentTrack.modifiers.Add(new InvisibleModifier());
+
             currentTrack.trackColour = colour;
             currentTrack.isCreationTrack = track.IsCreationTrack;
             if (currentTrack.builtinName == -1)
