@@ -28,8 +28,12 @@
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
         - Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
-        - Added ability to export SPINE sprites
-        - (NEW) Added ability to export Vector (SVG) sprites
+
+    Since the original script was left in an unfinished state, there was some things that couldn't be decompiled 
+    correctly or at all, but now can with this script, that being:
+        - WMA sound files
+        - SPINE and SVG Vector sprites
+        - Sequence track visibility
 
     Included LICENSE file applies ONLY to setupwitch's code
     Any of my own changes are not under this LICENSE file, and can be freely used by anyone
@@ -5108,14 +5112,16 @@ async Task DumpFonts()
 GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
 {
     var seqName = ((s?.Name?.Content != null || s.Name.Content != "") ? s.Name.Content : $"Unknown_Sequence");
-    GMSequence dumpedSequence = new(seqName);
-    dumpedSequence.playback = (int)s.Playback;
-    dumpedSequence.playbackSpeed = s.PlaybackSpeed;
-    dumpedSequence.playbackSpeedType = (int)s.PlaybackSpeedType;
-    dumpedSequence.length = s.Length;
-    dumpedSequence.xorigin = s.OriginX;
-    dumpedSequence.yorigin = s.OriginY;
-    dumpedSequence.volume = s.Volume;
+    GMSequence dumpedSequence = new(seqName)
+    {
+        playback = (int)s.Playback,
+        playbackSpeed = s.PlaybackSpeed,
+        playbackSpeedType = (int)s.PlaybackSpeedType,
+        length = s.Length,
+        xorigin = s.OriginX,
+        yorigin = s.OriginY,
+        volume = s.Volume
+    };
 
     if (spr is not null)
         dumpedSequence.parent = GetParentFolder(GMAssetType.Sprite);
