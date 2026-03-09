@@ -87,7 +87,7 @@ using static UndertaleModLib.Models.UndertaleRoom;
 EnsureDataLoaded();
 if (!Data.IsVersionAtLeast(2, 3))
 {
-    if (!ScriptQuestion("This Script is not intended for games made with GameMaker versions below GMS2.3\n(Consider using the GMS1 Decompiler instead)\n\n Continue Anyways?"))
+    if (!ScriptQuestion("This Script is not intended for games made with GameMaker versions below GMS2.3\n(Consider using the GMS1 Decompiler instead)\n\nContinue Anyways?"))
         return;
 }
 if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true)
@@ -988,6 +988,17 @@ public class GMRoom : GMResource
     }
 }
 
+public class ObjectProperty
+{
+    public string ObjName { get; set; }
+    public KeyValuePair<string, string> Prop { get; set; }
+    public ObjectProperty(string objName, KeyValuePair<string, string> prop)
+    {
+        ObjName = objName;
+        Prop = prop;
+    }
+}
+
 #endregion
 #region GMAnimCurve Class
 
@@ -1106,7 +1117,7 @@ public class GMSprite : GMResource
     }
 }
 
-#region Vector shit
+// Vector Class
 public class GMShape : GMResource
 {
     public bool baked { get; set; } = false;
@@ -1154,163 +1165,6 @@ public class GMShape : GMResource
         }
     }
 }
-
-public static class GMShapeToSVG
-{
-    public static string Convert(GMShape vecShape)
-    {
-        StringBuilder sb = new();
-
-        float width = vecShape.maxX - vecShape.minX;
-        float height = vecShape.maxY - vecShape.minY;
-
-        sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{vecShape.minX} {vecShape.minY} {width} {height}\">");
-
-        foreach (var styleGroup in vecShape.styleGroups)
-        {
-            foreach (var sub in styleGroup.shapes)
-            {
-                if (sub.tris.Count == 0)
-                    continue;
-
-                // get fill color
-                string fill = "#000000";
-                float opacity = 1;
-                if (sub.fillStyle1 >= 0 && sub.fillStyle1 < styleGroup.fillStyles.Count)
-                    (fill, opacity) = RGBAtoHex(styleGroup.fillStyles[sub.fillStyle1].rgba);
-
-                // get paths
-                var loops = ExtractLoops(sub);
-                foreach (var loop in loops)
-                    sb.AppendLine($"<path d=\"{BuildPath(loop, sub.points)}\" fill=\"{fill}\" fill-opacity=\"{opacity}\" />");
-            }
-        }
-
-        sb.AppendLine("</svg>");
-        return sb.ToString();
-    }
-
-    #region Helper Funcs
-    private struct Edge
-    {
-        public int A;
-        public int B;
-
-        public Edge(int a, int b)
-        {
-            A = (a < b) ? a : b;
-            B = (a < b) ? b : a;
-        }
-    }
-
-    private static List<List<int>> ExtractLoops(GMShape.GMSubShape sub)
-    {
-        Dictionary<Edge, int> edgeCount = new();
-
-        void AddEdge(int a, int b)
-        {
-            Edge e = new(a, b);
-
-            if (!edgeCount.ContainsKey(e))
-                edgeCount[e] = 0;
-
-            edgeCount[e]++;
-        }
-
-        for (int i = 0; i < sub.tris.Count; i += 3)
-        {
-            int a = sub.tris[i];
-            int b = sub.tris[i + 1];
-            int c = sub.tris[i + 2];
-
-            AddEdge(a, b);
-            AddEdge(b, c);
-            AddEdge(c, a);
-        }
-
-        var boundary = edgeCount.Where(e => e.Value == 1).Select(e => e.Key).ToList();
-        Dictionary<int, List<int>> adjacency = new();
-
-        foreach (var e in boundary)
-        {
-            if (!adjacency.ContainsKey(e.A))
-                adjacency[e.A] = new List<int>();
-
-            if (!adjacency.ContainsKey(e.B))
-                adjacency[e.B] = new List<int>();
-
-            adjacency[e.A].Add(e.B);
-            adjacency[e.B].Add(e.A);
-        }
-
-        List<List<int>> loops = new();
-        HashSet<int> visited = new();
-
-        foreach (var start in adjacency.Keys)
-        {
-            if (visited.Contains(start))
-                continue;
-
-            List<int> loop = new();
-
-            int current = start;
-            int prev = -1;
-
-            while (true)
-            {
-                loop.Add(current);
-                visited.Add(current);
-
-                var nextCandidates = adjacency[current];
-                int next = nextCandidates.FirstOrDefault(v => v != prev);
-
-                if (next == start || next == 0 && prev != -1)
-                    break;
-
-                prev = current;
-                current = next;
-
-                if (!adjacency.ContainsKey(current))
-                    break;
-            }
-
-            loops.Add(loop);
-        }
-
-        return loops;
-    }
-
-    private static string BuildPath(List<int> loop, List<GMShape.GMSubShape.Vec2> points)
-    {
-        StringBuilder sb = new();
-
-        var p0 = points[loop[0]];
-
-        sb.Append($"M {p0.x} {p0.y} ");
-
-        for (int i = 1; i < loop.Count; i++)
-        {
-            var p = points[loop[i]];
-            sb.Append($"L {p.x} {p.y} ");
-        }
-
-        sb.Append("Z");
-
-        return sb.ToString();
-    }
-
-    private static (string, float) RGBAtoHex(uint rgba)
-    {
-        byte r = (byte)(rgba >> 24);
-        byte g = (byte)(rgba >> 16);
-        byte b = (byte)(rgba >> 8);
-        byte a = (byte)(rgba);
-
-        return ($"#{r:X2}{g:X2}{b:X2}", (float)a / 255);
-    }
-    #endregion
-}
-#endregion
 
 #endregion
 #region GMSequence Class
@@ -1862,17 +1716,6 @@ public class GMWindowsOptions : GMResource
 }
 
 #endregion
-
-public class ObjectProperty
-{
-    public string ObjName { get; set; }
-    public KeyValuePair<string, string> Prop { get; set; }
-    public ObjectProperty(string objName, KeyValuePair<string, string> prop)
-    {
-        ObjName = objName;
-        Prop = prop;
-    }
-}
 
 #endregion
 
@@ -3803,6 +3646,165 @@ string GetTexturePageSize()
     KeyValuePair<string, int> OrderedSizes = SizesFound.Aggregate((l, r) => l.Value > r.Value ? l : r);
     return OrderedSizes.Value != 0 ? OrderedSizes.Key : "2048x2048";
 }
+
+#region GMShape to SVG Convertor
+public static class GMShapeToSVG
+{
+    public static string Convert(GMShape vecShape)
+    {
+        StringBuilder sb = new();
+
+        float width = vecShape.maxX - vecShape.minX;
+        float height = vecShape.maxY - vecShape.minY;
+
+        sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{vecShape.minX} {vecShape.minY} {width} {height}\">");
+
+        foreach (var styleGroup in vecShape.styleGroups)
+        {
+            foreach (var sub in styleGroup.shapes)
+            {
+                if (sub.tris.Count == 0)
+                    continue;
+
+                // get fill color
+                string fill = "#000000";
+                float opacity = 1;
+                if (sub.fillStyle1 >= 0 && sub.fillStyle1 < styleGroup.fillStyles.Count)
+                    (fill, opacity) = RGBAtoHex(styleGroup.fillStyles[sub.fillStyle1].rgba);
+
+                // get paths
+                var loops = ExtractLoops(sub);
+                foreach (var loop in loops)
+                    sb.AppendLine($"<path d=\"{BuildPath(loop, sub.points)}\" fill=\"{fill}\" fill-opacity=\"{opacity}\" />");
+            }
+        }
+
+        sb.AppendLine("</svg>");
+        return sb.ToString();
+    }
+
+    #region Helper Funcs
+    private struct Edge
+    {
+        public int A;
+        public int B;
+
+        public Edge(int a, int b)
+        {
+            A = (a < b) ? a : b;
+            B = (a < b) ? b : a;
+        }
+    }
+
+    private static List<List<int>> ExtractLoops(GMShape.GMSubShape sub)
+    {
+        Dictionary<Edge, int> edgeCount = new();
+
+        void AddEdge(int a, int b)
+        {
+            Edge e = new(a, b);
+
+            if (!edgeCount.ContainsKey(e))
+                edgeCount[e] = 0;
+
+            edgeCount[e]++;
+        }
+
+        for (int i = 0; i < sub.tris.Count; i += 3)
+        {
+            int a = sub.tris[i];
+            int b = sub.tris[i + 1];
+            int c = sub.tris[i + 2];
+
+            AddEdge(a, b);
+            AddEdge(b, c);
+            AddEdge(c, a);
+        }
+
+        var boundary = edgeCount.Where(e => e.Value == 1).Select(e => e.Key).ToList();
+        Dictionary<int, List<int>> adjacency = new();
+
+        foreach (var e in boundary)
+        {
+            if (!adjacency.ContainsKey(e.A))
+                adjacency[e.A] = new List<int>();
+
+            if (!adjacency.ContainsKey(e.B))
+                adjacency[e.B] = new List<int>();
+
+            adjacency[e.A].Add(e.B);
+            adjacency[e.B].Add(e.A);
+        }
+
+        List<List<int>> loops = new();
+        HashSet<int> visited = new();
+
+        foreach (var start in adjacency.Keys)
+        {
+            if (visited.Contains(start))
+                continue;
+
+            List<int> loop = new();
+
+            int current = start;
+            int prev = -1;
+
+            while (true)
+            {
+                loop.Add(current);
+                visited.Add(current);
+
+                var nextCandidates = adjacency[current];
+                int next = nextCandidates.FirstOrDefault(v => v != prev);
+
+                if (next == start || next == 0 && prev != -1)
+                    break;
+
+                prev = current;
+                current = next;
+
+                if (!adjacency.ContainsKey(current))
+                    break;
+            }
+
+            loops.Add(loop);
+        }
+
+        return loops;
+    }
+
+    private static string BuildPath(List<int> loop, List<GMShape.GMSubShape.Vec2> points)
+    {
+        StringBuilder sb = new();
+
+        var p0 = points[loop[0]];
+
+        sb.Append($"M {p0.x} {p0.y} ");
+
+        for (int i = 1; i < loop.Count; i++)
+        {
+            var p = points[loop[i]];
+            sb.Append($"L {p.x} {p.y} ");
+        }
+
+        sb.Append("Z");
+
+        return sb.ToString();
+    }
+
+    private static (string, float) RGBAtoHex(uint rgba)
+    {
+        byte r = (byte)(rgba >> 24);
+        byte g = (byte)(rgba >> 16);
+        byte b = (byte)(rgba >> 8);
+        byte a = (byte)(rgba);
+
+        return ($"#{r:X2}{g:X2}{b:X2}", (float)a / 255);
+    }
+    #endregion
+}
+#endregion
+
 #endregion
 
 #region Main Resource Dumpers
