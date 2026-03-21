@@ -3184,9 +3184,10 @@ public static string TrimShader(this string input)
 /// <param name="eventList"></param>
 public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<UndertaleGameObject.Event> eventList)
 {
-    //Still regex BULLSHIT
-    Regex assignmentRegex = new Regex(
-        @"^(?:self\.)?(\w+)\s*=\s*(.+?);?$",
+    // get the "var = value" bit from the decompiled code
+    // this also accounts for self. and multiline structs
+    Regex assignmentRegex = new(
+        @"(?:self\.)?(\w+)\s*=\s*({[\s\S]*?}|.+?);?$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.ECMAScript
     );
 
@@ -3211,7 +3212,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
         foreach (Match match in assignmentRegex.Matches(dumpedCode))
         {
             string name = match.Groups[1].Value;
-            string rawValue = match.Groups[2].Value.Trim();
+            string rawValue = Regex.Replace(match.Groups[2].Value, @"\s+", " ").Trim();// remove new lines
 
             GMObjectProperty prop = new(name)
             {
@@ -6407,8 +6408,8 @@ async Task DumpDatafiles()
     // Get all files and subdirectories
     foreach (var file in Directory.GetFiles(rootDir, "*", SearchOption.AllDirectories))
     {
-        // Skip these files                                                        //also get rid of sounds because yeah
-        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
+        // Skip these files                                                                 //also get rid of sounds because yeah
+        if (new[] { ".dll", ".exe", ".ini", ".win", ".unx", ".droid", ".ios", ".dat", ".yytex", ".mp3", ".ogg", ".wav" }.Contains(Path.GetExtension(file).ToLower()))
             continue;
 
         string relativePath = Path.GetRelativePath(rootDir, file);
