@@ -3184,16 +3184,16 @@ public static string TrimShader(this string input)
 /// <param name="eventList"></param>
 public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<UndertaleGameObject.Event> eventList)
 {
+    List<GMObjectProperty> propList = new();
+    if (eventList is null)
+        return propList;
+
     // get the "var = value" bit from the decompiled code
     // this also accounts for self. and multiline structs
     Regex assignmentRegex = new(
         @"(?:self\.)?(\w+)\s*=\s*({[\s\S]*?}|.+?);?$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.ECMAScript
     );
-
-    List<GMObjectProperty> propList = new();
-    if (eventList is null)
-        return propList;
 
     if (eventList.Count >= 1 && eventList[0].Actions.Count >= 1)
     {
@@ -3220,8 +3220,15 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 value = rawValue
             };
 
+            // List (only can check for multi-select lists)
+            Match listmatch = Regex.Match(rawValue, @"\[([^\]]+)\]");
+            if (listmatch.Success)
+            {
+                prop.varType = 6;
+                prop.value = listmatch.Groups[1].Value.Trim();
+            }
             // String
-            if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
+            else if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
                 prop.varType = 2;
             // Boolean
             else if (rawValue == "true" || rawValue == "false")
@@ -3240,24 +3247,19 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 else
                     prop.varType = 1; // Integer
             }
-
-            // Asset
+            // Asset (try to do last, since checking is pretty slow)
             else if (
                 !rawValue.Contains("\"") // Stop Strings
                 && !Regex.IsMatch(rawValue, @"\W") 
                 && (!char.IsDigit(rawValue[0]) || rawValue.Length > 1) // Stop Ints
                 && Data.IndexOfByName(rawValue) != -1 // Checks if value is a Game Asset
             ) prop.varType = 5;
-
             // Expression
             else if (Regex.IsMatch(rawValue, @"[=!<>+\-*/%&|()]"))
                 prop.varType = 4;
             // Default (Expression)
             else
                 prop.varType = 4;
-
-            // List (Type 6) is impossible to extract, since the list options (other than default) aren't present in code
-            // and Default value in list would just end up being one of the other types above
 
             propList.Add(prop);
         }
