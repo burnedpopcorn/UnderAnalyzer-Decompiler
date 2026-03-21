@@ -28,6 +28,7 @@
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
         - Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
+        - (NEW) Added ability to automatically organize some assets based on Texture and Audio Groups
 
     Since the original script was left in an unfinished state, there was some things that couldn't be decompiled 
     correctly or at all, but now can with this script, that being:
@@ -502,7 +503,7 @@ public class GMProject : GMResource
     public int defaultScriptType { get; set; } = 1;
     public bool isEcma { get; set; } = false;
     public RoomOrderNode[] RoomOrderNodes { get; set; } = new RoomOrderNode[0];
-    public GMFolder[] Folders { get; set; } = CreateDefaultFolders();
+    public GMFolder[] Folders { get; set; } = new GMFolder[0];
     public GMAudioGroup[] AudioGroups { get; set; } = new GMAudioGroup[0];
     public List<GMTextureGroup> TextureGroups { get; set; } = new();
     public List<GMIncludedFile> IncludedFiles { get; set; } = new();
@@ -597,34 +598,6 @@ public class GMProject : GMResource
         public string folderPath { get; set; }
         public int order { get; set; }
     }
-
-    static GMFolder[] CreateDefaultFolders()
-    {
-        // lazy solution, not planning to do much with folders so it doesnt matter.
-        int currentOrder = 0;
-        return new GMFolder[]
-        {
-            new GMFolder("Sprites", "folders/Sprites.yy") { order = ++currentOrder },
-            new GMFolder("Tile Sets", "folders/Tile Sets.yy") { order = ++currentOrder },
-            new GMFolder("Sounds", "folders/Sounds.yy") { order = ++currentOrder },
-            new GMFolder("Paths", "folders/Paths.yy") { order = ++currentOrder },
-            new GMFolder("Scripts", "folders/Scripts.yy") { order = ++currentOrder },
-            new GMFolder("Shaders", "folders/Shaders.yy") { order = ++currentOrder },
-            new GMFolder("Fonts", "folders/Fonts.yy") { order = ++currentOrder },
-            new GMFolder("Timelines", "folders/Timelines.yy") { order = ++currentOrder },
-            new GMFolder("Objects", "folders/Objects.yy") { order = ++currentOrder },
-            new GMFolder("Rooms", "folders/Rooms.yy") { order = ++currentOrder },
-            new GMFolder("Sequences", "folders/Sequences.yy") { order = ++currentOrder },
-            new GMFolder("Animation Curves", "folders/Animation Curves.yy") { order = ++currentOrder },
-            new GMFolder("Notes", "folders/Notes.yy") { order = ++currentOrder },
-            new GMFolder("Extensions", "folders/Extensions.yy") { order = ++currentOrder },
-
-            // for things like tile data & gml_pragma.
-            new GMFolder("DecompilerGenerated", "folders/DecompilerGenerated.yy") { order = ++currentOrder },
-            new GMFolder("GeneratedTileSprites", "folders/DecompilerGenerated/GeneratedTileSprites.yy") { order = ++currentOrder }
-        };
-
-    }
 }
 
 #endregion
@@ -717,11 +690,8 @@ public class GMScript : GMResource
 
 public class GMSound : GMResource
 {
-    public GMSound(string name)
-    {
+    public GMSound(string name) {
         this.name = name;
-
-        parent = GetParentFolder(GMAssetType.Sound);
     }
     public int conversionMode { get; set; }
     public int compression { get; set; }
@@ -3016,6 +2986,61 @@ if (!UISettings.DUMP)
 
 #region Useful Tools
 
+/// <summary>
+/// creates all project folders
+/// also organizes some assets based on texture and audio groups
+/// </summary>
+/// <returns>GMProject.GMFolder[]</returns>
+GMProject.GMFolder[] CreateProjectFolders()
+{
+    int order = 0;
+    List<GMProject.GMFolder> folders = new()
+    {
+        // default folders
+        CreateFolder("Sprites"),
+        CreateFolder("Tile Sets"),
+        CreateFolder("Sounds"),
+        CreateFolder("Paths"),
+        CreateFolder("Scripts"),
+        CreateFolder("Shaders"),
+        CreateFolder("Fonts"),
+        CreateFolder("Timelines"),
+        CreateFolder("Objects"),
+        CreateFolder("Rooms"),
+        CreateFolder("Sequences"),
+        CreateFolder("Animation Curves"),
+        CreateFolder("Notes"),
+        CreateFolder("Extensions"),
+
+        // for things like tile data & gml_pragma.
+        CreateFolder("DecompilerGenerated"),
+        CreateFolder("GeneratedTileSprites", "DecompilerGenerated/")
+    };
+
+    // autosort textures (if texturegroups are available)
+    foreach (UndertaleTextureGroupInfo t in Data.TextureGroupInfo)
+    {
+        if (!t.Name.Content.ToLower().Contains("_yy_") && t.Name.Content.ToLower() != "default")
+        {
+            if (t.Sprites.Count > 0)
+                folders.Add(CreateFolder(t.Name.Content, "Sprites/"));
+            if (t.Tilesets.Count > 0)
+                folders.Add(CreateFolder(t.Name.Content, "Tile Sets/"));
+        }
+    }
+
+    // autosort audio (if audiogroups are available)
+    foreach (UndertaleAudioGroup a in Data.AudioGroups)
+        if (a.Name.Content != "audiogroup_default")
+            folders.Add(CreateFolder(a.Name.Content, "Sounds/"));
+
+    return folders.ToArray();
+
+    GMProject.GMFolder CreateFolder(string name, string extpath = "") {
+        return new GMProject.GMFolder(name, $"folders/{extpath}{name}.yy") { order = ++order };
+    }
+}
+
 // this dictionary holds all the names of the assets
 public static readonly Dictionary<GMAssetType, string> assetTypes = new()
 {
@@ -3056,7 +3081,7 @@ uint GetRandomColour()
 {
     // this turns the color enum into array and use the random class to choose a random one
     Array values = Enum.GetValues(typeof(eColour));
-    Random random = new Random();
+    Random random = new();
     return (uint)values.GetValue(random.Next(values.Length));
 }
 /// <summary>
@@ -3220,6 +3245,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 value = rawValue
             };
 
+            #region Check Property Type
             // List (only can check for multi-select lists)
             Match listmatch = Regex.Match(rawValue, @"\[([^\]]+)\]");
             if (listmatch.Success)
@@ -3260,6 +3286,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             // Default (Expression)
             else
                 prop.varType = 4;
+            #endregion
 
             propList.Add(prop);
         }
@@ -3322,7 +3349,7 @@ public static string FixVariableDeclarations(this string s)
     everything that isnt an anchor line will be taken and put into the same line as the anchor.
     */
 
-    StringBuilder result = new StringBuilder();
+    StringBuilder result = new();
     string[] lines = s.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
     bool isAnchorLine = false;
 
@@ -4068,7 +4095,7 @@ public void DumpSound(UndertaleSound s, int index)
 
     bool isExternal = File.Exists(rootDir + s.File.Content);
 
-    GMSound dumpedSound = new GMSound(soundName)
+    GMSound dumpedSound = new(soundName)
     {
         volume = s.Volume,
         preload = s.Preload,
@@ -4085,6 +4112,11 @@ public void DumpSound(UndertaleSound s, int index)
     string audioGroupPath = $"{rootDir}audiogroup{s.GroupID}.dat";
     var audioGroupElement = Data.AudioGroups.ElementAtOrDefault(s.GroupID);
     string audioGroupName = (audioGroupElement is null ? "audiogroup_default" : audioGroupElement.Name.Content);
+
+    dumpedSound.parent =
+        (audioGroupName != "audiogroup_default")
+        ? GetFolderReference(audioGroupName, "Sounds/")
+        : GetParentFolder(GMAssetType.Sound);
 
     dumpedSound.audioGroupId = new AssetReference()
     {
@@ -4107,11 +4139,11 @@ public void DumpSound(UndertaleSound s, int index)
         {
             UndertaleData data = null;
             // read the audio group
-            using (var stream = new FileStream(audioGroupPath, FileMode.Open, FileAccess.Read))
+            using (FileStream stream = new(audioGroupPath, FileMode.Open, FileAccess.Read))
                 data = UndertaleIO.Read(stream);
 
             fileData = data.EmbeddedAudio[s.AudioID].Data;
-            File.WriteAllBytes(dumpedSoundPath, data.EmbeddedAudio[s.AudioID].Data);
+            File.WriteAllBytes(dumpedSoundPath, fileData);
         }
         catch (Exception e)
         {
@@ -4677,9 +4709,14 @@ void DumpSprite(UndertaleSprite s, int index)
             bottom = s.V3NineSlice.Bottom,
             tileMode = s.V3NineSlice.TileModes.Select(e => (int)e).ToArray()
         },
-        parent = GetParentFolder(GMAssetType.Sprite),
         tags = GetTags(s)
     };
+
+    // find parent folder
+    dumpedSprite.parent =
+        (texGroupStuff.ContainsKey(spriteName) && texGroupStuff[spriteName].ToLower() != "default")
+        ? GetFolderReference(texGroupStuff[spriteName], "Sprites/")
+        : GetParentFolder(GMAssetType.Sprite);
 
     if (s.V2Sequence is not null)
         dumpedSprite.sequence = SequenceDumper(s.V2Sequence, s);
@@ -6045,11 +6082,16 @@ void DumpTileSet(UndertaleBackground t, int index)
         spriteNoExport = true,
         out_columns = (int)t.GMS2TileColumns,
         tile_count = (int)t.GMS2TileCount,
-        parent = GetParentFolder(GMAssetType.TileSet),
         spriteId = (t.Texture is null ? null : new AssetReference(spriteName, GMAssetType.Sprite)),
         textureGroupId = GetTextureGroup(t.Name.Content),
         tags = GetTags(t)
     };
+
+    // find parent folder
+    dumpedTileset.parent =
+        (texGroupStuff.ContainsKey(tilesetName) && texGroupStuff[tilesetName].ToLower() != "default")
+        ? GetFolderReference(texGroupStuff[tilesetName], "Tile Sets/")
+        : GetParentFolder(GMAssetType.TileSet);
 
     dumpedTileset.tileAnimation.frameData = t.GMS2TileIds.Select(t => t.ID).ToArray();
 
@@ -6344,7 +6386,6 @@ void DumpTexGroup(UndertaleTextureGroupInfo t)
     string texGroupName = t.Name.Content;
     GMProject.GMTextureGroup dumpedTexGroup = new(texGroupName);
 
-
     string lType = "default";
     // LoadType is an enum
     if ((int)t.LoadType != 0) // if external
@@ -6567,9 +6608,10 @@ ParallelOptions parallelOptions = new()
 // obtain info from the runner
 RunnerData rData = new(runnerFile);
 
-GMProject finalExport = new GMProject(Data.GeneralInfo.Name.Content)
+GMProject finalExport = new(Data.GeneralInfo.Name.Content)
 {
-    isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode))
+    isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode)),
+    Folders = CreateProjectFolders()
 };
 
 finalExport.MetaData.IDEVersion = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}";
