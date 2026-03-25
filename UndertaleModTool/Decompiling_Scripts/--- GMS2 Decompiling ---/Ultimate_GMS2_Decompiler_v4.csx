@@ -6638,7 +6638,7 @@ if (UISettings.SCPT
             UseSemicolon = false,
             AllowLeftoverDataOnStack = true
         });
-        dumpedCode = (dumpedCode is null ? "" : dumpedCode);
+        dumpedCode = dumpedCode ?? ""; // just in case
         // from quantum
         dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
         globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
@@ -6655,7 +6655,7 @@ if (UISettings.SCPT
 
         foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
         {
-            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content != null ? Data?.GeneralInfo?.DisplayName?.Content : ""), condition.Value)) || condition.ConditionKind == "Always")
+            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content ?? ""), condition.Value)) || condition.ConditionKind == "Always")
             {
                 string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
                 if (File.Exists(macroPath))
@@ -6691,7 +6691,7 @@ if (UISettings.SCPT
         string enumPat = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
         HashSet<long> RawValues = new();
 
-        DecompileSettings dSettings = new DecompileSettings()
+        DecompileSettings dSettings = new()
         {
             MacroDeclarationsAtTop = true,
             CreateEnumDeclarations = true,
@@ -6729,7 +6729,7 @@ if (UISettings.SCPT
         SortedValues.Sort();
 
         // Adding Unknown Enums to the script
-        globalInitCode += "enum " + enumName + "\n{\n";
+        globalInitCode += $"enum {enumName}\n{{\n";
 
         long expectedValue = 0;
         foreach (long val in SortedValues)
@@ -6738,7 +6738,7 @@ if (UISettings.SCPT
             // if in order, ex: 1, 2, 3
             if (val == expectedValue)
             {
-                globalInitCode += "\t" + name + ",\n";
+                globalInitCode += $"\t{(name)},\n";
                 if (expectedValue != long.MaxValue)
                     expectedValue++;
             }
@@ -6746,11 +6746,8 @@ if (UISettings.SCPT
             // then make it = 5 to account for it
             else
             {
-                globalInitCode += "\t" + name + " = " + val.ToString() + ",\n";
-                if (expectedValue != long.MaxValue)
-                    expectedValue = val + 1;
-                else
-                    expectedValue = val;
+                globalInitCode += $"\t{(name)} = {(val)},\n";
+                expectedValue = val + (expectedValue != long.MaxValue ? 1 : 0);
             }
         }
         globalInitCode += "}";
