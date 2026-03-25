@@ -98,62 +98,6 @@ if (Data.ToolInfo.DecompilerSettings.CreateEnumDeclarations == true)
 }
 #endregion
 
-#region options.ini Parser
-
-// for the options.ini file
-public static class IniParser
-{
-    private static dynamic? GetValueType(string value)
-    {
-        if (value.StartsWith('\"')) // string
-            return value;
-        else if (value == "True" || value == "False") // boolean
-            return Convert.ToBoolean((value == "True"));
-        else if (value.Contains('.') && Single.TryParse(value, out float outputFloat)) // double/float
-            return outputFloat;
-        else if (int.TryParse(value, out int result)) // int
-            return result;
-        else
-            return value; // give up and return a string
-    }
-
-    public static Dictionary<string, Dictionary<string, dynamic>> ParseToDictionary(string filePath)
-    {
-        // obtain the data from the INI
-        string[] iniData = null;
-
-        if (File.Exists(filePath))
-            iniData = File.ReadAllLines(filePath);
-        else
-            return null;
-
-        string? section = null;
-        Dictionary<string, Dictionary<string, dynamic>> output = new();
-        foreach (string line in iniData)
-        {
-            // get a new section
-            if (line.StartsWith('[') && line.EndsWith(']'))
-            {
-                section = Regex.Replace(line, @"[\[\]]", "");
-                output[section] = new Dictionary<string, dynamic>();
-            }
-            else if (section is not null && line.Contains('='))
-            {
-                string[] splitLine = line.Split('=');
-                string key = splitLine[0];
-                string value = splitLine[1];
-
-                dynamic typedValue = GetValueType(value);
-
-                output[section][key] = typedValue;
-            }
-        }
-        return output;
-    }
-}
-
-#endregion
-
 #region Classes
 
 #region Asset Type Enums
@@ -2986,12 +2930,60 @@ if (!UISettings.DUMP)
 
 #region Useful Tools
 
+// this dictionary holds all the names of the assets
+public static readonly Dictionary<GMAssetType, string> assetTypes = new()
+{
+    { GMAssetType.None, "" },
+    { GMAssetType.Room, "Room" },
+    { GMAssetType.Sprite, "Sprite" },
+    { GMAssetType.Object, "Object" },
+    { GMAssetType.Script, "Script" },
+    { GMAssetType.Sound, "Sound" },
+    { GMAssetType.AudioGroup, "AudioGroup" },
+    { GMAssetType.TileSet, "Tile Set" },
+    { GMAssetType.Note, "Note" },
+    { GMAssetType.TextureGroup, "TextureGroup" },
+    { GMAssetType.Font, "Font" },
+    { GMAssetType.Sequence, "Sequence" },
+    { GMAssetType.Shader, "Shader" },
+    { GMAssetType.Extension, "Extension" },
+    { GMAssetType.Path, "Path" },
+    { GMAssetType.AnimationCurve, "Animation Curve" },
+    { GMAssetType.Timeline, "Timeline" },
+};
+
+/// <summary>
+/// adds a string to the log file.
+/// </summary>
+/// <param name="message"></param>
+public void PushToLog(string message)
+{
+    if (!UISettings.YYMPS)
+        File.AppendAllText(scriptDir + "script.log", $"{message}\n");
+}
+
+#region Create Project Resources
+/// <summary>
+/// creates a new <c>GMProject.Resource</c> inside of the exported project
+/// </summary>
+/// <param name="assetType"></param>
+/// <param name="assetName"></param>
+/// <param name="assetOrder"></param>
+public void CreateProjectResource(GMAssetType assetType, string assetName, int assetOrder)
+{
+    finalExport.resources.Enqueue(new GMProject.Resource()
+    {
+        id = new AssetReference(assetName, assetType),
+        order = assetOrder,
+        type = assetType
+    });
+}
 /// <summary>
 /// creates all project folders
 /// also organizes some assets based on texture and audio groups
 /// </summary>
 /// <returns>GMProject.GMFolder[]</returns>
-GMProject.GMFolder[] CreateProjectFolders()
+public GMProject.GMFolder[] CreateProjectFolders()
 {
     int order = 0;
     List<GMProject.GMFolder> folders = new()
@@ -3036,43 +3028,61 @@ GMProject.GMFolder[] CreateProjectFolders()
 
     return folders.ToArray();
 
-    GMProject.GMFolder CreateFolder(string name, string extpath = "") {
+    GMProject.GMFolder CreateFolder(string name, string extpath = "")
+    {
         return new GMProject.GMFolder(name, $"folders/{extpath}{name}.yy") { order = ++order };
     }
 }
-
-// this dictionary holds all the names of the assets
-public static readonly Dictionary<GMAssetType, string> assetTypes = new()
+/// <summary>
+/// creates a file path.
+/// e.g: $"{assetname}s/{assetname}/{assetname}.yy"
+/// </summary>
+/// <param name="assetName"></param>
+/// <param name="type"></param>
+public static string CreateFilePath(string assetName, GMAssetType type)
 {
-    { GMAssetType.None, "" },
-    { GMAssetType.Room, "Room" },
-    { GMAssetType.Sprite, "Sprite" },
-    { GMAssetType.Object, "Object" },
-    { GMAssetType.Script, "Script" },
-    { GMAssetType.Sound, "Sound" },
-    { GMAssetType.AudioGroup, "AudioGroup" },
-    { GMAssetType.TileSet, "Tile Set" },
-    { GMAssetType.Note, "Note" },
-    { GMAssetType.TextureGroup, "TextureGroup" },
-    { GMAssetType.Font, "Font" },
-    { GMAssetType.Sequence, "Sequence" },
-    { GMAssetType.Shader, "Shader" },
-    { GMAssetType.Extension, "Extension" },
-    { GMAssetType.Path, "Path" },
-    { GMAssetType.AnimationCurve, "Animation Curve" },
-    { GMAssetType.Timeline, "Timeline" },
-};
+    string asset = assetTypes[type].ToLower();
+    // dumb switch statement
+    switch (asset)
+    {
+        case "animation curve": asset = "animcurve";    break;
+        case "tile set":        asset = "tileset";      break;
+    }
+    return $"{asset}s/{assetName}/{assetName}.yy";
+}
+/// <summary>
+/// Creates a new GMNote in the project.
+/// </summary>
+/// <param name="noteName"></param>
+/// <param name="folderName"></param>
+/// <param name="noteText"></param>
+public void CreateNote(string noteName = "Note1", string folderName = "Notes", string noteText = "")
+{
+    string assetDir = $"{scriptDir}notes\\{noteName}\\";
 
+    GMNotes note = new(noteName);
+    note.parent.name = folderName;
+    note.parent.path = $"folders/{folderName}.yy";
+
+    CreateProjectResource(GMAssetType.Note, noteName, noteIndex++);
+    Directory.CreateDirectory(assetDir);
+    File.WriteAllText($"{assetDir}\\{noteName}.yy", JsonSerializer.Serialize(note, jsonOptions));
+    File.WriteAllText($"{assetDir}\\{noteName}.txt", noteText);
+}
+#endregion
+#region Get Project Resources
+/// <summary>
+/// converts numerical id to gamemaker's hex like id
+/// </summary>
+/// <returns>string</returns>
 string IdToHex(uint id)
 {
     if (!UISettings.GENROOM)
         return id.ToString();
 
     // gamemaker IDE does it kinda like this
-    Random rand = new((int)id);
-    return rand.Next().ToString("X");
+    return $"{new Random((int)id).Next():X}";
 }
-
 /// <summary>
 /// returns a random colour
 /// </summary>
@@ -3081,11 +3091,31 @@ uint GetRandomColour()
 {
     // this turns the color enum into array and use the random class to choose a random one
     Array values = Enum.GetValues(typeof(eColour));
-    Random random = new();
-    return (uint)values.GetValue(random.Next(values.Length));
+    return (uint)values.GetValue(new Random().Next(values.Length));
 }
 /// <summary>
-/// Returns the path of the runner.
+/// obtains the <c>tags</c> variable from any asset
+/// </summary>
+/// <param name="asset"></param>
+string[]? GetTags(dynamic asset)
+{
+    // that one obscure gamemaker feature that nobody uses
+    if (Data.Tags is null) return null;
+
+    // get the id
+    var assetTagId = UndertaleTags.GetAssetTagID(Data, asset);
+    if (Data.Tags.AssetTags.ContainsKey(assetTagId))
+    {
+        // cast it into an enumerable for use.
+        var tagList = (IEnumerable<UndertaleString>)Data.Tags.AssetTags[assetTagId];
+        // return tags list
+        return tagList.Select(t => t.Content).ToArray();
+    }
+
+    return null;
+}
+/// <summary>
+/// returns the path of the runner.
 /// </summary>
 /// <param name="fileDir"></param>
 /// <returns>file path</returns>
@@ -3125,83 +3155,70 @@ string GetRunnerFile(string fileDir)
     return String.Empty;
 }
 /// <summary>
-/// adds a string to the log file.
+/// returns a folder directory for an asset inside of an <c>AssetReference</c>. e.g: $"folders/{foldername}.yy"
 /// </summary>
-/// <param name="message"></param>
-public void PushToLog(string message)
-{
-    if (!UISettings.YYMPS)
-        File.AppendAllText(scriptDir + "script.log", $"{message}\n");
-}
-/// <summary>
-/// creates a new <c>GMProject.Resource</c> inside of the exported project
-/// </summary>
-/// <param name="assetType"></param>
-/// <param name="assetName"></param>
-/// <param name="assetOrder"></param>
-public void CreateProjectResource(GMAssetType assetType, string assetName, int assetOrder)
-{
-    finalExport.resources.Enqueue(new GMProject.Resource()
-    {
-        id = new AssetReference(assetName, assetType),
-        order = assetOrder,
-        type = assetType
-    });
-}
-/// <summary>
-/// creates a file path.
-/// e.g: $"{assetname}s/{assetname}/{assetname}.yy"
-/// </summary>
-/// <param name="assetName"></param>
 /// <param name="type"></param>
-public static string CreateFilePath(string assetName, GMAssetType type)
+public static AssetReference GetParentFolder(GMAssetType type)
 {
-    string asset = assetTypes[type].ToLower();
-    // dumb switch statement
-    switch (asset)
+    string assetName = assetTypes[type] + "s";
+    return new AssetReference(assetName, GMAssetType.None)
     {
-        case "animation curve":
-            asset = "animcurve";
-            break;
-        case "tile set":
-            asset = "tileset";
-            break;
-    }
-    return $"{asset}s/{assetName}/{assetName}.yy";
+        name = assetName,
+        path = $"folders/{assetName}.yy"
+    };
 }
 /// <summary>
-/// Creates a new GMNote in the project.
+/// e.g: $"folders/{folderPath}{folderName}.yy"
 /// </summary>
-/// <param name="noteName"></param>
 /// <param name="folderName"></param>
-/// <param name="noteText"></param>
-public void CreateNote(string noteName = "Note1", string folderName = "Notes", string noteText = "")
+public static AssetReference GetFolderReference(string folderName, string folderPath = "")
 {
-    string assetDir = $"{scriptDir}notes\\{noteName}\\";
-
-    GMNotes note = new(noteName);
-    note.parent.name = folderName;
-    note.parent.path = $"folders/{folderName}.yy";
-
-    CreateProjectResource(GMAssetType.Note, noteName, noteIndex++);
-    Directory.CreateDirectory(assetDir);
-    File.WriteAllText($"{assetDir}\\{noteName}.yy", JsonSerializer.Serialize(note, jsonOptions));
-    File.WriteAllText($"{assetDir}\\{noteName}.txt", noteText);
+    return new AssetReference()
+    {
+        name = folderName,
+        path = $"folders/{folderPath}{folderName}.yy"
+    };
 }
 /// <summary>
-/// Trims a certain part of the shader code to remove interal yyg stuff.
+/// returns an <c>AssetReference</c> based on the name of the texture group.
 /// </summary>
-/// <param name="input"></param>
-/// <returns>trimmedShader</returns>
-public static string TrimShader(this string input)
+/// <param name="name"></param>
+public AssetReference GetTextureGroup(string name)
 {
-    var lines = input.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                    .SkipWhile(line => !line.Contains("#define _YY_GLSL"))
-                    .Skip(1); // skip matching line
+    string texGroup = "default";
+    if (texGroupStuff.ContainsKey(name))
+        texGroup = texGroupStuff[name];
 
-    return String.Join("\n", lines);
+    return new AssetReference()
+    {
+        name = texGroup,
+        path = $"texturegroups/{texGroup}"
+    };
 }
+/// <summary>
+/// finds the most likely texture page size
+/// </summary>
+string GetTexturePageSize()
+{
+    if (Data.EmbeddedTextures.Count == 0) return "2048x2048";
 
+    List<int> TexPageSizes = new() { 256, 512, 1024, 2048, 4096, 8192 };
+    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => $"{size}x{size}", size => 0);
+
+    foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures)
+    {
+        int Width = TexPage.TextureData.Width;
+        int Height = TexPage.TextureData.Height;
+
+        if (TexPageSizes.Contains(Width) && TexPageSizes.Contains(Height) && Width == Height)
+            SizesFound[$"{Width}x{Height}"]++;
+    }
+
+    KeyValuePair<string, int> OrderedSizes = SizesFound.Aggregate((l, r) => l.Value > r.Value ? l : r);
+    return OrderedSizes.Value != 0 ? OrderedSizes.Key : "2048x2048";
+}
+#endregion
+#region Object Properties
 // heavily referenced from quantum
 /// <summary>
 /// translates pre-create code into object properties.
@@ -3276,7 +3293,7 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             // Asset (try to do last, since checking is pretty slow)
             else if (
                 !rawValue.Contains("\"") // Stop Strings
-                && !Regex.IsMatch(rawValue, @"\W") 
+                && !Regex.IsMatch(rawValue, @"\W")
                 && (!char.IsDigit(rawValue[0]) || rawValue.Length > 1) // Stop Ints
                 && Data.IndexOfByName(rawValue) != -1 // Checks if value is a Game Asset
             ) prop.varType = 5;
@@ -3294,47 +3311,134 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
 
     return propList;
 }
+/// <summary>
+/// turns properties of an object into a <c>Dictionary</c>
+/// </summary>
+/// <param name="codeInput"></param>
+public static Dictionary<string, string> ObjectPropertiesToDictionary(this string codeInput)
+{
+    Dictionary<string, string> objectProperties = new();
 
-/// <summary>
-/// returns a folder directory for an asset inside of an <c>AssetReference</c>. e.g: $"folders/{foldername}.yy"
-/// </summary>
-/// <param name="type"></param>
-public static AssetReference GetParentFolder(GMAssetType type)
-{
-    string assetName = assetTypes[type] + "s";
-    return new AssetReference(assetName, GMAssetType.None)
-    {
-        name = assetName,
-        path = $"folders/{assetName}.yy"
-    };
-}
-/// <summary>
-/// e.g: $"folders/{folderPath}{folderName}.yy"
-/// </summary>
-/// <param name="folderName"></param>
-public static AssetReference GetFolderReference(string folderName, string folderPath = "")
-{
-    return new AssetReference()
-    {
-        name = folderName,
-        path = $"folders/{folderPath}{folderName}.yy"
-    };
-}
-/// <summary>
-/// returns an <c>AssetReference</c> based on the name of the texture group.
-/// </summary>
-/// <param name="name"></param>
-public AssetReference GetTextureGroup(string name)
-{
-    string texGroup = "default";
-    if (texGroupStuff.ContainsKey(name))
-        texGroup = texGroupStuff[name];
+    // this assumes that you already ran FixVariableDeclarations
+    string[] lines = codeInput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
-    return new AssetReference()
+    foreach (string line in lines)
     {
-        name = texGroup,
-        path = $"texturegroups/{texGroup}"
-    };
+        string[] kvp = line.Split("=").ToArray();
+        // if the property exists, add it.
+        if (!objectProperties.ContainsKey(kvp[0].Trim()))
+            objectProperties.Add(kvp[0].Trim(), kvp[1].Trim());
+    }
+
+    return objectProperties;
+}
+#endregion
+#region Get Code
+/// <summary>
+/// decompiles any <c>UndertaleCode</c>
+/// </summary>
+/// <param name="code"></param>
+/// <param name="set"></param>
+/// <returns>code</returns>
+string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
+{
+    if (code is not null)
+    {
+        try
+        {
+            DecompileContext context = new(globalDecompileContext, code, (set != null ? set : decompilerSettings));
+            string dumpedCode = context.DecompileToString();
+
+            // remove "gml_Script_" from code, since that sometimes happens
+            dumpedCode = Regex.Replace(dumpedCode, "gml_Script_", "");
+
+            // Code Filters
+            #region UnknownEnum to Bitwise Converter
+            if (UISettings.ENUM)
+            {
+                // crystal didn't account for this, so i'll do it i guess
+                string uName = SettingsWindow.DecompilerSettings.UnknownEnumName;
+                string uVal = SettingsWindow.DecompilerSettings.UnknownEnumValuePattern;
+
+                //@"UnknownEnum\.Value_(m?)(\d+)"
+                dumpedCode = Regex.Replace(dumpedCode, $@"{uName}\.{uVal.Replace("{0}", "")}(m?)(\d+)", match =>
+                {
+                    string sign = match.Groups[1].Value == "m" ? "-" : "";
+                    string number = match.Groups[2].Value;
+                    return $"({sign}{number} << 0)";
+                });
+            }
+            #endregion
+            #region Fix Room Instance IDs
+            if (UISettings.GENROOM)
+            {
+                // if it has "graphic_" or "inst_"
+                dumpedCode = Regex.Replace(dumpedCode, @"(graphic_|inst_)(\d+)", match =>
+                {
+                    string prefix = match.Groups[1].Value;
+                    uint number = uint.Parse(match.Groups[2].Value);
+                    return $"{prefix}{IdToHex(number)}";
+                });
+            }
+            #endregion
+            #region Clean string() Func
+            if (UISettings.STRCLEAN)
+            {
+                dumpedCode = GMLCleaner.CleanCode(dumpedCode, @"\bstring\s*\(", args =>
+                {
+                    if (args.Count <= 1)
+                        return null;
+
+                    string formatString = args[0].Trim('"', '\'');
+
+                    for (int i = 1; i < args.Count; i++)
+                        formatString = formatString.Replace("{" + (i - 1) + "}", "{" + args[i] + "}");
+
+                    return $"$\"{formatString}\"";
+                });
+            }
+            #endregion
+            #region Clean ds_* Funcs
+            if (UISettings.DSCLEAN)
+            {
+                foreach (var accessor in AccessorMap)
+                {
+                    string pattern = $@"\b{Regex.Escape(accessor.Key)}\s*\(";
+                    var map = accessor.Value;
+
+                    dumpedCode = GMLCleaner.CleanCode(dumpedCode, pattern, args =>
+                    {
+                        if (args.Count != map.ArgCount)
+                            return null;
+
+                        string transformed = map.Symbol == "#"
+                            ? $"{args[0]}[# {args[1]}, {args[2]}]"  // Grid
+                            : $"{args[0]}[{map.Symbol} {args[1]}]"; // List/Map
+
+                        if (map.IsSetter)
+                            transformed += $" = {args[^1]}";
+
+                        return transformed;
+                    });
+                }
+            }
+            #endregion
+
+            // report any decompiler warnings and errors
+            foreach (IDecompileWarning error in context.Warnings)
+                errorList.Add($"{error.CodeEntryName} | {error.Message}");
+
+            // Spam the line
+            if (UISettings.LOG)
+                PushToLog($"'{code.Name.Content}' successfully decompiled.");
+
+            return dumpedCode;
+        }
+        catch (Exception e) {
+            errorList.Add($"{code.Name.Content} | Failed to decompile.");
+        }
+    }
+    return null;
 }
 /// <summary>
 /// makes all variable declarations on one line.
@@ -3380,303 +3484,200 @@ public static string FixVariableDeclarations(this string s)
     return result.ToString();
 }
 /// <summary>
-/// turns properties of an object into a <c>Dictionary</c>
+/// Trims a certain part of the shader code to remove interal yyg stuff.
 /// </summary>
-/// <param name="codeInput"></param>
-public static Dictionary<string, string> ObjectPropertiesToDictionary(this string codeInput)
+/// <param name="input"></param>
+/// <returns>trimmedShader</returns>
+public static string TrimShader(this string input)
 {
-    Dictionary<string, string> objectProperties = new();
+    var lines = input.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                    .SkipWhile(line => !line.Contains("#define _YY_GLSL")) // skip all above this line
+                    .Skip(1); // skip matching line
 
-    // this assumes that you already ran FixVariableDeclarations
-    string[] lines = codeInput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+    return String.Join("\n", lines);
+}
+#endregion
 
-    foreach (string line in lines)
+// Helper Classes
+#region options.ini Parser
+public static class IniParser
+{
+    private static dynamic? GetValueType(string value)
     {
-        string[] kvp = line.Split("=").ToArray();
-        // if the property exists, add it.
-        if (!objectProperties.ContainsKey(kvp[0].Trim()))
-            objectProperties.Add(kvp[0].Trim(), kvp[1].Trim());
+        if (value.StartsWith('\"')) // string
+            return value;
+        else if (value == "True" || value == "False") // boolean
+            return Convert.ToBoolean((value == "True"));
+        else if (value.Contains('.') && Single.TryParse(value, out float outputFloat)) // double/float
+            return outputFloat;
+        else if (int.TryParse(value, out int result)) // int
+            return result;
+        else
+            return value; // give up and return a string
     }
 
-    return objectProperties;
-}
-
-/// <summary>
-/// decompiles any <c>UndertaleCode</c>
-/// </summary>
-/// <param name="code"></param>
-/// <param name="set"></param>
-/// <returns>code</returns>
-string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
-{
-    if (code is not null)
+    public static Dictionary<string, Dictionary<string, dynamic>> ParseToDictionary(string filePath)
     {
-        try
+        // obtain the data from the INI
+        string[] iniData = null;
+
+        if (File.Exists(filePath))
+            iniData = File.ReadAllLines(filePath);
+        else
+            return null;
+
+        string? section = null;
+        Dictionary<string, Dictionary<string, dynamic>> output = new();
+        foreach (string line in iniData)
         {
-            DecompileContext context = new(globalDecompileContext, code, (set != null ? set : decompilerSettings));
-            string dumpedCode = context.DecompileToString();
-
-            // Code Filters
-            #region UnknownEnum to Bitwise Converter
-            if (UISettings.ENUM)
+            // get a new section
+            if (line.StartsWith('[') && line.EndsWith(']'))
             {
-                // crystal didn't account for this, so i'll do it i guess
-                var unknownName = SettingsWindow.DecompilerSettings.UnknownEnumName;
-                var unknownVal = SettingsWindow.DecompilerSettings.UnknownEnumValuePattern;
-
-                //@"UnknownEnum\.Value_(m?)(\d+)"
-                dumpedCode = Regex.Replace(dumpedCode, $@"{unknownName}\.{unknownVal.Replace("{0}", "")}(m?)(\d+)", match =>
-                {
-                    string sign = match.Groups[1].Value == "m" ? "-" : "";
-                    string number = match.Groups[2].Value;
-                    return $"({sign}{number} << 0)";
-                });
-
-                // remove "gml_Script_" from things
-                dumpedCode = Regex.Replace(dumpedCode, "gml_Script_", "");
+                section = Regex.Replace(line, @"[\[\]]", "");
+                output[section] = new Dictionary<string, dynamic>();
             }
-            #endregion
-            #region generated room stuff idk
-            if (UISettings.GENROOM)
+            else if (section is not null && line.Contains('='))
             {
-                // if it has "graphic_" or "inst_"
-                dumpedCode = Regex.Replace(dumpedCode, @"(graphic_|inst_)(\d+)", match =>
-                {
-                    string prefix = match.Groups[1].Value;
-                    uint number = uint.Parse(match.Groups[2].Value);
-                    string hexValue = IdToHex(number); // convert number
-                    return $"{prefix}{hexValue}";
-                });
+                string[] splitLine = line.Split('=');
+                string key = splitLine[0];
+                string value = splitLine[1];
+
+                dynamic typedValue = GetValueType(value);
+
+                output[section][key] = typedValue;
             }
-            #endregion
-            #region Clean string() Func
-            if (UISettings.STRCLEAN)
-            {
-                dumpedCode = ParseGMLCode(dumpedCode, @"\bstring\s*\(", args =>
-                {
-                    if (args.Count <= 1) 
-                        return null;
-
-                    string formatString = args[0].Trim('"', '\'');
-
-                    for (int i = 1; i < args.Count; i++)
-                        formatString = formatString.Replace("{" + (i - 1) + "}", "{" + args[i] + "}");
-
-                    return $"$\"{formatString}\"";
-                });
-            }
-            #endregion
-            #region Clean ds_* Funcs
-            if (UISettings.DSCLEAN)
-            {
-                foreach (var accessor in AccessorMap)
-                {
-                    string pattern = $@"\b{Regex.Escape(accessor.Key)}\s*\(";
-                    var map = accessor.Value;
-
-                    dumpedCode = ParseGMLCode(dumpedCode, pattern, args =>
-                    {
-                        if (args.Count != map.ArgCount) 
-                            return null;
-
-                        string transformed = map.Symbol == "#"
-                            ? $"{args[0]}[# {args[1]}, {args[2]}]"  // Grid
-                            : $"{args[0]}[{map.Symbol} {args[1]}]"; // List/Map
-
-                        if (map.IsSetter)
-                            transformed += $" = {args[^1]}";
-
-                        return transformed;
-                    });
-                }
-            }
-            #endregion
-
-            // report any decompiler warnings and errors
-            foreach (IDecompileWarning error in context.Warnings)
-                errorList.Add($"{error.CodeEntryName} | {error.Message}");
-
-            // Spam the line
-            if (UISettings.LOG)
-                PushToLog($"'{code.Name.Content}' successfully decompiled.");
-
-            return dumpedCode;
         }
-        catch (Exception e) {
-            errorList.Add($"{code.Name.Content} | Failed to decompile.");
-        }
+        return output;
     }
-    return null;
 }
 
+#endregion
 #region GML Cleaner
 
-#region Accessors
-public struct AccessorMapping
+public class GMLCleaner
 {
-    public string Symbol;
-    public int ArgCount;
-    public bool IsSetter;
-    public AccessorMapping(string s, int c, bool set)
+    #region Accessors
+    private struct AccessorMapping
     {
-        Symbol = s;
-        ArgCount = c;
-        IsSetter = set;
-    }
-}
-
-public static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
-{
-    { "ds_list_find_value", new AccessorMapping("|", 2, false) },
-    { "ds_list_set",        new AccessorMapping("|", 3, true)  },
-
-    { "ds_map_find_value",  new AccessorMapping("?", 2, false) },
-    { "ds_map_set",         new AccessorMapping("?", 3, true)  },
-    { "ds_map_replace",     new AccessorMapping("?", 3, true)  },
-
-    { "ds_grid_get",        new AccessorMapping("#", 3, false) },
-    { "ds_grid_set",        new AccessorMapping("#", 4, true)  }
-};
-#endregion
-
-public static string ParseGMLCode(string code, string pattern, Func<List<string>, string> formatFunc)
-{
-    int searchPos = 0;
-    while (searchPos < code.Length)
-    {
-        // search for pattern
-        Match match = Regex.Match(code.Substring(searchPos), pattern);
-
-        // if it wasn't found, leave
-        if (!match.Success) 
-            break;
-
-        int startPos = searchPos + match.Index;
-        int parenStart = startPos + match.Length - 1;
-
-        // get function information
-        var (args, endPos) = GetFunctionInfo(code, parenStart);
-
-        if (args != null)
+        public string Symbol;
+        public int ArgCount;
+        public bool IsSetter;
+        public AccessorMapping(string s, int c, bool set)
         {
-            // clean the function
-            string cleanedFunc = formatFunc(args);
-
-            if (cleanedFunc != null)
-            {
-                code = code.Remove(startPos, endPos - startPos).Insert(startPos, cleanedFunc);
-                searchPos = startPos + cleanedFunc.Length;
-                continue;
-            }
+            Symbol = s;
+            ArgCount = c;
+            IsSetter = set;
         }
-
-        // set pos past this for the next iteration
-        searchPos = startPos + match.Length;
     }
-    return code;
 
-
-
-    (List<string> args, int endPos) GetFunctionInfo(string code, int parenStart)
+    private static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
     {
-        List<string> args = new();
-        StringBuilder currentArg = new();
+        { "ds_list_find_value", new AccessorMapping("|", 2, false) },
+        { "ds_list_set",        new AccessorMapping("|", 3, true)  },
 
-        int parenDepth = 0, bracketDepth = 0;
-        bool inString = false;
-        char? quoteChar = null;
+        { "ds_map_find_value",  new AccessorMapping("?", 2, false) },
+        { "ds_map_set",         new AccessorMapping("?", 3, true)  },
+        { "ds_map_replace",     new AccessorMapping("?", 3, true)  },
 
-        for (int i = parenStart + 1; i < code.Length; i++)
+        { "ds_grid_get",        new AccessorMapping("#", 3, false) },
+        { "ds_grid_set",        new AccessorMapping("#", 4, true)  }
+    };
+    #endregion
+
+    public static string CleanCode(string code, string pattern, Func<List<string>, string> formatFunc)
+    {
+        int searchPos = 0;
+        while (searchPos < code.Length)
         {
-            char c = code[i];
+            // search for pattern
+            Match match = Regex.Match(code.Substring(searchPos), pattern);
 
-            // skip escape quotes
-            if ((c == '"' || c == '\'') && (i == 0 || code[i - 1] != '\\'))
-            {
-                if (!inString)
-                {
-                    inString = true;
-                    quoteChar = c;
-                }
-                else if (c == quoteChar)
-                    inString = false;
-            }
+            // if it wasn't found, leave
+            if (!match.Success)
+                break;
 
-            if (!inString)
+            int startPos = searchPos + match.Index;
+            int parenStart = startPos + match.Length - 1;
+
+            // get function information
+            var (args, endPos) = GetFunctionInfo(code, parenStart);
+
+            if (args != null)
             {
-                // update depth
-                switch (c)
+                // clean the function
+                string cleanedFunc = formatFunc(args);
+
+                if (cleanedFunc != null)
                 {
-                    case '(': parenDepth++; break;
-                    case ')': parenDepth--; break;
-                    case '[': bracketDepth++; break;
-                    case ']': bracketDepth--; break;
-                }
-                // if onto the next argument in function, get it
-                if (c == ',' && parenDepth == 0 && bracketDepth == 0)
-                {
-                    args.Add(currentArg.ToString().Trim());
-                    currentArg.Clear();
+                    code = code.Remove(startPos, endPos - startPos).Insert(startPos, cleanedFunc);
+                    searchPos = startPos + cleanedFunc.Length;
                     continue;
                 }
-                // if the function has been entirely read, return values
-                if (parenDepth < 0)
-                {
-                    args.Add(currentArg.ToString().Trim());
-                    return (args, i + 1);
-                }
             }
-            currentArg.Append(c);
+
+            // set pos past this for the next iteration
+            searchPos = startPos + match.Length;
         }
-        return (null, -1);
+        return code;
+
+
+
+        (List<string> args, int endPos) GetFunctionInfo(string code, int parenStart)
+        {
+            List<string> args = new();
+            StringBuilder currentArg = new();
+
+            int parenDepth = 0, bracketDepth = 0;
+            bool inString = false;
+            char? quoteChar = null;
+
+            for (int i = parenStart + 1; i < code.Length; i++)
+            {
+                char c = code[i];
+
+                // skip escape quotes
+                if ((c == '"' || c == '\'') && (i == 0 || code[i - 1] != '\\'))
+                {
+                    if (!inString)
+                    {
+                        inString = true;
+                        quoteChar = c;
+                    }
+                    else if (c == quoteChar)
+                        inString = false;
+                }
+
+                if (!inString)
+                {
+                    // update depth
+                    switch (c)
+                    {
+                        case '(': parenDepth++; break;
+                        case ')': parenDepth--; break;
+                        case '[': bracketDepth++; break;
+                        case ']': bracketDepth--; break;
+                    }
+                    // if onto the next argument in function, get it
+                    if (c == ',' && parenDepth == 0 && bracketDepth == 0)
+                    {
+                        args.Add(currentArg.ToString().Trim());
+                        currentArg.Clear();
+                        continue;
+                    }
+                    // if the function has been entirely read, return values
+                    if (parenDepth < 0)
+                    {
+                        args.Add(currentArg.ToString().Trim());
+                        return (args, i + 1);
+                    }
+                }
+                currentArg.Append(c);
+            }
+            return (null, -1);
+        }
     }
 }
 #endregion
-
-/// <summary>
-/// obtains the <c>tags</c> variable from any asset
-/// </summary>
-/// <param name="asset"></param>
-string[]? GetTags(dynamic asset)
-{
-    // that one obscure gamemaker feature that nobody uses
-    if (Data.Tags is null) return null;
-
-    // get the id
-    var assetTagId = UndertaleTags.GetAssetTagID(Data, asset);
-    string[] obtainedTags = null;
-
-    if (Data.Tags.AssetTags.ContainsKey(assetTagId))
-    {
-        // cast it into an enumerable for use.
-        var tagList = (IEnumerable<UndertaleString>)Data.Tags.AssetTags[assetTagId];
-        // add all the tags to the list.
-        obtainedTags = tagList.Select(t => t.Content).ToArray();
-    }
-
-    return obtainedTags;
-}
-
-string GetTexturePageSize()
-{
-    if (Data.EmbeddedTextures.Count == 0) return "2048x2048";
-
-    List<int> TexPageSizes = new() { 256, 512, 1024, 2048, 4096, 8192 };
-    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => $"{size}x{size}", size => 0);
-
-    foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures)
-    {
-        int Width = TexPage.TextureData.Width;
-        int Height = TexPage.TextureData.Height;
-
-        if (TexPageSizes.Contains(Width) && TexPageSizes.Contains(Height) && Width == Height)
-            SizesFound[$"{Width}x{Height}"]++;
-    }
-
-    KeyValuePair<string, int> OrderedSizes = SizesFound.Aggregate((l, r) => l.Value > r.Value ? l : r);
-    return OrderedSizes.Value != 0 ? OrderedSizes.Key : "2048x2048";
-}
-
 #region GMShape to SVG Convertor
 public static class GMShapeToSVG
 {

@@ -496,23 +496,17 @@ if (!UISettings.DUMP)
 #endregion
 
 #region Helper Functions
-string GetFolder(string path)
-{
+string GetFolder(string path) {
     return Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 }
-string BoolToString(bool value)
-{
-    // In the GMX file, -1 is true and 0 is false.
+
+// In the GMX file, -1 is true and 0 is false.
+string BoolToString(bool value) {
     return value ? "-1" : "0";
 }
 
-// UnderAnalyzer Decompiling Function
-string decompileCode(UndertaleCode codeId)
-{
-    string code = codeId != null ? new Underanalyzer.Decompiler.DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "";
-    // return code as string to be copied over to .gml file or .gmx asset
-    
-    return code;
+string decompileCode(UndertaleCode codeId) {
+    return (codeId != null ? new DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "");
 }
 
 // If a code entry is null
@@ -524,48 +518,27 @@ string AddtoLog(string assettype, string assetname)
 
 // works for at least bytecode 16 games
 // earlier bytecode versions means that it probably wasn't originally a GMS1.4 game
-
-// also for the one guy that cares for some reason, this isn't copied from the gms2 decompiler
-// it looks similar because they use similar methods to achieve similar goals
-// my explanation's in another commit if you really care
-// https://github.com/burnedpopcorn/UnderAnalyzer-Decompiler/commit/03a34632aef433265983c037051e5e4822e540e1
 string EstimateTexPageSize()
 {
-    // if somehow there's no textures, return a GMS1 default size
     if (Data.EmbeddedTextures.Count == 0) return "2048";
 
-    // all possible TP sizes
-    List<int> TexPageSizes = new List<int> { 256, 512, 1024, 2048, 4096, 8192 };
+    // all normal Texture Page sizes
+    List<int> TexPageSizes = new() { 256, 512, 1024, 2048, 4096, 8192 };
+    // counts the amount of appearences values of all possible sizes
+    Dictionary<string, int> SizesFound = TexPageSizes.ToDictionary(size => $"{size}", size => 0);
 
-    //  < BestSize, Amount of Appearences >
-    // this adds all values in TexPageSizes, with appearences values sent as 0 as default
-    Dictionary<int, int> SizesFound = TexPageSizes.ToDictionary(size => size, size => 0);
-
-    // check all Texture Pages in the data.win
-    foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures) 
+    foreach (UndertaleEmbeddedTexture TexPage in Data.EmbeddedTextures)
     {
         int Width = TexPage.TextureData.Width;
         int Height = TexPage.TextureData.Height;
 
         if (TexPageSizes.Contains(Width) && TexPageSizes.Contains(Height))
-        {
-            // Get the bigger of the two (just in case they are a mismatch)
-            int BestSize = (Width > Height) ? Width : Height;
-
-            // increment Appearence value to assoiciated size
-            SizesFound[BestSize]++;
-        }
+            SizesFound[$"{(Width > Height ? Width : Height)}"]++; // get biggest one just in case
     }
 
-    // find most commonly used size
-    // changed cuz i know someone that will claim using .Aggregate is theirs
-    var LikelySize = SizesFound.OrderByDescending(kvp => kvp.Value).First();
-
-    // check first if it even worked
-    if (LikelySize.Value == 0) 
-        return "2048";
-    else 
-        return LikelySize.Key.ToString();
+    // find most common size used
+    KeyValuePair<string, int> OrderedSizes = SizesFound.Aggregate((l, r) => l.Value > r.Value ? l : r);
+    return OrderedSizes.Value != 0 ? OrderedSizes.Key : "2048";
 }
 
 #endregion
@@ -1338,7 +1311,7 @@ void ExportExtension(UndertaleExtension extension)
         {
             case 2:  // GML
 
-                if (!DumpedExtGMLCode.ContainsKey(extension.Name.Content)|| !DumpedExtGMLScripts.ContainsKey(extension.Name.Content))
+                if (!DumpedExtGMLCode.ContainsKey(extension.Name.Content) || !DumpedExtGMLScripts.ContainsKey(extension.Name.Content))
                     break;
 
                 string ExtGMLCode = DumpedExtGMLCode[extension.Name.Content];
@@ -1494,8 +1467,7 @@ void ExportConfig()
     }
 
     // same thing as above, but returns int values
-    int HasFlagAsInt(dynamic Flag)
-    {
+    int HasFlagAsInt(dynamic Flag) {
         return HasFlag(Flag) ? 1 : 0;
     }
 
@@ -1584,11 +1556,10 @@ void ExportConfig()
         OptionsNode.Add(new XElement("option_windows_use_splash", 0));
 
     // add steam id if enabled
-    var SteamEnabled = HasFlag(InfoFlags.SteamEnabled);
-    if (SteamEnabled)
+    if (HasFlag(InfoFlags.SteamEnabled))
     {
         OptionsNode.Add(
-            new XElement("option_windows_enable_steam", SteamEnabled),
+            new XElement("option_windows_enable_steam", true),
             new XElement("option_windows_steam_app_id", Data.GeneralInfo.SteamAppID)
         );
     }
@@ -1717,6 +1688,7 @@ void AddDatafiles(XElement element, string filepath)
     }
 }
 #endregion
+
 #endregion
 
 #region Generate GMX
