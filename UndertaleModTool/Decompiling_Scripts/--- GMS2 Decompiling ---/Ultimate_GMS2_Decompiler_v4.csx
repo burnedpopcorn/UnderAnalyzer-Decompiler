@@ -363,7 +363,7 @@ public class RunnerData
         // stop interpolation
         iconData.FilterType = FilterType.Point;
         // set size
-        var size = new MagickGeometry(_width, _height);
+        MagickGeometry size = new(_width, _height);
         // maintain the aspect ratio
         size.IgnoreAspectRatio = false;
         // resize image
@@ -3401,7 +3401,7 @@ string? DumpCode(UndertaleCode code, IDecompileSettings? set = null)
             #region Clean ds_* Funcs
             if (UISettings.DSCLEAN)
             {
-                foreach (var accessor in AccessorMap)
+                foreach (var accessor in GMLCleaner.AccessorMap)
                 {
                     string pattern = $@"\b{Regex.Escape(accessor.Key)}\s*\(";
                     var map = accessor.Value;
@@ -3557,7 +3557,7 @@ public static class IniParser
 public class GMLCleaner
 {
     #region Accessors
-    private struct AccessorMapping
+    public struct AccessorMapping
     {
         public string Symbol;
         public int ArgCount;
@@ -3570,7 +3570,7 @@ public class GMLCleaner
         }
     }
 
-    private static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
+    public static readonly Dictionary<string, AccessorMapping> AccessorMap = new()
     {
         { "ds_list_find_value", new AccessorMapping("|", 2, false) },
         { "ds_list_set",        new AccessorMapping("|", 3, true)  },
@@ -3839,6 +3839,49 @@ public static class GMShapeToSVG
 #endregion
 
 #region Main Resource Dumpers
+
+#region Dump Resources
+void DumpResource(dynamic asset, int index, string type, bool allowdump)
+{
+    r_num++; // update resource number for progress bar
+    if (asset is null) return;
+
+    if (allowdump || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(asset.Name.Content)))
+    {
+        SetProgressBar(null, $"Exporting {type}: {asset.Name.Content}", r_num, toDump);
+
+        var assetWatch = Stopwatch.StartNew();
+        if (UISettings.LOG)
+            PushToLog($"Dumping {type} '{asset.Name.Content}'...");
+
+        // find what resource dump function to use
+        Action<dynamic, int> DumpFunc = type switch
+        {
+            "Script" => ((_a, _i) => DumpScript(_a, _i)),
+            "Object" => ((_a, _i) => DumpObject(_a, _i)),
+            "Sound" => ((_a, _i) => DumpSound(_a, _i)),
+            "Room" => ((_a, _i) => DumpRoom(_a, _i)),
+            "Sprite" => ((_a, _i) => DumpSprite(_a, _i)),
+            "Font" => ((_a, _i) => DumpFont(_a, _i)),
+            "Sequence" => ((_a, _i) => DumpSequence(_a, _i)),
+            "Shader" => ((_a, _i) => DumpShader(_a, _i)),
+            "Extension" => ((_a, _i) => DumpExtension(_a, _i)),
+            "Path" => ((_a, _i) => DumpPath(_a, _i)),
+            "Animation Curve" => ((_a, _i) => DumpAnimCurve(_a, _i)),
+            "Tileset" => ((_a, _i) => DumpTileSet(_a, _i)),
+            "Timeline" => ((_a, _i) => DumpTimeline(_a, _i))
+        };
+
+        // execute correct dump function
+        DumpFunc(asset, index);
+
+        assetWatch.Stop();
+        if (UISettings.LOG)
+            PushToLog($"{type} '{asset.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
+    }
+}
+#endregion
+
 #region Scripts
 void DumpScript(UndertaleScript s, int index)
 {
@@ -3871,32 +3914,17 @@ void DumpScript(UndertaleScript s, int index)
 }
 async Task DumpScripts()
 {
-    var watch = Stopwatch.StartNew();
     if (UISettings.SCPT || UISettings.CSTM_Enable)
     {
+        var watch = Stopwatch.StartNew();
         PushToLog("Dumping Scripts...");
-        await Task.Run(() => Parallel.ForEach(scriptsToDump, parallelOptions, (scr, state, index) =>
-        {
-            if (scr is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.SCPT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(scr.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Script: {scr.Name.Content}", r_num++, toDump);
 
-                if (UISettings.LOG)
-                    PushToLog($"Dumping script '{scr.Name.Content}'...");
-                DumpScript(scr, (int)index);
-                if (UISettings.LOG)
-                    PushToLog($"Script '{scr.Name.Content}' successfully dumped.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(scriptsToDump, parallelOptions, 
+            (scr, state, index) => DumpResource(scr, (int)index, "Script", UISettings.SCPT)));
+
+        watch.Stop();
+        PushToLog($"Scripts complete! Took {watch.ElapsedMilliseconds} ms");
     }
-
-    watch.Stop();
-    PushToLog($"Scripts complete! Took {watch.ElapsedMilliseconds} ms");
 }
 #endregion
 #region Objects
@@ -4053,32 +4081,13 @@ async Task DumpObjects()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Objects...");
-        await Task.Run(() => Parallel.ForEach(Data.GameObjects, parallelOptions, (obj, state, index) =>
-        {
-            if (obj is null)
-            {
-                r_num++;
-                return;
-            }
 
-            if (UISettings.OBJT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(obj.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Object: {obj.Name.Content}", r_num++, toDump);
+        await Task.Run(() => Parallel.ForEach(Data.GameObjects, parallelOptions,
+            (obj, state, index) => DumpResource(obj, (int)index, "Object", UISettings.OBJT)));
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping object '{obj.Name.Content}'...");
-                DumpObject(obj, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Object '{obj.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
         watch.Stop();
         PushToLog($"Objects complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Sounds
@@ -4264,31 +4273,13 @@ async Task DumpSounds()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sounds...");
-        await Task.Run(() => Parallel.ForEach(Data.Sounds, parallelOptions, (snd, state, index) =>
-        {
-            if (snd is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.SOND || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(snd.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Sound: {snd.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping sound '{snd.Name.Content}'...");
-                DumpSound(snd, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Sound '{snd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Sounds, parallelOptions,
+            (snd, state, index) => DumpResource(snd, (int)index, "Sound", UISettings.SOND)));
+
         watch.Stop();
         PushToLog($"Sounds complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Rooms
@@ -4635,34 +4626,13 @@ async Task DumpRooms()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Rooms...");
-        await Task.Run(() => Parallel.ForEach(Data.Rooms, parallelOptions, (rm, state, index) =>
-        {
-            if (rm is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.ROOM || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(rm.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Room: {rm.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping room '{rm.Name.Content}'...");
-                DumpRoom(rm, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Room '{rm.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
-        // room order nodes
-        finalExport.RoomOrderNodes = Data.GeneralInfo.RoomOrder.Select(r => new GMProject.RoomOrderNode(r.Resource.Name.Content)).ToArray();
+        await Task.Run(() => Parallel.ForEach(Data.Rooms, parallelOptions,
+            (rm, state, index) => DumpResource(rm, (int)index, "Room", UISettings.ROOM)));
 
         watch.Stop();
         PushToLog($"Rooms complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Sprites
@@ -5017,31 +4987,13 @@ async Task DumpSprites()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sprites...");
-        await Task.Run(() => Parallel.ForEach(Data.Sprites, parallelOptions, (spr, state, index) =>
-        {
-            if (spr is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.SPRT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(spr.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Sprite: {spr.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping sprite '{spr.Name.Content}'...");
-                DumpSprite(spr, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Sprite '{spr.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Sprites, parallelOptions,
+            (spr, state, index) => DumpResource(spr, (int)index, "Sprite", UISettings.SPRT)));
+
         watch.Stop();
         PushToLog($"Sprites complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Fonts
@@ -5124,31 +5076,13 @@ async Task DumpFonts()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Fonts...");
-        await Task.Run(() => Parallel.ForEach(Data.Fonts, parallelOptions, (fnt, state, index) =>
-        {
-            if (fnt is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.FONT || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(fnt.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Font: {fnt.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping font '{fnt.Name.Content}'...");
-                DumpFont(fnt, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Font '{fnt.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Fonts, parallelOptions,
+            (fnt, state, index) => DumpResource(fnt, (int)index, "Font", UISettings.FONT)));
+
         watch.Stop();
         PushToLog($"Fonts complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Sequences
@@ -5610,31 +5544,13 @@ async Task DumpSequences()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Sequences...");
-        await Task.Run(() => Parallel.ForEach(Data.Sequences, (seq, state, index) =>
-        {
-            if (seq is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.SEQN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(seq.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Sequence: {seq.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping '{seq.Name.Content}'...");
-                DumpSequence(seq, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Sequence '{seq.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Sequences, parallelOptions,
+            (seq, state, index) => DumpResource(seq, (int)index, "Sequence", UISettings.SEQN)));
+
         watch.Stop();
         PushToLog($"Sequences complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Shaders
@@ -5684,32 +5600,13 @@ async Task DumpShaders()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Shaders...");
-        await Task.Run(() => Parallel.ForEach(Data.Shaders, parallelOptions, (shd, state, index) =>
-        {
-            if (shd is null)
-            {
-                r_num++;
-                return;
-            }
 
-            if (UISettings.SHDR || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(shd.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Shader: {shd.Name.Content}", r_num++, toDump);
+        await Task.Run(() => Parallel.ForEach(Data.Shaders, parallelOptions,
+            (shd, state, index) => DumpResource(shd, (int)index, "Shader", UISettings.SHDR)));
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping shader '{shd.Name.Content}'...");
-                DumpShader(shd, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Shader '{shd.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
         watch.Stop();
         PushToLog($"Shaders complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Extensions
@@ -5838,27 +5735,11 @@ async Task DumpExtensions()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Extensions...");
-        await Task.Run(() => Parallel.ForEach(Data.Extensions, parallelOptions, (ext, state, index) =>
-        {
-            if (ext is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.EXTN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(ext.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Extension: {ext.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping extension '{ext.Name.Content}'...");
-                DumpExtension(ext, (int)index);
-                if (UISettings.LOG)
-                    PushToLog($"Extension '{ext.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Extensions, parallelOptions,
+            (ext, state, index) => DumpResource(ext, (int)index, "Extension", UISettings.EXTN)));
 
-        #region gml extension
+        #region Decompiler Generated Extension
 
         if (!extensionGML.ContainsKey("DecompiledGMLExtension"))
             return;
@@ -5925,8 +5806,6 @@ async Task DumpExtensions()
         watch.Stop();
         PushToLog($"Extensions complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Paths
@@ -5960,31 +5839,13 @@ async Task DumpPaths()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Paths...");
-        await Task.Run(() => Parallel.ForEach(Data.Paths, parallelOptions, (pth, state, index) =>
-        {
-            if (pth is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.PATH || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(pth.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Path: {pth.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping path '{pth.Name.Content}'...");
-                DumpPath(pth, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Path '{pth.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Paths, parallelOptions,
+            (pth, state, index) => DumpResource(pth, (int)index, "Path", UISettings.PATH)));
+
         watch.Stop();
         PushToLog($"Paths complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Anim Curves
@@ -6028,31 +5889,13 @@ async Task DumpAnimCurves()
     {
         var watch = Stopwatch.StartNew();
         PushToLog($"Dumping Animation Curves...");
-        await Task.Run(() => Parallel.ForEach(Data.AnimationCurves, parallelOptions, (cur, state, index) =>
-        {
-            if (cur is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.ACRV || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(cur.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Animation Curve: {cur.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping animation curve '{cur.Name.Content}'...");
-                DumpAnimCurve(cur, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Animation curve '{cur.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.AnimationCurves, parallelOptions,
+            (cur, state, index) => DumpResource(cur, (int)index, "Animation Curve", UISettings.ACRV)));
+
         watch.Stop();
         PushToLog($"Animation Curves complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Tile Sets
@@ -6276,31 +6119,13 @@ async Task DumpTileSets()
     {
         var watch = Stopwatch.StartNew();
         PushToLog($"Dumping Tilesets...");
-        await Task.Run(() => Parallel.ForEach(Data.Backgrounds, parallelOptions, (ts, state, index) =>
-        {
-            if (ts is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.BGND || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(ts.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Tileset: {ts.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping tileset '{ts.Name.Content}'...");
-                DumpTileSet(ts, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Tileset '{ts.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Backgrounds, parallelOptions,
+            (ts, state, index) => DumpResource(ts, (int)index, "Tileset", UISettings.BGND)));
+
         watch.Stop();
         PushToLog($"Tilesets complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 #region Timeline
@@ -6350,31 +6175,13 @@ async Task DumpTimelines()
     {
         var watch = Stopwatch.StartNew();
         PushToLog("Dumping Timelines...");
-        await Task.Run(() => Parallel.ForEach(Data.Timelines, parallelOptions, (tl, state, index) =>
-        {
-            if (tl is null)
-            {
-                r_num++;
-                return;
-            }
-            if (UISettings.TMLN || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(tl.Name.Content)))
-            {
-                SetProgressBar(null, $"Exporting Timeline: {tl.Name.Content}", r_num++, toDump);
 
-                var assetWatch = Stopwatch.StartNew();
-                if (UISettings.LOG) 
-                    PushToLog($"Dumping timeline '{tl.Name.Content}'...");
-                DumpTimeline(tl, (int)index);
-                assetWatch.Stop();
-                if (UISettings.LOG)
-                    PushToLog($"Timelines '{tl.Name.Content}' successfully dumped in {assetWatch.ElapsedMilliseconds} ms.");
-            }
-        }));
+        await Task.Run(() => Parallel.ForEach(Data.Timelines, parallelOptions,
+            (tl, state, index) => DumpResource(tl, (int)index, "Timeline", UISettings.TMLN)));
+
         watch.Stop();
         PushToLog($"Timelines complete! Took {watch.ElapsedMilliseconds} ms");
     }
-    else
-        return;
 }
 #endregion
 
@@ -6479,13 +6286,6 @@ async Task DumpDatafiles()
         });
     }
 }
-async Task DumpAudioGroups()
-{
-    var watch = Stopwatch.StartNew();
-    finalExport.AudioGroups = Data.AudioGroups.Select(ag => new GMProject.GMAudioGroup(ag?.Name?.Content)).ToArray();
-    watch.Stop();
-    PushToLog($"Audio Groups complete! Took {watch.ElapsedMilliseconds} ms");
-}
 async Task DumpTextures()
 {
     var watch = Stopwatch.StartNew();
@@ -6501,7 +6301,7 @@ async Task DumpTextures()
     PushToLog($"All Textures complete! Took {watch.ElapsedMilliseconds} ms");
 }
 
-void DumpOptions()
+async Task DumpOptions()
 {
     // don't do this shit if YYMPS
     if (UISettings.YYMPS)
@@ -6612,6 +6412,8 @@ RunnerData rData = new(runnerFile);
 GMProject finalExport = new(Data.GeneralInfo.Name.Content)
 {
     isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode)),
+    AudioGroups = Data.AudioGroups.Select(ag => new GMProject.GMAudioGroup(ag?.Name?.Content)).ToArray(),
+    RoomOrderNodes = Data.GeneralInfo.RoomOrder.Select(r => new GMProject.RoomOrderNode(r.Resource.Name.Content)).ToArray(),
     Folders = CreateProjectFolders()
 };
 
@@ -6643,11 +6445,6 @@ public int toDump =
 
 // doing this before main operation because its needed
 await DumpTexGroups();
-// might aswell do this as well
-await DumpAudioGroups();
-// just because I dont consider it a real asset.
-if (!UISettings.YYMPS)
-    DumpOptions();
 
 // for DumpScripts & the progress bar
 public List<UndertaleScript> scriptsToDump = new();
@@ -6689,6 +6486,8 @@ SetUMTConsoleText("Running Decompiler...");
 
 await Task.WhenAll(
     DumpDatafiles(),
+    DumpOptions(),
+
     DumpScripts(),
     DumpObjects(),
     DumpSounds(),
@@ -6750,25 +6549,22 @@ if (!UISettings.YYMPS)
     asset_text += ("\n\nAssets Found:\n");
 
     #region Asset Count
-    void AddAssetCount(string Header, dynamic? Chunk)
-    {
-        if (Chunk != null)
-            asset_text += ($"\n{Header}: {Chunk.Count}");
-        else
-            asset_text += ($"\n{Header}: 0");
+
+    void AddAssetCount(string Header, int? Chunk) {
+        asset_text += $"\n{Header}: {(Chunk ?? 0)}";
     }
 
-    AddAssetCount("Sprites", Data?.Sprites);
-    AddAssetCount("Objects", Data?.GameObjects);
-    AddAssetCount("Rooms", Data?.Rooms);
-    AddAssetCount("Sounds", Data?.Sounds);
-    AddAssetCount("Backgrounds", Data?.Backgrounds);
-    AddAssetCount("Shaders", Data?.Shaders);
-    AddAssetCount("Animation Curves", Data?.AnimationCurves);
-    AddAssetCount("Sequences", Data?.Sequences);
-    AddAssetCount("Timelines", Data?.Timelines);
-    AddAssetCount("Paths", Data?.Paths);
-    AddAssetCount("Fonts", Data?.Fonts);
+    AddAssetCount("Sprites", Data?.Sprites?.Count);
+    AddAssetCount("Objects", Data?.GameObjects?.Count);
+    AddAssetCount("Rooms", Data?.Rooms?.Count);
+    AddAssetCount("Sounds", Data?.Sounds?.Count);
+    AddAssetCount("Backgrounds", Data?.Backgrounds?.Count);
+    AddAssetCount("Shaders", Data?.Shaders?.Count);
+    AddAssetCount("Animation Curves", Data?.AnimationCurves?.Count);
+    AddAssetCount("Sequences", Data?.Sequences?.Count);
+    AddAssetCount("Timelines", Data?.Timelines?.Count);
+    AddAssetCount("Paths", Data?.Paths?.Count);
+    AddAssetCount("Fonts", Data?.Fonts?.Count);
     #endregion
 
     asset_text += ("\n\n");//spacer
@@ -6870,12 +6666,12 @@ if (UISettings.SCPT
                         // builtin enums
                         if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
                             continue;
+
                         // add the enum line
                         globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
                         foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
-                        {
                             globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
-                        }
+
                         globalInitCode += $"}}\n\n";
                     }
                 }
@@ -6994,7 +6790,7 @@ if (UISettings.YYMPS)
         display_name = "Package",
         version = "1.0.0",
         package_type = "asset",
-        ide_version = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}"
+        ide_version = finalExport.MetaData.IDEVersion
     };
     string metadataString = JsonSerializer.Serialize(metadata, jsonOptions);
     File.WriteAllText($"{scriptDir}metadata.json", metadataString);
