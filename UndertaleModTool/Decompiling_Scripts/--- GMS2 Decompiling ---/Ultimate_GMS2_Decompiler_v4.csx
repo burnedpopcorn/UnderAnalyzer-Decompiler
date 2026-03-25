@@ -2271,7 +2271,7 @@ public class AssetPickerWindow : Window
         treeView = new TreeView { Height = 400, Width = 200 };
         treeView.MouseDoubleClick += (s, e) =>
         {
-            if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem)
+            if (treeView.SelectedItem is TreeViewItem item && item.Parent is TreeViewItem pitem && pitem.Parent is TreeViewItem)
             {
                 if (!UISettings.CSTM.Contains(item.Header.ToString()))
                     UISettings.CSTM.Add(item.Header.ToString());
