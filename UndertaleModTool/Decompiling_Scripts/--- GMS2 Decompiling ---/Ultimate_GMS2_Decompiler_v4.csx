@@ -181,28 +181,6 @@ public enum eOrigin
 
 #endregion
 #region Internal Data Classes
-// really hacky way to get enums
-public class MacroData
-{
-    public MacroTypes Types { get; set; } = new();
-    public class MacroTypes
-    {
-        public Dictionary<string, EnumData> Enums { get; set; } = new();
-    }
-}
-
-public class EnumData
-{
-    public EnumData(string name, Dictionary<string, long>? values)
-    {
-        this.Name = name;
-        if (values is not null)
-            this.Values = values;
-    }
-    public Dictionary<string, long> Values { get; set; } = new();
-    public string Name { get; set; }
-}
-
 // thanks https://stackoverflow.com/questions/17830853/how-can-i-load-a-program-icon-in-c-sharp
 #region Extract Icon Functions
 internal static class ExtractIcon
@@ -6645,112 +6623,79 @@ if (UISettings.SCPT
     }
     Directory.CreateDirectory(assetDir);
     #endregion
-    #region Extract Enums from JSON files
-    globalInitCode += "\n// GameSpecificData Enums\n";
-    string[] defs = Directory.GetFiles(definitionDir);
-
-    foreach (string def in defs)
+    #region Extract All Enums
+    // YYC check
+    if (Data?.Code != null)
     {
-        GameSpecificResolver.GameSpecificDefinition currentDef = JsonSerializer.Deserialize<GameSpecificResolver.GameSpecificDefinition>(File.ReadAllText(def), new JsonSerializerOptions() { AllowTrailingCommas = true });
-
-        foreach (GameSpecificResolver.GameSpecificCondition condition in currentDef.Conditions)
-        {
-            if ((condition.ConditionKind == "DisplayName.Regex" && Regex.IsMatch((Data?.GeneralInfo?.DisplayName?.Content ?? ""), condition.Value)) || condition.ConditionKind == "Always")
-            {
-                string macroPath = $"{macroDir}{currentDef.UnderanalyzerFilename}";
-                if (File.Exists(macroPath))
-                {
-                    MacroData macro = JsonSerializer.Deserialize<MacroData>(File.ReadAllText(macroPath), new JsonSerializerOptions() { AllowTrailingCommas = true });
-                    foreach (KeyValuePair<string, EnumData> kvp in macro.Types.Enums)
-                    {
-                        // builtin enums
-                        if (kvp.Value.Name == "AudioEffectType" || kvp.Value.Name == "AudioLFOType")
-                            continue;
-
-                        // add the enum line
-                        globalInitCode += $"enum {kvp.Value.Name} \n{{\n";
-                        foreach (KeyValuePair<string, long> currentEnum in kvp.Value.Values)
-                            globalInitCode += $"\t{currentEnum.Key} = {currentEnum.Value},\n";
-
-                        globalInitCode += $"}}\n\n";
-                    }
-                }
-            }
-
-        }
-    }
-    #endregion
-    #region Extract UnknownEnums
-    // if bitwise enums are to be used, don't do it at all
-    if (!UISettings.ENUM && Data?.Code != null)// also YYC check
-    {
-        globalInitCode += "// Generic Enum Declaration\n";
-
-        #region Init
-        string enumName = Data.ToolInfo.DecompilerSettings.UnknownEnumName;
-        string enumPat = Data.ToolInfo.DecompilerSettings.UnknownEnumValuePattern;
-        HashSet<long> RawValues = new();
-
+        // EnumSetName, <EntryVal, EntryName>
+        Dictionary<string, Dictionary<long, string>> EnumSets = new();
         DecompileSettings dSettings = new()
         {
             MacroDeclarationsAtTop = true,
             CreateEnumDeclarations = true,
-            UnknownEnumName = enumName,
-            UnknownEnumValuePattern = enumPat
         };
-        #endregion
-        #region Helper Func
-        // Check all Code Entries for Unknown Enums
-        void DumpEnumValues(UndertaleCode code)
+
+        // Check all Code Entries for Enums
+        foreach (UndertaleCode code in Data.Code)
         {
-            try
+            // check only if code entry is valid
+            if (code.ParentEntry == null && code != null)
             {
-                var context = new DecompileContext(globalDecompileContext, code, dSettings);
+                DecompileContext context = new(globalDecompileContext, code, dSettings);
                 BlockNode rootBlock = (BlockNode)context.DecompileToAST();
                 foreach (IStatementNode stmt in rootBlock.Children)
-                    if (stmt is EnumDeclNode decl && decl.Enum.Name == enumName)
+                {
+                    // also account for bitwise unknown enum setting
+                    if (stmt is EnumDeclNode decl && !(UISettings.ENUM && decl.Enum.Name == SettingsWindow.DecompilerSettings.UnknownEnumName))
+                    {
+                        // add enum set if not there already
+                        if (!EnumSets.ContainsKey(decl.Enum.Name))
+                            EnumSets.Add(decl.Enum.Name, new Dictionary<long, string>());
+                        // add each enum entry and its value
                         foreach (GMEnumValue val in decl.Enum.Values)
-                            RawValues.Add(val.Value);
-            } catch { }
+                            EnumSets[decl.Enum.Name].TryAdd(val.Value, val.Name);
+                    }
+                }
+            }
         }
-        #endregion
 
-        // search for all UnknownEnum values
-        List<UndertaleCode> searchcode = new();
-        foreach (UndertaleCode code in Data.Code)
-            if (code.ParentEntry == null && code != null)
-                searchcode.Add(code);
+        globalInitCode += "\n// GameSpecificData Enums\n";
 
-        // get all UnknownEnum values
-        await Task.Run(() => Parallel.ForEach(searchcode, DumpEnumValues));
-
-        // order the values properly
-        List<long> SortedValues = RawValues.ToList();
-        SortedValues.Sort();
-
-        // Adding Unknown Enums to the script
-        globalInitCode += $"enum {enumName}\n{{\n";
-
-        long expectedValue = 0;
-        foreach (long val in SortedValues)
+        foreach (string EnumSetName in EnumSets.Keys)
         {
-            string name = string.Format(enumPat, val.ToString().Replace("-", "m"));
-            // if in order, ex: 1, 2, 3
-            if (val == expectedValue)
+            // get enum set
+            Dictionary<long, string> EnumEntries = EnumSets[EnumSetName];
+            // get every enum entries' values
+            List<long> SortedValues = EnumEntries.Keys.ToList();
+            // order the values properly
+            SortedValues.Sort();
+
+            // Add Enum Declaration
+            globalInitCode += $"\nenum {EnumSetName}\n{{\n";
+
+            long expectedValue = 0;
+            foreach (long val in SortedValues)
             {
-                globalInitCode += $"\t{(name)},\n";
-                if (expectedValue != long.MaxValue)
-                    expectedValue++;
+                // for negative UnknownEnum values
+                string name = string.Format(EnumEntries[val], val.ToString().Replace("-", "m"));
+
+                // if in order, ex: 1, 2, 3
+                if (val == expectedValue)
+                {
+                    globalInitCode += $"\t{(name)},\n";
+                    if (expectedValue != long.MaxValue)
+                        expectedValue++;
+                }
+                // else if not in order, like: 1, 2, 5
+                // then make it = 5 to account for it
+                else
+                {
+                    globalInitCode += $"\t{(name)} = {(val)},\n";
+                    expectedValue = val + (expectedValue != long.MaxValue ? 1 : 0);
+                }
             }
-            // else if not in order, like: 1, 2, 5
-            // then make it = 5 to account for it
-            else
-            {
-                globalInitCode += $"\t{(name)} = {(val)},\n";
-                expectedValue = val + (expectedValue != long.MaxValue ? 1 : 0);
-            }
+            globalInitCode += "}\n";
         }
-        globalInitCode += "}";
     }
     #endregion
 
