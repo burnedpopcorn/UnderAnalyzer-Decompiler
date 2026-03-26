@@ -3886,12 +3886,7 @@ void DumpScript(UndertaleScript s, int index)
     if (scriptName == "_effect_windblown_particles_script" || scriptName == "_effect_blend_script")
         return;
 
-    string? dumpedCode = DumpCode(s.Code);
-    dumpedCode = (dumpedCode is null ? "" : dumpedCode);
-
-    // fallback to empty function for when the script is empty just in case if its called.
-    if (dumpedCode == String.Empty)
-        dumpedCode = "function " + scriptName + "()\n{\n\n}";
+    string dumpedCode = DumpCode(s.Code) ?? $"function {scriptName}()\n{{\n\n}}"; // YYC fallback
 
     Directory.CreateDirectory(assetDir);
     GMScript dumpedScript = new(scriptName)
@@ -4122,7 +4117,7 @@ public void DumpSound(UndertaleSound s, int index)
     // handle audiogroups
     string audioGroupPath = $"{rootDir}audiogroup{s.GroupID}.dat";
     var audioGroupElement = Data.AudioGroups.ElementAtOrDefault(s.GroupID);
-    string audioGroupName = (audioGroupElement is null ? "audiogroup_default" : audioGroupElement.Name.Content);
+    string audioGroupName = audioGroupElement?.Name.Content ?? "audiogroup_default";
 
     dumpedSound.parent =
         (!UISettings.YYMPS && !UISettings.CSTM_Enable && audioGroupName != "audiogroup_default")
@@ -4163,7 +4158,7 @@ public void DumpSound(UndertaleSound s, int index)
             return;
         }
     }
-    else if (s.AudioFile is not null)
+    else if (s.AudioFile != null)
         File.WriteAllBytes(dumpedSoundPath, s.AudioFile.Data);
     else if (isExternal)
         File.Copy(soundPath, dumpedSoundPath);
@@ -4217,24 +4212,13 @@ public void DumpSound(UndertaleSound s, int index)
 
     try
     {
-        switch (fileExt)
+        ws = fileExt switch
         {
-            case "wav":
-                ws = new WaveFileReader(dumpedSoundPath);
-                break;
-
-            case "ogg":
-                ws = new VorbisWaveReader(dumpedSoundPath);
-                break;
-
-            case "mp3":
-                ws = new Mp3FileReader(dumpedSoundPath);
-                break;
-
-            case "wma":
-                ws = new MediaFoundationReader(dumpedSoundPath);
-                break;
-        }
+            "wav" => new WaveFileReader(dumpedSoundPath),
+            "ogg" => new VorbisWaveReader(dumpedSoundPath),
+            "mp3" => new Mp3FileReader(dumpedSoundPath),
+            "wma" => new MediaFoundationReader(dumpedSoundPath)
+        };
     }
     catch
     {
@@ -4243,9 +4227,9 @@ public void DumpSound(UndertaleSound s, int index)
     }
 
     // set the sound file name in the yy file
-    dumpedSound.soundFile = (s.File is not null) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
+    dumpedSound.soundFile = (s.File != null) ? Path.GetFileName(dumpedSoundPath) : String.Empty;
 
-    if (ws is not null)
+    if (ws != null)
     {
         TimeSpan len = ws.TotalTime;
         double hours = len.TotalHours * 3600; // hours to seconds
@@ -4319,10 +4303,7 @@ void DumpRoom(UndertaleRoom r, int index)
 	{
 		string instanceName = $"inst_{IdToHex(inst_obj.InstanceID)}";
 		// add an entry to instanceCreationOrder
-		dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room)
-		{
-			name = instanceName
-		});
+		dumpedRoom.instanceCreationOrder.Add(new AssetReference(r.Name.Content, GMAssetType.Room) { name = instanceName});
 	}
 
     #region layer handling
@@ -4585,9 +4566,7 @@ void DumpRoom(UndertaleRoom r, int index)
     if (r.CreationCodeId is not null)
     {
         dumpedRoom.creationCodeFile = $"rooms/{r.Name.Content}/RoomCreationCode.gml";
-
-        string file_path = $"{assetDir}\\RoomCreationCode.gml";
-        File.WriteAllText(file_path, DumpCode(r.CreationCodeId));
+        File.WriteAllText($"{assetDir}\\RoomCreationCode.gml", DumpCode(r.CreationCodeId) ?? "");
     }
     // settings stuff
     dumpedRoom.roomSettings = new GMRoom.GMRoomSettings
@@ -5978,16 +5957,11 @@ void DumpTileSet(UndertaleBackground t, int index)
 
     if (t.Texture is not null)
     {
+        // tileset still needs the shit broken sprite here for some reason
+        imagesToDump.Add(new ImageAssetData(t.Texture, assetDir, "output_tileset.png", tilesetName));
+
         MagickImage finalResult = null;
-
-        // Decompile shit tileset sprite first
-        // tileset still needs this one for some reason
-        TextureWorker worker = new();
-        var image = worker.GetTextureFor(t.Texture, tilesetName);
-        TextureWorker.SaveImageToFile(image, $"{assetDir}output_tileset.png");
-        worker.Dispose();
-
-        var settings = new MagickReadSettings
+        MagickReadSettings settings = new()
         {
             BackgroundColor = MagickColors.Transparent,
             Width = (uint)dumpedTileset.tileWidth,
@@ -6007,25 +5981,30 @@ void DumpTileSet(UndertaleBackground t, int index)
         // or don't if user is too lazy to do it manually i guess
         else
         {
+            TextureWorker worker = new();
+            var image = worker.GetTextureFor(t.Texture, tilesetName);
+            worker.Dispose();
+
             var tiledImage = image.CropToTiles(
                 (uint)(dumpedTileset.tileWidth + ((int)t.GMS2OutputBorderX * 2)),
                 (uint)(dumpedTileset.tileHeight + ((int)t.GMS2OutputBorderY * 2))
             ).ToList();
+            image.Dispose();
 
             // set the geometry to the tileset dimensions
-            var geometry = new MagickGeometry((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
+            MagickGeometry geometry = new((uint)dumpedTileset.tileWidth, (uint)dumpedTileset.tileHeight);
             // remove checkerboard tile
             tiledImage[0] = new MagickImage("xc:none", settings);
             // iterate through each tile, fixing the padding by setting the tileset to the correct dimensions.
             for (int i = 0; i <= tiledImage.Count - 1; i++)
                 tiledImage[i].Extent(geometry, Gravity.Center, MagickColors.Transparent);
 
-            using var exportedImage = new MagickImageCollection();
+            using MagickImageCollection exportedImage = new();
             // construct the image by each tile.
             foreach (var tile in tiledImage)
                 exportedImage.Add(tile);
 
-            MontageSettings ms = new MontageSettings()
+            MontageSettings ms = new()
             {
                 Geometry = geometry,
                 TileGeometry = new MagickGeometry((uint)dumpedTileset.out_columns, 0),
@@ -6039,7 +6018,6 @@ void DumpTileSet(UndertaleBackground t, int index)
 
             exportedImage.Dispose();
         }
-        image.Dispose();
 
         GMSprite dumpedSprite = new(spriteName)
         {
