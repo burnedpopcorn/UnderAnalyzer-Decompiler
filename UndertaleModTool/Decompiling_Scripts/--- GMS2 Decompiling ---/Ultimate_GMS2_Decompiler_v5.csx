@@ -2934,8 +2934,16 @@ public static readonly Dictionary<GMAssetType, string> assetTypes = new()
 /// <param name="message"></param>
 public void PushToLog(string message)
 {
-    if (!UISettings.YYMPS)
-        File.AppendAllText(scriptDir + "script.log", $"{message}\n");
+    if (UISettings.YYMPS) return;
+
+    // absolute shitfix
+    while (true)
+    {
+        try {
+            File.AppendAllText(scriptDir + "script.log", $"{message}\n");
+            return;
+        } catch { }
+    }
 }
 
 #region Create Project Resources
@@ -4622,6 +4630,9 @@ async Task DumpRooms()
 
         await Task.Run(() => Parallel.ForEach(Data.Rooms, parallelOptions,
             (rm, state, index) => DumpResource(rm, (int)index, "Room", UISettings.ROOM)));
+
+        // room nodes
+        finalExport.RoomOrderNodes = Data.GeneralInfo.RoomOrder.Select(r => new GMProject.RoomOrderNode(r.Resource.Name.Content)).ToArray();
 
         watch.Stop();
         PushToLog($"Rooms complete! Took {watch.ElapsedMilliseconds} ms");
@@ -6406,7 +6417,6 @@ GMProject finalExport = new(Data.GeneralInfo.Name.Content)
 {
     isEcma = (Data.GeneralInfo.Info.HasFlag(UndertaleGeneralInfo.InfoFlags.JavaScriptMode)),
     AudioGroups = Data.AudioGroups.Select(ag => new GMProject.GMAudioGroup(ag?.Name?.Content)).ToArray(),
-    RoomOrderNodes = Data.GeneralInfo.RoomOrder.Select(r => new GMProject.RoomOrderNode(r.Resource.Name.Content)).ToArray(),
     Folders = CreateProjectFolders()
 };
 
