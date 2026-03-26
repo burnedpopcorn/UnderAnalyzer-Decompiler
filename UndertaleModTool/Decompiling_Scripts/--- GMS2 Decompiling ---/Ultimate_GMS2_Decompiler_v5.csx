@@ -530,8 +530,6 @@ public class GMObject : GMResource
     public GMObject(string name)
     {
         this.name = name;
-
-        parent = GetParentFolder(GMAssetType.Object);
     }
     public AssetReference? spriteId { get; set; } = null;
     public bool solid { get; set; } = false;
@@ -2987,27 +2985,34 @@ public GMProject.GMFolder[] CreateProjectFolders()
         CreateFolder("GeneratedTileSprites", "DecompilerGenerated/")
     };
 
-    // autosort textures (if texturegroups are available)
-    foreach (UndertaleTextureGroupInfo t in Data.TextureGroupInfo)
+    if (!UISettings.YYMPS && !UISettings.CSTM_Enable)
     {
-        if (!t.Name.Content.ToLower().Contains("_yy_") && t.Name.Content.ToLower() != "default")
+        // autosort textures (if texturegroups are available)
+        foreach (UndertaleTextureGroupInfo tg in Data.TextureGroupInfo)
         {
-            if (t.Sprites.Count > 0)
-                folders.Add(CreateFolder(t.Name.Content, "Sprites/"));
-            if (t.Tilesets.Count > 0)
-                folders.Add(CreateFolder(t.Name.Content, "Tile Sets/"));
+            if (!tg.Name.Content.ToLower().Contains("_yy_") && tg.Name.Content.ToLower() != "default")
+            {
+                if (tg.Sprites.Count > 0)
+                {
+                    if (UISettings.SPRT) folders.Add(CreateFolder(tg.Name.Content, "Sprites/"));
+                    // also organize objects with sprites in this texture group
+                    if (UISettings.OBJT) folders.Add(CreateFolder(tg.Name.Content, "Objects/"));
+                }
+                if (tg.Tilesets.Count > 0 && UISettings.BGND) 
+                    folders.Add(CreateFolder(tg.Name.Content, "Tile Sets/"));
+            }
         }
-    }
 
-    // autosort audio (if audiogroups are available)
-    foreach (UndertaleAudioGroup a in Data.AudioGroups)
-        if (a.Name.Content != "audiogroup_default")
-            folders.Add(CreateFolder(a.Name.Content, "Sounds/"));
+        // autosort audio (if audiogroups are available)
+        if (UISettings.SOND)
+            foreach (UndertaleAudioGroup a in Data.AudioGroups)
+                if (a.Name.Content != "audiogroup_default")
+                    folders.Add(CreateFolder(a.Name.Content, "Sounds/"));
+    }
 
     return folders.ToArray();
 
-    GMProject.GMFolder CreateFolder(string name, string extpath = "")
-    {
+    GMProject.GMFolder CreateFolder(string name, string extpath = "") {
         return new GMProject.GMFolder(name, $"folders/{extpath}{name}.yy") { order = ++order };
     }
 }
@@ -3940,6 +3945,14 @@ void DumpObject(UndertaleGameObject o, int index)
         physicsShapePoints = o.PhysicsVertices.Select(p => new GMPoint(p.X, p.Y)).ToArray(),
         tags = GetTags(o)
     };
+
+    // find parent folder based on object sprite
+    dumpedObject.parent =
+        (!UISettings.YYMPS && !UISettings.CSTM_Enable 
+        && o.Sprite != null && texGroupStuff.ContainsKey(o.Sprite.Name.Content) && texGroupStuff[o.Sprite.Name.Content].ToLower() != "default")
+        ? GetFolderReference(texGroupStuff[o.Sprite.Name.Content], "Objects/")
+        : GetParentFolder(GMAssetType.Object);
+
     // events (also referenced from quantum)
     for (int i = 0; i < o.Events.Count; i++)
     {
@@ -4043,9 +4056,8 @@ void DumpObject(UndertaleGameObject o, int index)
                     subTypeString = Data.GameObjects[(int)ev.EventSubtype].Name.Content;
 
                 string fileName = $"{((EventType)i).ToString()}_{subTypeString}";
-                string dumpedCode = DumpCode(code);
 				// Write Code
-                File.WriteAllText($"{scriptDir}objects\\{objectName}\\{fileName}.gml", dumpedCode is not null ? dumpedCode : "");
+                File.WriteAllText($"{scriptDir}objects\\{objectName}\\{fileName}.gml", DumpCode(code) ?? "");
             }
         }
     }
@@ -4105,7 +4117,7 @@ public void DumpSound(UndertaleSound s, int index)
     string audioGroupName = (audioGroupElement is null ? "audiogroup_default" : audioGroupElement.Name.Content);
 
     dumpedSound.parent =
-        (audioGroupName != "audiogroup_default")
+        (!UISettings.YYMPS && !UISettings.CSTM_Enable && audioGroupName != "audiogroup_default")
         ? GetFolderReference(audioGroupName, "Sounds/")
         : GetParentFolder(GMAssetType.Sound);
 
@@ -4666,7 +4678,7 @@ void DumpSprite(UndertaleSprite s, int index)
 
     // find parent folder
     dumpedSprite.parent =
-        (texGroupStuff.ContainsKey(spriteName) && texGroupStuff[spriteName].ToLower() != "default")
+        (!UISettings.YYMPS && !UISettings.CSTM_Enable && texGroupStuff.ContainsKey(spriteName) && texGroupStuff[spriteName].ToLower() != "default")
         ? GetFolderReference(texGroupStuff[spriteName], "Sprites/")
         : GetParentFolder(GMAssetType.Sprite);
 
@@ -5914,7 +5926,7 @@ void DumpTileSet(UndertaleBackground t, int index)
 
     // find parent folder
     dumpedTileset.parent =
-        (texGroupStuff.ContainsKey(tilesetName) && texGroupStuff[tilesetName].ToLower() != "default")
+        (!UISettings.YYMPS && !UISettings.CSTM_Enable && texGroupStuff.ContainsKey(tilesetName) && texGroupStuff[tilesetName].ToLower() != "default")
         ? GetFolderReference(texGroupStuff[tilesetName], "Tile Sets/")
         : GetParentFolder(GMAssetType.TileSet);
 
@@ -6618,8 +6630,7 @@ if (UISettings.SCPT
             CreateEnumDeclarations = false,
             UseSemicolon = false,
             AllowLeftoverDataOnStack = true
-        });
-        dumpedCode = dumpedCode ?? ""; // just in case
+        }) ?? "";
         // from quantum
         dumpedCode = dumpedCode.Replace("'", "'+\"'\"+@'").TrimEnd();
         globalInitCode += $"gml_pragma(\"global\", @'{dumpedCode}');\n";
@@ -6679,7 +6690,7 @@ if (UISettings.SCPT
             long expectedValue = 0;
             foreach (long val in SortedValues)
             {
-                // for negative UnknownEnum values
+                // for negative values
                 string name = string.Format(EnumEntries[val], val.ToString().Replace("-", "m"));
 
                 // if in order, ex: 1, 2, 3
