@@ -3821,11 +3821,14 @@ public static class GMShapeToSVG
 #region Dump Resources
 void DumpResource(dynamic asset, int index, string type, bool allowdump)
 {
-    r_num++; // update resource number for progress bar
-    if (asset is null) return;
-
+    if (asset is null)
+    {
+        r_num++;
+        return;
+    }
     if (allowdump || (UISettings.CSTM_Enable && UISettings.CSTM.Contains(asset.Name.Content)))
     {
+        r_num++;
         SetProgressBar(null, $"Exporting {type}: {asset.Name.Content}", r_num, toDump);
 
         var assetWatch = Stopwatch.StartNew();
