@@ -3254,6 +3254,9 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
             };
 
             #region Check Property Type
+            // TODO - this sometimes does not work, as sometimes it's just a list (aka needs to be an expression)
+            // maybe store previous variables and decide if its a list using that?
+            /*
             // List (only can check for multi-select lists)
             Match listmatch = Regex.Match(rawValue, @"\[([^\]]+)\]");
             if (listmatch.Success)
@@ -3261,8 +3264,9 @@ public List<GMObjectProperty> CreateObjectProperties(UndertalePointerList<Undert
                 prop.varType = 6;
                 prop.value = listmatch.Groups[1].Value.Trim();
             }
+            */
             // String
-            else if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
+            if (rawValue.StartsWith("\"") && rawValue.EndsWith("\""))
                 prop.varType = 2;
             // Boolean
             else if (rawValue == "true" || rawValue == "false")
