@@ -917,7 +917,7 @@ namespace UndertaleModTool
                         DecompiledChanged = false;
 
                         CurrentDecompiled = code;
-                        dialog.Hide();
+                        dialog.TryClose();
                     });
                 });
                 await t;

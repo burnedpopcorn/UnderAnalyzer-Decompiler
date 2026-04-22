@@ -114,6 +114,7 @@ namespace UndertaleModTool
         public string ScriptErrorMessage { get; set; } = "";
         public string ExePath { get; private set; } = Program.GetExecutableDirectory();
         public string ScriptErrorType { get; set; } = "";
+        public Action<Action> MainThreadAction => (f) => Dispatcher.Invoke(() => f());
 
         public enum SaveResult
         {
@@ -1004,7 +1005,7 @@ namespace UndertaleModTool
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        dialog.Hide();
+                        dialog.TryClose();
                         Data = data;
                         FilePath = filename;
                     });
@@ -1083,7 +1084,7 @@ namespace UndertaleModTool
                         #pragma warning restore CA1416
                     }
 
-                    dialog.Hide();
+                    dialog.TryClose();
                 });
             });
             dialog.ShowDialog();
@@ -1287,7 +1288,7 @@ namespace UndertaleModTool
 
                 Dispatcher.Invoke(() =>
                 {
-                    dialog.Hide();
+                    dialog.TryClose();
                 });
             });
             dialog.ShowDialog();
@@ -2124,8 +2125,7 @@ namespace UndertaleModTool
                 {
                     foreach (string resType in resTypes)
                     {
-                        IEnumerable resListCollection = Data[resType];
-                        if (resListCollection is not null)
+                        if (Data[resType] is IEnumerable resListCollection)
                         {
                             BindingOperations.EnableCollectionSynchronization(resListCollection, bindingLock);
 
@@ -2139,7 +2139,8 @@ namespace UndertaleModTool
                     {
                         if (syncBindings.Contains(resType))
                         {
-                            BindingOperations.DisableCollectionSynchronization(Data[resType]);
+                            if (Data[resType] is IEnumerable resListCollection)
+                                BindingOperations.DisableCollectionSynchronization(resListCollection);
 
                             syncBindings.Remove(resType);
                         }
@@ -2150,8 +2151,7 @@ namespace UndertaleModTool
             {
                 if (enable)
                 {
-                    IEnumerable resListCollection = Data[resourceType];
-                    if (resListCollection is not null)
+                    if (Data[resourceType] is IEnumerable resListCollection)
                     {
                         BindingOperations.EnableCollectionSynchronization(resListCollection, bindingLock);
 
@@ -2160,7 +2160,8 @@ namespace UndertaleModTool
                 }
                 else if (syncBindings.Contains(resourceType))
                 {
-                    BindingOperations.DisableCollectionSynchronization(Data[resourceType]);
+                    if (Data[resourceType] is IEnumerable resListCollection)
+                        BindingOperations.DisableCollectionSynchronization(resListCollection);
 
                     syncBindings.Remove(resourceType);
                 }
@@ -2171,7 +2172,10 @@ namespace UndertaleModTool
             if (syncBindings.Count <= 0) return;
 
             foreach (string resType in syncBindings)
-                BindingOperations.DisableCollectionSynchronization(Data[resType]);
+            {
+                if (Data[resType] is IEnumerable resListCollection)
+                    BindingOperations.DisableCollectionSynchronization(resListCollection);
+            }
 
             syncBindings.Clear();
         }
@@ -2496,7 +2500,7 @@ namespace UndertaleModTool
             }
             catch (Exception exc)
             {
-                bool isScriptException = exc.GetType().Name == "ScriptException";
+                bool isScriptException = exc is ScriptException;
                 string excString = string.Empty;
 
                 if (!isScriptException)
@@ -3134,7 +3138,7 @@ result in loss of work.");
 
                         Dispatcher.Invoke(() =>
                         {
-                            dialog.Hide();
+                            dialog.TryClose();
                         });
                     });
                     dialog.ShowDialog();
