@@ -37,11 +37,7 @@ namespace UndertaleModTool
         #region Enum stuffs
 
         // Add Function Button Press
-        private void AddENUMRowButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Add Row Function for functions
-            AddENUMRow();
-        }
+        private void AddENUMRowButton_Click(object sender, RoutedEventArgs e) => AddENUMRow();
 
         // Add Enum row
         public void AddENUMRow(string functionName = "gml_Script_", string functionArguments = "scr_", string optionalArgumentsString = "state")

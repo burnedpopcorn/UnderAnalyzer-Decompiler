@@ -1014,6 +1014,10 @@ namespace UndertaleModTool
                             if (!EnumSet.ContainsKey(kvp.Key))// stop overwrite
                                 EnumSet[kvp.Key] = kvp.Value; // add
                         }
+                        // remove old enum
+                        EnumEntries.Remove($"Enum.{switchstate}s");
+                        // add new merged enum
+                        AddEnum($"{switchstate}s", EnumSet);
                     }
                     // make new if it doesn't exist
                     else

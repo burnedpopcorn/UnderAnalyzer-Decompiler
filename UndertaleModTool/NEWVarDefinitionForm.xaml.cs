@@ -67,22 +67,16 @@ namespace UndertaleModTool
             InitializeComponent();
 
             // if in default "New (Clean) Mode"
+            // Set Initial Variable Row if making a New one
             if (mode == 0)
-            {
-                // Set Initial Variable Row if making a New one
                 AddVarRow();
-            }
             // If "Editing Mode" aka editing existing one, prompt user for JSON and load
             // This bool is set true or left false in MainWindow
             else if (mode == 1) 
-            {
                 PromptJSONLoad();
-            }
             // if in "New (Fill) Mode"
             else if (mode == 2)
-            {
                 FindnAddAllVars();
-            }
         }
 
         public void FindnAddAllVars() 
@@ -262,11 +256,7 @@ namespace UndertaleModTool
         #region Variable Functions
 
         // Add Variable Button Press
-        private void AddVarRowButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Add Row Function
-            AddVarRow();
-        }
+        private void AddVarRowButton_Click(object sender, RoutedEventArgs e) => AddVarRow();
 
         // Add Row Function
         // Isn't built in above because of the Initial Row
@@ -305,16 +295,11 @@ namespace UndertaleModTool
 
             VariableRowsPanel.Children.Add(newRow);
         }
-
         #endregion
         #region Function Functions
 
         // Add Function Button Press
-        private void AddFunctionRowButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Add Row Function for functions
-            AddFunctionRow();
-        }
+        private void AddFunctionRowButton_Click(object sender, RoutedEventArgs e) => AddFunctionRow();
 
         // Add Row Function for functions (2 TextBoxes)
         public void AddFunctionRow(string functionName = "gml_Script_", string functionArguments = "", string optionalArgumentsString = "")
@@ -367,13 +352,11 @@ namespace UndertaleModTool
 
             VariableRowsPanel.Children.Add(newRow);
         }
-
-
         #endregion
         #region Save Main JSON File Function (Shared)
         public void SaveButton_Func()
         {
-            var rowsData = new List<RowData>();
+            List<RowData> rowsData = new();
 
             // Dictionaries for storing user input separately for function rows and variable rows
             Dictionary<string, string> variableRows = new(); // Variable name and asset type
