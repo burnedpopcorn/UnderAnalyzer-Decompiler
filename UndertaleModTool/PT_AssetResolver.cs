@@ -48,6 +48,9 @@ namespace UndertaleModTool
 
         public static void AddFunction(string FuncName, List<string> AssetTypes, string OptionalArg = null, int OptionalAmount = -1)
         {
+            if (data.Functions.FirstOrDefault(f => f.ToString() == FuncName) == null)
+                return;
+
             // Setup JSON element
             dynamic JSON;
 
