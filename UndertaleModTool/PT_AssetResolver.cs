@@ -1,14 +1,15 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using UndertaleModLib;
-using UndertaleModLib.Models;
-using System.Windows;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
-using UndertaleModLib.Decompiler;
+using System.Windows;
 using Underanalyzer.Decompiler;
+using UndertaleModLib;
+using UndertaleModLib.Decompiler;
+using UndertaleModLib.Models;
 
 namespace UndertaleModTool
 {
@@ -42,7 +43,8 @@ namespace UndertaleModTool
             });
         }
 
-        public static void AddArray(string AssetType) => ArrayEntries.TryAdd($"Array<{AssetType}>", new { MacroType = "ArrayInit", Macro = AssetType });
+        public static void AddArray(string AssetType) 
+            => ArrayEntries.TryAdd($"Array<{AssetType}>", new { MacroType = "ArrayInit", Macro = AssetType });
 
         public static void AddFunction(string FuncName, List<string> AssetTypes, string OptionalArg = null, int OptionalAmount = -1)
         {
@@ -874,9 +876,13 @@ namespace UndertaleModTool
             AddArray("Asset.Object");
             AddArray("Asset.Sprite");
 
-            #region JSON
-            // UTMT JSON structure
-            var PTJSON = new
+            #region Write JSON Files
+            JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+            string GameFileName = $"{data.GeneralInfo.Name}".Replace("\"", "");
+            string GameDispName = $"{data.GeneralInfo.DisplayName}".Replace("\"", "");
+
+            #region Definitions JSON
+            var MainJSONStruct = new
             {
                 // Enum Only Branch
                 Types = new
@@ -897,17 +903,14 @@ namespace UndertaleModTool
             };
 
             // Convert the parent object to a JSON string
-            JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(PTJSON, jsonOptions);
-            jsonString = jsonString.Replace("\\u003C", "<").Replace("\\u003E", ">"); // idk man
+            string jsonString = JsonSerializer.Serialize(MainJSONStruct, jsonOptions)
+                .Replace("\\u003C", "<").Replace("\\u003E", ">");// idk man
 
             // Write main JSON File
-            string datanameclean = $"{data.GeneralInfo.Name}".Replace("\"", "");
-            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Underanalyzer/" + datanameclean + ".json", jsonString);
-
-            // Loader JSON
-            string dispnameclean = $"{data.GeneralInfo.DisplayName}".Replace("\"", "");
-            var loader = new
+            File.WriteAllText($"{Program.GetExecutableDirectory()}/GameSpecificData/Underanalyzer/{GameFileName}.json", jsonString);
+            #endregion
+            #region Loader JSON
+            var LoaderJSONStruct = new
             {
                 LoadOrder = 1,
                 Conditions = new[]
@@ -915,17 +918,20 @@ namespace UndertaleModTool
                     new
                     {
                         ConditionKind = "DisplayName.Regex",
-                        Value = $"(?i)^{dispnameclean}"
+                        Value = $"(?i)^{GameDispName}"
                     }
                 },
-                UnderanalyzerFilename = datanameclean + ".json"
+                UnderanalyzerFilename = GameFileName + ".json"
             };
+
             // Write Loader JSON
-            string loaderString = JsonSerializer.Serialize(loader, jsonOptions);
-            File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
-            // Notify User that it is done
-            Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
+            File.WriteAllText($"{Program.GetExecutableDirectory()}/GameSpecificData/Definitions/{GameFileName}_loader.json", JsonSerializer.Serialize(LoaderJSONStruct, jsonOptions));
             #endregion
+
+            #endregion
+
+            // Notify User that it's done
+            Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
 
             // Clean Up
             FuncEntries = new();
@@ -946,8 +952,7 @@ namespace UndertaleModTool
                     CreateEnumDeclarations = false,
                     AllowLeftoverDataOnStack = true
                 };
-                DecompileContext context = new(globalDecompileContext, code, decompilerSettings);
-                var decompiledcode = context.DecompileToString();
+                string decompiledcode = new DecompileContext(globalDecompileContext, code, decompilerSettings).DecompileToString();
 
                 // get lines of code
                 var lines = decompiledcode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -967,13 +972,12 @@ namespace UndertaleModTool
                     // start checking for states
                     if (line.StartsWith("case "))
                     {
-                        int stateValue;
                         var caseMatch = Regex.Match(line, @"case\s+(?:UnknownEnum\.Value_)?(\d+):");
                         if (!caseMatch.Success)
                             continue;
 
                         // get state value as integer
-                        stateValue = int.Parse(caseMatch.Groups[1].Value);
+                        int stateValue = int.Parse(caseMatch.Groups[1].Value);
 
                         // Look for the function call on the next line
                         string nextLine = lines[i + 1].Trim();
