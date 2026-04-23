@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,38 +15,31 @@ namespace UndertaleModTool
     public class PT_AssetResolver
     {
         // get data.win from MainWindow
-        public static UndertaleData data = ((MainWindow)Application.Current.MainWindow).Data;
+        private static UndertaleData data = ((MainWindow)Application.Current.MainWindow).Data;
 
         // main stuff for JSON
-        public static Dictionary<string, object> FuncEntries = new();
-        public static Dictionary<string, string> VarEntries = new();
-        public static Dictionary<string, object> EnumEntries = new();
-        public static Dictionary<string, object> ArrayEntries = new();
+        private static Dictionary<string, object> FuncEntries = new();
+        private static Dictionary<string, string> VarEntries = new();
+        private static Dictionary<string, object> EnumEntries = new();
+        private static Dictionary<string, object> ArrayEntries = new();
 
         #region Helper Functions
-        public static void AddVariable(string VarName, string AssetType) 
-        { 
-            // see if Variable exists in the game data before adding
+        private static void AddVariable(string VarName, string AssetType) 
+        {
+            // if variable is missing in data.win, don't add
             if (data.Variables.FirstOrDefault(v => v.ToString() == VarName) != null)
                 VarEntries.TryAdd(VarName, AssetType); 
         }
 
-        public static void AddEnum(string EnumName, Dictionary<string, int> EnumSet)
-        {
-            EnumEntries.TryAdd(
-            $"Enum.{EnumName}",
-            new
-            {
-                Name = EnumName,
-                Values = EnumSet
-            });
-        }
+        private static void AddEnum(string EnumName, Dictionary<string, int> EnumSet)
+            => EnumEntries.TryAdd($"Enum.{EnumName}", new { Name = EnumName, Values = EnumSet});
 
-        public static void AddArray(string AssetType) 
+        private static void AddArray(string AssetType) 
             => ArrayEntries.TryAdd($"Array<{AssetType}>", new { MacroType = "ArrayInit", Macro = AssetType });
 
-        public static void AddFunction(string FuncName, List<string> AssetTypes, string OptionalArg = null, int OptionalAmount = -1)
+        private static void AddFunction(string FuncName, List<string> AssetTypes, string OptionalArg = null, int OptionalAmount = -1)
         {
+            // if function is missing in data.win, don't add
             if (data.Functions.FirstOrDefault(f => f.ToString() == FuncName) == null)
                 return;
 
@@ -67,8 +59,8 @@ namespace UndertaleModTool
                 // +1 so that OptionalAmount can equal exactly to how many need to be added
                 for (var i = 0; i < OptionalAmount + 1; i++)
                 {
-                    // Add Array
-                    JSON.Macros.Add(AssetTypes);
+                    // Add Array (create a new list for this, so that it doesn't overwrite during json serialization)
+                    JSON.Macros.Add(new List<string>(AssetTypes));
                     // Add Optional Arg to List for next cycle (if it makes it)
                     AssetTypes.Add(OptionalArg);
                 }
