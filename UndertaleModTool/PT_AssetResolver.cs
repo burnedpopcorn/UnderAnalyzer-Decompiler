@@ -1,786 +1,895 @@
-﻿// Make JSON File for Pizza Tower data.win
-// This is basically completely from UTMTCE, but is used to make JSON files for UA
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-// Json stuff
 using System.Text.Json;
-// for the data.win, duh
 using UndertaleModLib;
 using UndertaleModLib.Models;
-// for ShowWarning
 using System.Windows;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UndertaleModLib.Decompiler;
-// for PT Enums
 using Underanalyzer.Decompiler;
 
 namespace UndertaleModTool
 {
     public class PT_AssetResolver
     {
-        // also new stuffs that will merge with builtin_funcs
-        public static Dictionary<string, object> functionArguments = new(); // union functions
-        public static Dictionary<string, string[]> builtin_funcs = new Dictionary<string, string[]> { }; // keys are function names
-        public static Dictionary<string, string> builtin_vars = new Dictionary<string, string> { }; // keys are variable names
-        public static Dictionary<string, object> enums = new(); // Main enums
-        public static Dictionary<string, object> generalarrays = new(); // General Arrays
+        // get data.win from MainWindow
+        public static UndertaleData data = ((MainWindow)Application.Current.MainWindow).Data;
 
-        // All other enums
-        public static Dictionary<string, int> particle_enums = new();
-        public static Dictionary<string, int> notification_enums = new();
-        public static Dictionary<string, int> holiday_enums = new();
-        public static Dictionary<string, int> tv_enums = new();
-        public static Dictionary<string, int> text_enums = new();
-        public static Dictionary<string, int> menuID_enums = new();
-        public static Dictionary<string, int> editor_enums = new();
-        public static Dictionary<string, int> afterimg_enums = new();
-        public static Dictionary<string, int> tdp_input_enums = new();
-        public static Dictionary<string, int> menuanchors_enums = new();
+        // main stuff for JSON
+        public static Dictionary<string, object> FuncEntries = new();
+        public static Dictionary<string, string> VarEntries = new();
+        public static Dictionary<string, object> EnumEntries = new();
+        public static Dictionary<string, object> ArrayEntries = new();
 
-        public class MacroEntry // for new shit
-        {
-            public string MacroType { get; set; }
-            public List<List<object>> Macros { get; set; }
-
-            public MacroEntry(string macroType, List<List<object>> macros)
-            {
-                MacroType = macroType;
-                Macros = macros;
-            }
+        #region Helper Functions
+        public static void AddVariable(string VarName, string AssetType) 
+        { 
+            // see if Variable exists in the game data before adding
+            if (data.Variables.FirstOrDefault(v => v.ToString() == VarName) != null)
+                VarEntries.TryAdd(VarName, AssetType); 
         }
 
-        // Make the JSON Files
-        public static void InitializeTypes(UndertaleData data)
+        public static void AddEnum(string EnumName, Dictionary<string, int> EnumSet)
         {
-            // Variable Definitions
-            // there's probably duplicates, but idc
+            EnumEntries.TryAdd(
+            $"Enum.{EnumName}",
+            new
+            {
+                Name = EnumName,
+                Values = EnumSet
+            });
+        }
 
-            // Rooms
-            builtin_vars.TryAdd("leveltorestart", "Asset.Room");
-            builtin_vars.TryAdd("targetRoom", "Asset.Room");
-            builtin_vars.TryAdd("targetRoom2", "Asset.Room");
-            builtin_vars.TryAdd("backtohubroom", "Asset.Room");
-            builtin_vars.TryAdd("roomtorestart", "Asset.Room");
-            builtin_vars.TryAdd("checkpointroom", "Asset.Room");
-            builtin_vars.TryAdd("lastroom", "Asset.Room");
-            builtin_vars.TryAdd("hub_array", "Asset.Room");
-            builtin_vars.TryAdd("level_array", "Asset.Room");
-            builtin_vars.TryAdd("_levelinfo", "Asset.Room");
-            builtin_vars.TryAdd("rm", "Asset.Room");
-            builtin_vars.TryAdd("room_index", "Asset.Room");
+        public static void AddArray(string AssetType) => ArrayEntries.TryAdd($"Array<{AssetType}>", new { MacroType = "ArrayInit", Macro = AssetType });
 
-            // Objects
-            builtin_vars.TryAdd("content", "Asset.Object");
-            builtin_vars.TryAdd("player", "Asset.Object");
-            builtin_vars.TryAdd("targetplayer", "Asset.Object");
-            builtin_vars.TryAdd("target", "Asset.Object");
-            builtin_vars.TryAdd("playerid", "Asset.Object");
-            builtin_vars.TryAdd("_playerid", "Asset.Object");
-            builtin_vars.TryAdd("player_id", "Asset.Object");
-            builtin_vars.TryAdd("platformid", "Asset.Object");
-            builtin_vars.TryAdd("objID", "Asset.Object");
-            builtin_vars.TryAdd("objectID", "Asset.Object");
-            builtin_vars.TryAdd("spawnenemyID", "Asset.Object");
-            builtin_vars.TryAdd("ID", "Asset.Object");
-            builtin_vars.TryAdd("baddiegrabbedID", "Asset.Object");
-            builtin_vars.TryAdd("pizzashieldID", "Asset.Object");
-            builtin_vars.TryAdd("angryeffectid", "Asset.Object");
-            builtin_vars.TryAdd("pizzashieldid", "Asset.Object");
-            builtin_vars.TryAdd("superchargedeffectid", "Asset.Object");
-            builtin_vars.TryAdd("baddieID", "Asset.Object");
-            builtin_vars.TryAdd("baddieid", "Asset.Object");
-            builtin_vars.TryAdd("brickid", "Asset.Object");
-            builtin_vars.TryAdd("attackerID", "Asset.Object");
-            builtin_vars.TryAdd("object", "Asset.Object");
-            builtin_vars.TryAdd("obj", "Asset.Object");
-            builtin_vars.TryAdd("_obj", "Asset.Object");
-            builtin_vars.TryAdd("closestObj", "Asset.Object");
-            builtin_vars.TryAdd("solidObj", "Asset.Object");
-            builtin_vars.TryAdd("bg_obj", "Asset.Object");
-            builtin_vars.TryAdd("_obj_player", "Asset.Object");
-            builtin_vars.TryAdd("obj_explosion", "Asset.Object");
-            builtin_vars.TryAdd("my_obj_index", "Asset.Object");
-            builtin_vars.TryAdd("inst", "Asset.Object");
-            builtin_vars.TryAdd("chargeeffectid", "Asset.Object");
-            builtin_vars.TryAdd("dashcloudid", "Asset.Object");
-            builtin_vars.TryAdd("crazyruneffectid", "Asset.Object");
-            builtin_vars.TryAdd("superslameffectid", "Asset.Object");
-            builtin_vars.TryAdd("speedlineseffectid", "Asset.Object");
+        public static void AddFunction(string FuncName, List<string> AssetTypes, string OptionalArg = null, int OptionalAmount = -1)
+        {
+            // Setup JSON element
+            dynamic JSON;
 
-            // Sprites
-            builtin_vars.TryAdd("bpal", "Asset.Sprite");
-            builtin_vars.TryAdd("vstitle", "Asset.Sprite");
-            builtin_vars.TryAdd("bg", "Asset.Sprite");
-            builtin_vars.TryAdd("bg2", "Asset.Sprite");
-            builtin_vars.TryAdd("bg3", "Asset.Sprite");
-            builtin_vars.TryAdd("playersprshadow", "Asset.Sprite");
-            builtin_vars.TryAdd("bosssprshadow", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait1_idle", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait1_hurt", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait2_idle", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait2_hurt", "Asset.Sprite");
-            builtin_vars.TryAdd("boss_palette", "Asset.Sprite");
-            builtin_vars.TryAdd("panicspr", "Asset.Sprite");
-            builtin_vars.TryAdd("bossarr", "Asset.Sprite");
-            builtin_vars.TryAdd("palettetexture", "Asset.Sprite");
-            builtin_vars.TryAdd("switchstart", "Asset.Sprite");
-            builtin_vars.TryAdd("switchend", "Asset.Sprite");
-            builtin_vars.TryAdd("_hurt", "Asset.Sprite");
-            builtin_vars.TryAdd("_dead", "Asset.Sprite");
-            builtin_vars.TryAdd("storedspriteindex", "Asset.Sprite");
-            builtin_vars.TryAdd("icon", "Asset.Sprite");
-            builtin_vars.TryAdd("spridle", "Asset.Sprite");
-            builtin_vars.TryAdd("sprgot", "Asset.Sprite");
-
-            // Colors
-            builtin_vars.TryAdd("color", "Constant.Color");
-            builtin_vars.TryAdd("textcolor", "Constant.Color");
-            builtin_vars.TryAdd("bc", "Constant.Color");
-            builtin_vars.TryAdd("tc", "Constant.Color");
-            builtin_vars.TryAdd("gameframe_blend", "Constant.Color");
-            builtin_vars.TryAdd("c1", "Constant.Color");
-            builtin_vars.TryAdd("c2", "Constant.Color");
-            builtin_vars.TryAdd("c_player", "Constant.Color");
-
-            builtin_vars.TryAdd("gameframe_caption_icon", "Asset.Sprite");
-
-            // Add all from this repo: https://github.com/avievie/PizzaTowerGameSpecificData
-            // thanks so much @avievie
-            builtin_vars.TryAdd("landspr", "Asset.Sprite");
-            builtin_vars.TryAdd("idlespr", "Asset.Sprite");
-            builtin_vars.TryAdd("fallspr", "Asset.Sprite");
-            builtin_vars.TryAdd("stunfallspr", "Asset.Sprite");
-            builtin_vars.TryAdd("walkspr", "Asset.Sprite");
-            builtin_vars.TryAdd("turnspr", "Asset.Sprite");
-            builtin_vars.TryAdd("recoveryspr", "Asset.Sprite");
-            builtin_vars.TryAdd("grabbedspr", "Asset.Sprite");
-            builtin_vars.TryAdd("scaredspr", "Asset.Sprite");
-            builtin_vars.TryAdd("ragespr", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_dead", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_palette", "Asset.Sprite");
-            builtin_vars.TryAdd("tube_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_intro", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_introidle", "Asset.Sprite");
-            builtin_vars.TryAdd("ts", "Asset.Tileset");
-            builtin_vars.TryAdd("t", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_attack", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hidden", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle", "Asset.Sprite");
-            builtin_vars.TryAdd("stunspr", "Asset.Sprite");
-            builtin_vars.TryAdd("bgsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("ratpowerup", "Asset.Object");
-            builtin_vars.TryAdd("boss_hpsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("pl", "Asset.Object");
-            builtin_vars.TryAdd("spr", "Asset.Sprite");
-            builtin_vars.TryAdd("expressionsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("attackdash", "Asset.Sprite");
-            builtin_vars.TryAdd("airattackdash", "Asset.Sprite");
-            builtin_vars.TryAdd("airattackdashstart", "Asset.Sprite");
-            builtin_vars.TryAdd("tauntstoredsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("movespr", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_joystick", "Asset.Sprite");
-            builtin_vars.TryAdd("_select", "Constant.GamepadButton");
-            builtin_vars.TryAdd("_back", "Constant.GamepadButton");
-            builtin_vars.TryAdd("tvsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("divisionjustforplayersprites", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_move", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crawl", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hurt", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_jump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_jump2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_fall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_fall2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crouch", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crouchjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crouchfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_couchstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_land", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_land2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_lookdoor", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_walkfront", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_victory", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_Ladder", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_laddermove", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_ladderdown", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_keyget", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crouchslip", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pistolshot", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pistolwalk", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_longjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_longjumpend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_breakdance", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machslideboostfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach3boostfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mrpinch", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_rampjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_secondjump1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_secondjump2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machslidestart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machslide", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machslideend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machslideboost", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_catched", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_punch", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_backkick", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_shoulder", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_uppunch", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_stomp", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_stompprep", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crouchslide", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_climbwall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_grab", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach2jump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_Timesup", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_deathstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_deathend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machpunch1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machpunch2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hurtjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_entergate", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_gottreasure", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bossintro", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hurtidle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hurtwalk", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexmash1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexmash2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexmash3", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexmash4", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_tackle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_airdash1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_airdash2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle3", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle4", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle5", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle6", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_wallsplat", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_piledriver", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_piledriverland", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_charge", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach3jump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach4", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machclimbwall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_dive", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machroll", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hitwall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjumpland", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_walljumpstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjumpprep", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjumppreplight", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjumpright", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_superjumpleft", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_machfreefall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach3hit", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepwalk", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepidle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepjumpstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepthunder", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepland", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepdownslope", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepcharge", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepdoublejump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepfly", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepdowntrust", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepupslope", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_knightpepbump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bodyslamfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bodyslamstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bodyslamland", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_crazyrun", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bombpeprun", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bombpepintro", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bombpeprunabouttoexplode", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_bombpepend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_jetpackstart2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_fireass", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_fireassground", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_fireassend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_tumblestart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_tumbleend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_tumble", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_stunned", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clown", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clownbump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clowncrouch", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clownfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clownjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_clownwallclimb", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_downpizzabox", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_uppizzabox", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_slipnslide", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_mach3boost", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_facehurtup", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_facehurt", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_walljumpend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexdash", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexdashjumpstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_suplexdashjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_shotgunsuplexdash", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_rollgetup", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_swingding", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_swingdingend", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingjump", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingidle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingwalk", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingstart", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingfall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_haulingland", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_uppercutfinishingblow", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_finishingblow1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_finishingblow2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_finishingblow3", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_finishingblow4", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_finishingblow5", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_winding", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_3hpwalk", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_3hpidle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_panic", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_facestomp", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_freefall", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_shotgunsuplex", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pushback1", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pushback2", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_throw", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_run", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_shotgunidle", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_sworddash", "Asset.Sprite");
-
-            // New shit by CST
-            // bro is literally insane
-            builtin_vars.TryAdd("_face", "Constant.GamepadButton");
-            builtin_vars.TryAdd("objectlist", "Array<Asset.Object>");
-            builtin_vars.TryAdd("object_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("objdark_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("content_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("spawnpool", "Array<Asset.Object>");
-            builtin_vars.TryAdd("spawn_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("dark_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("flash_arr", "Array<Asset.Object>");
-            builtin_vars.TryAdd("collision_list", "Array<Asset.Object>");
-
-            builtin_vars.TryAdd("levels", "Array<Asset.Room>");
-            builtin_vars.TryAdd("room_arr", "Array<Asset.Room>");
-
-            builtin_vars.TryAdd("treasure_arr", "Array<Asset.Sprite>");
-
-            // Extra Shit i found
-            builtin_vars.TryAdd("particlespr", "Asset.Sprite");
-            builtin_vars.TryAdd("heatmeterspr", "Asset.Sprite");
-            builtin_vars.TryAdd("heatmetersprfill", "Asset.Sprite");
-            builtin_vars.TryAdd("heatmetersprpalette", "Asset.Sprite");
-            builtin_vars.TryAdd("pizzascorespr", "Asset.Sprite");
-            builtin_vars.TryAdd("rankshudspr", "Asset.Sprite");
-            builtin_vars.TryAdd("rankshudsprfill", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_combobubble", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_combobubblefill", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_escapeG", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_happyG", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_hurtG", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_idleG", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_barrel", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_bombpep", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_boxxedpep", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_cheeseball", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_cheesepep", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_clown", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprcollect", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprcombo", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprheat", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprmach3", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprmach4", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprpanic", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_fireass", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_firemouth", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_ghost", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_golf", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_idle", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_idlesecret", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_idleanim1", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_idleanim2", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_knight", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_mort", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_rocket", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_scaredjump", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_shotgun", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_squished", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_tumble", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_weenie", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_off", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_open", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_whitenoise", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt1", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt2", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt3", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt4", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt5", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt6", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt7", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt8", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt9", "Asset.Sprite");
-            builtin_vars.TryAdd("tv_exprhurt10", "Asset.Sprite");
-
-            // EVEN MORE!!!
-            builtin_vars.TryAdd("vstitleplayer", "Asset.Sprite");
-            builtin_vars.TryAdd("texture", "Asset.Sprite");
-            builtin_vars.TryAdd("dragonactor", "Asset.Object");
-            builtin_vars.TryAdd("anarchist", "Asset.Object");
-            builtin_vars.TryAdd("_checker", "Asset.Object");
-            builtin_vars.TryAdd("baddieID", "Asset.Object");
-            builtin_vars.TryAdd("baddieid", "Asset.Object");
-            builtin_vars.TryAdd("player_hpsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("chasespr", "Asset.Sprite");
-            builtin_vars.TryAdd("throwspr", "Asset.Sprite");
-            builtin_vars.TryAdd("transitionspr", "Asset.Sprite");
-            builtin_vars.TryAdd("angryspr", "Asset.Sprite");
-            builtin_vars.TryAdd("upspr", "Asset.Sprite");
-            builtin_vars.TryAdd("downspr", "Asset.Sprite");
-            builtin_vars.TryAdd("deadspr", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pose", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_run", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_intro", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_idle_strongcold", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_run_strongcold", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_intro_strongcold", "Asset.Sprite");
-            builtin_vars.TryAdd("prevsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("title_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("titlecard_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("playersprite", "Asset.Sprite");
-            builtin_vars.TryAdd("peppino_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("toppin_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("bell_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait1_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("portrait2_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("pizzaface_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("johnface_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("bubblespr", "Asset.Sprite");
-            builtin_vars.TryAdd("noise_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("noisesprite", "Asset.Sprite");
-            builtin_vars.TryAdd("iconspr", "Asset.Sprite");
-            builtin_vars.TryAdd("hand_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("canon_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("captain_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("door_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("throw_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("gate_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("taunt_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("rank_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_happy", "Asset.Sprite");
-            builtin_vars.TryAdd("tauntspr", "Asset.Sprite");
-            builtin_vars.TryAdd("activatespr", "Asset.Sprite");
-            builtin_vars.TryAdd("dancespr", "Asset.Sprite");
-            builtin_vars.TryAdd("smilespr", "Asset.Sprite");
-            builtin_vars.TryAdd("item_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_arrow", "Asset.Sprite");
-            builtin_vars.TryAdd("bg_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("playerspr", "Asset.Sprite");
-            builtin_vars.TryAdd("particlespr", "Asset.Sprite");
-            builtin_vars.TryAdd("bomblit_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("defeatplayerspr", "Asset.Sprite");
-            builtin_vars.TryAdd("bumpspr", "Asset.Sprite");
-            builtin_vars.TryAdd("bubble_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("transspr", "Asset.Sprite");
-            builtin_vars.TryAdd("confirmspr", "Asset.Sprite");
-            builtin_vars.TryAdd("selectedspr", "Asset.Sprite");
-            builtin_vars.TryAdd("clipspr", "Asset.Sprite");
-            builtin_vars.TryAdd("signspr", "Asset.Sprite");
-            builtin_vars.TryAdd("bouncespr", "Asset.Sprite");
-            builtin_vars.TryAdd("parryspr", "Asset.Sprite");
-            builtin_vars.TryAdd("background_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("achievement_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("visible_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("treasurespr", "Asset.Sprite");
-            builtin_vars.TryAdd("shootspr", "Asset.Sprite");
-            builtin_vars.TryAdd("gerome_spr", "Asset.Sprite");
-            builtin_vars.TryAdd("timerspr", "Asset.Sprite");
-            builtin_vars.TryAdd("spitcheesespr", "Asset.Sprite");
-            builtin_vars.TryAdd("hitceillingspr", "Asset.Sprite");
-            builtin_vars.TryAdd("hitwallspr", "Asset.Sprite");
-            builtin_vars.TryAdd("stunfalltransspr", "Asset.Sprite");
-            builtin_vars.TryAdd("rollingspr", "Asset.Sprite");
-            builtin_vars.TryAdd("flyingspr", "Asset.Sprite");
-            builtin_vars.TryAdd("hitspr", "Asset.Sprite");
-            builtin_vars.TryAdd("stunlandspr", "Asset.Sprite");
-            builtin_vars.TryAdd("stompedspr", "Asset.Sprite");
-            builtin_vars.TryAdd("handsprite", "Asset.Sprite");
-            builtin_vars.TryAdd("player_sprite", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_sign", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_helicopter", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_name", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_air", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_animatronic", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_pal", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_hand", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_left", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_right", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_content_dead", "Asset.Sprite");
-            builtin_vars.TryAdd("spr_gamepadbuttons", "Asset.Sprite");
-
-            builtin_funcs["gml_Script_randomize_animations"] = new[] { "Array<Asset.Sprite>" };
-
-            // Function Arguments that potentially have many arguments
-            functionArguments.TryAdd("gml_Script_scr_boss_genericintro", new MacroEntry(
-            "Union",
-            new List<List<object>>
+            // if Complex Function with optional arguments
+            if (OptionalAmount != -1)
+            {
+                JSON = new
                 {
-                    new List<object> { null, null, "Asset.Sprite" },
-                    new List<object> { null, null, "Asset.Sprite", null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_palette_unlock", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, null, null, "Asset.Sprite" },
-                    new List<object> { null, null, null, "Asset.Sprite", null },
-                    new List<object> { null, null, null, "Asset.Sprite", null, null }
-                })
-            );
-
-            functionArguments.TryAdd("gml_Script_scr_sound", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sound" },
-                    new List<object> { "Asset.Sound", null },
-                    new List<object> { "Asset.Sound", null, null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_scr_soundeffect", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sound" },
-                    new List<object> { "Asset.Sound", null },
-                    new List<object> { "Asset.Sound", null, null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_scr_music", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sound" },
-                    new List<object> { "Asset.Sound", null },
-                    new List<object> { "Asset.Sound", null, null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_create_debris", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, null, "Asset.Sprite" },
-                    new List<object> { null, null, "Asset.Sprite", null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_add_music", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Room", null, null, null },
-                    new List<object> { "Asset.Room", null, null, null, null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_scr_pauseicon_add", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sprite" },
-                    new List<object> { "Asset.Sprite", null },
-                    new List<object> { "Asset.Sprite", null, null },
-                    new List<object> { "Asset.Sprite", null, null, null }
-                })
-            );
-            functionArguments.TryAdd("gml_Script_tv_do_expression", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { "Asset.Sprite" },
-                    new List<object> { "Asset.Sprite", "Bool" },
-                    new List<object> { "Asset.Sprite", "Bool", "Bool" },
-                })
-            );
-            functionArguments.TryAdd("gml_Script_create_collect", new MacroEntry(
-            "Union",
-            new List<List<object>>
-                {
-                    new List<object> { null, null, "Asset.Sprite" },
-                    new List<object> { null, null, "Asset.Sprite", null },
-                })
-            );
-
-            // Function Arguments (From UTMTCE)
-            builtin_funcs["gml_Script_instance_create_unique"] =
-                    new[] { null, null, "Asset.Object" };
-            builtin_funcs["gml_Script_instance_nearest_random"] =
-                new[] { "Asset.Object", null };
-            builtin_funcs["instance_place_list"] =
-                new[] { null, null, "Asset.Object", null, "Bool" };
-
-            builtin_funcs["gml_Script_draw_enemy"] =
-                new[] { null, null, "Constant.Color" };
-
-            builtin_funcs["gml_Script_create_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null };
-            builtin_funcs["gml_Script_create_mach2effect"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_heatattack_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_firemouth_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_blue_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_red_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_create_blur_afterimage"] =
-                new[] { null, null, "Asset.Sprite", null, null };
-
-            builtin_funcs["gml_Script_pal_swap_init_system"] =
-                new[] { "Asset.Shader" };
-            builtin_funcs["gml_Script_pal_swap_init_system_fix"] =
-                new[] { "Asset.Shader" };
-            builtin_funcs["gml_Script_pal_swap_set"] =
-                new[] { "Asset.Sprite", null, null };
-            builtin_funcs["gml_Script_pattern_set"] =
-                new[] { null, "Asset.Sprite", null, null, null, null };
-
-            builtin_funcs["gml_Script_scr_room_goto"] =
-                new[] { "Asset.Room" };
-
-            builtin_funcs["gml_Script_hub_state"] =
-                new[] { "Asset.Room", null, null };
-
-            builtin_funcs["gml_Script_draw_background_tiled"] =
-                new[] { "Asset.Sprite", null, null, null };
-            builtin_funcs["gml_Script_scr_draw_granny_texture"] =
-                new[] { null, null, null, null,
-                    null, null, "Asset.Sprite", "Asset.Sprite", };
-
-            builtin_funcs["gml_Script_object_get_depth"] =
-                new[] { "Asset.Object" };
-
-            builtin_funcs["gml_Script_scr_bosscontroller_particle_anim"] =
-                new[] { "Asset.Sprite", null, null,
-                    null, null, "Asset.Sprite", null };
-            builtin_funcs["gml_Script_scr_bosscontroller_particle_hp"] =
-                new[] { "Asset.Sprite", null, null,
-                    null, null, "Asset.Sprite", null, "Asset.Sprite" };
-            builtin_funcs["gml_Script_scr_bosscontroller_draw_health"] =
-                new[] { "Asset.Sprite",
-                    null, null, null, null, null,
-                    null, null, null, null, null,
-                    "Asset.Sprite", null, "Asset.Sprite" };
-            builtin_funcs["gml_Script_boss_update_pizzaheadKO"] =
-                new[] { "Asset.Sprite", "Asset.Sprite" };
-            builtin_funcs["gml_Script_scr_pizzaface_p3_do_player_attack"] =
-                new[] { "Asset.Object" };
-
-            builtin_funcs["gml_Script_scr_boss_do_hurt_phase2"] =
-                new[] { "Asset.Object" };
-
-            builtin_funcs["gml_Script_check_slope"] = new[] { "Asset.Object" };
-            builtin_funcs["gml_Script_check_slope_player"] = new[] { "Asset.Object" };
-            builtin_funcs["gml_Script_try_solid"] =
-                new[] { null, null, "Asset.Object", null };
-
-            builtin_funcs["gml_Script_add_rank_achievements"] =
-                new[] { null, null, "Asset.Sprite", null,
-                    null };
-            builtin_funcs["gml_Script_add_boss_achievements"] =
-                new[] { null, "Asset.Room", "Asset.Sprite", null };
-
-            builtin_funcs["gml_Script_achievement_unlock"] =
-                new[] { null, null, "Asset.Sprite", null };
-
-            builtin_funcs["gml_Script_scr_monsterinvestigate"] =
-                new[] { null, "Asset.Sprite", "Asset.Sprite" };
-
-            builtin_funcs["gml_Script_timedgate_add_objects"] =
-                new[] { "Asset.Object", null };
-
-            builtin_funcs["gml_Script_randomize_animations"] =
-                new[] { "Array<Asset.Sprite>" };
-
-            builtin_funcs["gml_Script_tdp_draw_text_color"] =
-                new[] {
-                        null, null, null,
-                        "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color",
-                        null
+                    MacroType = "Union",
+                    Macros = new List<List<string>>()
                 };
-            builtin_funcs["gml_Script_lang_draw_sprite"] =
-                new[] { "Asset.Sprite", null, null, null };
 
-            builtin_funcs["layer_background_change"] =
-                new[] { null, "Asset.Sprite" };
-            builtin_funcs["layer_background_sprite"] =
-                new[] { null, "Asset.Sprite" };
+                // Add however many optional arguments need to be added
+                // +1 so that OptionalAmount can equal exactly to how many need to be added
+                for (var i = 0; i < OptionalAmount + 1; i++)
+                {
+                    // Add Array
+                    JSON.Macros.Add(AssetTypes);
+                    // Add Optional Arg to List for next cycle (if it makes it)
+                    AssetTypes.Add(OptionalArg);
+                }
+            }
+            else // else if simple function, just add simple arg array without the Macro shit
+                JSON = AssetTypes;
 
-            // Calls this function to search for other enums
-            // Also used in the GMS2 Decomp Script
-            FindOtherEnums(data);
-            // Because this codebase hates me
-            AddOtherEnums(data);
+            FuncEntries.TryAdd(FuncName, JSON);
+        }
+        #endregion
+
+        // Make the JSON File
+        public static void InitializeTypes()
+        {
+            #region Variables
+
+            // there's probably duplicates, but idc
+            #region Rooms
+            AddVariable("leveltorestart", "Asset.Room");
+            AddVariable("targetRoom", "Asset.Room");
+            AddVariable("targetRoom2", "Asset.Room");
+            AddVariable("backtohubroom", "Asset.Room");
+            AddVariable("roomtorestart", "Asset.Room");
+            AddVariable("checkpointroom", "Asset.Room");
+            AddVariable("lastroom", "Asset.Room");
+            AddVariable("hub_array", "Asset.Room");
+            AddVariable("level_array", "Asset.Room");
+            AddVariable("_levelinfo", "Asset.Room");
+            AddVariable("rm", "Asset.Room");
+            AddVariable("room_index", "Asset.Room");
+            #endregion
+            #region Objects
+            AddVariable("content", "Asset.Object");
+            AddVariable("player", "Asset.Object");
+            AddVariable("targetplayer", "Asset.Object");
+            AddVariable("target", "Asset.Object");
+            AddVariable("playerid", "Asset.Object");
+            AddVariable("_playerid", "Asset.Object");
+            AddVariable("player_id", "Asset.Object");
+            AddVariable("platformid", "Asset.Object");
+            AddVariable("objID", "Asset.Object");
+            AddVariable("objectID", "Asset.Object");
+            AddVariable("spawnenemyID", "Asset.Object");
+            AddVariable("ID", "Asset.Object");
+            AddVariable("baddiegrabbedID", "Asset.Object");
+            AddVariable("pizzashieldID", "Asset.Object");
+            AddVariable("angryeffectid", "Asset.Object");
+            AddVariable("pizzashieldid", "Asset.Object");
+            AddVariable("superchargedeffectid", "Asset.Object");
+            AddVariable("baddieID", "Asset.Object");
+            AddVariable("baddieid", "Asset.Object");
+            AddVariable("brickid", "Asset.Object");
+            AddVariable("attackerID", "Asset.Object");
+            AddVariable("object", "Asset.Object");
+            AddVariable("obj", "Asset.Object");
+            AddVariable("_obj", "Asset.Object");
+            AddVariable("closestObj", "Asset.Object");
+            AddVariable("solidObj", "Asset.Object");
+            AddVariable("bg_obj", "Asset.Object");
+            AddVariable("_obj_player", "Asset.Object");
+            AddVariable("obj_explosion", "Asset.Object");
+            AddVariable("my_obj_index", "Asset.Object");
+            AddVariable("inst", "Asset.Object");
+            AddVariable("chargeeffectid", "Asset.Object");
+            AddVariable("dashcloudid", "Asset.Object");
+            AddVariable("crazyruneffectid", "Asset.Object");
+            AddVariable("superslameffectid", "Asset.Object");
+            AddVariable("speedlineseffectid", "Asset.Object");
+            AddVariable("ratpowerup", "Asset.Object");
+            AddVariable("pl", "Asset.Object");
+            AddVariable("dragonactor", "Asset.Object");
+            AddVariable("anarchist", "Asset.Object");
+            AddVariable("_checker", "Asset.Object");
+            AddVariable("baddieID", "Asset.Object");
+            AddVariable("baddieid", "Asset.Object");
+            #endregion
+            #region Sprites
+            AddVariable("gameframe_caption_icon", "Asset.Sprite");
+            AddVariable("bpal", "Asset.Sprite");
+            AddVariable("vstitle", "Asset.Sprite");
+            AddVariable("bg", "Asset.Sprite");
+            AddVariable("bg2", "Asset.Sprite");
+            AddVariable("bg3", "Asset.Sprite");
+            AddVariable("playersprshadow", "Asset.Sprite");
+            AddVariable("bosssprshadow", "Asset.Sprite");
+            AddVariable("portrait1_idle", "Asset.Sprite");
+            AddVariable("portrait1_hurt", "Asset.Sprite");
+            AddVariable("portrait2_idle", "Asset.Sprite");
+            AddVariable("portrait2_hurt", "Asset.Sprite");
+            AddVariable("boss_palette", "Asset.Sprite");
+            AddVariable("panicspr", "Asset.Sprite");
+            AddVariable("bossarr", "Asset.Sprite");
+            AddVariable("palettetexture", "Asset.Sprite");
+            AddVariable("switchstart", "Asset.Sprite");
+            AddVariable("switchend", "Asset.Sprite");
+            AddVariable("_hurt", "Asset.Sprite");
+            AddVariable("_dead", "Asset.Sprite");
+            AddVariable("storedspriteindex", "Asset.Sprite");
+            AddVariable("icon", "Asset.Sprite");
+            AddVariable("spridle", "Asset.Sprite");
+            AddVariable("sprgot", "Asset.Sprite");
+            AddVariable("landspr", "Asset.Sprite");
+            AddVariable("idlespr", "Asset.Sprite");
+            AddVariable("fallspr", "Asset.Sprite");
+            AddVariable("stunfallspr", "Asset.Sprite");
+            AddVariable("walkspr", "Asset.Sprite");
+            AddVariable("turnspr", "Asset.Sprite");
+            AddVariable("recoveryspr", "Asset.Sprite");
+            AddVariable("grabbedspr", "Asset.Sprite");
+            AddVariable("scaredspr", "Asset.Sprite");
+            AddVariable("ragespr", "Asset.Sprite");
+            AddVariable("spr_dead", "Asset.Sprite");
+            AddVariable("spr_palette", "Asset.Sprite");
+            AddVariable("tube_spr", "Asset.Sprite");
+            AddVariable("spr_intro", "Asset.Sprite");
+            AddVariable("spr_introidle", "Asset.Sprite");
+            AddVariable("sprite", "Asset.Sprite");
+            AddVariable("divisionjustforplayersprites", "Asset.Sprite");
+            AddVariable("spr_move", "Asset.Sprite");
+            AddVariable("spr_crawl", "Asset.Sprite");
+            AddVariable("spr_hurt", "Asset.Sprite");
+            AddVariable("spr_jump", "Asset.Sprite");
+            AddVariable("spr_jump2", "Asset.Sprite");
+            AddVariable("spr_fall", "Asset.Sprite");
+            AddVariable("spr_fall2", "Asset.Sprite");
+            AddVariable("spr_crouch", "Asset.Sprite");
+            AddVariable("spr_crouchjump", "Asset.Sprite");
+            AddVariable("spr_crouchfall", "Asset.Sprite");
+            AddVariable("spr_couchstart", "Asset.Sprite");
+            AddVariable("spr_bump", "Asset.Sprite");
+            AddVariable("spr_land", "Asset.Sprite");
+            AddVariable("spr_land2", "Asset.Sprite");
+            AddVariable("spr_lookdoor", "Asset.Sprite");
+            AddVariable("spr_walkfront", "Asset.Sprite");
+            AddVariable("spr_victory", "Asset.Sprite");
+            AddVariable("spr_Ladder", "Asset.Sprite");
+            AddVariable("spr_laddermove", "Asset.Sprite");
+            AddVariable("spr_ladderdown", "Asset.Sprite");
+            AddVariable("spr_keyget", "Asset.Sprite");
+            AddVariable("spr_crouchslip", "Asset.Sprite");
+            AddVariable("spr_pistolshot", "Asset.Sprite");
+            AddVariable("spr_pistolwalk", "Asset.Sprite");
+            AddVariable("spr_longjump", "Asset.Sprite");
+            AddVariable("spr_longjumpend", "Asset.Sprite");
+            AddVariable("spr_breakdance", "Asset.Sprite");
+            AddVariable("spr_machslideboostfall", "Asset.Sprite");
+            AddVariable("spr_mach3boostfall", "Asset.Sprite");
+            AddVariable("spr_mrpinch", "Asset.Sprite");
+            AddVariable("spr_rampjump", "Asset.Sprite");
+            AddVariable("spr_mach1", "Asset.Sprite");
+            AddVariable("spr_mach", "Asset.Sprite");
+            AddVariable("spr_secondjump1", "Asset.Sprite");
+            AddVariable("spr_secondjump2", "Asset.Sprite");
+            AddVariable("spr_machslidestart", "Asset.Sprite");
+            AddVariable("spr_machslide", "Asset.Sprite");
+            AddVariable("spr_machslideend", "Asset.Sprite");
+            AddVariable("spr_machslideboost", "Asset.Sprite");
+            AddVariable("spr_catched", "Asset.Sprite");
+            AddVariable("spr_punch", "Asset.Sprite");
+            AddVariable("spr_backkick", "Asset.Sprite");
+            AddVariable("spr_shoulder", "Asset.Sprite");
+            AddVariable("spr_uppunch", "Asset.Sprite");
+            AddVariable("spr_stomp", "Asset.Sprite");
+            AddVariable("spr_stompprep", "Asset.Sprite");
+            AddVariable("spr_crouchslide", "Asset.Sprite");
+            AddVariable("spr_climbwall", "Asset.Sprite");
+            AddVariable("spr_grab", "Asset.Sprite");
+            AddVariable("spr_mach2jump", "Asset.Sprite");
+            AddVariable("spr_Timesup", "Asset.Sprite");
+            AddVariable("spr_deathstart", "Asset.Sprite");
+            AddVariable("spr_deathend", "Asset.Sprite");
+            AddVariable("spr_machpunch1", "Asset.Sprite");
+            AddVariable("spr_machpunch2", "Asset.Sprite");
+            AddVariable("spr_hurtjump", "Asset.Sprite");
+            AddVariable("spr_entergate", "Asset.Sprite");
+            AddVariable("spr_gottreasure", "Asset.Sprite");
+            AddVariable("spr_bossintro", "Asset.Sprite");
+            AddVariable("spr_hurtidle", "Asset.Sprite");
+            AddVariable("spr_hurtwalk", "Asset.Sprite");
+            AddVariable("spr_suplexmash1", "Asset.Sprite");
+            AddVariable("spr_suplexmash2", "Asset.Sprite");
+            AddVariable("spr_suplexmash3", "Asset.Sprite");
+            AddVariable("spr_suplexmash4", "Asset.Sprite");
+            AddVariable("spr_tackle", "Asset.Sprite");
+            AddVariable("spr_airdash1", "Asset.Sprite");
+            AddVariable("spr_airdash2", "Asset.Sprite");
+            AddVariable("spr_idle1", "Asset.Sprite");
+            AddVariable("spr_idle2", "Asset.Sprite");
+            AddVariable("spr_idle3", "Asset.Sprite");
+            AddVariable("spr_idle4", "Asset.Sprite");
+            AddVariable("spr_idle5", "Asset.Sprite");
+            AddVariable("spr_idle6", "Asset.Sprite");
+            AddVariable("spr_wallsplat", "Asset.Sprite");
+            AddVariable("spr_piledriver", "Asset.Sprite");
+            AddVariable("spr_piledriverland", "Asset.Sprite");
+            AddVariable("spr_charge", "Asset.Sprite");
+            AddVariable("spr_mach3jump", "Asset.Sprite");
+            AddVariable("spr_mach4", "Asset.Sprite");
+            AddVariable("spr_machclimbwall", "Asset.Sprite");
+            AddVariable("spr_dive", "Asset.Sprite");
+            AddVariable("spr_machroll", "Asset.Sprite");
+            AddVariable("spr_hitwall", "Asset.Sprite");
+            AddVariable("spr_superjumpland", "Asset.Sprite");
+            AddVariable("spr_walljumpstart", "Asset.Sprite");
+            AddVariable("spr_superjumpprep", "Asset.Sprite");
+            AddVariable("spr_superjump", "Asset.Sprite");
+            AddVariable("spr_superjumppreplight", "Asset.Sprite");
+            AddVariable("spr_superjumpright", "Asset.Sprite");
+            AddVariable("spr_superjumpleft", "Asset.Sprite");
+            AddVariable("spr_machfreefall", "Asset.Sprite");
+            AddVariable("spr_mach3hit", "Asset.Sprite");
+            AddVariable("spr_knightpepwalk", "Asset.Sprite");
+            AddVariable("spr_knightpepjump", "Asset.Sprite");
+            AddVariable("spr_knightpepfall", "Asset.Sprite");
+            AddVariable("spr_knightpepidle", "Asset.Sprite");
+            AddVariable("spr_knightpepjumpstart", "Asset.Sprite");
+            AddVariable("spr_knightpepthunder", "Asset.Sprite");
+            AddVariable("spr_knightpepland", "Asset.Sprite");
+            AddVariable("spr_knightpepdownslope", "Asset.Sprite");
+            AddVariable("spr_knightpepstart", "Asset.Sprite");
+            AddVariable("spr_knightpepcharge", "Asset.Sprite");
+            AddVariable("spr_knightpepdoublejump", "Asset.Sprite");
+            AddVariable("spr_knightpepfly", "Asset.Sprite");
+            AddVariable("spr_knightpepdowntrust", "Asset.Sprite");
+            AddVariable("spr_knightpepupslope", "Asset.Sprite");
+            AddVariable("spr_knightpepbump", "Asset.Sprite");
+            AddVariable("spr_bodyslamfall", "Asset.Sprite");
+            AddVariable("spr_bodyslamstart", "Asset.Sprite");
+            AddVariable("spr_bodyslamland", "Asset.Sprite");
+            AddVariable("spr_crazyrun", "Asset.Sprite");
+            AddVariable("spr_bombpeprun", "Asset.Sprite");
+            AddVariable("spr_bombpepintro", "Asset.Sprite");
+            AddVariable("spr_bombpeprunabouttoexplode", "Asset.Sprite");
+            AddVariable("spr_bombpepend", "Asset.Sprite");
+            AddVariable("spr_jetpackstart2", "Asset.Sprite");
+            AddVariable("spr_fireass", "Asset.Sprite");
+            AddVariable("spr_fireassground", "Asset.Sprite");
+            AddVariable("spr_fireassend", "Asset.Sprite");
+            AddVariable("spr_tumblestart", "Asset.Sprite");
+            AddVariable("spr_tumbleend", "Asset.Sprite");
+            AddVariable("spr_tumble", "Asset.Sprite");
+            AddVariable("spr_stunned", "Asset.Sprite");
+            AddVariable("spr_clown", "Asset.Sprite");
+            AddVariable("spr_clownbump", "Asset.Sprite");
+            AddVariable("spr_clowncrouch", "Asset.Sprite");
+            AddVariable("spr_clownfall", "Asset.Sprite");
+            AddVariable("spr_clownjump", "Asset.Sprite");
+            AddVariable("spr_clownwallclimb", "Asset.Sprite");
+            AddVariable("spr_downpizzabox", "Asset.Sprite");
+            AddVariable("spr_uppizzabox", "Asset.Sprite");
+            AddVariable("spr_slipnslide", "Asset.Sprite");
+            AddVariable("spr_mach3boost", "Asset.Sprite");
+            AddVariable("spr_facehurtup", "Asset.Sprite");
+            AddVariable("spr_facehurt", "Asset.Sprite");
+            AddVariable("spr_walljumpend", "Asset.Sprite");
+            AddVariable("spr_suplexdash", "Asset.Sprite");
+            AddVariable("spr_suplexdashjumpstart", "Asset.Sprite");
+            AddVariable("spr_suplexdashjump", "Asset.Sprite");
+            AddVariable("spr_shotgunsuplexdash", "Asset.Sprite");
+            AddVariable("spr_rollgetup", "Asset.Sprite");
+            AddVariable("spr_swingding", "Asset.Sprite");
+            AddVariable("spr_swingdingend", "Asset.Sprite");
+            AddVariable("spr_haulingjump", "Asset.Sprite");
+            AddVariable("spr_haulingidle", "Asset.Sprite");
+            AddVariable("spr_haulingwalk", "Asset.Sprite");
+            AddVariable("spr_haulingstart", "Asset.Sprite");
+            AddVariable("spr_haulingfall", "Asset.Sprite");
+            AddVariable("spr_haulingland", "Asset.Sprite");
+            AddVariable("spr_uppercutfinishingblow", "Asset.Sprite");
+            AddVariable("spr_finishingblow1", "Asset.Sprite");
+            AddVariable("spr_finishingblow2", "Asset.Sprite");
+            AddVariable("spr_finishingblow3", "Asset.Sprite");
+            AddVariable("spr_finishingblow4", "Asset.Sprite");
+            AddVariable("spr_finishingblow5", "Asset.Sprite");
+            AddVariable("spr_winding", "Asset.Sprite");
+            AddVariable("spr_3hpwalk", "Asset.Sprite");
+            AddVariable("spr_3hpidle", "Asset.Sprite");
+            AddVariable("spr_panic", "Asset.Sprite");
+            AddVariable("spr_facestomp", "Asset.Sprite");
+            AddVariable("spr_freefall", "Asset.Sprite");
+            AddVariable("spr_shotgunsuplex", "Asset.Sprite");
+            AddVariable("spr_pushback1", "Asset.Sprite");
+            AddVariable("spr_pushback2", "Asset.Sprite");
+            AddVariable("spr_throw", "Asset.Sprite");
+            AddVariable("spr_run", "Asset.Sprite");
+            AddVariable("spr_shotgunidle", "Asset.Sprite");
+            AddVariable("spr_sworddash", "Asset.Sprite");
+            AddVariable("spr", "Asset.Sprite");
+            AddVariable("expressionsprite", "Asset.Sprite");
+            AddVariable("_spr", "Asset.Sprite");
+            AddVariable("attackdash", "Asset.Sprite");
+            AddVariable("airattackdash", "Asset.Sprite");
+            AddVariable("airattackdashstart", "Asset.Sprite");
+            AddVariable("tauntstoredsprite", "Asset.Sprite");
+            AddVariable("movespr", "Asset.Sprite");
+            AddVariable("spr_joystick", "Asset.Sprite");
+            AddVariable("t", "Asset.Sprite");
+            AddVariable("spr_attack", "Asset.Sprite");
+            AddVariable("spr_hidden", "Asset.Sprite");
+            AddVariable("spr_idle", "Asset.Sprite");
+            AddVariable("stunspr", "Asset.Sprite");
+            AddVariable("bgsprite", "Asset.Sprite");
+            AddVariable("boss_hpsprite", "Asset.Sprite");
+            AddVariable("tvsprite", "Asset.Sprite");
+            AddVariable("particlespr", "Asset.Sprite");
+            AddVariable("heatmeterspr", "Asset.Sprite");
+            AddVariable("heatmetersprfill", "Asset.Sprite");
+            AddVariable("heatmetersprpalette", "Asset.Sprite");
+            AddVariable("pizzascorespr", "Asset.Sprite");
+            AddVariable("rankshudspr", "Asset.Sprite");
+            AddVariable("rankshudsprfill", "Asset.Sprite");
+            AddVariable("tv_combobubble", "Asset.Sprite");
+            AddVariable("tv_combobubblefill", "Asset.Sprite");
+            AddVariable("tv_escapeG", "Asset.Sprite");
+            AddVariable("tv_happyG", "Asset.Sprite");
+            AddVariable("tv_hurtG", "Asset.Sprite");
+            AddVariable("tv_idleG", "Asset.Sprite");
+            AddVariable("tv_barrel", "Asset.Sprite");
+            AddVariable("tv_bombpep", "Asset.Sprite");
+            AddVariable("tv_boxxedpep", "Asset.Sprite");
+            AddVariable("tv_cheeseball", "Asset.Sprite");
+            AddVariable("tv_cheesepep", "Asset.Sprite");
+            AddVariable("tv_clown", "Asset.Sprite");
+            AddVariable("tv_exprcollect", "Asset.Sprite");
+            AddVariable("tv_exprcombo", "Asset.Sprite");
+            AddVariable("tv_exprheat", "Asset.Sprite");
+            AddVariable("tv_exprhurt", "Asset.Sprite");
+            AddVariable("tv_exprmach3", "Asset.Sprite");
+            AddVariable("tv_exprmach4", "Asset.Sprite");
+            AddVariable("tv_exprpanic", "Asset.Sprite");
+            AddVariable("tv_fireass", "Asset.Sprite");
+            AddVariable("tv_firemouth", "Asset.Sprite");
+            AddVariable("tv_ghost", "Asset.Sprite");
+            AddVariable("tv_golf", "Asset.Sprite");
+            AddVariable("tv_idle", "Asset.Sprite");
+            AddVariable("tv_idlesecret", "Asset.Sprite");
+            AddVariable("tv_idleanim1", "Asset.Sprite");
+            AddVariable("tv_idleanim2", "Asset.Sprite");
+            AddVariable("tv_knight", "Asset.Sprite");
+            AddVariable("tv_mort", "Asset.Sprite");
+            AddVariable("tv_rocket", "Asset.Sprite");
+            AddVariable("tv_scaredjump", "Asset.Sprite");
+            AddVariable("tv_shotgun", "Asset.Sprite");
+            AddVariable("tv_squished", "Asset.Sprite");
+            AddVariable("tv_tumble", "Asset.Sprite");
+            AddVariable("tv_weenie", "Asset.Sprite");
+            AddVariable("tv_off", "Asset.Sprite");
+            AddVariable("tv_open", "Asset.Sprite");
+            AddVariable("tv_whitenoise", "Asset.Sprite");
+            AddVariable("tv_exprhurt1", "Asset.Sprite");
+            AddVariable("tv_exprhurt2", "Asset.Sprite");
+            AddVariable("tv_exprhurt3", "Asset.Sprite");
+            AddVariable("tv_exprhurt4", "Asset.Sprite");
+            AddVariable("tv_exprhurt5", "Asset.Sprite");
+            AddVariable("tv_exprhurt6", "Asset.Sprite");
+            AddVariable("tv_exprhurt7", "Asset.Sprite");
+            AddVariable("tv_exprhurt8", "Asset.Sprite");
+            AddVariable("tv_exprhurt9", "Asset.Sprite");
+            AddVariable("tv_exprhurt10", "Asset.Sprite");
+            AddVariable("vstitleplayer", "Asset.Sprite");
+            AddVariable("texture", "Asset.Sprite");
+            AddVariable("player_hpsprite", "Asset.Sprite");
+            AddVariable("chasespr", "Asset.Sprite");
+            AddVariable("throwspr", "Asset.Sprite");
+            AddVariable("transitionspr", "Asset.Sprite");
+            AddVariable("angryspr", "Asset.Sprite");
+            AddVariable("upspr", "Asset.Sprite");
+            AddVariable("downspr", "Asset.Sprite");
+            AddVariable("deadspr", "Asset.Sprite");
+            AddVariable("spr_pose", "Asset.Sprite");
+            AddVariable("spr_run", "Asset.Sprite");
+            AddVariable("spr_intro", "Asset.Sprite");
+            AddVariable("spr_idle_strongcold", "Asset.Sprite");
+            AddVariable("spr_run_strongcold", "Asset.Sprite");
+            AddVariable("spr_intro_strongcold", "Asset.Sprite");
+            AddVariable("prevsprite", "Asset.Sprite");
+            AddVariable("title_sprite", "Asset.Sprite");
+            AddVariable("titlecard_sprite", "Asset.Sprite");
+            AddVariable("playersprite", "Asset.Sprite");
+            AddVariable("peppino_sprite", "Asset.Sprite");
+            AddVariable("toppin_sprite", "Asset.Sprite");
+            AddVariable("bell_sprite", "Asset.Sprite");
+            AddVariable("portrait1_sprite", "Asset.Sprite");
+            AddVariable("portrait2_sprite", "Asset.Sprite");
+            AddVariable("pizzaface_sprite", "Asset.Sprite");
+            AddVariable("johnface_sprite", "Asset.Sprite");
+            AddVariable("bubblespr", "Asset.Sprite");
+            AddVariable("noise_sprite", "Asset.Sprite");
+            AddVariable("noisesprite", "Asset.Sprite");
+            AddVariable("iconspr", "Asset.Sprite");
+            AddVariable("hand_sprite", "Asset.Sprite");
+            AddVariable("canon_sprite", "Asset.Sprite");
+            AddVariable("captain_sprite", "Asset.Sprite");
+            AddVariable("door_sprite", "Asset.Sprite");
+            AddVariable("throw_sprite", "Asset.Sprite");
+            AddVariable("_sprite", "Asset.Sprite");
+            AddVariable("gate_sprite", "Asset.Sprite");
+            AddVariable("taunt_spr", "Asset.Sprite");
+            AddVariable("rank_spr", "Asset.Sprite");
+            AddVariable("spr_happy", "Asset.Sprite");
+            AddVariable("tauntspr", "Asset.Sprite");
+            AddVariable("activatespr", "Asset.Sprite");
+            AddVariable("dancespr", "Asset.Sprite");
+            AddVariable("smilespr", "Asset.Sprite");
+            AddVariable("item_sprite", "Asset.Sprite");
+            AddVariable("spr_arrow", "Asset.Sprite");
+            AddVariable("bg_spr", "Asset.Sprite");
+            AddVariable("playerspr", "Asset.Sprite");
+            AddVariable("particlespr", "Asset.Sprite");
+            AddVariable("bomblit_spr", "Asset.Sprite");
+            AddVariable("defeatplayerspr", "Asset.Sprite");
+            AddVariable("bumpspr", "Asset.Sprite");
+            AddVariable("bubble_spr", "Asset.Sprite");
+            AddVariable("transspr", "Asset.Sprite");
+            AddVariable("confirmspr", "Asset.Sprite");
+            AddVariable("selectedspr", "Asset.Sprite");
+            AddVariable("clipspr", "Asset.Sprite");
+            AddVariable("signspr", "Asset.Sprite");
+            AddVariable("bouncespr", "Asset.Sprite");
+            AddVariable("parryspr", "Asset.Sprite");
+            AddVariable("background_spr", "Asset.Sprite");
+            AddVariable("achievement_spr", "Asset.Sprite");
+            AddVariable("visible_spr", "Asset.Sprite");
+            AddVariable("treasurespr", "Asset.Sprite");
+            AddVariable("shootspr", "Asset.Sprite");
+            AddVariable("gerome_spr", "Asset.Sprite");
+            AddVariable("timerspr", "Asset.Sprite");
+            AddVariable("spitcheesespr", "Asset.Sprite");
+            AddVariable("hitceillingspr", "Asset.Sprite");
+            AddVariable("hitwallspr", "Asset.Sprite");
+            AddVariable("stunfalltransspr", "Asset.Sprite");
+            AddVariable("rollingspr", "Asset.Sprite");
+            AddVariable("flyingspr", "Asset.Sprite");
+            AddVariable("hitspr", "Asset.Sprite");
+            AddVariable("stunlandspr", "Asset.Sprite");
+            AddVariable("stompedspr", "Asset.Sprite");
+            AddVariable("handsprite", "Asset.Sprite");
+            AddVariable("player_sprite", "Asset.Sprite");
+            AddVariable("spr_sign", "Asset.Sprite");
+            AddVariable("spr_helicopter", "Asset.Sprite");
+            AddVariable("spr_name", "Asset.Sprite");
+            AddVariable("spr_air", "Asset.Sprite");
+            AddVariable("spr_animatronic", "Asset.Sprite");
+            AddVariable("spr_pal", "Asset.Sprite");
+            AddVariable("spr_hand", "Asset.Sprite");
+            AddVariable("spr_left", "Asset.Sprite");
+            AddVariable("spr_right", "Asset.Sprite");
+            AddVariable("spr_content_dead", "Asset.Sprite");
+            AddVariable("spr_gamepadbuttons", "Asset.Sprite");
+            #endregion
+            #region Colors
+            AddVariable("color", "Constant.Color");
+            AddVariable("textcolor", "Constant.Color");
+            AddVariable("bc", "Constant.Color");
+            AddVariable("tc", "Constant.Color");
+            AddVariable("gameframe_blend", "Constant.Color");
+            AddVariable("c1", "Constant.Color");
+            AddVariable("c2", "Constant.Color");
+            AddVariable("c_player", "Constant.Color");
+            #endregion
+            // Tilesets
+            AddVariable("ts", "Asset.Tileset");
+            
+            // Gamepad Constants
+            AddVariable("_select", "Constant.GamepadButton");
+            AddVariable("_back", "Constant.GamepadButton");
+            AddVariable("_face", "Constant.GamepadButton");
+
+            // Arrays
+            AddVariable("objectlist", "Array<Asset.Object>");
+            AddVariable("object_arr", "Array<Asset.Object>");
+            AddVariable("objdark_arr", "Array<Asset.Object>");
+            AddVariable("content_arr", "Array<Asset.Object>");
+            AddVariable("spawnpool", "Array<Asset.Object>");
+            AddVariable("spawn_arr", "Array<Asset.Object>");
+            AddVariable("dark_arr", "Array<Asset.Object>");
+            AddVariable("flash_arr", "Array<Asset.Object>");
+            AddVariable("collision_list", "Array<Asset.Object>");
+            AddVariable("levels", "Array<Asset.Room>");
+            AddVariable("room_arr", "Array<Asset.Room>");
+            AddVariable("treasure_arr", "Array<Asset.Sprite>");
+            #endregion
+            #region Functions
+            // Functions with Optional Arguments
+            AddFunction("gml_Script_scr_boss_genericintro", new List<string> { null, null, "Asset.Sprite" }, null, 1);
+            AddFunction("gml_Script_palette_unlock", new List<string> { null, null, null, "Asset.Sprite" }, null, 2);
+            AddFunction("gml_Script_scr_sound", new List<string> { "Asset.Sound" }, null, 2);
+            AddFunction("gml_Script_scr_soundeffect", new List<string> { "Asset.Sound" }, null, 2);
+            AddFunction("gml_Script_scr_music", new List<string> { "Asset.Sound" }, null, 2);
+            AddFunction("gml_Script_create_debris", new List<string> { null, null, "Asset.Sprite" }, null, 1);
+            AddFunction("gml_Script_add_music", new List<string> { "Asset.Room", null, null, null }, null, 1);
+            AddFunction("gml_Script_scr_pauseicon_add", new List<string> { "Asset.Sprite" }, null, 3);
+            AddFunction("gml_Script_tv_do_expression", new List<string> { "Asset.Sprite" }, "Bool", 2);
+            AddFunction("gml_Script_create_collect", new List<string> { null, null, "Asset.Sprite" }, null, 1);
+
+            // Simple Functions (From UTMTCE)
+            AddFunction("gml_Script_randomize_animations", new List<string> { "Array<Asset.Sprite>" });
+            AddFunction("gml_Script_instance_create_unique", new List<string> { null, null, "Asset.Object" });
+            AddFunction("gml_Script_instance_nearest_random", new List<string> { "Asset.Object", null });
+            AddFunction("instance_place_list", new List<string> { null, null, "Asset.Object", null, "Bool" });
+            AddFunction("gml_Script_draw_enemy", new List<string> { null, null, "Constant.Color" });
+            AddFunction("gml_Script_create_afterimage", new List<string> { null, null, "Asset.Sprite", null });
+            AddFunction("gml_Script_create_mach2effect", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_create_heatattack_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_create_firemouth_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_create_blue_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_create_red_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_create_blur_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_pal_swap_init_system", new List<string> { "Asset.Shader" });
+            AddFunction("gml_Script_pal_swap_init_system_fix", new List<string> { "Asset.Shader" });
+            AddFunction("gml_Script_pal_swap_set", new List<string> { "Asset.Sprite", null, null });
+            AddFunction("gml_Script_pattern_set", new List<string> { null, "Asset.Sprite", null, null, null, null });
+            AddFunction("gml_Script_scr_room_goto", new List<string> { "Asset.Room" });
+            AddFunction("gml_Script_hub_state", new List<string> { "Asset.Room", null, null });
+            AddFunction("gml_Script_draw_background_tiled", new List<string> { "Asset.Sprite", null, null, null });
+            AddFunction("gml_Script_scr_draw_granny_texture", new List<string> { null, null, null, null, null, null, "Asset.Sprite", "Asset.Sprite" });
+            AddFunction("gml_Script_object_get_depth", new List<string> { "Asset.Object" });
+            AddFunction("gml_Script_scr_bosscontroller_particle_anim", new List<string> { "Asset.Sprite", null, null, null, null, "Asset.Sprite", null });
+            AddFunction("gml_Script_scr_bosscontroller_particle_hp", new List<string> { "Asset.Sprite", null, null, null, null, "Asset.Sprite", null, "Asset.Sprite" });
+            AddFunction("gml_Script_scr_bosscontroller_draw_health", new List<string> { "Asset.Sprite", null, null, null, null, null, null, null, null, null, null, "Asset.Sprite", null, "Asset.Sprite" });
+            AddFunction("gml_Script_boss_update_pizzaheadKO", new List<string> { "Asset.Sprite", "Asset.Sprite" });
+            AddFunction("gml_Script_scr_pizzaface_p3_do_player_attack", new List<string> { "Asset.Object" });
+            AddFunction("gml_Script_scr_boss_do_hurt_phase2", new List<string> { "Asset.Object" });
+            AddFunction("gml_Script_check_slope", new List<string> { "Asset.Object" });
+            AddFunction("gml_Script_check_slope_player", new List<string> { "Asset.Object" });
+            AddFunction("gml_Script_try_solid", new List<string> { null, null, "Asset.Object", null });
+            AddFunction("gml_Script_add_rank_achievements", new List<string> { null, null, "Asset.Sprite", null, null });
+            AddFunction("gml_Script_add_boss_achievements", new List<string> { null, "Asset.Room", "Asset.Sprite", null });
+            AddFunction("gml_Script_achievement_unlock", new List<string> { null, null, "Asset.Sprite", null });
+            AddFunction("gml_Script_scr_monsterinvestigate", new List<string> { null, "Asset.Sprite", "Asset.Sprite" });
+            AddFunction("gml_Script_timedgate_add_objects", new List<string> { "Asset.Object", null });
+            AddFunction("gml_Script_randomize_animations", new List<string> { "Array<Asset.Sprite>" });
+            AddFunction("gml_Script_tdp_draw_text_color", new List<string> { null, null, null, "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color", null });
+            AddFunction("gml_Script_lang_draw_sprite", new List<string> { "Asset.Sprite", null, null, null });
+            AddFunction("layer_background_change", new List<string> { null, "Asset.Sprite" });
+            AddFunction("layer_background_sprite", new List<string> { null, "Asset.Sprite" });
+            #endregion
+
+            #region Misc Enums
+
+            #region Particle Enums
+            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("enum_start", i++);
+                EnumSet.TryAdd("cloudeffect", i++);
+                EnumSet.TryAdd("crazyrunothereffect", i++);
+                EnumSet.TryAdd("highjumpcloud1", i++);
+                EnumSet.TryAdd("highjumpcloud2", i++);
+                EnumSet.TryAdd("jumpdust", i++);
+                EnumSet.TryAdd("balloonpop", i++);
+                EnumSet.TryAdd("shotgunimpact", i++);
+                EnumSet.TryAdd("impact", i++);
+                EnumSet.TryAdd("genericpoofeffect", i++);
+                EnumSet.TryAdd("keyparticles", i++);
+                EnumSet.TryAdd("teleporteffect", i++);
+                EnumSet.TryAdd("landcloud", i++);
+                EnumSet.TryAdd("ratmountballooncloud", i++);
+                EnumSet.TryAdd("groundpoundeffect", i++);
+                EnumSet.TryAdd("noisegrounddash", i++);
+                EnumSet.TryAdd("bubblepop", i++);
+                EnumSet.TryAdd("enum_length", i++);
+
+                AddFunction("gml_Script_declare_particle", new List<string> { "Enum.particle", "Asset.Sprite", null, null });
+                AddFunction("gml_Script_particle_set_scale", new List<string> { "Enum.particle", null, null });
+                AddFunction("gml_Script_create_particle", new List<string> { null, null, "Enum.particle" }, null, 1);
+
+                AddEnum("particle", EnumSet);
+            }
+            #endregion
+            #region Notification Enums
+            if (data.Code.ByName("gml_Script_notification_push") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("bodyslam_start", i++);
+                EnumSet.TryAdd("bodyslam_end", i++);
+                EnumSet.TryAdd("generic_killed", i++);
+                EnumSet.TryAdd("room_enemiesdead", i++);
+                EnumSet.TryAdd("enemy_parried", i++);
+                EnumSet.TryAdd("level_finished", i++);
+                EnumSet.TryAdd("mortcube_destroyed", i++);
+                EnumSet.TryAdd("hurt", i++);
+                EnumSet.TryAdd("fell_into_pit", i++);
+                EnumSet.TryAdd("beer_knocked", i++);
+                EnumSet.TryAdd("touched_timedgate", i++);
+                EnumSet.TryAdd("flush_done", i++);
+                EnumSet.TryAdd("baddie_killed_projectile", i++);
+                EnumSet.TryAdd("treasureguy_uncovered", i++);
+                EnumSet.TryAdd("special_destroyable_destroyed", i++);
+                EnumSet.TryAdd("custom_destructibles_destroyed", i++);
+                EnumSet.TryAdd("pizzaball_shot", i++);
+                EnumSet.TryAdd("pizzaball_kill", i++);
+                EnumSet.TryAdd("pizzaball_goal", i++);
+                EnumSet.TryAdd("brickball_start", i++);
+                EnumSet.TryAdd("john_destroyed", i++);
+                EnumSet.TryAdd("brickball_kill", i++);
+                EnumSet.TryAdd("pigcitizen_taunt", i++);
+                EnumSet.TryAdd("pizzaboy_killed", i++);
+                EnumSet.TryAdd("touched_mrpinch", i++);
+                EnumSet.TryAdd("priest_touched", i++);
+                EnumSet.TryAdd("secret_entered", i++);
+                EnumSet.TryAdd("secret_exited", i++);
+                EnumSet.TryAdd("iceblock_bird_freed", i++);
+                EnumSet.TryAdd("monster_killed", i++);
+                EnumSet.TryAdd("monster_activated", i++);
+                EnumSet.TryAdd("jumpscared", i++);
+                EnumSet.TryAdd("knightpep_bumped", i++);
+                EnumSet.TryAdd("cheeseblock_destroyed", i++);
+                EnumSet.TryAdd("rat_destroyed_with_baddie", i++);
+                EnumSet.TryAdd("rattumble_destroyed", i++);
+                EnumSet.TryAdd("rat_destroyed", i++);
+                EnumSet.TryAdd("touched_lava", i++);
+                EnumSet.TryAdd("touched_cow", i++);
+                EnumSet.TryAdd("touched_cow_once", i++);
+                EnumSet.TryAdd("touched_gravesurf_once", i++);
+                EnumSet.TryAdd("touched_ghostfollow", i++);
+                EnumSet.TryAdd("ghost_end", i++);
+                EnumSet.TryAdd("superjump_end", i++);
+                EnumSet.TryAdd("shotgun_shot", i++);
+                EnumSet.TryAdd("shotgun_shot_end", i++);
+                EnumSet.TryAdd("destroyable_destroyed", i++);
+                EnumSet.TryAdd("bazooka_explosion", i++);
+                EnumSet.TryAdd("wartimer_finished", i++);
+                EnumSet.TryAdd("totem_reactivated", i++);
+                EnumSet.TryAdd("boss_defeated", i++);
+                EnumSet.TryAdd("combo_end", i++);
+                EnumSet.TryAdd("achievement_unlocked", i++);
+                EnumSet.TryAdd("crouched_in_poo", i++);
+                EnumSet.TryAdd("game_beaten", i++);
+                EnumSet.TryAdd("taunted", i++);
+                EnumSet.TryAdd("john_resurrected", i++);
+                EnumSet.TryAdd("knight_obtained", i++);
+                EnumSet.TryAdd("mooney_unlocked", i++);
+                EnumSet.TryAdd("unknown59", i++);
+                EnumSet.TryAdd("pumpkin_gotten", i++);
+                EnumSet.TryAdd("pumpkindoor_entered", i++);
+                EnumSet.TryAdd("trickytreat_failed", i++);
+                EnumSet.TryAdd("trickytreat_door_entered", i++);
+                EnumSet.TryAdd("tornadoattack_end", i++);
+                EnumSet.TryAdd("gate_taunted", i++);
+                EnumSet.TryAdd("noisebomb_wasted", i++);
+                EnumSet.TryAdd("got_endingrank", i++);
+                EnumSet.TryAdd("breakdance_start", i++);
+                EnumSet.TryAdd("touched_banana", i++);
+                EnumSet.TryAdd("level_finished_pizzaface", i++);
+                EnumSet.TryAdd("player_antigrav", i++);
+                EnumSet.TryAdd("ptg_seen", i++);
+                EnumSet.TryAdd("touched_granny", i++);
+
+                AddFunction("gml_Script_notification_push", new List<string> { "Enum.notifications", null });
+
+                AddEnum("notifications", EnumSet);
+            }
+            #endregion
+            #region Holiday Enums
+            if (data.Code.ByName("gml_Script_is_holiday") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("normal", i++);
+                EnumSet.TryAdd("halloween", i++);
+
+                AddFunction("gml_Script_is_holiday", new List<string> { "Enum.holidays" });
+
+                AddEnum("holidays", EnumSet);
+            }
+            #endregion
+            #region TV Prompt Enums
+            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("start", i++);
+                EnumSet.TryAdd("highprio", i++);
+                EnumSet.TryAdd("normal", i++);
+
+                AddFunction("gml_Script_tv_push_prompt", new List<string> { null, "Enum.tv_prompttypes", null, null });
+                AddArray("Enum.tv_prompttypes");
+
+                AddEnum("tv_prompttypes", EnumSet);
+            }
+            #endregion
+            #region Text Enums
+            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("none", i++);
+                EnumSet.TryAdd("shake", i++);
+                EnumSet.TryAdd("wave", i++);
+
+                AddFunction("gml_Script_scr_draw_text_arr", new List<string> { null, null, null, "Constant.Color" }, null, 3);
+
+                AddEnum("text_effects", EnumSet);
+            }
+            #endregion
+            #region Menu ID Enums
+            if (data.Code.ByName("gml_Script_menu_goto") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("categories", i++);
+                EnumSet.TryAdd("audio", i++);
+                EnumSet.TryAdd("video", i++);
+                EnumSet.TryAdd("window", i++);
+                EnumSet.TryAdd("resolution", i++);
+                EnumSet.TryAdd("unknown5", i++);
+                EnumSet.TryAdd("game", i++);
+                EnumSet.TryAdd("controls", i++);
+                EnumSet.TryAdd("controller", i++);
+                EnumSet.TryAdd("keyboard", i++);
+                EnumSet.TryAdd("deadzones", i++);
+                EnumSet.TryAdd("last", i++);
+
+                AddFunction("gml_Script_menu_goto", new List<string> { "Enum.MenuIDs" });
+
+                AddEnum("MenuIDs", EnumSet);
+            }
+            #endregion
+            #region Editor Enums
+            if (data.Code.ByName("gml_Script_editor_set_state") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("init", i++);
+                EnumSet.TryAdd("instance_edit", i++);
+                EnumSet.TryAdd("unknown2", i++);
+                EnumSet.TryAdd("resize_room", i++);
+                EnumSet.TryAdd("save_level", i++);
+                EnumSet.TryAdd("load_level", i++);
+
+                AddFunction("gml_Script_editor_set_state", new List<string> { "Enum.EditorState" });
+
+                AddEnum("EditorState", EnumSet);
+            }
+            #endregion
+            #region AfterImage Enums
+            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("normal", i++);
+                EnumSet.TryAdd("mach3effect", i++);
+                EnumSet.TryAdd("heatattack", i++);
+                EnumSet.TryAdd("firemouth", i++);
+                EnumSet.TryAdd("blue", i++);
+                EnumSet.TryAdd("blur", i++);
+                EnumSet.TryAdd("red", i++);
+                EnumSet.TryAdd("red_alt", i++);
+                EnumSet.TryAdd("noise", i++);
+                EnumSet.TryAdd("last", i++);
+
+                AddVariable("identifier", "Enum.AfterimageType");
+
+                AddEnum("AfterimageType", EnumSet);
+            }
+            #endregion
+            #region TDP Input Enums
+            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("keyboard", i++);
+                EnumSet.TryAdd("gamepad_button", i++);
+                EnumSet.TryAdd("gamepad_axis", i++);
+
+                // WHAT THE FUCK IS THIS
+                AddFunction("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes",
+                    new List<string> { "Enum.TDPInputActionType", null }, null, 1);
+
+                AddFunction("gml_Script_tdp_input_action", new List<string> { "Enum.TDPInputActionType", "Constant.GamepadButton" }, null, 1);
+                AddFunction("gml_Script_tdp_action", new List<string> { "Enum.TDPInputActionType", "Constant.GamepadButton" }, null, 1);
+                AddFunction("has_value", new List<string> { "Enum.TDPInputActionType", null, null }, null, 1);
+
+                AddEnum("TDPInputActionType", EnumSet);
+            }
+            #endregion
+            #region Menu Anchor Enums
+            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
+            {
+                int i = 0;
+                Dictionary<string, int> EnumSet = new();
+
+                EnumSet.TryAdd("center", i++);
+                EnumSet.TryAdd("left", i++);
+
+                AddFunction("gml_Script_create_menu_fixed", new List<string> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null }, null, 1);
+
+                AddEnum("MenuAnchor", EnumSet);
+            }
+            #endregion
+
+            #endregion
 
             // Init these Arrays
-            generalarrays.TryAdd("Array<Asset.Room>", new { MacroType = "ArrayInit", Macro = "Asset.Room" });
-            generalarrays.TryAdd("Array<Asset.Object>", new { MacroType = "ArrayInit", Macro = "Asset.Object" });
-            // Wasn't in original, but some still reference it, so yeah
-            generalarrays.TryAdd("Array<Asset.Sprite>", new { MacroType = "ArrayInit", Macro = "Asset.Sprite" });
+            AddArray("Asset.Room");
+            AddArray("Asset.Object");
+            AddArray("Asset.Sprite");
 
-            // Time for the goofy ahh JSON shit
-
-            // Merge functionArguments and builtin_funcs
-            // Directly include the arrays from builtin_funcs as-is
-            var mergedFunctionArguments = functionArguments.Concat(builtin_funcs.ToDictionary(
-                pair => pair.Key,
-                pair => (object)pair.Value)) // Cast string[] to object so it can merge with the MacroEntry objects
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
-
-            // check if variables even exist in this data.win
-            // and if so, add to json
-            var allexistingvars = data.Variables;
-            Dictionary<string, string> existingvars = new Dictionary<string, string> { };
-            foreach (var vars in allexistingvars)
-            {
-                string stringvars = vars.ToString();
-                // Check if it hasn't already been added
-                if (builtin_vars.ContainsKey(stringvars))
-                    existingvars.TryAdd(stringvars, builtin_vars[stringvars]);
-            }
-
-            // Main JSON thingy
+            #region JSON
+            // UTMT JSON structure
             var PTJSON = new
             {
                 // Enum Only Branch
                 Types = new
                 {
-                    // goofy thing from above
-                    Enums = enums,
-                    // Shit just for the Template
+                    Enums = EnumEntries,
                     Constants = new { },
-                    // thank you CST!!!
-                    General = generalarrays
+                    General = ArrayEntries
                 },
                 // Other Shit Branch
                 GlobalNames = new
                 {
-                    // crackful
-                    Variables = existingvars,
-                    FunctionArguments = mergedFunctionArguments,
-                    // Shit just for the Template
+                    Variables = VarEntries,
+                    FunctionArguments = FuncEntries,
                     FunctionReturn = new { }
                 },
                 // Shit just for the Template
@@ -788,9 +897,9 @@ namespace UndertaleModTool
             };
 
             // Convert the parent object to a JSON string
-            string jsonString = JsonSerializer.Serialize(PTJSON, new JsonSerializerOptions { WriteIndented = true });
-            // goddamn it
-            jsonString = jsonString.Replace("\\u003C", "<").Replace("\\u003E", ">");
+            JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+            string jsonString = JsonSerializer.Serialize(PTJSON, jsonOptions);
+            jsonString = jsonString.Replace("\\u003C", "<").Replace("\\u003E", ">"); // idk man
 
             // Write main JSON File
             string datanameclean = $"{data.GeneralInfo.Name}".Replace("\"", "");
@@ -812,408 +921,21 @@ namespace UndertaleModTool
                 UnderanalyzerFilename = datanameclean + ".json"
             };
             // Write Loader JSON
-            string loaderString = JsonSerializer.Serialize(loader, new JsonSerializerOptions { WriteIndented = true });
+            string loaderString = JsonSerializer.Serialize(loader, jsonOptions);
             File.WriteAllText(Program.GetExecutableDirectory() + "/GameSpecificData/Definitions/" + datanameclean + "_loader.json", loaderString);
             // Notify User that it is done
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
+            #endregion
 
             // Clean Up
-            functionArguments = new Dictionary<string, object> { };
-            builtin_funcs = new Dictionary<string, string[]> { };
-            builtin_vars = new Dictionary<string, string> { };
-            enums = new Dictionary<string, object> { };
-            generalarrays = new Dictionary<string, object> { };
-
-            particle_enums = new Dictionary<string, int> { };
-            notification_enums = new Dictionary<string, int> { };
-            holiday_enums = new Dictionary<string, int> { };
-            tv_enums = new Dictionary<string, int> { };
-            text_enums = new Dictionary<string, int> { };
-            menuID_enums = new Dictionary<string, int> { };
-            editor_enums = new Dictionary<string, int> { };
-            afterimg_enums = new Dictionary<string, int> { };
-            tdp_input_enums = new Dictionary<string, int> { };
-            menuanchors_enums = new Dictionary<string, int> { };
+            FuncEntries = new();
+            VarEntries = new();
+            EnumEntries = new();
+            ArrayEntries = new();
         }
-
-        #region Other Enum Shit
-        public static void FindOtherEnums(UndertaleData data)
-        {
-            // Particle Enums
-            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
-            {
-                particle_enums.TryAdd("enum_start", 0); // just because
-                particle_enums.TryAdd("cloudeffect", 1);
-                particle_enums.TryAdd("crazyrunothereffect", 2);
-                particle_enums.TryAdd("highjumpcloud1", 3);
-                particle_enums.TryAdd("highjumpcloud2", 4);
-                particle_enums.TryAdd("jumpdust", 5);
-                particle_enums.TryAdd("balloonpop", 6);
-                particle_enums.TryAdd("shotgunimpact", 7);
-                particle_enums.TryAdd("impact", 8);
-                particle_enums.TryAdd("genericpoofeffect", 9);
-                particle_enums.TryAdd("keyparticles", 10);
-                particle_enums.TryAdd("teleporteffect", 11);
-                particle_enums.TryAdd("landcloud", 12);
-                particle_enums.TryAdd("ratmountballooncloud", 13);
-                particle_enums.TryAdd("groundpoundeffect", 14);
-                particle_enums.TryAdd("noisegrounddash", 15);
-                particle_enums.TryAdd("bubblepop", 16);
-                particle_enums.TryAdd("enum_length", 17); // just because
-            }
-
-            // Notification Enums
-            if (data.Code.ByName("gml_Script_notification_push") != null) //Searching for this should work
-            {
-                notification_enums.TryAdd("bodyslam_start", 0);
-                notification_enums.TryAdd("bodyslam_end", 1);
-                notification_enums.TryAdd("generic_killed", 2);
-                notification_enums.TryAdd("room_enemiesdead", 3);
-                notification_enums.TryAdd("enemy_parried", 4);
-                notification_enums.TryAdd("level_finished", 5);
-                notification_enums.TryAdd("mortcube_destroyed", 6);
-                notification_enums.TryAdd("hurt", 7);
-                notification_enums.TryAdd("fell_into_pit", 8);
-                notification_enums.TryAdd("beer_knocked", 9);
-                notification_enums.TryAdd("touched_timedgate", 10);
-                notification_enums.TryAdd("flush_done", 11);
-                notification_enums.TryAdd("baddie_killed_projectile", 12);
-                notification_enums.TryAdd("treasureguy_uncovered", 13);
-                notification_enums.TryAdd("special_destroyable_destroyed", 14);
-                notification_enums.TryAdd("custom_destructibles_destroyed", 15);
-                notification_enums.TryAdd("pizzaball_shot", 16);
-                notification_enums.TryAdd("pizzaball_kill", 17);
-                notification_enums.TryAdd("pizzaball_goal", 18);
-                notification_enums.TryAdd("brickball_start", 19);
-                notification_enums.TryAdd("john_destroyed", 20);
-                notification_enums.TryAdd("brickball_kill", 21);
-                notification_enums.TryAdd("pigcitizen_taunt", 22);
-                notification_enums.TryAdd("pizzaboy_killed", 23);
-                notification_enums.TryAdd("touched_mrpinch", 24);
-                notification_enums.TryAdd("priest_touched", 25);
-                notification_enums.TryAdd("secret_entered", 26);
-                notification_enums.TryAdd("secret_exited", 27);
-                notification_enums.TryAdd("iceblock_bird_freed", 28);
-                notification_enums.TryAdd("monster_killed", 29);
-                notification_enums.TryAdd("monster_activated", 30);
-                notification_enums.TryAdd("jumpscared", 31);
-                notification_enums.TryAdd("knightpep_bumped", 32);
-                notification_enums.TryAdd("cheeseblock_destroyed", 33);
-                notification_enums.TryAdd("rat_destroyed_with_baddie", 34);
-                notification_enums.TryAdd("rattumble_destroyed", 35);
-                notification_enums.TryAdd("rat_destroyed", 36);
-                notification_enums.TryAdd("touched_lava", 37);
-                notification_enums.TryAdd("touched_cow", 38);
-                notification_enums.TryAdd("touched_cow_once", 39);
-                notification_enums.TryAdd("touched_gravesurf_once", 40);
-                notification_enums.TryAdd("touched_ghostfollow", 41);
-                notification_enums.TryAdd("ghost_end", 42);
-                notification_enums.TryAdd("superjump_end", 43);
-                notification_enums.TryAdd("shotgun_shot", 44);
-                notification_enums.TryAdd("shotgun_shot_end", 45);
-                notification_enums.TryAdd("destroyable_destroyed", 46);
-                notification_enums.TryAdd("bazooka_explosion", 47);
-                notification_enums.TryAdd("wartimer_finished", 48);
-                notification_enums.TryAdd("totem_reactivated", 49);
-                notification_enums.TryAdd("boss_defeated", 50);
-                notification_enums.TryAdd("combo_end", 51);
-                notification_enums.TryAdd("achievement_unlocked", 52);
-                notification_enums.TryAdd("crouched_in_poo", 53);
-                notification_enums.TryAdd("game_beaten", 54);
-                notification_enums.TryAdd("taunted", 55);
-                notification_enums.TryAdd("john_resurrected", 56);
-                notification_enums.TryAdd("knight_obtained", 57);
-                notification_enums.TryAdd("mooney_unlocked", 58);
-                notification_enums.TryAdd("unknown59", 59);
-                notification_enums.TryAdd("pumpkin_gotten", 60);
-                notification_enums.TryAdd("pumpkindoor_entered", 61);
-                notification_enums.TryAdd("trickytreat_failed", 62);
-                notification_enums.TryAdd("trickytreat_door_entered", 63);
-                notification_enums.TryAdd("tornadoattack_end", 64);
-                notification_enums.TryAdd("gate_taunted", 65);
-                notification_enums.TryAdd("noisebomb_wasted", 66);
-                notification_enums.TryAdd("got_endingrank", 67);
-                notification_enums.TryAdd("breakdance_start", 68);
-                notification_enums.TryAdd("touched_banana", 69);
-                notification_enums.TryAdd("level_finished_pizzaface", 70);
-                notification_enums.TryAdd("player_antigrav", 71);
-                notification_enums.TryAdd("ptg_seen", 72);
-                notification_enums.TryAdd("touched_granny", 73);
-            }
-
-            // HOLIDAY
-            if (data.Code.ByName("gml_Script_is_holiday") != null)
-            {
-                holiday_enums.TryAdd("normal", 0);
-                holiday_enums.TryAdd("halloween", 1);
-            }
-
-            // TV Prompt Enums
-            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
-            {
-                tv_enums.TryAdd("start", 0);
-                tv_enums.TryAdd("highprio", 1);
-                tv_enums.TryAdd("normal", 2);
-            }
-
-            // Text Enums
-            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
-            {
-                text_enums.TryAdd("none", 0);
-                text_enums.TryAdd("shake", 1);
-                text_enums.TryAdd("wave", 2);
-            }
-
-            // Menu ID Enums
-            if (data.Code.ByName("gml_Script_menu_goto") != null)
-            {
-                menuID_enums.TryAdd("categories", 0);
-                menuID_enums.TryAdd("audio", 1);
-                menuID_enums.TryAdd("video", 2);
-                menuID_enums.TryAdd("window", 3);
-                menuID_enums.TryAdd("resolution", 4);
-                menuID_enums.TryAdd("unknown5", 5);
-                menuID_enums.TryAdd("game", 6);
-                menuID_enums.TryAdd("controls", 7);
-                menuID_enums.TryAdd("controller", 8);
-                menuID_enums.TryAdd("keyboard", 9);
-                menuID_enums.TryAdd("deadzones", 10);
-                menuID_enums.TryAdd("last", 11);
-            }
-
-            // Editor Enums (Unused, but might as well)
-            if (data.Code.ByName("gml_Script_editor_set_state") != null)
-            {
-                editor_enums.TryAdd("init", 0);
-                editor_enums.TryAdd("instance_edit", 1);
-                editor_enums.TryAdd("unknown2", 2);
-                editor_enums.TryAdd("resize_room", 3);
-                editor_enums.TryAdd("save_level", 4);
-                editor_enums.TryAdd("load_level", 5);
-            }
-            // AfterImage Enums
-            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
-            {
-                afterimg_enums.TryAdd("normal", 0);
-                afterimg_enums.TryAdd("mach3effect", 1);
-                afterimg_enums.TryAdd("heatattack", 2);
-                afterimg_enums.TryAdd("firemouth", 3);
-                afterimg_enums.TryAdd("blue", 4);
-                afterimg_enums.TryAdd("blur", 5);
-                afterimg_enums.TryAdd("red", 6);
-                afterimg_enums.TryAdd("red_alt", 7);
-                afterimg_enums.TryAdd("noise", 8);
-                afterimg_enums.TryAdd("last", 9);
-            }
-
-            // TDP Input Enums
-            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
-            {
-                tdp_input_enums.TryAdd("keyboard", 0);
-                tdp_input_enums.TryAdd("gamepad_button", 1);
-                tdp_input_enums.TryAdd("gamepad_axis", 2);
-            }
-
-            // Menu Anchor Enums
-            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
-            {
-                menuanchors_enums.TryAdd("center", 0);
-                menuanchors_enums.TryAdd("left", 1);
-            }
-
-            // add new ones here
-        }
-
-        public static void AddOtherEnums(UndertaleData data)
-        {
-            if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
-            {
-                builtin_funcs["gml_Script_declare_particle"] = new[] { "Enum.particle", "Asset.Sprite", null, null };
-                builtin_funcs["gml_Script_particle_set_scale"] = new[] { "Enum.particle", null, null };
-
-                functionArguments.TryAdd("gml_Script_create_particle", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                        new List<object> { null, null, "Enum.particle" },
-                        new List<object> { null, null, "Enum.particle", null }
-                    })
-                );
-                enums.TryAdd(
-                   "Enum.particle",
-                    new
-                    {
-                        Name = "particle",
-                        Values = particle_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_notification_push") != null)
-            {
-                builtin_funcs["gml_Script_notification_push"] = new[] { "Enum.Notification", null };
-
-                enums.TryAdd(
-                   "Enum.Notification",
-                    new
-                    {
-                        Name = "notifications",
-                        Values = notification_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_is_holiday") != null)
-            {
-                builtin_funcs["gml_Script_is_holiday"] = new[] { "Enum.Holiday" };
-                enums.TryAdd(
-                   "Enum.Holiday",
-                    new
-                    {
-                        Name = "holidays",
-                        Values = holiday_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
-            {
-                builtin_funcs["gml_Script_tv_push_prompt"] = new[] { null, "Enum.TVPromptTypes", null, null };
-                generalarrays.TryAdd("Array<Enum.TVPromptTypes>", new { MacroType = "ArrayInit", Macro = "Enum.TVPromptTypes" });
-                enums.TryAdd(
-                   "Enum.TVPromptTypes",
-                    new
-                    {
-                        Name = "tv_prompttypes",
-                        Values = tv_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
-            {
-                functionArguments.TryAdd("gml_Script_scr_draw_text_arr", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                        new List<object> { null, null, null, "Constant.Color" },
-                        new List<object> { null, null, null, "Constant.Color", null },
-                        new List<object> { null, null, null, "Constant.Color", null, "Enum.TextEffect" },
-                        new List<object> { null, null, null, "Constant.Color", null, "Enum.TextEffect", null }
-                    })
-                );
-                enums.TryAdd(
-                   "Enum.TextEffect",
-                    new
-                    {
-                        Name = "text_effects",
-                        Values = text_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_menu_goto") != null)
-            {
-                builtin_funcs["gml_Script_menu_goto"] = new[] { "Enum.MenuIDs" };
-                enums.TryAdd(
-                   "Enum.MenuIDs",
-                    new
-                    {
-                        Name = "menuids",
-                        Values = menuID_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_editor_set_state") != null)
-            {
-                builtin_funcs["gml_Script_editor_set_state"] = new[] { "Enum.EditorState" };
-                enums.TryAdd(
-                   "Enum.EditorState",
-                    new
-                    {
-                        Name = "editorstates",
-                        Values = editor_enums
-                    }
-                );
-            }
-            // AfterImages
-            if (data.Code.ByName("gml_Script_particle_set_scale") != null)
-            {
-                builtin_vars.TryAdd("identifier", "Enum.AfterimageType");
-                enums.TryAdd(
-                   "Enum.AfterimageType",
-                    new
-                    {
-                        Name = "afterimagetype",
-                        Values = afterimg_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
-            {
-                // WHAT THE FUCK IS THIS
-                functionArguments.TryAdd("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                    new List<object> { "Enum.TDPInputActionType", null },
-                    new List<object> { "Enum.TDPInputActionType", null, null }
-                    })
-                );
-                functionArguments.TryAdd("gml_Script_tdp_input_action", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton" },
-                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton", null }
-                    })
-                );
-                functionArguments.TryAdd("gml_Script_tdp_action", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton" },
-                        new List<object> { "Enum.TDPInputActionType", "Constant.GamepadButton", null }
-                    })
-                );
-                functionArguments.TryAdd("has_value", new MacroEntry(
-                "Union",
-                new List<List<object>>
-                    {
-                        new List<object> { "Enum.TDPInputActionType", null, null },
-                        new List<object> { "Enum.TDPInputActionType", null, null, null }
-                    })
-                );
-
-                enums.TryAdd(
-                   "Enum.TDPInputActionType",
-                    new
-                    {
-                        Name = "tdp_input_actiontypes",
-                        Values = tdp_input_enums
-                    }
-                );
-            }
-            if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
-            {
-                functionArguments.TryAdd("gml_Script_create_menu_fixed", new MacroEntry(
-                    "Union",
-                    new List<List<object>>
-                        {
-                        new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null },
-                        new List<object> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null, null }
-                        })
-                    );
-
-                enums.TryAdd(
-                   "Enum.MenuAnchor",
-                    new
-                    {
-                        Name = "menuanchors",
-                        Values = menuanchors_enums
-                    }
-                );
-            }
-        }
-        #endregion
 
         // Detects PT state names (now without instuction bullshit)
-        public static void FindStateNames(UndertaleCode code, string switchstate, string[] statePrefix, UndertaleData data)
+        public static void FindStateNames(UndertaleCode code, string switchstate, string[] statePrefix)
         {
             if (code != null)
             {
@@ -1224,14 +946,14 @@ namespace UndertaleModTool
                     CreateEnumDeclarations = false,
                     AllowLeftoverDataOnStack = true
                 };
-                DecompileContext context = new DecompileContext(globalDecompileContext, code, decompilerSettings);
+                DecompileContext context = new(globalDecompileContext, code, decompilerSettings);
                 var decompiledcode = context.DecompileToString();
 
                 // get lines of code
                 var lines = decompiledcode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
                 // make dictionary for this enum
-                Dictionary<string, int> enumset_found = new Dictionary<string, int> { };
+                Dictionary<string, int> enumset_found = new();
 
                 // go through every line
                 for (int i = 0; i < lines.Length - 1; i++)
@@ -1268,12 +990,8 @@ namespace UndertaleModTool
                                     // fix throw and parry
                                     switch (suffix)
                                     {
-                                        case "throw":
-                                            suffix = "Throw";
-                                            break;
-                                        case "parry":
-                                            suffix = "Parry";
-                                            break;
+                                        case "throw": suffix = "Throw"; break;
+                                        case "parry": suffix = "Parry"; break;
                                     }
 
                                     // Add to dictionary
@@ -1288,70 +1006,59 @@ namespace UndertaleModTool
                 // after everything, add to json file
                 if (enumset_found.Count > 0)
                 {
-                    // merge existing
-                    if (enums.TryGetValue($"Enum.{switchstate}s", out var existing))
+                    // merge existing entry
+                    if (EnumEntries.TryGetValue($"Enum.{switchstate}s", out dynamic EnumObj))
                     {
-                        dynamic existingEntry = existing;
-                        var existingValues = existingEntry.Values as Dictionary<string, int>;
+                        Dictionary<string, int> EnumSet = EnumObj.Values as Dictionary<string, int>;
                         foreach (var kvp in enumset_found)
                         {
-                            if (!existingValues.ContainsKey(kvp.Key))// stop overwrite
-                                existingValues[kvp.Key] = kvp.Value; // add
+                            if (!EnumSet.ContainsKey(kvp.Key))// stop overwrite
+                                EnumSet[kvp.Key] = kvp.Value; // add
                         }
                     }
                     // make new if it doesn't exist
                     else
-                    {
-                        enums.TryAdd(
-                           $"Enum.{switchstate}s", // add s because i can
-                            new
-                            {
-                                Name = $"{switchstate}s", // plus it stops var from becoming enum in IDE
-                                Values = new Dictionary<string, int>(enumset_found)
-                            }
-                        );
-                    }
+                        AddEnum($"{switchstate}s", enumset_found);
                 }
 
                 // ONLY Add if the FindStateNames Function actually found pt player states
                 if (enumset_found.Count > 0 && switchstate == "state")
                 {
                     // Variables that should == Enum
-                    builtin_vars.TryAdd("state", "Enum.states");
-                    builtin_vars.TryAdd("_state", "Enum.states");
-                    builtin_vars.TryAdd("prevstate", "Enum.states");
-                    builtin_vars.TryAdd("_prevstate", "Enum.states");
-                    builtin_vars.TryAdd("substate", "Enum.states");
-                    builtin_vars.TryAdd("arenastate", "Enum.states");
-                    builtin_vars.TryAdd("player_state", "Enum.states");
-                    builtin_vars.TryAdd("tauntstoredstate", "Enum.states");
-                    builtin_vars.TryAdd("taunt_storedstate", "Enum.states");
-                    builtin_vars.TryAdd("storedstate", "Enum.states");
-                    builtin_vars.TryAdd("chosenstate", "Enum.states");
-                    builtin_vars.TryAdd("superattackstate", "Enum.states");
-                    builtin_vars.TryAdd("text_state", "Enum.states");
-                    builtin_vars.TryAdd("ministate", "Enum.states");
-                    builtin_vars.TryAdd("dropstate", "Enum.states");
-                    builtin_vars.TryAdd("verticalstate", "Enum.states");
-                    builtin_vars.TryAdd("walkstate", "Enum.states");
-                    builtin_vars.TryAdd("hitstate", "Enum.states");
-                    builtin_vars.TryAdd("toppin_state", "Enum.states");
-                    builtin_vars.TryAdd("bossintrostate", "Enum.states");
-                    builtin_vars.TryAdd("introstate", "Enum.states");
-                    builtin_vars.TryAdd("fadeoutstate", "Enum.states");
-                    builtin_vars.TryAdd("supergrabstate", "Enum.states");
-                    builtin_vars.TryAdd("startstate", "Enum.states");
-                    builtin_vars.TryAdd("atstate", "Enum.states");
-                    // New ones
-                    builtin_vars.TryAdd("attack_pool", "Array<Enum.states>");
-                    builtin_vars.TryAdd("transformation", "Enum.states");
+                    AddVariable("state", "Enum.states");
+                    AddVariable("_state", "Enum.states");
+                    AddVariable("prevstate", "Enum.states");
+                    AddVariable("_prevstate", "Enum.states");
+                    AddVariable("substate", "Enum.states");
+                    AddVariable("arenastate", "Enum.states");
+                    AddVariable("player_state", "Enum.states");
+                    AddVariable("tauntstoredstate", "Enum.states");
+                    AddVariable("taunt_storedstate", "Enum.states");
+                    AddVariable("storedstate", "Enum.states");
+                    AddVariable("chosenstate", "Enum.states");
+                    AddVariable("superattackstate", "Enum.states");
+                    AddVariable("text_state", "Enum.states");
+                    AddVariable("ministate", "Enum.states");
+                    AddVariable("dropstate", "Enum.states");
+                    AddVariable("verticalstate", "Enum.states");
+                    AddVariable("walkstate", "Enum.states");
+                    AddVariable("hitstate", "Enum.states");
+                    AddVariable("toppin_state", "Enum.states");
+                    AddVariable("bossintrostate", "Enum.states");
+                    AddVariable("introstate", "Enum.states");
+                    AddVariable("fadeoutstate", "Enum.states");
+                    AddVariable("supergrabstate", "Enum.states");
+                    AddVariable("startstate", "Enum.states");
+                    AddVariable("atstate", "Enum.states");
+                    AddVariable("attack_pool", "Array<Enum.states>");
+                    AddVariable("transformation", "Enum.states");
 
                     // Function Arguments
-                    builtin_funcs["gml_Script_vigilante_cancel_attack"] = new[] { "Enum.states", null };
-                    builtin_funcs["gml_Script_scr_bombshoot"] = new[] { "Enum.states" };
+                    AddFunction("gml_Script_vigilante_cancel_attack", new List<string> { "Enum.states", null });
+                    AddFunction("gml_Script_scr_bombshoot", new List<string> { "Enum.states" });
 
                     // Apply States to Arrays as well
-                    generalarrays.TryAdd("Array<Enum.states>", new { MacroType = "ArrayInit", Macro = "Enum.states" });
+                    AddArray("Enum.states");
                 }
             }
         }

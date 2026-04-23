@@ -152,11 +152,10 @@ namespace UndertaleModTool
                             {
                                 PT_AssetResolver.FindStateNames(Data.Code.ByName(textBox1Text), // Code Entry to search
                                 textBox3Text,                                            // Switch Var Name, ex: switch (state)
-                                functionsin_tbox2,                                          // scripts of state name, ex: (scr_player_normal(); --> normal
-                                Data // just here because
+                                functionsin_tbox2                                          // scripts of state name, ex: (scr_player_normal(); --> normal
                                 );
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 mainWindow.ShowWarning($"Failed to Extract Pizza Tower Enums from Row {debugnum}");
                             }
@@ -165,7 +164,7 @@ namespace UndertaleModTool
                 }
             }
             // call main pt json func
-            PT_AssetResolver.InitializeTypes(Data);
+            PT_AssetResolver.InitializeTypes();
         }
 
         public void CSTMUseDefaultsButton(object sender, RoutedEventArgs e)
