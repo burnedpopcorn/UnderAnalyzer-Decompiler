@@ -5190,7 +5190,7 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
                                 Disabled = keyframe.Disabled,
                                 Channels = keyframe.Channels.ToDictionary(k => k.Channel.ToString(), k => new AudioKeyframe()
                                 {
-                                    Mode = k.Value.Mode,
+                                    Mode = (int)k.Value.Mode,
                                     Id = new AssetReference(k.Value.Resource.Resource.Name.Content, GMAssetType.Sound)
                                 })
                             });
@@ -5487,7 +5487,8 @@ GMSequence SequenceDumper(UndertaleSequence s, UndertaleSprite spr = null)
             }
 
             // Track Visibility
-            // if Tags list is empty, then visible, if Tags list has one entry (with value 1) then not visible
+            // if Tags list is empty, then visible
+            // if Tags list has one entry (with value 1), then not visible
             // (UTMT, should this be a bool instead of a List<int>?)
             if (track.Tags != null && track.Tags.Count > 0 && track.Tags[0] == 1)
                 currentTrack.modifiers.Add(new InvisibleModifier());
