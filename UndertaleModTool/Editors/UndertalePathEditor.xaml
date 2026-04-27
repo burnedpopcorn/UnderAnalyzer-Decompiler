@@ -70,21 +70,21 @@
                 <DataGridTemplateColumn Header="X" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding X, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Margin="20,0,0,0" />
+                            <TextBox Text="{Binding X, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True}" SourceUpdated="PathPoint_ValueUpdated" Margin="20,0,0,0" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Y" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Y, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                            <TextBox Text="{Binding Y, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True}" SourceUpdated="PathPoint_ValueUpdated" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Speed" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Speed, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                            <TextBox Text="{Binding Speed, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True}" SourceUpdated="PathPoint_ValueUpdated" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -67,7 +67,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">Version</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="0" Margin="3">GM Tileset Version</TextBlock>
             <TextBox Grid.Row="0" Grid.Column="1" Margin="3" Text="{Binding GMS2TilesetVersion}"/>
 
             <TextBlock Grid.Row="1" Grid.Column="0" Margin="3">Tile Width</TextBlock>
@@ -101,14 +101,15 @@
             <TextBlock Grid.Row="9" Grid.Column="0" Margin="3">Tile Count</TextBlock>
             <TextBox Grid.Row="9" Grid.Column="1" Margin="3" Text="{Binding GMS2TileCount}"/>
 
-            <TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Exported Sprite Index</TextBlock>
-            <TextBox Grid.Row="10" Grid.Column="1" Margin="3" Text="{Binding GMS2ExportedSpriteIndex}"/>
+            <TextBlock Grid.Row="10" Grid.Column="0" Margin="3">Exported Sprite (GM 2023.8+)</TextBlock>
+            <local:UndertaleObjectReference Grid.Row="10" Grid.Column="1" Margin="3" ObjectReference="{Binding GMS2ExportedSprite}" ObjectType="{x:Type undertale:UndertaleSprite}"/>
 
             <TextBlock Grid.Row="11" Grid.Column="0" Margin="3">Frame Time (microseconds)</TextBlock>
             <TextBox Grid.Row="11" Grid.Column="1" Margin="3" Text="{Binding GMS2FrameLength}"/>
 
             <TextBlock Grid.Row="12" Grid.Column="0" Margin="3">Tile IDs</TextBlock>
             <DataGrid Grid.Row="12" Grid.Column="1" x:Name="TileIdList" ItemsSource="{Binding GMS2TileIds}" MaxHeight="279" Margin="0,0,0,3" AutoGenerateColumns="False" CanUserAddRows="True" CanUserDeleteRows="True" HorizontalGridLinesBrush="LightGray" VerticalGridLinesBrush="LightGray" HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow" IsSynchronizedWithCurrentItem="True"
+                Loaded="DataGrid_Loaded" Unloaded="DataGrid_Unloaded" 
                 SelectionChanged="DataGrid_SelectionChanged">
                 
                 <DataGrid.Resources>
@@ -140,7 +141,7 @@
                     <DataGridTemplateColumn Header="ID" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBox Margin="20,0,0,0" Text="{Binding ID, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+                                <TextBox Margin="20,0,0,0" Text="{Binding ID, Mode=TwoWay, UpdateSourceTrigger=LostFocus, NotifyOnSourceUpdated=True}" SourceUpdated="TextBoxDark_TileID_SourceUpdated" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

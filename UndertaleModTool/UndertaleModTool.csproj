@@ -9,7 +9,7 @@
         <DebugType>embedded</DebugType>
         <Platforms>AnyCPU;x64</Platforms>
         <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
-        <LangVersion>10</LangVersion>
+        <LangVersion>13.0</LangVersion>
         <ApplicationIcon>icon.ico</ApplicationIcon>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
@@ -24,7 +24,6 @@
     </PropertyGroup>
     <ItemGroup>
       <None Remove="BuildDate.txt" />
-      <None Remove="Corrections\README.txt" />
       <None Remove="Resources\tabs_left_button.png" />
       <None Remove="Resources\tabs_right_button.png" />
       <None Remove="Resources\X_Down.png" />
@@ -120,10 +119,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 		</Content>
-        <Content Include="Corrections/**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-        </Content>
     </ItemGroup>
     <ItemGroup>
       <Content Include="BuildDate.txt">
