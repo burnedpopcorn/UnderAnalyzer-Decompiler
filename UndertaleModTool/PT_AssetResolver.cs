@@ -18,10 +18,10 @@ namespace UndertaleModTool
         private static UndertaleData data = ((MainWindow)Application.Current.MainWindow).Data;
 
         // main stuff for JSON
-        private static Dictionary<string, object> FuncEntries = new();
-        private static Dictionary<string, string> VarEntries = new();
-        private static Dictionary<string, object> EnumEntries = new();
-        private static Dictionary<string, object> ArrayEntries = new();
+        private static Dictionary<string, object> FuncEntries = [];
+        private static Dictionary<string, string> VarEntries = [];
+        private static Dictionary<string, object> EnumEntries = [];
+        private static Dictionary<string, object> ArrayEntries = [];
 
         #region Helper Functions
         private static void AddVariable(string VarName, string AssetType) 
@@ -32,7 +32,7 @@ namespace UndertaleModTool
         }
 
         private static void AddEnum(string EnumName, Dictionary<string, int> EnumSet)
-            => EnumEntries.TryAdd($"Enum.{EnumName}", new { Name = EnumName, Values = EnumSet});
+            => EnumEntries.TryAdd($"Enum.{EnumName}", new { Name = EnumName, Values = EnumSet });
 
         private static void AddArray(string AssetType) 
             => ArrayEntries.TryAdd($"Array<{AssetType}>", new { MacroType = "ArrayInit", Macro = AssetType });
@@ -545,58 +545,58 @@ namespace UndertaleModTool
             #endregion
             #region Functions
             // Functions with Optional Arguments
-            AddFunction("gml_Script_scr_boss_genericintro", new List<string> { null, null, "Asset.Sprite" }, null, 1);
-            AddFunction("gml_Script_palette_unlock", new List<string> { null, null, null, "Asset.Sprite" }, null, 2);
-            AddFunction("gml_Script_scr_sound", new List<string> { "Asset.Sound" }, null, 2);
-            AddFunction("gml_Script_scr_soundeffect", new List<string> { "Asset.Sound" }, null, 2);
-            AddFunction("gml_Script_scr_music", new List<string> { "Asset.Sound" }, null, 2);
-            AddFunction("gml_Script_create_debris", new List<string> { null, null, "Asset.Sprite" }, null, 1);
-            AddFunction("gml_Script_add_music", new List<string> { "Asset.Room", null, null, null }, null, 1);
-            AddFunction("gml_Script_scr_pauseicon_add", new List<string> { "Asset.Sprite" }, null, 3);
-            AddFunction("gml_Script_tv_do_expression", new List<string> { "Asset.Sprite" }, "Bool", 2);
-            AddFunction("gml_Script_create_collect", new List<string> { null, null, "Asset.Sprite" }, null, 1);
+            AddFunction("gml_Script_scr_boss_genericintro", [null, null, "Asset.Sprite"], null, 1);
+            AddFunction("gml_Script_palette_unlock", [null, null, null, "Asset.Sprite" ], null, 2);
+            AddFunction("gml_Script_scr_sound", ["Asset.Sound"], null, 2);
+            AddFunction("gml_Script_scr_soundeffect", ["Asset.Sound"], null, 2);
+            AddFunction("gml_Script_scr_music", ["Asset.Sound"], null, 2);
+            AddFunction("gml_Script_create_debris", [null, null, "Asset.Sprite"], null, 1);
+            AddFunction("gml_Script_add_music", ["Asset.Room", null, null, null], null, 1);
+            AddFunction("gml_Script_scr_pauseicon_add", ["Asset.Sprite"], null, 3);
+            AddFunction("gml_Script_tv_do_expression", ["Asset.Sprite"], "Bool", 2);
+            AddFunction("gml_Script_create_collect", [null, null, "Asset.Sprite"], null, 1);
 
             // Simple Functions (From UTMTCE)
-            AddFunction("gml_Script_randomize_animations", new List<string> { "Array<Asset.Sprite>" });
-            AddFunction("gml_Script_instance_create_unique", new List<string> { null, null, "Asset.Object" });
-            AddFunction("gml_Script_instance_nearest_random", new List<string> { "Asset.Object", null });
-            AddFunction("instance_place_list", new List<string> { null, null, "Asset.Object", null, "Bool" });
-            AddFunction("gml_Script_draw_enemy", new List<string> { null, null, "Constant.Color" });
-            AddFunction("gml_Script_create_afterimage", new List<string> { null, null, "Asset.Sprite", null });
-            AddFunction("gml_Script_create_mach2effect", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_create_heatattack_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_create_firemouth_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_create_blue_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_create_red_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_create_blur_afterimage", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_pal_swap_init_system", new List<string> { "Asset.Shader" });
-            AddFunction("gml_Script_pal_swap_init_system_fix", new List<string> { "Asset.Shader" });
-            AddFunction("gml_Script_pal_swap_set", new List<string> { "Asset.Sprite", null, null });
-            AddFunction("gml_Script_pattern_set", new List<string> { null, "Asset.Sprite", null, null, null, null });
-            AddFunction("gml_Script_scr_room_goto", new List<string> { "Asset.Room" });
-            AddFunction("gml_Script_hub_state", new List<string> { "Asset.Room", null, null });
-            AddFunction("gml_Script_draw_background_tiled", new List<string> { "Asset.Sprite", null, null, null });
-            AddFunction("gml_Script_scr_draw_granny_texture", new List<string> { null, null, null, null, null, null, "Asset.Sprite", "Asset.Sprite" });
-            AddFunction("gml_Script_object_get_depth", new List<string> { "Asset.Object" });
-            AddFunction("gml_Script_scr_bosscontroller_particle_anim", new List<string> { "Asset.Sprite", null, null, null, null, "Asset.Sprite", null });
-            AddFunction("gml_Script_scr_bosscontroller_particle_hp", new List<string> { "Asset.Sprite", null, null, null, null, "Asset.Sprite", null, "Asset.Sprite" });
-            AddFunction("gml_Script_scr_bosscontroller_draw_health", new List<string> { "Asset.Sprite", null, null, null, null, null, null, null, null, null, null, "Asset.Sprite", null, "Asset.Sprite" });
-            AddFunction("gml_Script_boss_update_pizzaheadKO", new List<string> { "Asset.Sprite", "Asset.Sprite" });
-            AddFunction("gml_Script_scr_pizzaface_p3_do_player_attack", new List<string> { "Asset.Object" });
-            AddFunction("gml_Script_scr_boss_do_hurt_phase2", new List<string> { "Asset.Object" });
-            AddFunction("gml_Script_check_slope", new List<string> { "Asset.Object" });
-            AddFunction("gml_Script_check_slope_player", new List<string> { "Asset.Object" });
-            AddFunction("gml_Script_try_solid", new List<string> { null, null, "Asset.Object", null });
-            AddFunction("gml_Script_add_rank_achievements", new List<string> { null, null, "Asset.Sprite", null, null });
-            AddFunction("gml_Script_add_boss_achievements", new List<string> { null, "Asset.Room", "Asset.Sprite", null });
-            AddFunction("gml_Script_achievement_unlock", new List<string> { null, null, "Asset.Sprite", null });
-            AddFunction("gml_Script_scr_monsterinvestigate", new List<string> { null, "Asset.Sprite", "Asset.Sprite" });
-            AddFunction("gml_Script_timedgate_add_objects", new List<string> { "Asset.Object", null });
-            AddFunction("gml_Script_randomize_animations", new List<string> { "Array<Asset.Sprite>" });
-            AddFunction("gml_Script_tdp_draw_text_color", new List<string> { null, null, null, "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color", null });
-            AddFunction("gml_Script_lang_draw_sprite", new List<string> { "Asset.Sprite", null, null, null });
-            AddFunction("layer_background_change", new List<string> { null, "Asset.Sprite" });
-            AddFunction("layer_background_sprite", new List<string> { null, "Asset.Sprite" });
+            AddFunction("gml_Script_randomize_animations", ["Array<Asset.Sprite>"]);
+            AddFunction("gml_Script_instance_create_unique", [null, null, "Asset.Object"]);
+            AddFunction("gml_Script_instance_nearest_random", ["Asset.Object", null]);
+            AddFunction("instance_place_list", [null, null, "Asset.Object", null, "Bool"]);
+            AddFunction("gml_Script_draw_enemy", [null, null, "Constant.Color"]);
+            AddFunction("gml_Script_create_afterimage", [null, null, "Asset.Sprite", null]);
+            AddFunction("gml_Script_create_mach2effect", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_create_heatattack_afterimage", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_create_firemouth_afterimage", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_create_blue_afterimage", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_create_red_afterimage", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_create_blur_afterimage", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_pal_swap_init_system", ["Asset.Shader"]);
+            AddFunction("gml_Script_pal_swap_init_system_fix", ["Asset.Shader"]);
+            AddFunction("gml_Script_pal_swap_set", ["Asset.Sprite", null, null]);
+            AddFunction("gml_Script_pattern_set", [null, "Asset.Sprite", null, null, null, null]);
+            AddFunction("gml_Script_scr_room_goto", ["Asset.Room"]);
+            AddFunction("gml_Script_hub_state", ["Asset.Room", null, null]);
+            AddFunction("gml_Script_draw_background_tiled", ["Asset.Sprite", null, null, null]);
+            AddFunction("gml_Script_scr_draw_granny_texture", [null, null, null, null, null, null, "Asset.Sprite", "Asset.Sprite"]);
+            AddFunction("gml_Script_object_get_depth", ["Asset.Object"]);
+            AddFunction("gml_Script_scr_bosscontroller_particle_anim", ["Asset.Sprite", null, null, null, null, "Asset.Sprite", null]);
+            AddFunction("gml_Script_scr_bosscontroller_particle_hp", ["Asset.Sprite", null, null, null, null, "Asset.Sprite", null, "Asset.Sprite"]);
+            AddFunction("gml_Script_scr_bosscontroller_draw_health", ["Asset.Sprite", null, null, null, null, null, null, null, null, null, null, "Asset.Sprite", null, "Asset.Sprite"]);
+            AddFunction("gml_Script_boss_update_pizzaheadKO", ["Asset.Sprite", "Asset.Sprite"]);
+            AddFunction("gml_Script_scr_pizzaface_p3_do_player_attack", ["Asset.Object"]);
+            AddFunction("gml_Script_scr_boss_do_hurt_phase2", ["Asset.Object"]);
+            AddFunction("gml_Script_check_slope", ["Asset.Object"]);
+            AddFunction("gml_Script_check_slope_player", ["Asset.Object"]);
+            AddFunction("gml_Script_try_solid", [null, null, "Asset.Object", null]);
+            AddFunction("gml_Script_add_rank_achievements", [null, null, "Asset.Sprite", null, null]);
+            AddFunction("gml_Script_add_boss_achievements", [null, "Asset.Room", "Asset.Sprite", null]);
+            AddFunction("gml_Script_achievement_unlock", [null, null, "Asset.Sprite", null]);
+            AddFunction("gml_Script_scr_monsterinvestigate", [null, "Asset.Sprite", "Asset.Sprite"]);
+            AddFunction("gml_Script_timedgate_add_objects", ["Asset.Object", null]);
+            AddFunction("gml_Script_randomize_animations", ["Array<Asset.Sprite>"]);
+            AddFunction("gml_Script_tdp_draw_text_color", [null, null, null, "Constant.Color", "Constant.Color", "Constant.Color", "Constant.Color", null]);
+            AddFunction("gml_Script_lang_draw_sprite", ["Asset.Sprite", null, null, null]);
+            AddFunction("layer_background_change", [null, "Asset.Sprite"]);
+            AddFunction("layer_background_sprite", [null, "Asset.Sprite"]);
             #endregion
 
             #region Misc Enums
@@ -605,7 +605,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Object_obj_particlesystem_Create_0") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("enum_start", i++);
                 EnumSet.TryAdd("cloudeffect", i++);
@@ -626,9 +626,9 @@ namespace UndertaleModTool
                 EnumSet.TryAdd("bubblepop", i++);
                 EnumSet.TryAdd("enum_length", i++);
 
-                AddFunction("gml_Script_declare_particle", new List<string> { "Enum.particle", "Asset.Sprite", null, null });
-                AddFunction("gml_Script_particle_set_scale", new List<string> { "Enum.particle", null, null });
-                AddFunction("gml_Script_create_particle", new List<string> { null, null, "Enum.particle" }, null, 1);
+                AddFunction("gml_Script_declare_particle", ["Enum.particle", "Asset.Sprite", null, null]);
+                AddFunction("gml_Script_particle_set_scale", ["Enum.particle", null, null]);
+                AddFunction("gml_Script_create_particle", [null, null, "Enum.particle"], null, 1);
 
                 AddEnum("particle", EnumSet);
             }
@@ -637,7 +637,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_notification_push") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("bodyslam_start", i++);
                 EnumSet.TryAdd("bodyslam_end", i++);
@@ -714,7 +714,7 @@ namespace UndertaleModTool
                 EnumSet.TryAdd("ptg_seen", i++);
                 EnumSet.TryAdd("touched_granny", i++);
 
-                AddFunction("gml_Script_notification_push", new List<string> { "Enum.notifications", null });
+                AddFunction("gml_Script_notification_push", ["Enum.notifications", null]);
 
                 AddEnum("notifications", EnumSet);
             }
@@ -723,12 +723,12 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_is_holiday") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("normal", i++);
                 EnumSet.TryAdd("halloween", i++);
 
-                AddFunction("gml_Script_is_holiday", new List<string> { "Enum.holidays" });
+                AddFunction("gml_Script_is_holiday", ["Enum.holidays"]);
 
                 AddEnum("holidays", EnumSet);
             }
@@ -737,13 +737,13 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_tv_push_prompt") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("start", i++);
                 EnumSet.TryAdd("highprio", i++);
                 EnumSet.TryAdd("normal", i++);
 
-                AddFunction("gml_Script_tv_push_prompt", new List<string> { null, "Enum.tv_prompttypes", null, null });
+                AddFunction("gml_Script_tv_push_prompt", [null, "Enum.tv_prompttypes", null, null]);
                 AddArray("Enum.tv_prompttypes");
 
                 AddEnum("tv_prompttypes", EnumSet);
@@ -753,13 +753,13 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_scr_draw_text_arr") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("none", i++);
                 EnumSet.TryAdd("shake", i++);
                 EnumSet.TryAdd("wave", i++);
 
-                AddFunction("gml_Script_scr_draw_text_arr", new List<string> { null, null, null, "Constant.Color" }, null, 3);
+                AddFunction("gml_Script_scr_draw_text_arr", [null, null, null, "Constant.Color"], null, 3);
 
                 AddEnum("text_effects", EnumSet);
             }
@@ -768,7 +768,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_menu_goto") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("categories", i++);
                 EnumSet.TryAdd("audio", i++);
@@ -783,7 +783,7 @@ namespace UndertaleModTool
                 EnumSet.TryAdd("deadzones", i++);
                 EnumSet.TryAdd("last", i++);
 
-                AddFunction("gml_Script_menu_goto", new List<string> { "Enum.MenuIDs" });
+                AddFunction("gml_Script_menu_goto", ["Enum.MenuIDs"]);
 
                 AddEnum("MenuIDs", EnumSet);
             }
@@ -792,7 +792,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_editor_set_state") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("init", i++);
                 EnumSet.TryAdd("instance_edit", i++);
@@ -801,7 +801,7 @@ namespace UndertaleModTool
                 EnumSet.TryAdd("save_level", i++);
                 EnumSet.TryAdd("load_level", i++);
 
-                AddFunction("gml_Script_editor_set_state", new List<string> { "Enum.EditorState" });
+                AddFunction("gml_Script_editor_set_state", ["Enum.EditorState"]);
 
                 AddEnum("EditorState", EnumSet);
             }
@@ -810,7 +810,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_particle_set_scale") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("normal", i++);
                 EnumSet.TryAdd("mach3effect", i++);
@@ -832,7 +832,7 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_tdp_get_icon") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("keyboard", i++);
                 EnumSet.TryAdd("gamepad_button", i++);
@@ -840,11 +840,11 @@ namespace UndertaleModTool
 
                 // WHAT THE FUCK IS THIS
                 AddFunction("gml_Script_anon_tdp_input_key_gml_GlobalScript_tdp_input_classes_316_tdp_input_key_gml_GlobalScript_tdp_input_classes",
-                    new List<string> { "Enum.TDPInputActionType", null }, null, 1);
+                    ["Enum.TDPInputActionType", null], null, 1);
 
-                AddFunction("gml_Script_tdp_input_action", new List<string> { "Enum.TDPInputActionType", "Constant.GamepadButton" }, null, 1);
-                AddFunction("gml_Script_tdp_action", new List<string> { "Enum.TDPInputActionType", "Constant.GamepadButton" }, null, 1);
-                AddFunction("has_value", new List<string> { "Enum.TDPInputActionType", null, null }, null, 1);
+                AddFunction("gml_Script_tdp_input_action", ["Enum.TDPInputActionType", "Constant.GamepadButton"], null, 1);
+                AddFunction("gml_Script_tdp_action", ["Enum.TDPInputActionType", "Constant.GamepadButton"], null, 1);
+                AddFunction("has_value", ["Enum.TDPInputActionType", null, null], null, 1);
 
                 AddEnum("TDPInputActionType", EnumSet);
             }
@@ -853,12 +853,12 @@ namespace UndertaleModTool
             if (data.Code.ByName("gml_Script_create_menu_fixed") != null)
             {
                 int i = 0;
-                Dictionary<string, int> EnumSet = new();
+                Dictionary<string, int> EnumSet = [];
 
                 EnumSet.TryAdd("center", i++);
                 EnumSet.TryAdd("left", i++);
 
-                AddFunction("gml_Script_create_menu_fixed", new List<string> { "Enum.MenuIDs", "Enum.MenuAnchor", null, null }, null, 1);
+                AddFunction("gml_Script_create_menu_fixed", ["Enum.MenuIDs", "Enum.MenuAnchor", null, null], null, 1);
 
                 AddEnum("MenuAnchor", EnumSet);
             }
@@ -929,141 +929,149 @@ namespace UndertaleModTool
             Application.Current.MainWindow.ShowMessage("Pizza Tower JSON File made\n\nTo apply the generated JSON File to the Decompiler, please restart the program");
 
             // Clean Up
-            FuncEntries = new();
-            VarEntries = new();
-            EnumEntries = new();
-            ArrayEntries = new();
+            FuncEntries = [];
+            VarEntries = [];
+            EnumEntries = [];
+            ArrayEntries = [];
         }
 
         // Detects PT state names (now without instuction bullshit)
-        public static void FindStateNames(UndertaleCode code, string switchstate, string[] statePrefix)
+        public static void FindStateNames(UndertaleCode UCode, string switchstate, string[] statePrefix)
         {
-            if (code != null)
+            if (UCode is null) return;
+
+            // sorry but i dont like making vars for one time uses 
+            string[] CodeLines = 
+                new DecompileContext(
+                    new GlobalDecompileContext(data),
+                    UCode,
+                    new DecompileSettings()
+                    {
+                        // force UnknownEnums
+                        UnknownEnumName = "UnknownEnum",
+                        UnknownEnumValuePattern = "Value_{0}",
+                        CreateEnumDeclarations = false,
+                        AllowLeftoverDataOnStack = true
+                    }
+                )
+                .DecompileToString() // get decompiled code
+                .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None); // split it into lines
+
+            // if code is useless, just leave
+            if (CodeLines.Length < 6) return;
+
+            // make dictionary for this enum
+            Dictionary<string, int> enumset_found = [];
+
+            #region Find State Names in Code
+            for (int i = 0; i < CodeLines.Length - 1; i++)
             {
-                // get code
-                GlobalDecompileContext globalDecompileContext = new(data);
-                IDecompileSettings decompilerSettings = new DecompileSettings()
+                string line = CodeLines[i].Trim();
+
+                // check only in the switch state
+                if (line.StartsWith($"switch ({switchstate})"))
+                    continue;
+
+                // start checking for states
+                if (line.StartsWith("case "))
                 {
-                    CreateEnumDeclarations = false,
-                    AllowLeftoverDataOnStack = true
-                };
-                string decompiledcode = new DecompileContext(globalDecompileContext, code, decompilerSettings).DecompileToString();
-
-                // get lines of code
-                var lines = decompiledcode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
-                // make dictionary for this enum
-                Dictionary<string, int> enumset_found = new();
-
-                // go through every line
-                for (int i = 0; i < lines.Length - 1; i++)
-                {
-                    string line = lines[i].Trim();
-
-                    // check only in the switch state
-                    if (line.StartsWith($"switch ({switchstate})"))
+                    var caseMatch = Regex.Match(line, @"case\s+(?:UnknownEnum\.Value_)?(\d+):");
+                    if (!caseMatch.Success)
                         continue;
 
-                    // start checking for states
-                    if (line.StartsWith("case "))
+                    // get state value as integer
+                    int stateValue = int.Parse(caseMatch.Groups[1].Value);
+
+                    // Look for the function call on the next line
+                    string nextLine = CodeLines[i + 1].Trim();
+                    foreach (var prefix in statePrefix)
                     {
-                        var caseMatch = Regex.Match(line, @"case\s+(?:UnknownEnum\.Value_)?(\d+):");
-                        if (!caseMatch.Success)
-                            continue;
-
-                        // get state value as integer
-                        int stateValue = int.Parse(caseMatch.Groups[1].Value);
-
-                        // Look for the function call on the next line
-                        string nextLine = lines[i + 1].Trim();
-                        foreach (var prefix in statePrefix)
+                        if (nextLine.StartsWith(prefix))
                         {
-                            if (nextLine.StartsWith(prefix))
+                            var suffixMatch = Regex.Match(nextLine, $@"{Regex.Escape(prefix)}(\w+)\s*\(");
+                            if (suffixMatch.Success)
                             {
-                                var suffixMatch = Regex.Match(nextLine, $@"{Regex.Escape(prefix)}(\w+)\s*\(");
-                                if (suffixMatch.Success)
-                                {
-                                    // STATE!!!
-                                    string suffix = suffixMatch.Groups[1].Value;
+                                // STATE!!!
+                                string suffix = suffixMatch.Groups[1].Value;
 
-                                    // fix throw and parry
-                                    switch (suffix)
-                                    {
-                                        case "throw": suffix = "Throw"; break;
-                                        case "parry": suffix = "Parry"; break;
-                                    }
+                                // fix throw and parry
+                                suffix = suffix switch
+                                { 
+                                    "throw" or "parry" => $"{suffix}ing",
+                                    _ => suffix
+                                };
 
-                                    // Add to dictionary
-                                    enumset_found.TryAdd(suffix, stateValue);
-                                }
-                                break;
+                                // Add to dictionary
+                                enumset_found.TryAdd(suffix, stateValue);
                             }
+                            break;
                         }
                     }
-                }
-
-                // after everything, add to json file
-                if (enumset_found.Count > 0)
-                {
-                    // merge existing entry
-                    if (EnumEntries.TryGetValue($"Enum.{switchstate}s", out dynamic EnumObj))
-                    {
-                        Dictionary<string, int> EnumSet = EnumObj.Values as Dictionary<string, int>;
-                        foreach (var kvp in enumset_found)
-                        {
-                            if (!EnumSet.ContainsKey(kvp.Key))// stop overwrite
-                                EnumSet[kvp.Key] = kvp.Value; // add
-                        }
-                        // remove old enum
-                        EnumEntries.Remove($"Enum.{switchstate}s");
-                        // add new merged enum
-                        AddEnum($"{switchstate}s", EnumSet);
-                    }
-                    // make new if it doesn't exist
-                    else
-                        AddEnum($"{switchstate}s", enumset_found);
-                }
-
-                // ONLY Add if the FindStateNames Function actually found pt player states
-                if (enumset_found.Count > 0 && switchstate == "state")
-                {
-                    // Variables that should == Enum
-                    AddVariable("state", "Enum.states");
-                    AddVariable("_state", "Enum.states");
-                    AddVariable("prevstate", "Enum.states");
-                    AddVariable("_prevstate", "Enum.states");
-                    AddVariable("substate", "Enum.states");
-                    AddVariable("arenastate", "Enum.states");
-                    AddVariable("player_state", "Enum.states");
-                    AddVariable("tauntstoredstate", "Enum.states");
-                    AddVariable("taunt_storedstate", "Enum.states");
-                    AddVariable("storedstate", "Enum.states");
-                    AddVariable("chosenstate", "Enum.states");
-                    AddVariable("superattackstate", "Enum.states");
-                    AddVariable("text_state", "Enum.states");
-                    AddVariable("ministate", "Enum.states");
-                    AddVariable("dropstate", "Enum.states");
-                    AddVariable("verticalstate", "Enum.states");
-                    AddVariable("walkstate", "Enum.states");
-                    AddVariable("hitstate", "Enum.states");
-                    AddVariable("toppin_state", "Enum.states");
-                    AddVariable("bossintrostate", "Enum.states");
-                    AddVariable("introstate", "Enum.states");
-                    AddVariable("fadeoutstate", "Enum.states");
-                    AddVariable("supergrabstate", "Enum.states");
-                    AddVariable("startstate", "Enum.states");
-                    AddVariable("atstate", "Enum.states");
-                    AddVariable("attack_pool", "Array<Enum.states>");
-                    AddVariable("transformation", "Enum.states");
-
-                    // Function Arguments
-                    AddFunction("gml_Script_vigilante_cancel_attack", new List<string> { "Enum.states", null });
-                    AddFunction("gml_Script_scr_bombshoot", new List<string> { "Enum.states" });
-
-                    // Apply States to Arrays as well
-                    AddArray("Enum.states");
                 }
             }
+            #endregion
+            #region Add Enum to JSON
+            if (enumset_found.Count > 0)
+            {
+                // merge existing entry
+                if (EnumEntries.TryGetValue($"Enum.{switchstate}s", out dynamic EnumObj))
+                {
+                    Dictionary<string, int> EnumSet = EnumObj.Values as Dictionary<string, int>;
+                    foreach (var kvp in enumset_found)
+                    {
+                        if (!EnumSet.ContainsKey(kvp.Key))// stop overwrite
+                            EnumSet[kvp.Key] = kvp.Value; // add
+                    }
+                    // remove old enum
+                    EnumEntries.Remove($"Enum.{switchstate}s");
+                    // add new merged enum
+                    AddEnum($"{switchstate}s", EnumSet);
+                }
+                // make new if it doesn't exist
+                else
+                    AddEnum($"{switchstate}s", enumset_found);
+            }
+
+            // ONLY Add if the FindStateNames Function actually found pt player states
+            if (enumset_found.Count > 0 && switchstate == "state")
+            {
+                // Variables that should == Enum
+                AddVariable("state", "Enum.states");
+                AddVariable("_state", "Enum.states");
+                AddVariable("prevstate", "Enum.states");
+                AddVariable("_prevstate", "Enum.states");
+                AddVariable("substate", "Enum.states");
+                AddVariable("arenastate", "Enum.states");
+                AddVariable("player_state", "Enum.states");
+                AddVariable("tauntstoredstate", "Enum.states");
+                AddVariable("taunt_storedstate", "Enum.states");
+                AddVariable("storedstate", "Enum.states");
+                AddVariable("chosenstate", "Enum.states");
+                AddVariable("superattackstate", "Enum.states");
+                AddVariable("text_state", "Enum.states");
+                AddVariable("ministate", "Enum.states");
+                AddVariable("dropstate", "Enum.states");
+                AddVariable("verticalstate", "Enum.states");
+                AddVariable("walkstate", "Enum.states");
+                AddVariable("hitstate", "Enum.states");
+                AddVariable("toppin_state", "Enum.states");
+                AddVariable("bossintrostate", "Enum.states");
+                AddVariable("introstate", "Enum.states");
+                AddVariable("fadeoutstate", "Enum.states");
+                AddVariable("supergrabstate", "Enum.states");
+                AddVariable("startstate", "Enum.states");
+                AddVariable("atstate", "Enum.states");
+                AddVariable("attack_pool", "Array<Enum.states>");
+                AddVariable("transformation", "Enum.states");
+
+                // Function Arguments
+                AddFunction("gml_Script_vigilante_cancel_attack", ["Enum.states", null]);
+                AddFunction("gml_Script_scr_bombshoot", ["Enum.states"]);
+
+                // Apply States to Arrays as well
+                AddArray("Enum.states");
+            }
+            #endregion
         }
     }
 }
