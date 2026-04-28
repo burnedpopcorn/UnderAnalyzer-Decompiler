@@ -28,7 +28,8 @@
         - Added ability to copy external datafiles into the project (before official implimentation, and a bit better)
         - Added ability to manually correct Tileset Seperation in the Fix Tileset Window
         - Added ability to clean decompiled code (such as string and ds_* functions to use literals and accessors instead)
-        - (NEW) Added ability to automatically organize some assets based on Texture and Audio Groups
+        - Added ability to automatically organize some assets based on Texture and Audio Groups
+        - (NEW) Added ability to extract the game's compile config
 
     Since the original script was left in an unfinished state, there was some things that couldn't be decompiled 
     correctly or at all, but now can with this script, that being:
@@ -431,6 +432,9 @@ public class GMProject : GMResource
     public List<GMIncludedFile> IncludedFiles { get; set; } = new();
     public ProjectMetaData MetaData { get; set; } = new();
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public BuildConfig? configs { get; set; } = new();
+
     public class ProjectMetaData
     {
         public string IDEVersion { get; set; } = "2022.0.3.85"; // the IDE version this script was made for
@@ -459,8 +463,8 @@ public class GMProject : GMResource
 
     public class BuildConfig
     {
-        string name { get; set; } = "Default";
-        BuildConfig[] children { get; set; } = new BuildConfig[0];
+        public BuildConfig[] children { get; set; } = new BuildConfig[0];
+        public string name { get; set; } = "Default";
     }
 
     public class RoomOrderNode
@@ -6405,6 +6409,12 @@ GMProject finalExport = new(Data.GeneralInfo.Name.Content)
 
 finalExport.MetaData.IDEVersion = $"{Data.GeneralInfo.Major}.{Data.GeneralInfo.Minor}.{Data.GeneralInfo.Release}.{Data.GeneralInfo.Build}";
 
+// add compile config if the data.win's isn't Default
+if (Data.GeneralInfo.Config.Content != "Default" && !UISettings.YYMPS)
+    finalExport.configs.children = [new GMProject.BuildConfig() { name = Data.GeneralInfo.Config.Content }];
+else if (UISettings.YYMPS) // remove entire element if YYMPS
+    finalExport.configs = null;
+
 // parse the options.ini file, some extension options export to it.
 var iniData = IniParser.ParseToDictionary(rootDir + "options.ini");
 #endregion
@@ -6510,7 +6520,33 @@ public int noteIndex = 0; // for the order
 string readMeMessage =
 $@"A Decompilation of {Data.GeneralInfo.DisplayName.Content}
 
-Original GameMaker Version: {finalExport.MetaData.IDEVersion}
+Original GameMaker Version: {finalExport.MetaData.IDEVersion}";
+
+// if compiled with config
+if (Data.GeneralInfo.Config.Content != "Default" && !UISettings.YYMPS)
+{
+    readMeMessage += $@"
+
+NOTE:
+This game was complied with the ""{Data.GeneralInfo.Config.Content}"" config
+Make sure to look out for any config specific macro usage
+
+Examples of macros in decompiled code: 
+
+|   #macro DEBUG false
+|   #macro {Data.GeneralInfo.Config.Content}:DEBUG true
+|
+|   // somewhere in code...
+|   if (true && otherCondition)
+|
+|   // might actually be
+|   if (DEBUG && otherCondition)
+
+Learn more here
+https://manual.gamemaker.io/beta/en/GameMaker_Language/GML_Overview/Variables/Constants.htm#:~:text=Configuration%20Override";
+}
+
+readMeMessage += @"
 
 --------------------------------------------------------
 Project Decompiled by Ultimate_GMS2_Decompiler_v5.csx
