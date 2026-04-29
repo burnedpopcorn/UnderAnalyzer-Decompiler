@@ -3325,7 +3325,7 @@ public static Dictionary<string, string> ObjectPropertiesToDictionary(this strin
     {
         string[] kvp = line.Split("=").ToArray();
         // if the property exists, add it.
-        if (!objectProperties.ContainsKey(kvp[0].Trim()))
+        if (kvp.Length > 1 && !objectProperties.ContainsKey(kvp[0].Trim()))
             objectProperties.Add(kvp[0].Trim(), kvp[1].Trim());
     }
 

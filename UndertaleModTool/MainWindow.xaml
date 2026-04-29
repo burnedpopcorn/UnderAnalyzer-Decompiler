@@ -76,6 +76,9 @@
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
+                <Menu.Style>
+                    <Style TargetType="{x:Type Menu}" BasedOn="{StaticResource {x:Type Menu}}" />
+                </Menu.Style>
                 <MenuItem Header="_File">
                     <MenuItem Header="_New" Command="New" InputGestureText="Ctrl+N"/>
                     <MenuItem Header="_Open" Command="Open" InputGestureText="Ctrl+O"/>
@@ -145,24 +148,18 @@
                     <MenuItem Header="Find unreferenced _assets" Name="FindUnreferencedAssetsItem" Click="MenuItem_FindUnreferencedAssets_Click"/>
                 </MenuItem>
                 <MenuItem Header="_Project">
-                    <MenuItem.Resources>
-                        <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Data, Mode=OneWay}" Value="{x:Null}">
-                                    <Setter Property="IsEnabled" Value="False"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding FilePath, Mode=OneWay}" Value="{x:Null}">
-                                    <Setter Property="IsEnabled" Value="False"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </MenuItem.Resources>
                     <MenuItem Header="_New project" Command="{x:Static local:MainWindow.NewProjectCommand}"></MenuItem>
                     <MenuItem Header="_Open project" Command="{x:Static local:MainWindow.OpenProjectCommand}"></MenuItem>
                     <MenuItem Header="_Save project" Command="{x:Static local:MainWindow.SaveProjectCommand}">
                         <MenuItem.Style>
                             <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Data, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding FilePath, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding Project, Mode=OneWay}" Value="{x:Null}">
                                         <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
@@ -174,6 +171,12 @@
                         <MenuItem.Style>
                             <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Data, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding FilePath, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding Project, Mode=OneWay}" Value="{x:Null}">
                                         <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
@@ -185,6 +188,12 @@
                         <MenuItem.Style>
                             <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Data, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding FilePath, Mode=OneWay}" Value="{x:Null}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding Project, Mode=OneWay}" Value="{x:Null}">
                                         <Setter Property="IsEnabled" Value="False"/>
                                     </DataTrigger>
