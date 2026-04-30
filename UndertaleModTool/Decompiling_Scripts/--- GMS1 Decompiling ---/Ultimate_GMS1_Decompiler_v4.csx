@@ -671,79 +671,81 @@ async Task ExportResources(dynamic AssetChunk, Action<dynamic> ExportFunc, bool 
 }
 
 #region Sprites
-void ExportSprite(UndertaleSprite sprite)
+void ExportSprite(UndertaleSprite s)
 {
-    UpdateProgressBar(null, $"Exporting Sprite: {sprite.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Sprite: {s.Name.Content}", progress++, resourceNum);
 
     // Save the sprite GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("sprite",
             new XElement("type", "0"),
-            new XElement("xorig", sprite.OriginX.ToString()),
-            new XElement("yorigin", sprite.OriginY.ToString()),
+            new XElement("xorig", $"{s.OriginX}"),
+            new XElement("yorigin", $"{s.OriginY}"),
             // If SepMasks == precise, set to 0 to avoid shape issues
-            new XElement("colkind", sprite.SepMasks == UndertaleSprite.SepMaskType.Precise ? "0" : sprite.BBoxMode.ToString()),
+            new XElement("colkind", s.SepMasks == UndertaleSprite.SepMaskType.Precise ? "0" : $"{s.BBoxMode}"),
             new XElement("coltolerance", "0"),
-            new XElement("sepmasks", sprite.SepMasks.ToString("D")),
-            new XElement("bboxmode", sprite.BBoxMode.ToString()),
-            new XElement("bbox_left", sprite.MarginLeft.ToString()),
-            new XElement("bbox_right", sprite.MarginRight.ToString()),
-            new XElement("bbox_top", sprite.MarginTop.ToString()),
-            new XElement("bbox_bottom", sprite.MarginBottom.ToString()),
+            new XElement("sepmasks", $"{s.SepMasks:D}"),
+            new XElement("bboxmode", $"{s.BBoxMode}"),
+            new XElement("bbox_left", $"{s.MarginLeft}"),
+            new XElement("bbox_right", $"{s.MarginRight}"),
+            new XElement("bbox_top", $"{s.MarginTop}"),
+            new XElement("bbox_bottom", $"{s.MarginBottom}"),
             new XElement("HTile", "0"),
             new XElement("VTile", "0"),
             new XElement("TextureGroups",
                 new XElement("TextureGroup0", "0")
             ),
             new XElement("For3D", "0"),
-            new XElement("width", sprite.Width.ToString()),
-            new XElement("height", sprite.Height.ToString()),
+            new XElement("width", $"{s.Width}"),
+            new XElement("height", $"{s.Height}"),
             new XElement("frames")
         )
     );
 
-    for (int i = 0; i < sprite.Textures.Count; i++)
+    for (int i = 0; i < s.Textures.Count; i++)
     {
-        if (sprite.Textures[i]?.Texture != null)
+        if (s.Textures[i]?.Texture != null)
         {
             gmx.Element("sprite").Element("frames").Add(
                 new XElement(
                     "frame",
-                    new XAttribute("index", i.ToString()),
-                    $"images\\{sprite.Name.Content}_{i}.png"
+                    new XAttribute("index", $"{i}"),
+                    $"images\\{s.Name.Content}_{i}.png"
                 )
             );
 
             // Save sprite textures
             SavedImages.Add(
                 new Images(
-                    sprite.Textures[i].Texture, 
-                    $"{projFolder}/sprites/images/{sprite.Name.Content}_{i}.png", 
-                    sprite.Name.Content, 
+                    s.Textures[i].Texture, 
+                    $"{projFolder}/sprites/images/{s.Name.Content}_{i}.png", 
+                    s.Name.Content, 
                     i
                 )
             );
         }
     }
 
-    AddAssetToProjectGMX(sprite.Name.Content, "sprites");
-
-    File.WriteAllText($"{projFolder}/sprites/{sprite.Name.Content}.sprite.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(s.Name.Content, "sprites");
+    File.WriteAllText($"{projFolder}/sprites/{s.Name.Content}.sprite.gmx", GMXToString(gmx));
 }
 #endregion
 #region Backgrounds
-void ExportBackground(UndertaleBackground background)
+void ExportBackground(UndertaleBackground b)
 {
-    UpdateProgressBar(null, $"Exporting Background: {background.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Background: {b.Name.Content}", progress++, resourceNum);
+
+    string Width = b.Texture == null ? "0" : $"{b.Texture.BoundingWidth}";
+    string Height = b.Texture == null ? "0" : $"{b.Texture.BoundingHeight}";
 
     // Save the backgound GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("background",
             new XElement("istileset", "-1"),
-            new XElement("tilewidth", background.Texture == null ? "0" : background.Texture.BoundingWidth.ToString()),
-            new XElement("tileheight", background.Texture == null ? "0" : background.Texture.BoundingHeight.ToString()),
+            new XElement("tilewidth", Width),
+            new XElement("tileheight", Height),
             new XElement("tilexoff", "0"),
             new XElement("tileyoff", "0"),
             new XElement("tilehsep", "0"),
@@ -754,156 +756,154 @@ void ExportBackground(UndertaleBackground background)
                 new XElement("TextureGroup0", "0")
             ),
             new XElement("For3D", "0"),
-            new XElement("width", background.Texture == null ? "0" : background.Texture.BoundingWidth.ToString()),
-            new XElement("height", background.Texture == null ? "0" : background.Texture.BoundingHeight.ToString()),
-            new XElement("data", $"images\\{background.Name.Content}.png")
+            new XElement("width", Width),
+            new XElement("height", Height),
+            new XElement("data", $"images\\{b.Name.Content}.png")
         )
     );
 
     // Save background images
-    if (background.Texture != null)
+    if (b.Texture != null)
     {
         SavedImages.Add(
             new Images(
-                background.Texture,
-                $"{projFolder}/background/images/{background.Name.Content}.png",
-                background.Name.Content,
+                b.Texture,
+                $"{projFolder}/background/images/{b.Name.Content}.png",
+                b.Name.Content,
                 null
             )
         );
     }
 
-    AddAssetToProjectGMX(background.Name.Content, "backgrounds");
-
-    File.WriteAllText($"{projFolder}/background/{background.Name.Content}.background.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(b.Name.Content, "backgrounds");
+    File.WriteAllText($"{projFolder}/background/{b.Name.Content}.background.gmx", GMXToString(gmx));
 }
 #endregion
 #region Objects
-void ExportGameObject(UndertaleGameObject gameObject)
+void ExportGameObject(UndertaleGameObject o)
 {
-    UpdateProgressBar(null, $"Exporting Object: {gameObject.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Object: {o.Name.Content}", progress++, resourceNum);
 
     // Save the object GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("object",
-            new XElement("spriteName", gameObject.Sprite is null ? "<undefined>" : gameObject.Sprite.Name.Content),
-            new XElement("solid", BoolToString(gameObject.Solid)),
-            new XElement("visible", BoolToString(gameObject.Visible)),
-            new XElement("depth", gameObject.Depth.ToString()),
-            new XElement("persistent", BoolToString(gameObject.Persistent)),
-            new XElement("parentName", gameObject.ParentId is null ? "<undefined>" : gameObject.ParentId.Name.Content),
-            new XElement("maskName", gameObject.TextureMaskId is null ? "<undefined>" : gameObject.TextureMaskId.Name.Content),
+            new XElement("spriteName", o.Sprite is null ? "<undefined>" : o.Sprite.Name.Content),
+            new XElement("solid", BoolToString(o.Solid)),
+            new XElement("visible", BoolToString(o.Visible)),
+            new XElement("depth", $"{o.Depth}"),
+            new XElement("persistent", BoolToString(o.Persistent)),
+            new XElement("parentName", o.ParentId is null ? "<undefined>" : o.ParentId.Name.Content),
+            new XElement("maskName", o.TextureMaskId is null ? "<undefined>" : o.TextureMaskId.Name.Content),
             new XElement("events"),
 
             //Physics
-            new XElement("PhysicsObject", BoolToString(gameObject.UsesPhysics)),
-            new XElement("PhysicsObjectSensor", BoolToString(gameObject.IsSensor)),
-            new XElement("PhysicsObjectShape", (uint)gameObject.CollisionShape),
-            new XElement("PhysicsObjectDensity", gameObject.Density),
-            new XElement("PhysicsObjectRestitution", gameObject.Restitution),
-            new XElement("PhysicsObjectGroup", gameObject.Group),
-            new XElement("PhysicsObjectLinearDamping", gameObject.LinearDamping),
-            new XElement("PhysicsObjectAngularDamping", gameObject.AngularDamping),
-            new XElement("PhysicsObjectFriction", gameObject.Friction),
-            new XElement("PhysicsObjectAwake", BoolToString(gameObject.Awake)),
-            new XElement("PhysicsObjectKinematic", BoolToString(gameObject.Kinematic)),
+            new XElement("PhysicsObject", BoolToString(o.UsesPhysics)),
+            new XElement("PhysicsObjectSensor", BoolToString(o.IsSensor)),
+            new XElement("PhysicsObjectShape", (uint)o.CollisionShape),
+            new XElement("PhysicsObjectDensity", o.Density),
+            new XElement("PhysicsObjectRestitution", o.Restitution),
+            new XElement("PhysicsObjectGroup", o.Group),
+            new XElement("PhysicsObjectLinearDamping", o.LinearDamping),
+            new XElement("PhysicsObjectAngularDamping", o.AngularDamping),
+            new XElement("PhysicsObjectFriction", o.Friction),
+            new XElement("PhysicsObjectAwake", BoolToString(o.Awake)),
+            new XElement("PhysicsObjectKinematic", BoolToString(o.Kinematic)),
             new XElement("PhysicsShapePoints")
         )
     );
 
     // Loop through PhysicsShapePoints List
-    for (int _point = 0; _point < gameObject.PhysicsVertices.Count; _point++)
+    for (int _point = 0; _point < o.PhysicsVertices.Count; _point++)
     {
-        var _x = gameObject.PhysicsVertices[_point].X;
-        var _y = gameObject.PhysicsVertices[_point].Y;
+        var _x = o.PhysicsVertices[_point].X;
+        var _y = o.PhysicsVertices[_point].Y;
 
         var physicsPointsNode = gmx.Element("object").Element("PhysicsShapePoints");
         physicsPointsNode.Add(new XElement("points", $"{_x},{_y}"));
     }
 
     // Traversing the event type list
-    for (int i = 0; i < gameObject.Events.Count; i++)
+    for (int i = 0; i < o.Events.Count; i++)
     {
         // Determine if an event is empty
-        if (gameObject.Events[i].Count > 0)
-        {
-            // Traversing event list
-            foreach (var j in gameObject.Events[i])
-            {
-                var eventsNode = gmx.Element("object").Element("events");
+        if (o.Events[i].Count == 0) 
+            continue;
 
-                var eventNode = new XElement("event",
-                        new XAttribute("eventtype", $"{i}")
+        // Traversing event list
+        foreach (var j in o.Events[i])
+        {
+            var eventsNode = gmx.Element("object").Element("events");
+
+            XElement eventNode = new("event",
+                new XAttribute("eventtype", $"{i}")
+            );
+
+            eventNode.Add(
+                j.EventSubtype == 4 // To get the actual name of the collision object when the event type is a collision event
+                ? new XAttribute("ename", Data.GameObjects[(int)j.EventSubtype].Name.Content)
+                : new XAttribute("enumb", $"{j.EventSubtype}") // Get the sub-event number directly if not
                 );
 
-                if (j.EventSubtype == 4) // To get the actual name of the collision object when the event type is a collision event
-                    eventNode.Add(new XAttribute("ename", Data.GameObjects[(int)j.EventSubtype].Name.Content));
-                else // Get the sub-event number directly
-                    eventNode.Add(new XAttribute("enumb", j.EventSubtype.ToString()));
+            // Save action
+            XElement actionNode = new("action");
 
-                // Save action
-                var actionNode = new XElement("action");
-
-                // Traversing the action list
-                foreach (var k in j.Actions)
-                {
-                    actionNode.Add(
-                        new XElement("libid", k.LibID.ToString()),
-                        new XElement("id", "603"),// set to 603 so its always code, because that's all we get
-                        new XElement("kind", k.Kind.ToString()),
-                        new XElement("userelative", BoolToString(k.UseRelative)),
-                        new XElement("isquestion", BoolToString(k.IsQuestion)),
-                        new XElement("useapplyto", BoolToString(k.UseApplyTo)),
-                        new XElement("exetype", k.ExeType.ToString()),
-                        new XElement("functionname", k.ActionName.Content),
-                        new XElement("codestring", ""),
-                        new XElement("whoName", "self"),
-                        new XElement("relative", BoolToString(k.Relative)),
-                        new XElement("isnot", BoolToString(k.IsNot)),
-                        new XElement("arguments",
-                            new XElement("argument",
-                                new XElement("kind", "1"),
-                                new XElement("string", DecompileCode(k.CodeId, "OBJECT", gameObject.Name.Content))
-                            )
+            // Traversing the action list
+            foreach (var k in j.Actions)
+            {
+                actionNode.Add(
+                    new XElement("libid", $"{k.LibID}"),
+                    new XElement("id", "603"),// set to 603 so its always code, because that's all we get
+                    new XElement("kind", $"{k.Kind}"),
+                    new XElement("userelative", BoolToString(k.UseRelative)),
+                    new XElement("isquestion", BoolToString(k.IsQuestion)),
+                    new XElement("useapplyto", BoolToString(k.UseApplyTo)),
+                    new XElement("exetype", $"{k.ExeType}"),
+                    new XElement("functionname", k.ActionName.Content),
+                    new XElement("codestring", ""),
+                    new XElement("whoName", "self"),
+                    new XElement("relative", BoolToString(k.Relative)),
+                    new XElement("isnot", BoolToString(k.IsNot)),
+                    new XElement("arguments",
+                        new XElement("argument",
+                            new XElement("kind", "1"),
+                            new XElement("string", DecompileCode(k.CodeId, "OBJECT", o.Name.Content))
                         )
-                    );
-                }
-                eventNode.Add(actionNode);
-                eventsNode.Add(eventNode);
+                    )
+                );
             }
+            eventNode.Add(actionNode);
+            eventsNode.Add(eventNode);
         }
     }
 
-    AddAssetToProjectGMX(gameObject.Name.Content, "objects");
-
-    File.WriteAllText($"{projFolder}/objects/{gameObject.Name.Content}.object.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(o.Name.Content, "objects");
+    File.WriteAllText($"{projFolder}/objects/{o.Name.Content}.object.gmx", GMXToString(gmx));
 }
 #endregion
 #region Rooms
-void ExportRoom(UndertaleRoom room)
+void ExportRoom(UndertaleRoom r)
 {
-    UpdateProgressBar(null, $"Exporting Room: {room.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Room: {r.Name.Content}", progress++, resourceNum);
 
     // Save the room GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("room",
-            new XElement("caption", room.Caption.Content),
-            new XElement("width", room.Width.ToString()),
-            new XElement("height", room.Height.ToString()),
-            new XElement("vsnap", room.GridHeight.ToString()),
-            new XElement("hsnap", room.GridWidth.ToString()),
+            new XElement("caption", r.Caption.Content),
+            new XElement("width", $"{r.Width}"),
+            new XElement("height", $"{r.Height}"),
+            new XElement("vsnap", $"{r.GridHeight}"),
+            new XElement("hsnap", $"{r.GridWidth}"),
             new XElement("isometric", "0"),
-            new XElement("speed", room.Speed.ToString()),
-            new XElement("persistent", BoolToString(room.Persistent)),
-            // remove alpha (background color doesn't have alpha)
-            new XElement("colour", (room.BackgroundColor ^ 0xFF000000).ToString()),
-            new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
-            new XElement("code", DecompileCode(room.CreationCodeId)),
-            new XElement("enableViews", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
-            new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearViewBackground))),
-            new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer))),//added back cuz yeah
+            new XElement("speed", $"{r.Speed}"),
+            new XElement("persistent", BoolToString(r.Persistent)),
+            new XElement("colour", $"{(r.BackgroundColor ^ 0xFF000000)}"),// remove alpha (background color doesn't have alpha)
+            new XElement("showcolour", BoolToString(r.DrawBackgroundColor)),
+            new XElement("code", DecompileCode(r.CreationCodeId)),
+            new XElement("enableViews", BoolToString(r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
+            new XElement("clearViewBackground", BoolToString(r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearViewBackground))),
+            new XElement("clearDisplayBuffer", BoolToString(r.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer))),//added back cuz yeah
             new XElement("makerSettings",
                 new XElement("isSet", 0),
                 new XElement("w", 1024),
@@ -923,126 +923,128 @@ void ExportRoom(UndertaleRoom room)
         )
     );
 
-    // Room backgrounds
-    var backgroundsNode = new XElement("backgrounds");
-    foreach (var i in room.Backgrounds)
+    #region Room Backgrounds
+    XElement backgroundsNode = new("backgrounds");
+    foreach (var i in r.Backgrounds)
     {
-        var backgroundNode = new XElement("background",
+        XElement backgroundNode = new("background",
             new XAttribute("visible", BoolToString(i.Enabled)),
             new XAttribute("foreground", BoolToString(i.Foreground)),
             new XAttribute("name", i.BackgroundDefinition is null ? "" : i.BackgroundDefinition.Name.Content),
-            new XAttribute("x", i.X.ToString()),
-            new XAttribute("y", i.Y.ToString()),
+            new XAttribute("x", $"{i.X}"),
+            new XAttribute("y", $"{i.Y}"),
             new XAttribute("htiled", BoolToString(i.TiledHorizontally)),
             new XAttribute("vtiled", BoolToString(i.TiledVertically)),
-            new XAttribute("hspeed", i.SpeedX.ToString()),
-            new XAttribute("vspeed", i.SpeedY.ToString()),
+            new XAttribute("hspeed", $"{i.SpeedX}"),
+            new XAttribute("vspeed", $"{i.SpeedY}"),
             new XAttribute("stretch", BoolToString(i.Stretch))
         );
         backgroundsNode.Add(backgroundNode);
     }
     gmx.Element("room").Add(backgroundsNode);
-
-    // Room views
-    var viewsNode = new XElement("views");
-    foreach (var i in room.Views)
+    #endregion
+    #region Room Views
+    XElement viewsNode = new("views");
+    foreach (var i in r.Views)
     {
-        var viewNode = new XElement("view",
+        XElement viewNode = new("view",
             new XAttribute("visible", BoolToString(i.Enabled)),
             new XAttribute("objName", i.ObjectId is null ? "<undefined>" : i.ObjectId.Name.Content),
-            new XAttribute("xview", i.ViewX.ToString()),
-            new XAttribute("yview", i.ViewY.ToString()),
-            new XAttribute("wview", i.ViewWidth.ToString()),
-            new XAttribute("hview", i.ViewHeight.ToString()),
-            new XAttribute("xport", i.PortX.ToString()),
-            new XAttribute("yport", i.PortY.ToString()),
-            new XAttribute("wport", i.PortWidth.ToString()),
-            new XAttribute("hport", i.PortHeight.ToString()),
-            new XAttribute("hborder", i.BorderX.ToString()),
-            new XAttribute("vborder", i.BorderY.ToString()),
-            new XAttribute("hspeed", i.SpeedX.ToString()),
-            new XAttribute("vspeed", i.SpeedY.ToString())
+            new XAttribute("xview", $"{i.ViewX}"),
+            new XAttribute("yview", $"{i.ViewY}"),
+            new XAttribute("wview", $"{i.ViewWidth}"),
+            new XAttribute("hview", $"{i.ViewHeight}"),
+            new XAttribute("xport", $"{i.PortX}"),
+            new XAttribute("yport", $"{i.PortY}"),
+            new XAttribute("wport", $"{i.PortWidth}"),
+            new XAttribute("hport", $"{i.PortHeight}"),
+            new XAttribute("hborder", $"{i.BorderX}"),
+            new XAttribute("vborder", $"{i.BorderY}"),
+            new XAttribute("hspeed", $"{i.SpeedX}"),
+            new XAttribute("vspeed", $"{i.SpeedY}")
         );
         viewsNode.Add(viewNode);
     }
     gmx.Element("room").Add(viewsNode);
-
-    // Room instances
-    var instancesNode = new XElement("instances");
-    foreach (var i in room.GameObjects)
+    #endregion
+    #region Room Instances
+    XElement instancesNode = new("instances");
+    foreach (var i in r.GameObjects)
     {
-        var instanceNode = new XElement("instance",
+        XElement instanceNode = new("instance",
             new XAttribute("objName", i.ObjectDefinition.Name.Content),
-            new XAttribute("x", i.X.ToString()),
-            new XAttribute("y", i.Y.ToString()),
-            new XAttribute("name", "inst_" + i.InstanceID.ToString("X")),
+            new XAttribute("x", $"{i.X}"),
+            new XAttribute("y", $"{i.Y}"),
+            new XAttribute("name", $"inst_{i.InstanceID:X}"),
             new XAttribute("locked", "0"),
             new XAttribute("code", DecompileCode(i.CreationCode)),
-            new XAttribute("scaleX", i.ScaleX.ToString()),
-            new XAttribute("scaleY", i.ScaleY.ToString()),
-            new XAttribute("colour", i.Color.ToString()),
-            new XAttribute("rotation", i.Rotation.ToString())
+            new XAttribute("scaleX", $"{i.ScaleX}"),
+            new XAttribute("scaleY", $"{i.ScaleY}"),
+            new XAttribute("colour", $"{i.Color}"),
+            new XAttribute("rotation", $"{i.Rotation}")
         );
         instancesNode.Add(instanceNode);
     }
     gmx.Element("room").Add(instancesNode);
-
-    // Room tiles
-    var tilesNode = new XElement("tiles");
-    foreach (var i in room.Tiles)
+    #endregion
+    #region Room Tiles
+    XElement tilesNode = new("tiles");
+    foreach (var i in r.Tiles)
     {
-        var tileNode = new XElement("tile",
+        XElement tileNode = new("tile",
             new XAttribute("bgName", i.BackgroundDefinition is null ? "" : i.BackgroundDefinition.Name.Content),
-            new XAttribute("x", i.X.ToString()),
-            new XAttribute("y", i.Y.ToString()),
-            new XAttribute("w", i.Width.ToString()),
-            new XAttribute("h", i.Height.ToString()),
-            new XAttribute("xo", i.SourceX.ToString()),
-            new XAttribute("yo", i.SourceY.ToString()),
-            new XAttribute("id", i.InstanceID.ToString()),
-            new XAttribute("name", "inst_" + i.InstanceID.ToString("X")),
-            new XAttribute("depth", i.TileDepth.ToString()),
+            new XAttribute("x", $"{i.X}"),
+            new XAttribute("y", $"{i.Y}"),
+            new XAttribute("w", $"{i.Width}"),
+            new XAttribute("h", $"{i.Height}"),
+            new XAttribute("xo", $"{i.SourceX}"),
+            new XAttribute("yo", $"{i.SourceY}"),
+            new XAttribute("id", $"{i.InstanceID}"),
+            new XAttribute("name", $"inst_{i.InstanceID:X}"),
+            new XAttribute("depth", $"{i.TileDepth}"),
             new XAttribute("locked", "0"),
-            new XAttribute("colour", i.Color.ToString()),
-            new XAttribute("scaleX", i.ScaleX.ToString()),
-            new XAttribute("scaleY", i.ScaleY.ToString())
+            new XAttribute("colour", $"{i.Color}"),
+            new XAttribute("scaleX", $"{i.ScaleX}"),
+            new XAttribute("scaleY", $"{i.ScaleY}")
         );
         tilesNode.Add(tileNode);
     }
     gmx.Element("room").Add(tilesNode);
-
-    //Room Physics
+    #endregion
+    #region Room Physics
     gmx.Element("room").Add(
-        new XElement("PhysicsWorld", BoolToString(room.World)),
-        new XElement("PhysicsWorldTop", room.Top),
-        new XElement("PhysicsWorldLeft", room.Left),
-        new XElement("PhysicsWorldRight", room.Right),
-        new XElement("PhysicsWorldBottom", room.Bottom),
-        new XElement("PhysicsWorldGravityX", room.GravityX),
-        new XElement("PhysicsWorldGravityY", room.GravityY),
-        new XElement("PhysicsWorldPixToMeters", room.MetersPerPixel)
+        new XElement("PhysicsWorld", BoolToString(r.World)),
+        new XElement("PhysicsWorldTop", r.Top),
+        new XElement("PhysicsWorldLeft", r.Left),
+        new XElement("PhysicsWorldRight", r.Right),
+        new XElement("PhysicsWorldBottom", r.Bottom),
+        new XElement("PhysicsWorldGravityX", r.GravityX),
+        new XElement("PhysicsWorldGravityY", r.GravityY),
+        new XElement("PhysicsWorldPixToMeters", r.MetersPerPixel)
     );
+    #endregion
 
-    AddAssetToProjectGMX(room.Name.Content, "rooms");
-
-    File.WriteAllText($"{projFolder}/rooms/{room.Name.Content}.room.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(r.Name.Content, "rooms");
+    File.WriteAllText($"{projFolder}/rooms/{r.Name.Content}.room.gmx", GMXToString(gmx));
 }
 #endregion
 #region Sounds
-void ExportSound(UndertaleSound sound)
+void ExportSound(UndertaleSound s)
 {
-    UpdateProgressBar(null, $"Exporting Sound: {sound.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Sound: {s.Name.Content}", progress++, resourceNum);
+
+    string sExt = Path.GetExtension(s.File.Content);
 
     // Save the sound GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("sound",
-            new XElement("kind", Path.GetExtension(sound.File.Content) == ".ogg" ? "3" : "0"),
-            new XElement("extension", Path.GetExtension(sound.File.Content)),
-            new XElement("origname", $"sound\\audio\\{sound.File.Content}"),
-            new XElement("effects", sound.Effects.ToString()),
+            new XElement("kind", sExt == ".ogg" ? "3" : "0"),
+            new XElement("extension", sExt),
+            new XElement("origname", $"sound\\audio\\{s.File.Content}"),
+            new XElement("effects", $"{s.Effects}"),
             new XElement("volume",
-                new XElement("volume", sound.Volume.ToString())
+                new XElement("volume", $"{s.Volume}")
             ),
             new XElement("pan", "0"),
             new XElement("bitRates",
@@ -1058,116 +1060,117 @@ void ExportSound(UndertaleSound sound)
                 new XElement("bitDepth", "16")
             ),
             new XElement("preload", "-1"),
-            new XElement("data", Path.GetFileName(sound.File.Content)),
-            new XElement("compressed", Path.GetExtension(sound.File.Content) == ".ogg" ? "1" : "0"),
-            new XElement("streamed", Path.GetExtension(sound.File.Content) == ".ogg" ? "1" : "0"),
+            new XElement("data", Path.GetFileName(s.File.Content)),
+            new XElement("compressed", sExt == ".ogg" ? "1" : "0"),
+            new XElement("streamed", sExt == ".ogg" ? "1" : "0"),
             new XElement("uncompressOnLoad", "0"),
             new XElement("audioGroup", "0")
         )
     );
 
-    AddAssetToProjectGMX(sound.Name.Content, "sounds");
-
-    File.WriteAllText($"{projFolder}/sound/{sound.Name.Content}.sound.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(s.Name.Content, "sounds");
+    File.WriteAllText($"{projFolder}/sound/{s.Name.Content}.sound.gmx", GMXToString(gmx));
 
     // Save sound files
-    string sndPath = $"{projFolder}/sound/audio/{sound.File.Content}";
-    if (sound.AudioFile != null)
-        File.WriteAllBytes(sndPath, sound.AudioFile.Data);
-    // if sound file is external, add them
-    else if (File.Exists($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content))
-        File.Copy($"{Path.GetDirectoryName(FilePath)}\\{sound.File.Content}", sndPath, true);
+    string sPath = $"{projFolder}/sound/audio/{s.File.Content}";
+    string sExtPath = $"{Path.GetDirectoryName(FilePath)}\\{s.File.Content}";
+
+    if (s.AudioFile != null) // if sound is internal, write it
+        File.WriteAllBytes(sPath, s.AudioFile.Data);
+    else if (File.Exists(sExtPath)) // if sound file is external, copy it
+        File.Copy(sExtPath, sPath, true);
 }
 #endregion
 #region Scripts
-void ExportScript(UndertaleScript script)
+void ExportScript(UndertaleScript s)
 {
-    UpdateProgressBar(null, $"Exporting Script: {script.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Script: {s.Name.Content}", progress++, resourceNum);
 
     foreach (string extName in DumpedExtGMLScripts.Keys)
-        if (DumpedExtGMLScripts[extName].ContainsKey(script.Name.Content))
+        if (DumpedExtGMLScripts[extName].ContainsKey(s.Name.Content))
             return;
 
-    AddAssetToProjectGMX(script.Name.Content, "scripts", ".gml");
+    AddAssetToProjectGMX(s.Name.Content, "scripts", ".gml");
 
     // Save code to GML file
     File.WriteAllText(
-        $"{projFolder}/scripts/{script.Name.Content}.gml",
-        DecompileCode(script.Code, "SCRIPT", script.Name.Content)
+        $"{projFolder}/scripts/{s.Name.Content}.gml",
+        DecompileCode(s.Code, "SCRIPT", s.Name.Content)
     );
 }
 #endregion
 #region Fonts
-void ExportFont(UndertaleFont font)
+void ExportFont(UndertaleFont f)
 {
-    UpdateProgressBar(null, $"Exporting Font: {font.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Font: {f.Name.Content}", progress++, resourceNum);
 
     // Save the font GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("font",
-            new XElement("name", font.Name.Content),
-            new XElement("size", font.EmSize.ToString()),
-            new XElement("bold", BoolToString(font.Bold)),
+            new XElement("name", f.Name.Content),
+            new XElement("size", $"{f.EmSize}"),
+            new XElement("bold", BoolToString(f.Bold)),
             new XElement("renderhq", "-1"),
-            new XElement("italic", BoolToString(font.Italic)),
-            new XElement("charset", font.Charset.ToString()),
-            new XElement("aa", font.AntiAliasing.ToString()),
+            new XElement("italic", BoolToString(f.Italic)),
+            new XElement("charset", $"{f.Charset}"),
+            new XElement("aa", $"{f.AntiAliasing}"),
             new XElement("includeTTF", "0"),
             new XElement("TTFName", ""),
             new XElement("texgroups",
                 new XElement("texgroup", "0")
             ),
             new XElement("ranges",
-                new XElement("range0", $"{font.RangeStart},{font.RangeEnd}")
+                new XElement("range0", $"{f.RangeStart},{f.RangeEnd}")
             ),
             new XElement("glyphs"),
             new XElement("kerningPairs"),
-            new XElement("image", $"{font.Name.Content}.png")
+            new XElement("image", $"{f.Name.Content}.png")
         )
     );
 
-    var glyphsNode = gmx.Element("font").Element("glyphs");
-    foreach (var i in font.Glyphs)
+    #region Glyphs
+    XElement glyphsNode = gmx.Element("font").Element("glyphs");
+    foreach (var i in f.Glyphs)
     {
-        var glyphNode = new XElement("glyph");
-        glyphNode.Add(new XAttribute("character", i.Character.ToString()));
-        glyphNode.Add(new XAttribute("x", i.SourceX.ToString()));
-        glyphNode.Add(new XAttribute("y", i.SourceY.ToString()));
-        glyphNode.Add(new XAttribute("w", i.SourceWidth.ToString()));
-        glyphNode.Add(new XAttribute("h", i.SourceHeight.ToString()));
-        glyphNode.Add(new XAttribute("shift", i.Shift.ToString()));
-        glyphNode.Add(new XAttribute("offset", i.Offset.ToString()));
+        XElement glyphNode = new("glyph");
+        glyphNode.Add(new XAttribute("character", $"{i.Character}"));
+        glyphNode.Add(new XAttribute("x", $"{i.SourceX}"));
+        glyphNode.Add(new XAttribute("y", $"{i.SourceY}"));
+        glyphNode.Add(new XAttribute("w", $"{i.SourceWidth}"));
+        glyphNode.Add(new XAttribute("h", $"{i.SourceHeight}"));
+        glyphNode.Add(new XAttribute("shift", $"{i.Shift}"));
+        glyphNode.Add(new XAttribute("offset", $"{i.Offset}"));
         glyphsNode.Add(glyphNode);
     }
+    #endregion
 
     // Save font textures
     SavedImages.Add(
         new Images(
-            font.Texture,
-            $"{projFolder}/fonts/{font.Name.Content}.png",
-            font.Name.Content,
+            f.Texture,
+            $"{projFolder}/fonts/{f.Name.Content}.png",
+            f.Name.Content,
             null
         )
     );
 
-    AddAssetToProjectGMX(font.Name.Content, "fonts");
-
-    File.WriteAllText($"{projFolder}/fonts/{font.Name.Content}.font.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(f.Name.Content, "fonts");
+    File.WriteAllText($"{projFolder}/fonts/{f.Name.Content}.font.gmx", GMXToString(gmx));
 }
 #endregion
 #region Paths
-void ExportPath(UndertalePath path)
+void ExportPath(UndertalePath p)
 {
-    UpdateProgressBar(null, $"Exporting Path: {path.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Path: {p.Name.Content}", progress++, resourceNum);
 
     // Save the path GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("path",
             new XElement("kind", "0"),
-            new XElement("closed", BoolToString(path.IsClosed)),
-            new XElement("precision", path.Precision.ToString()),
+            new XElement("closed", BoolToString(p.IsClosed)),
+            new XElement("precision", $"{p.Precision}"),
             new XElement("backroom", "-1"),
             new XElement("hsnap", "16"),
             new XElement("vsnap", "16"),
@@ -1176,44 +1179,40 @@ void ExportPath(UndertalePath path)
     );
 
     // add points
-    foreach (var i in path.Points)
-    {
-        gmx.Element("path").Element("points").Add(
-            new XElement("point", $"{i.X},{i.Y},{i.Speed}")
-        );
-    }
+    foreach (var i in p.Points)
+        gmx.Element("path").Element("points").Add(new XElement("point", $"{i.X},{i.Y},{i.Speed}"));
 
-    AddAssetToProjectGMX(path.Name.Content, "paths");
-
-    File.WriteAllText($"{projFolder}/paths/{path.Name.Content}.path.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(p.Name.Content, "paths");
+    File.WriteAllText($"{projFolder}/paths/{p.Name.Content}.path.gmx", GMXToString(gmx));
 }
 #endregion
 #region Timelines
-void ExportTimeline(UndertaleTimeline timeline)
+void ExportTimeline(UndertaleTimeline t)
 {
-    UpdateProgressBar(null, $"Exporting Timeline: {timeline.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Timeline: {t.Name.Content}", progress++, resourceNum);
 
     // Save the timeline GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("timeline")
     );
-    foreach (var i in timeline.Moments)
+
+    foreach (var i in t.Moments)
     {
-        var entryNode = new XElement("entry");
+        XElement entryNode = new("entry");
         entryNode.Add(new XElement("step", i.Step));
         entryNode.Add(new XElement("event"));
         foreach (var j in i.Event)
         {
             entryNode.Element("event").Add(
                 new XElement("action",
-                    new XElement("libid", j.LibID.ToString()),
+                    new XElement("libid", $"{j.LibID}"),
                     new XElement("id", "603"),// set to always use code
-                    new XElement("kind", j.Kind.ToString()),
+                    new XElement("kind", $"{j.Kind}"),
                     new XElement("userelative", BoolToString(j.UseRelative)),
                     new XElement("isquestion", BoolToString(j.IsQuestion)),
                     new XElement("useapplyto", BoolToString(j.UseApplyTo)),
-                    new XElement("exetype", j.ExeType.ToString()),
+                    new XElement("exetype", $"{j.ExeType}"),
                     new XElement("functionname", j.ActionName.Content),
                     new XElement("codestring", ""),
                     new XElement("whoName", "self"),
@@ -1231,22 +1230,19 @@ void ExportTimeline(UndertaleTimeline timeline)
         gmx.Element("timeline").Add(entryNode);
     }
 
-    AddAssetToProjectGMX(timeline.Name.Content, "timelines");
-
-    File.WriteAllText($"{projFolder}/timelines/{timeline.Name.Content}.timeline.gmx", GMXToString(gmx));
+    AddAssetToProjectGMX(t.Name.Content, "timelines");
+    File.WriteAllText($"{projFolder}/timelines/{t.Name.Content}.timeline.gmx", GMXToString(gmx));
 }
 #endregion
 #region Shaders
-void ExportShader(UndertaleShader shader)
+void ExportShader(UndertaleShader s)
 {
-    UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Shader: {s.Name.Content}", progress++, resourceNum);
 
-    // Vertex and Fragment shit
-    string vertex = shader.GLSL_ES_Vertex.Content;
-    string fragment = shader.GLSL_ES_Fragment.Content;
-
-    string TrimShader(string shader, string functionName)
+    string TrimShader(string? sCode, string functionName)
     {
+        if (sCode is null) return "";
+
         // this fuck ass regex man
         // this finds the position of a basic GM function that is always compiled with the shader
         string pattern = @"\w+\s+" + functionName + @"\s*\([^)]*\)\s*\{" +
@@ -1254,44 +1250,35 @@ void ExportShader(UndertaleShader shader)
                          @"(?(open)(?!))\}";
 
         // find pattern
-        Match match = Regex.Match(shader, pattern, RegexOptions.Singleline);
-
-        // remove basic GM function and all the others above it
-        if (match.Success)
-            return shader.Substring(match.Index + match.Length).TrimStart();
-
-        return shader;
+        Match match = Regex.Match(sCode, pattern, RegexOptions.Singleline);
+        return
+            match.Success
+            ? sCode.Substring(match.Index + match.Length).TrimStart() // remove basic GM function and all the others above it
+            : sCode;
     }
 
-    // Trim Vertex at vec4 DoLighting
-    if (vertex != null) vertex = TrimShader(vertex, "DoLighting");
-
-    // Trim Fragment at void DoFog
-    if (fragment != null) fragment = TrimShader(fragment, "DoFog");
-
     // add gamemaker marker between them since they share the same file
-    string finalshader = 
-        vertex
+    string ShaderFile =
+        TrimShader(s.GLSL_ES_Vertex?.Content, "DoLighting") // Vertex Shader Code (cutoff stuff higher then vec4 DoLighting)
         + "//######################_==_YOYO_SHADER_MARKER_==_######################@~" +
-        fragment;
+        TrimShader(s.GLSL_ES_Fragment?.Content, "DoFog"); // Fragment Shader Code (cutoff stuff higher then void DoFog)
 
-    AddAssetToProjectGMX(shader.Name.Content, "shaders", ".shader");
-
-    File.WriteAllText($"{projFolder}/shaders/{shader.Name.Content}.shader", finalshader);
+    AddAssetToProjectGMX(s.Name.Content, "shaders", ".shader");
+    File.WriteAllText($"{projFolder}/shaders/{s.Name.Content}.shader", ShaderFile);
 }
 #endregion
 #region Extensions
-void ExportExtension(UndertaleExtension extension)
+void ExportExtension(UndertaleExtension e)
 {
-    UpdateProgressBar(null, $"Exporting Extension: {extension.Name.Content}", progress++, resourceNum);
+    UpdateProgressBar(null, $"Exporting Extension: {e.Name.Content}", progress++, resourceNum);
 
     // Save the extension GMX
     XDocument gmx = new(
         GMXDeclaration(),
         new XElement("extension",
-            new XElement("name", extension.Name.Content),
-            new XElement("version", extension.Version?.Content ?? ""),
-            new XElement("classname", extension.ClassName?.Content ?? ""),
+            new XElement("name", e.Name.Content),
+            new XElement("version", e.Version?.Content ?? ""),
+            new XElement("classname", e.ClassName?.Content ?? ""),
             new XElement("files")
         )
     );
@@ -1310,21 +1297,21 @@ void ExportExtension(UndertaleExtension extension)
         );
         var Xfunctions = XCurrentFile.Element("functions");
 
-        var newfilepath = $"{projFolder}/extensions/{extension.Name.Content}";
+        string newfilepath = $"{projFolder}/extensions/{e.Name.Content}";
         Directory.CreateDirectory(newfilepath);
 
         switch ((int)extFile.Kind)
         {
             case 2:  // GML
 
-                if (!DumpedExtGMLCode.ContainsKey(extension.Name.Content) || !DumpedExtGMLScripts.ContainsKey(extension.Name.Content))
+                if (!DumpedExtGMLCode.ContainsKey(e.Name.Content) || !DumpedExtGMLScripts.ContainsKey(e.Name.Content))
                     break;
 
-                string ExtGMLCode = DumpedExtGMLCode[extension.Name.Content];
+                string ExtGMLCode = DumpedExtGMLCode[e.Name.Content];
 
-                foreach (string GMLEntryName in DumpedExtGMLScripts[extension.Name.Content].Keys)
+                foreach (string GMLEntryName in DumpedExtGMLScripts[e.Name.Content].Keys)
                 {
-                    int maxArgs = DumpedExtGMLScripts[extension.Name.Content][GMLEntryName];
+                    int maxArgs = DumpedExtGMLScripts[e.Name.Content][GMLEntryName];
 
                     // construct new func element
                     var Xfunc = new XElement("function",
@@ -1350,7 +1337,7 @@ void ExportExtension(UndertaleExtension extension)
 
                 // copy GML code
                 if (ExtGMLCode != string.Empty)
-                    File.WriteAllText($"{newfilepath}/{extension.Name.Content}.gml", ExtGMLCode);
+                    File.WriteAllText($"{newfilepath}/{e.Name.Content}.gml", ExtGMLCode);
 
                 break;
 
@@ -1390,7 +1377,7 @@ void ExportExtension(UndertaleExtension extension)
         Xfiles.Add(XCurrentFile);
     }
 
-    File.WriteAllText($"{projFolder}/extensions/{extension.Name.Content}.extension.gmx", GMXToString(gmx));
+    File.WriteAllText($"{projFolder}/extensions/{e.Name.Content}.extension.gmx", GMXToString(gmx));
 }
 
 void CheckExtensionGML()
