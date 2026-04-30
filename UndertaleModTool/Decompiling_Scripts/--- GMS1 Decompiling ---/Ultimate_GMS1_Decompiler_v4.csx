@@ -530,8 +530,10 @@ string GetFolder(string path) => Path.GetDirectoryName(path) + Path.DirectorySep
 // In the GMX file, -1 is true and 0 is false.
 string BoolToString(bool value) => value ? "-1" : "0";
 
-string decompileCode(UndertaleCode codeId)
-    => codeId != null ? new DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "";
+string DecompileCode(UndertaleCode codeId, string assettype = "", string assetname = "")
+    => codeId != null 
+        ? new DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() 
+        : (assettype != "" ? AddtoLog(assettype, assetname) : "");
 
 // If a code entry is null
 string AddtoLog(string assettype, string assetname)
@@ -881,14 +883,13 @@ void ExportGameObject(UndertaleGameObject gameObject)
                         new XElement("arguments",
                             new XElement("argument",
                                 new XElement("kind", "1"),
-                                new XElement("string", (k.CodeId != null) ? decompileCode(k.CodeId) : AddtoLog("OBJECT", gameObject.Name.Content))
+                                new XElement("string", DecompileCode(k.CodeId, "OBJECT", gameObject.Name.Content))
                             )
                         )
                     );
                 }
                 eventNode.Add(actionNode);
                 eventsNode.Add(eventNode);
-
             }
         }
     }
@@ -918,7 +919,7 @@ void ExportRoom(UndertaleRoom room)
             // remove alpha (background color doesn't have alpha)
             new XElement("colour", (room.BackgroundColor ^ 0xFF000000).ToString()),
             new XElement("showcolour", BoolToString(room.DrawBackgroundColor)),
-            new XElement("code", (room.CreationCodeId != null) ? decompileCode(room.CreationCodeId) : ""),
+            new XElement("code", DecompileCode(room.CreationCodeId),
             new XElement("enableViews", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.EnableViews))),
             new XElement("clearViewBackground", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.ClearViewBackground))),
             new XElement("clearDisplayBuffer", BoolToString(room.Flags.HasFlag(UndertaleRoom.RoomEntryFlags.DoNotClearDisplayBuffer))),//added back cuz yeah
@@ -995,7 +996,7 @@ void ExportRoom(UndertaleRoom room)
             new XAttribute("y", i.Y.ToString()),
             new XAttribute("name", "inst_" + i.InstanceID.ToString("X")),
             new XAttribute("locked", "0"),
-            new XAttribute("code", (i.CreationCode != null) ? decompileCode(i.CreationCode) : ""),
+            new XAttribute("code", DecompileCode(i.CreationCode),
             new XAttribute("scaleX", i.ScaleX.ToString()),
             new XAttribute("scaleY", i.ScaleY.ToString()),
             new XAttribute("colour", i.Color.ToString()),
@@ -1110,8 +1111,8 @@ void ExportScript(UndertaleScript script)
 
     // Save code to GML file
     File.WriteAllText(
-        $"{projFolder}/scripts/{script.Name.Content}.gml", 
-        (script.Code != null) ? decompileCode(script.Code) : AddtoLog("SCRIPT", script.Name.Content)
+        $"{projFolder}/scripts/{script.Name.Content}.gml",
+        DecompileCode(script.Code, "SCRIPT", script.Name.Content)
     );
 }
 #endregion
@@ -1240,7 +1241,7 @@ void ExportTimeline(UndertaleTimeline timeline)
                     new XElement("arguments",
                         new XElement("argument",
                             new XElement("kind", "1"),
-                            new XElement("string", (j.CodeId != null) ? decompileCode(j.CodeId) : AddtoLog("TIMELINE", timeline.Name.Content))
+                            new XElement("string", DecompileCode(j.CodeId, "TIMELINE", timeline.Name.Content))
                         )
                     )
                 )
@@ -1440,7 +1441,7 @@ void CheckExtensionGML()
 
             // return check
             // because most extension code has a return at the last line
-            string GMLCode = decompileCode(scr.Code);
+            string GMLCode = DecompileCode(scr.Code);
 
             string lastLine = GMLCode.TrimEnd(); //default just in case its one line
             int lastNewLine = GMLCode.TrimEnd().LastIndexOf('\n');
