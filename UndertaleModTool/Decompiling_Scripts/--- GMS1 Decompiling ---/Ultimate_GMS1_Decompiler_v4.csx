@@ -600,17 +600,17 @@ SetUMTConsoleText("Starting Decompiler...");
 
 // Export Resources
 await Task.WhenAll(
-    ExportResource(Data.Sprites, "SPRT", UISettings.SPRT, "/sprites/images"),
-    ExportResource(Data.Backgrounds, "BGND", UISettings.BGND, "/background/images"),
-    ExportResource(Data.GameObjects, "OBJT", UISettings.OBJT, "/objects"),
-    ExportResource(Data.Rooms, "ROOM", UISettings.ROOM, "/rooms"),
-    ExportResource(Data.Sounds, "SOND", UISettings.SOND, "/sound/audio"),
-    ExportResource(Data.Scripts, "SCPT", UISettings.SCPT, "/scripts"),
-    ExportResource(Data.Fonts, "FONT", UISettings.FONT, "/fonts"),
-    ExportResource(Data.Paths, "PATH", UISettings.PATH, "/paths"),
-    ExportResource(Data.Timelines, "TMLN", UISettings.TMLN, "/timelines"),
-    ExportResource(Data.Shaders, "SHDR", UISettings.SHDR, "/shaders"),
-    ExportResource(Data.Extensions, "EXTN", UISettings.EXTN, "/extensions"),
+    ExportResources(Data.Sprites, ((a) => ExportSprite(a)), UISettings.SPRT, "/sprites/images"),
+    ExportResources(Data.Backgrounds, ((a) => ExportBackground(a)), UISettings.BGND, "/background/images"),
+    ExportResources(Data.GameObjects, ((a) => ExportGameObject(a)), UISettings.OBJT, "/objects"),
+    ExportResources(Data.Rooms, ((a) => ExportRoom(a)), UISettings.ROOM, "/rooms"),
+    ExportResources(Data.Sounds, ((a) => ExportSound(a)), UISettings.SOND, "/sound/audio"),
+    ExportResources(Data.Scripts, ((a) => ExportScript(a)), UISettings.SCPT, "/scripts"),
+    ExportResources(Data.Fonts, ((a) => ExportFont(a)), UISettings.FONT, "/fonts"),
+    ExportResources(Data.Paths, ((a) => ExportPath(a)), UISettings.PATH, "/paths"),
+    ExportResources(Data.Timelines, ((a) => ExportTimeline(a)), UISettings.TMLN, "/timelines"),
+    ExportResources(Data.Shaders, ((a) => ExportShader(a)), UISettings.SHDR, "/shaders"),
+    ExportResources(Data.Extensions, ((a) => ExportExtension(a)), UISettings.EXTN, "/extensions"),
     ExportConfig()
 );
 
@@ -662,31 +662,13 @@ System.Diagnostics.Process.Start("explorer.exe", projFolder);
 
 #region Main Export Functions
 
-#region Dump Resources
-async Task ExportResource(dynamic Assets, string assetType, bool isEnabled, string Dir)
+async Task ExportResources(dynamic AssetChunk, Action<dynamic> ExportFunc, bool isEnabled, string Dir)
 {
     if (!isEnabled) return;
 
-    Directory.CreateDirectory(projFolder + Dir);
-
-    Action<dynamic> Func = assetType switch
-    { 
-        "SPRT" => (a) => ExportSprite(a),
-        "BGND" => (a) => ExportBackground(a),
-        "OBJT" => (a) => ExportGameObject(a),
-        "ROOM" => (a) => ExportRoom(a),
-        "SOND" => (a) => ExportSound(a),
-        "SCPT" => (a) => ExportScript(a),
-        "FONT" => (a) => ExportFont(a),
-        "PATH" => (a) => ExportPath(a),
-        "TMLN" => (a) => ExportTimeline(a),
-        "SHDR" => (a) => ExportShader(a),
-        "EXTN" => (a) => ExportExtension(a)
-    };
-
-    await Task.Run(() => Parallel.ForEach(Assets, Func));
+    Directory.CreateDirectory($"{projFolder}{Dir}");
+    await Task.Run(() => Parallel.ForEach(AssetChunk, ExportFunc));
 }
-#endregion
 
 #region Sprites
 void ExportSprite(UndertaleSprite sprite)
