@@ -310,10 +310,10 @@ public static class Theme
     public static bool IsDark = SettingsWindow.EnableDarkMode;
 
     // Individual Colors
-    public static SolidColorBrush LightGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(245, 245, 245));
-    public static SolidColorBrush DarkGrey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 45, 48));
-    public static SolidColorBrush BG_Grey = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 23, 23));
-    public static SolidColorBrush BG_White = new SolidColorBrush(System.Windows.Media.Color.FromRgb(230, 230, 230));
+    public static SolidColorBrush LightGrey = new(System.Windows.Media.Color.FromRgb(245, 245, 245));
+    public static SolidColorBrush DarkGrey = new(System.Windows.Media.Color.FromRgb(45, 45, 48));
+    public static SolidColorBrush BG_Grey = new(System.Windows.Media.Color.FromRgb(23, 23, 23));
+    public static SolidColorBrush BG_White = new(System.Windows.Media.Color.FromRgb(230, 230, 230));
 
     // Simple Colors
     public static SolidColorBrush BasicWhite = System.Windows.Media.Brushes.White;
@@ -342,19 +342,19 @@ public class UIWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         Background = Theme.WindowBackground;
-        Foreground = Theme.WindowForeground;//text
+        Foreground = Theme.WindowForeground;
 
-        var mainPanel = new StackPanel { Margin = new Thickness(8) };
-        var tooltip = new ToolTip();
+        StackPanel mainPanel = new() { Margin = new Thickness(8) };
+        ToolTip tooltip = new();
 
         #region New Titlebar
-        var titleBar = new DockPanel
+        DockPanel titleBar = new()
         {
             Height = 30,
             Background = Theme.ElementBackground,
         };
 
-        var titleText = new TextBlock
+        TextBlock titleText = new()
         {
             Text = Title,
             VerticalAlignment = VerticalAlignment.Center,
@@ -362,7 +362,7 @@ public class UIWindow : Window
             Foreground = Foreground,
         };
 
-        var closeButton = new Button
+        Button closeButton = new()
         {
             Content = "X",
             Width = 40,
@@ -405,18 +405,18 @@ public class UIWindow : Window
             Margin = new Thickness(0, 8, 0, 4)
         });
 
-        var resourceGrid = new UniformGrid { Columns = 6 };
-        var _OBJT = CreateCheckBox("Objects", true);
-        var _ROOM = CreateCheckBox("Rooms", true);
-        var _SCPT = CreateCheckBox("Scripts", true);
-        var _TMLN = CreateCheckBox("Timelines", true);
-        var _SOND = CreateCheckBox("Sounds", true);
-        var _SHDR = CreateCheckBox("Shaders", true);
-        var _EXTN = CreateCheckBox("Extensions", true);
-        var _PATH = CreateCheckBox("Paths", true);
-        var _FONT = CreateCheckBox("Fonts", true);
-        var _SPRT = CreateCheckBox("Sprites", true);
-        var _BGND = CreateCheckBox("Tilesets", true);
+        UniformGrid resourceGrid = new() { Columns = 6 };
+        CheckBox _OBJT = CreateCheckBox("Objects", true);
+        CheckBox _ROOM = CreateCheckBox("Rooms", true);
+        CheckBox _SCPT = CreateCheckBox("Scripts", true);
+        CheckBox _TMLN = CreateCheckBox("Timelines", true);
+        CheckBox _SOND = CreateCheckBox("Sounds", true);
+        CheckBox _SHDR = CreateCheckBox("Shaders", true);
+        CheckBox _EXTN = CreateCheckBox("Extensions", true);
+        CheckBox _PATH = CreateCheckBox("Paths", true);
+        CheckBox _FONT = CreateCheckBox("Fonts", true);
+        CheckBox _SPRT = CreateCheckBox("Sprites", true);
+        CheckBox _BGND = CreateCheckBox("Tilesets", true);
 
         resourceGrid.Children.Add(_OBJT);
         resourceGrid.Children.Add(_ROOM);
@@ -433,7 +433,7 @@ public class UIWindow : Window
         mainPanel.Children.Add(resourceGrid);
 
         // OK Button
-        var OKBT = new Button
+        Button OKBT = new()
         {
             Content = "Start Dump",
             Height = 48,
@@ -468,13 +468,13 @@ public class UIWindow : Window
         Content = mainPanel;
     }
 
-    private CheckBox CreateCheckBox(string content, bool isChecked = false, bool? enabled = true)
+    private CheckBox CreateCheckBox(string content, bool isChecked = false, bool enabled = true)
     {
         return new CheckBox
         {
             Content = content,
             IsChecked = isChecked,
-            IsEnabled = enabled ?? true,
+            IsEnabled = enabled,
             Margin = new Thickness(4),
             Background = Theme.ElementBackground,
             Foreground = Theme.WindowForeground
@@ -496,18 +496,13 @@ if (!UISettings.DUMP)
 #endregion
 
 #region Helper Functions
-string GetFolder(string path) {
-    return Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
-}
+string GetFolder(string path) => Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
 
 // In the GMX file, -1 is true and 0 is false.
-string BoolToString(bool value) {
-    return value ? "-1" : "0";
-}
+string BoolToString(bool value) => value ? "-1" : "0";
 
-string decompileCode(UndertaleCode codeId) {
-    return (codeId != null ? new DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "");
-}
+string decompileCode(UndertaleCode codeId)
+    => codeId != null ? new DecompileContext(decompileContext, codeId, decompilerSettings).DecompileToString() : "";
 
 // If a code entry is null
 string AddtoLog(string assettype, string assetname)
@@ -551,39 +546,38 @@ if (Directory.Exists(projFolder))
 Directory.CreateDirectory(projFolder);
 
 // Find Amount of Assets that will be extracted
-var resourceNum = 
-  (UISettings.OBJT ? Data.GameObjects.Count : 0) +
-   (UISettings.SOND ? Data.Sounds.Count : 0) +
-    (UISettings.ROOM ? Data.Rooms.Count : 0) +
-     (UISettings.SPRT ? Data.Sprites.Count : 0) +
-      (UISettings.FONT ? Data.Fonts.Count : 0) +
-       (UISettings.SHDR ? Data.Shaders.Count : 0) +
-        (UISettings.EXTN ? Data.Extensions.Count : 0) +
-         (UISettings.PATH ? Data.Paths.Count : 0) +
-          (UISettings.BGND ? Data.Backgrounds.Count : 0) +
-           (UISettings.TMLN ? Data.Timelines.Count : 0) +
-            (UISettings.SCPT ? Data.Scripts.Count : 0);
+int GetResourceNum(int AssetCount, bool isEnabled) => isEnabled ? AssetCount : 0;
+int resourceNum =
+    GetResourceNum(Data.Sprites.Count, UISettings.SPRT) +
+    GetResourceNum(Data.Backgrounds.Count, UISettings.BGND) +
+    GetResourceNum(Data.GameObjects.Count, UISettings.OBJT) +
+    GetResourceNum(Data.Rooms.Count, UISettings.ROOM) +
+    GetResourceNum(Data.Sounds.Count, UISettings.SOND) +
+    GetResourceNum(Data.Scripts.Count, UISettings.SCPT) +
+    GetResourceNum(Data.Fonts.Count, UISettings.FONT) +
+    GetResourceNum(Data.Paths.Count, UISettings.PATH) +
+    GetResourceNum(Data.Timelines.Count, UISettings.TMLN) +
+    GetResourceNum(Data.Shaders.Count, UISettings.SHDR) +
+    GetResourceNum(Data.Extensions.Count, UISettings.EXTN);
 
 // Check Extension GMLs
 CheckExtensionGML();
 
 // Export Resources
 await Task.WhenAll(
-    ExportSprites(),
-    ExportBackground(),
-    ExportGameObjects(),
-    ExportRooms(),
-    ExportSounds(),
-    ExportScripts(),
-    ExportFonts(),
-    ExportPaths(),
-    ExportTimelines(),
-    ExportShaders(),
-    ExportExtensions()
+    ExportResource(Data.Sprites, "SPRT", UISettings.SPRT, "/sprites/images"),
+    ExportResource(Data.Backgrounds, "BGND", UISettings.BGND, "/background/images"),
+    ExportResource(Data.GameObjects, "OBJT", UISettings.OBJT, "/objects"),
+    ExportResource(Data.Rooms, "ROOM", UISettings.ROOM, "/rooms"),
+    ExportResource(Data.Sounds, "SOND", UISettings.SOND, "/sound/audio"),
+    ExportResource(Data.Scripts, "SCPT", UISettings.SCPT, "/scripts"),
+    ExportResource(Data.Fonts, "FONT", UISettings.FONT, "/fonts"),
+    ExportResource(Data.Paths, "PATH", UISettings.PATH, "/paths"),
+    ExportResource(Data.Timelines, "TMLN", UISettings.TMLN, "/timelines"),
+    ExportResource(Data.Shaders, "SHDR", UISettings.SHDR, "/shaders"),
+    ExportResource(Data.Extensions, "EXTN", UISettings.EXTN, "/extensions"),
+    ExportConfig()
 );
-
-// Make Config
-ExportConfig();
 
 // Generate project file
 GenerateProjectFile();
@@ -608,46 +602,64 @@ System.Diagnostics.Process.Start("explorer.exe", projFolder);
 
 #region Main Export Functions
 
-#region Sprites
-async Task ExportSprites()
+#region Dump Resources
+async Task ExportResource(dynamic Assets, string assetType, bool isEnabled, string Dir)
 {
-    if (UISettings.SPRT)
-    {
-        Directory.CreateDirectory(projFolder + "/sprites/images");
-        await Task.Run(() => Parallel.ForEach(Data.Sprites, ExportSprite));
-    }
+    if (!isEnabled) return;
+
+    Directory.CreateDirectory(projFolder + Dir);
+
+    Action<dynamic> Func = assetType switch
+    { 
+        "SPRT" => (a) => ExportSprite(a),
+        "BGND" => (a) => ExportBackground(a),
+        "OBJT" => (a) => ExportGameObject(a),
+        "ROOM" => (a) => ExportRoom(a),
+        "SOND" => (a) => ExportSound(a),
+        "SCPT" => (a) => ExportScript(a),
+        "FONT" => (a) => ExportFont(a),
+        "PATH" => (a) => ExportPath(a),
+        "TMLN" => (a) => ExportTimeline(a),
+        "SHDR" => (a) => ExportShader(a),
+        "EXTN" => (a) => ExportExtension(a)
+    };
+
+    await Task.Run(() => Parallel.ForEach(Assets, Func));
 }
+#endregion
+
+#region Sprites
 void ExportSprite(UndertaleSprite sprite)
 {
     UpdateProgressBar(null, $"Exporting Sprite: {sprite.Name.Content}", progress++, resourceNum);
 
     // Save the sprite GMX
     var gmx = new XDocument(
-    new XComment(gmxDeclaration),
-    new XElement("sprite",
-        new XElement("type", "0"),
-        new XElement("xorig", sprite.OriginX.ToString()),
-        new XElement("yorigin", sprite.OriginY.ToString()),
-        // If SepMasks == precise, set to 0 to avoid shape issues
-        new XElement("colkind", sprite.SepMasks == UndertaleSprite.SepMaskType.Precise ? "0" : sprite.BBoxMode.ToString()),
-        new XElement("coltolerance", "0"),
-        new XElement("sepmasks", sprite.SepMasks.ToString("D")),
-        new XElement("bboxmode", sprite.BBoxMode.ToString()),
-        new XElement("bbox_left", sprite.MarginLeft.ToString()),
-        new XElement("bbox_right", sprite.MarginRight.ToString()),
-        new XElement("bbox_top", sprite.MarginTop.ToString()),
-        new XElement("bbox_bottom", sprite.MarginBottom.ToString()),
-        new XElement("HTile", "0"),
-        new XElement("VTile", "0"),
-        new XElement("TextureGroups",
-            new XElement("TextureGroup0", "0")
-        ),
-        new XElement("For3D", "0"),
-        new XElement("width", sprite.Width.ToString()),
-        new XElement("height", sprite.Height.ToString()),
-        new XElement("frames")
-    )
-);
+        new XComment(gmxDeclaration),
+        new XElement("sprite",
+            new XElement("type", "0"),
+            new XElement("xorig", sprite.OriginX.ToString()),
+            new XElement("yorigin", sprite.OriginY.ToString()),
+            // If SepMasks == precise, set to 0 to avoid shape issues
+            new XElement("colkind", sprite.SepMasks == UndertaleSprite.SepMaskType.Precise ? "0" : sprite.BBoxMode.ToString()),
+            new XElement("coltolerance", "0"),
+            new XElement("sepmasks", sprite.SepMasks.ToString("D")),
+            new XElement("bboxmode", sprite.BBoxMode.ToString()),
+            new XElement("bbox_left", sprite.MarginLeft.ToString()),
+            new XElement("bbox_right", sprite.MarginRight.ToString()),
+            new XElement("bbox_top", sprite.MarginTop.ToString()),
+            new XElement("bbox_bottom", sprite.MarginBottom.ToString()),
+            new XElement("HTile", "0"),
+            new XElement("VTile", "0"),
+            new XElement("TextureGroups",
+                new XElement("TextureGroup0", "0")
+            ),
+            new XElement("For3D", "0"),
+            new XElement("width", sprite.Width.ToString()),
+            new XElement("height", sprite.Height.ToString()),
+            new XElement("frames")
+        )
+    );
 
     for (int i = 0; i < sprite.Textures.Count; i++)
     {
@@ -657,33 +669,23 @@ void ExportSprite(UndertaleSprite sprite)
                 new XElement(
                     "frame",
                     new XAttribute("index", i.ToString()),
-                    "images\\" + sprite.Name.Content + "_" + i + ".png"
+                    $"images\\{sprite.Name.Content}_{i}.png"
                 )
             );
         }
     }
 
-    File.WriteAllText(projFolder + "/sprites/" + sprite.Name.Content + ".sprite.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/sprites/{sprite.Name.Content}.sprite.gmx", gmx.ToString() + eol);
 
     // Save sprite images
     for (int i = 0; i < sprite.Textures.Count; i++)
     {
         if (sprite.Textures[i]?.Texture != null)
-        {
-            worker.ExportAsPNG(sprite.Textures[i].Texture, projFolder + "/sprites/images/" + sprite.Name.Content + "_" + i + ".png", null, true);
-        }
+            worker.ExportAsPNG(sprite.Textures[i].Texture, $"{projFolder}/sprites/images/{sprite.Name.Content}_{i}.png", null, true);
     }
 }
 #endregion
 #region Backgrounds
-async Task ExportBackground()
-{
-    if (UISettings.BGND)
-    {
-        Directory.CreateDirectory(projFolder + "/background/images");
-        await Task.Run(() => Parallel.ForEach(Data.Backgrounds, ExportBackground));
-    }
-}
 void ExportBackground(UndertaleBackground background)
 {
     UpdateProgressBar(null, $"Exporting Background: {background.Name.Content}", progress++, resourceNum);
@@ -707,26 +709,18 @@ void ExportBackground(UndertaleBackground background)
             new XElement("For3D", "0"),
             new XElement("width", background.Texture == null ? "0" : background.Texture.BoundingWidth.ToString()),
             new XElement("height", background.Texture == null ? "0" : background.Texture.BoundingHeight.ToString()),
-            new XElement("data", "images\\" + background.Name.Content + ".png")
+            new XElement("data", $"images\\{background.Name.Content}.png")
         )
     );
 
-    File.WriteAllText(projFolder + "/background/" + background.Name.Content + ".background.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/background/{background.Name.Content}.background.gmx", gmx.ToString() + eol);
 
     // Save background images
     if (background.Texture != null)
-        worker.ExportAsPNG(background.Texture, projFolder + "/background/images/" + background.Name.Content + ".png");
+        worker.ExportAsPNG(background.Texture, $"{projFolder}/background/images/{background.Name.Content}.png");
 }
 #endregion
 #region Objects
-async Task ExportGameObjects()
-{
-    if (UISettings.OBJT)
-    {
-        Directory.CreateDirectory(projFolder + "/objects");
-        await Task.Run(() => Parallel.ForEach(Data.GameObjects, ExportGameObject));
-    }
-}
 void ExportGameObject(UndertaleGameObject gameObject)
 {
     UpdateProgressBar(null, $"Exporting Object: {gameObject.Name.Content}", progress++, resourceNum);
@@ -767,7 +761,7 @@ void ExportGameObject(UndertaleGameObject gameObject)
         var _y = gameObject.PhysicsVertices[_point].Y;
 
         var physicsPointsNode = gmx.Element("object").Element("PhysicsShapePoints");
-        physicsPointsNode.Add(new XElement("points", _x.ToString() + "," + _y.ToString()));
+        physicsPointsNode.Add(new XElement("points", $"{_x},{_y}"));
     }
 
     // Traversing the event type list
@@ -782,19 +776,13 @@ void ExportGameObject(UndertaleGameObject gameObject)
                 var eventsNode = gmx.Element("object").Element("events");
 
                 var eventNode = new XElement("event",
-                        new XAttribute("eventtype", i.ToString())
+                        new XAttribute("eventtype", $"{i}")
                 );
 
-                if (j.EventSubtype == 4)
-                {
-                    // To get the actual name of the collision object when the event type is a collision event
+                if (j.EventSubtype == 4) // To get the actual name of the collision object when the event type is a collision event
                     eventNode.Add(new XAttribute("ename", Data.GameObjects[(int)j.EventSubtype].Name.Content));
-                }
-                else
-                {
-                    // Get the sub-event number directly
+                else // Get the sub-event number directly
                     eventNode.Add(new XAttribute("enumb", j.EventSubtype.ToString()));
-                }
 
                 // Save action
                 var actionNode = new XElement("action");
@@ -830,18 +818,10 @@ void ExportGameObject(UndertaleGameObject gameObject)
         }
     }
 
-    File.WriteAllText(projFolder + "/objects/" + gameObject.Name.Content + ".object.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/objects/{gameObject.Name.Content}.object.gmx", gmx.ToString() + eol);
 }
 #endregion
 #region Rooms
-async Task ExportRooms()
-{
-    if (UISettings.ROOM)
-    {
-        Directory.CreateDirectory(projFolder + "/rooms");
-        await Task.Run(() => Parallel.ForEach(Data.Rooms, ExportRoom));
-    }
-}
 void ExportRoom(UndertaleRoom room)
 {
     UpdateProgressBar(null, $"Exporting Room: {room.Name.Content}", progress++, resourceNum);
@@ -853,8 +833,8 @@ void ExportRoom(UndertaleRoom room)
             new XElement("caption", room.Caption.Content),
             new XElement("width", room.Width.ToString()),
             new XElement("height", room.Height.ToString()),
-            new XElement("vsnap", room.GridHeight.ToString()),//"32"),
-            new XElement("hsnap", room.GridWidth.ToString()),//"32"),
+            new XElement("vsnap", room.GridHeight.ToString()),
+            new XElement("hsnap", room.GridWidth.ToString()),
             new XElement("isometric", "0"),
             new XElement("speed", room.Speed.ToString()),
             new XElement("persistent", BoolToString(room.Persistent)),
@@ -898,7 +878,7 @@ void ExportRoom(UndertaleRoom room)
             new XAttribute("vtiled", BoolToString(i.TiledVertically)),
             new XAttribute("hspeed", i.SpeedX.ToString()),
             new XAttribute("vspeed", i.SpeedY.ToString()),
-            new XAttribute("stretch", BoolToString(i.Stretch))//"0")
+            new XAttribute("stretch", BoolToString(i.Stretch))
         );
         backgroundsNode.Add(backgroundNode);
     }
@@ -984,18 +964,10 @@ void ExportRoom(UndertaleRoom room)
         new XElement("PhysicsWorldPixToMeters", room.MetersPerPixel)
     );
 
-    File.WriteAllText(projFolder + "/rooms/" + room.Name.Content + ".room.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/rooms/{room.Name.Content}.room.gmx", gmx.ToString() + eol);
 }
 #endregion
 #region Sounds
-async Task ExportSounds()
-{
-    if (UISettings.SOND)
-    {
-        Directory.CreateDirectory(projFolder + "/sound/audio");
-        await Task.Run(() => Parallel.ForEach(Data.Sounds, ExportSound));
-    }
-}
 void ExportSound(UndertaleSound sound)
 {
     UpdateProgressBar(null, $"Exporting Sound: {sound.Name.Content}", progress++, resourceNum);
@@ -1006,7 +978,7 @@ void ExportSound(UndertaleSound sound)
         new XElement("sound",
             new XElement("kind", Path.GetExtension(sound.File.Content) == ".ogg" ? "3" : "0"),
             new XElement("extension", Path.GetExtension(sound.File.Content)),
-            new XElement("origname", "sound\\audio\\" + sound.File.Content),
+            new XElement("origname", $"sound\\audio\\{sound.File.Content}"),
             new XElement("effects", sound.Effects.ToString()),
             new XElement("volume",
                 new XElement("volume", sound.Volume.ToString())
@@ -1033,25 +1005,18 @@ void ExportSound(UndertaleSound sound)
         )
     );
 
-    File.WriteAllText(projFolder + "/sound/" + sound.Name.Content + ".sound.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/sound/{sound.Name.Content}.sound.gmx", gmx.ToString() + eol);
 
     // Save sound files
+    string sndPath = $"{projFolder}/sound/audio/{sound.File.Content}";
     if (sound.AudioFile != null)
-        File.WriteAllBytes(projFolder + "/sound/audio/" + sound.File.Content, sound.AudioFile.Data);
+        File.WriteAllBytes(sndPath, sound.AudioFile.Data);
     // if sound file is external, add them
     else if (File.Exists($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content))
-        File.Copy($"{Path.GetDirectoryName(FilePath)}\\" + sound.File.Content, projFolder + "/sound/audio/" + sound.File.Content, true);
+        File.Copy($"{Path.GetDirectoryName(FilePath)}\\{sound.File.Content}", sndPath, true);
 }
 #endregion
 #region Scripts
-async Task ExportScripts()
-{
-    if (UISettings.SCPT)
-    {
-        Directory.CreateDirectory(projFolder + "/scripts/");
-        await Task.Run(() => Parallel.ForEach(Data.Scripts, ExportScript));
-    }
-}
 void ExportScript(UndertaleScript script)
 {
     UpdateProgressBar(null, $"Exporting Script: {script.Name.Content}", progress++, resourceNum);
@@ -1060,22 +1025,14 @@ void ExportScript(UndertaleScript script)
         if (DumpedExtGMLScripts[extName].ContainsKey(script.Name.Content))
             return;
 
-    var scriptpath = projFolder + "/scripts/" + script.Name.Content + ".gml";
-    var scriptcode = ((script.Code != null) ? decompileCode(script.Code) : AddtoLog("SCRIPT", script.Name.Content));
-
     // Save code to GML file
-    File.WriteAllText(scriptpath, scriptcode);
+    File.WriteAllText(
+        $"{projFolder}/scripts/{script.Name.Content}.gml", 
+        (script.Code != null) ? decompileCode(script.Code) : AddtoLog("SCRIPT", script.Name.Content)
+    );
 }
 #endregion
 #region Fonts
-async Task ExportFonts()
-{
-    if (UISettings.FONT)
-    {
-        Directory.CreateDirectory(projFolder + "/fonts/");
-        await Task.Run(() => Parallel.ForEach(Data.Fonts, ExportFont));
-    }
-}
 void ExportFont(UndertaleFont font)
 {
     UpdateProgressBar(null, $"Exporting Font: {font.Name.Content}", progress++, resourceNum);
@@ -1097,11 +1054,11 @@ void ExportFont(UndertaleFont font)
                 new XElement("texgroup", "0")
             ),
             new XElement("ranges",
-                new XElement("range0", font.RangeStart.ToString() + "," + font.RangeEnd.ToString())
+                new XElement("range0", $"{font.RangeStart},{font.RangeEnd}")
             ),
             new XElement("glyphs"),
             new XElement("kerningPairs"),
-            new XElement("image", font.Name.Content + ".png")
+            new XElement("image", $"{font.Name.Content}.png")
         )
     );
 
@@ -1119,21 +1076,13 @@ void ExportFont(UndertaleFont font)
         glyphsNode.Add(glyphNode);
     }
 
-    File.WriteAllText(projFolder + "/fonts/" + font.Name.Content + ".font.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/fonts/{font.Name.Content}.font.gmx", gmx.ToString() + eol);
 
     // Save font textures
-    worker.ExportAsPNG(font.Texture, projFolder + "/fonts/" + font.Name.Content + ".png");
+    worker.ExportAsPNG(font.Texture, $"{projFolder}/fonts/{font.Name.Content}.png");
 }
 #endregion
 #region Paths
-async Task ExportPaths()
-{
-    if (UISettings.PATH)
-    {
-        Directory.CreateDirectory(projFolder + "/paths");
-        await Task.Run(() => Parallel.ForEach(Data.Paths, ExportPath));
-    }
-}
 void ExportPath(UndertalePath path)
 {
     UpdateProgressBar(null, $"Exporting Path: {path.Name.Content}", progress++, resourceNum);
@@ -1151,26 +1100,19 @@ void ExportPath(UndertalePath path)
             new XElement("points")
         )
     );
+
+    // add points
     foreach (var i in path.Points)
     {
-        var pointsNode = gmx.Element("path").Element("points");
-        pointsNode.Add(
-            new XElement("point", $"{i.X.ToString()},{i.Y.ToString()},{i.Speed.ToString()}")
+        gmx.Element("path").Element("points").Add(
+            new XElement("point", $"{i.X},{i.Y},{i.Speed}")
         );
     }
 
-    File.WriteAllText(projFolder + "/paths/" + path.Name.Content + ".path.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/paths/{path.Name.Content}.path.gmx", gmx.ToString() + eol);
 }
 #endregion
 #region Timelines
-async Task ExportTimelines()
-{
-    if (UISettings.TMLN)
-    {
-        Directory.CreateDirectory(projFolder + "/timelines");
-        await Task.Run(() => Parallel.ForEach(Data.Timelines, ExportTimeline));
-    }
-}
 void ExportTimeline(UndertaleTimeline timeline)
 {
     UpdateProgressBar(null, $"Exporting Timeline: {timeline.Name.Content}", progress++, resourceNum);
@@ -1213,21 +1155,14 @@ void ExportTimeline(UndertaleTimeline timeline)
         gmx.Element("timeline").Add(entryNode);
     }
 
-    File.WriteAllText(projFolder + "/timelines/" + timeline.Name.Content + ".timeline.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/timelines/{timeline.Name.Content}.timeline.gmx", gmx.ToString() + eol);
 }
 #endregion
 #region Shaders
-async Task ExportShaders()
-{
-    if (UISettings.SHDR)
-    {
-        Directory.CreateDirectory(projFolder + "/shaders");
-        await Task.Run(() => Parallel.ForEach(Data.Shaders, ExportShader));
-    }
-}
-
 void ExportShader(UndertaleShader shader)
 {
+    UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
+
     // Vertex and Fragment shit
     string vertex = shader.GLSL_ES_Vertex.Content;
     string fragment = shader.GLSL_ES_Fragment.Content;
@@ -1262,19 +1197,10 @@ void ExportShader(UndertaleShader shader)
         + "//######################_==_YOYO_SHADER_MARKER_==_######################@~" +
         fragment;
 
-    UpdateProgressBar(null, $"Exporting Shader: {shader.Name.Content}", progress++, resourceNum);
-    File.WriteAllText(projFolder + "/shaders/" + shader.Name.Content + ".shader", finalshader);
+    File.WriteAllText($"{projFolder}/shaders/{shader.Name.Content}.shader", finalshader);
 }
 #endregion
 #region Extensions
-async Task ExportExtensions()
-{
-    if (UISettings.EXTN)
-    {
-        Directory.CreateDirectory(projFolder + "/extensions");
-        await Task.Run(() => Parallel.ForEach(Data.Extensions, ExportExtension));
-    }
-}
 void ExportExtension(UndertaleExtension extension)
 {
     UpdateProgressBar(null, $"Exporting Extension: {extension.Name.Content}", progress++, resourceNum);
@@ -1304,7 +1230,7 @@ void ExportExtension(UndertaleExtension extension)
         );
         var Xfunctions = XCurrentFile.Element("functions");
 
-        var newfilepath = projFolder + "/extensions/" + extension.Name.Content;
+        var newfilepath = $"{projFolder}/extensions/{extension.Name.Content}";
         Directory.CreateDirectory(newfilepath);
 
         switch ((int)extFile.Kind)
@@ -1384,7 +1310,7 @@ void ExportExtension(UndertaleExtension extension)
         Xfiles.Add(XCurrentFile);
     }
 
-    File.WriteAllText(projFolder + "/extensions/" + extension.Name.Content + ".extension.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}/extensions/{extension.Name.Content}.extension.gmx", gmx.ToString() + eol);
 }
 
 void CheckExtensionGML()
@@ -1452,7 +1378,7 @@ void CheckExtensionGML()
 #endregion
 
 #region Config Options
-void ExportConfig()
+async Task ExportConfig()
 {
     #region Setup shit
     // universal func to get both types of flags
@@ -1467,9 +1393,7 @@ void ExportConfig()
     }
 
     // same thing as above, but returns int values
-    int HasFlagAsInt(dynamic Flag) {
-        return HasFlag(Flag) ? 1 : 0;
-    }
+    int HasFlagAsInt(dynamic Flag) => HasFlag(Flag) ? 1 : 0;
 
     string ConfigDir = $"{projFolder}/Configs/Default/windows";
     Directory.CreateDirectory(ConfigDir);
@@ -1713,28 +1637,37 @@ void GenerateProjectFile()
     AddExtensions(GMXAssets);
 
     // Write all resource indexes to project.gmx
-    if (UISettings.SOND) WriteIndexes<UndertaleSound>(GMXAssets, "sounds", "sound", Data.Sounds, "sound", "sound\\");
-    if (UISettings.SPRT) WriteIndexes<UndertaleSprite>(GMXAssets, "sprites", "sprites", Data.Sprites, "sprite", "sprites\\");
-    if (UISettings.BGND) WriteIndexes<UndertaleBackground>(GMXAssets, "backgrounds", "background", Data.Backgrounds, "background", "background\\");
-    if (UISettings.SCPT) WriteIndexes<UndertaleScript>(GMXAssets, "scripts", "scripts", Data.Scripts, "script", "scripts\\", ".gml");
-    if (UISettings.FONT) WriteIndexes<UndertaleFont>(GMXAssets, "fonts", "fonts", Data.Fonts, "font", "fonts\\");
-    if (UISettings.OBJT) WriteIndexes<UndertaleGameObject>(GMXAssets, "objects", "objects", Data.GameObjects, "object", "objects\\");
-    if (UISettings.ROOM) WriteIndexes<UndertaleRoom>(GMXAssets, "rooms", "rooms", Data.Rooms, "room", "rooms\\");
-    if (UISettings.PATH) WriteIndexes<UndertalePath>(GMXAssets, "paths", "paths", Data.Paths, "path", "paths\\");
-    if (UISettings.TMLN) WriteIndexes<UndertaleTimeline>(GMXAssets, "timelines", "timelines", Data.Timelines, "timeline", "timelines\\");
-    if (UISettings.SHDR) WriteIndexes<UndertaleShader>(GMXAssets, "shaders", "shaders", Data.Shaders, "shader", "shaders\\", ".shader");
+    WriteIndexes(GMXAssets, Data.Sounds, UISettings.SOND, "sounds");
+    WriteIndexes(GMXAssets, Data.Sprites, UISettings.SPRT, "sprites");
+    WriteIndexes(GMXAssets, Data.Backgrounds, UISettings.BGND, "backgrounds");
+    WriteIndexes(GMXAssets, Data.Scripts, UISettings.SCPT, "scripts", ".gml");
+    WriteIndexes(GMXAssets, Data.Fonts, UISettings.FONT, "fonts");
+    WriteIndexes(GMXAssets, Data.GameObjects, UISettings.OBJT, "objects");
+    WriteIndexes(GMXAssets, Data.Rooms, UISettings.ROOM, "rooms");
+    WriteIndexes(GMXAssets, Data.Paths, UISettings.PATH, "paths");
+    WriteIndexes(GMXAssets, Data.Timelines, UISettings.TMLN, "timelines");
+    WriteIndexes(GMXAssets, Data.Shaders, UISettings.SHDR, "shaders", ".shader");
 
-    File.WriteAllText(projFolder + GameName + ".project.gmx", gmx.ToString() + eol);
+    File.WriteAllText($"{projFolder}{GameName}.project.gmx", gmx.ToString() + eol);
 }
 
-void WriteIndexes<T>(XElement rootNode, string elementName, string attributeName, IList<T> dataList, string oneName, string resourcePath, string fileExtension = "")
+void WriteIndexes(XElement rootNode, dynamic dataList, bool isEnabled, string elementName, string fileExtension = "")
 {
-    var resourcesNode = new XElement(elementName,
+    if (!isEnabled) return;
+
+    string resourceName = elementName.TrimEnd('s');
+    string attributeName = elementName switch
+    {
+        "sounds" or "backgrounds" => resourceName,
+        _ => elementName,
+    };
+
+    XElement resourcesNode = new(elementName,
         new XAttribute("name", attributeName)
     );
     foreach (UndertaleNamedResource i in dataList)
     {
-        var resourceNode = new XElement(oneName, resourcePath + i.Name.Content + fileExtension);
+        XElement resourceNode = new(resourceName, $"{attributeName}\\{i.Name.Content}{fileExtension}");
         resourcesNode.Add(resourceNode);
     }
     rootNode.Add(resourcesNode);
@@ -1744,7 +1677,7 @@ void AddExtensions(XElement rootNode)
 {
     if (Data.Extensions.Count > 0)
     {
-        var extXML = new XElement("NewExtensions");
+        XElement extXML = new("NewExtensions");
         int extindex = 0;
 
         foreach (UndertaleExtension e in Data.Extensions)
