@@ -1,5 +1,24 @@
 ## UnderAnalyzer Decompiler
 
+> [!WARNING]
+> Message from 8/5/2026
+>
+> PLEASE DO NOT ASK THE UNDERMINERS TEAM FOR HELP WITH THIS PROGRAM
+>
+> This program is not only un-maintained, but is also not at all affilated with the Underminers Team
+>
+> This was just a competely seperate fork made by me for fun, and they do not and will not support this program whatsoever
+>
+> Also, I picked the program's name (Underanalyzer-Decompiler) because it was fitting at the time I created it, since it was one of the first forks of UTMT to use the (then) experimental Underanalyzer Library for code decompilation, but I now realize that this name wasn't great, and is confusing to many, since this program and the Underanalyzer C# Library are VASTLY different things, and official UTMT now uses it for code decompilation as well
+>
+> I would change it, but I'm leaving programming in general, and I don't want to re-download Visual Studio to do so,
+> plus this tool should just not be used at all anymore in favor of the official UndertaleModTool
+>
+> Since the scripts for decompiling GMS1 and GMS2 game can actually be used on official UTMT using the "Run other scripts" feature,
+> you should just take the .csx decompiling scripts from this and use it with that
+>
+> (Although they probably won't work in newer updates, but that's just how things go)
+
 This Fork of UnderTaleModTool allows for Complete Decompilation of a given GameMaker Game
 <br>
 And I mean TRUE Decompiling (and NOT just patching a game)
